@@ -1,0 +1,467 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "opencode/hy3-preview-free",
+  "default_agent": "core-builder",
+  "enabled_providers": ["opencode"],
+  "plugin": [
+    "C:\\opencode\\plugins\\index.ts",
+    "C:\\opencode\\plugins\\agent-router.ts",
+    "C:\\opencode\\plugins\\mcp-manager.ts",
+    "C:\\opencode\\plugins\\skill-manager.ts",
+    "C:\\opencode\\plugins\\context-manager.ts"
+  ],
+  "provider": {
+    "opencode": {
+      "name": "opencode",
+      "options": {},
+      "models": {
+        "hy3-preview-free": {
+          "name": "hy3-preview-free",
+          "tool_call": true,
+          "reasoning": false
+        },
+        "hy3-review-free": {
+          "name": "hy3-review-free",
+          "tool_call": true,
+          "reasoning": true
+        }
+      }
+    }
+  },
+  "server": {
+    "port": 4096,
+    "hostname": "127.0.0.1",
+    "mdns": false,
+    "cors": ["http://127.0.0.1:8080", "http://"]
+  },
+  "mcp": {
+    "context7": {
+      "type": "local",
+      "command": ["npx", "-y", "@upstash/context7-mcp@latest"],
+      "enabled": true,
+      "timeout": 30000
+    },
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "C:\\opencode"],
+      "enabled": true,
+      "timeout": 15000
+    },
+    "memory": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-memory"],
+      "enabled": true,
+      "timeout": 10000
+    },
+    "git": {
+      "type": "local",
+      "command": ["uvx", "mcp-server-git"],
+      "enabled": true,
+      "timeout": 20000
+    },
+    "fetch": {
+      "type": "local",
+      "command": ["uvx", "mcp-server-fetch"],
+      "enabled": true,
+      "timeout": 15000
+    },
+    "sqlite": {
+      "type": "local",
+      "command": ["uvx", "mcp-server-sqlite", "--db-path", "C:\\opencode\\database.sqlite"],
+      "enabled": true,
+      "timeout": 10000
+    },
+    "sequential-thinking": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "enabled": true,
+      "timeout": 30000
+    },
+    "language-server": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-language-server"],
+      "enabled": true,
+      "timeout": 20000
+    }
+  },
+  "permission": {
+    "skill": {
+      "*": "allow",
+      "experimental-*": "ask",
+      "internal-*": "deny"
+    },
+    "command": {
+      "*": "ask",
+      "ls": "allow",
+      "git": "allow",
+      "npm": "allow",
+      "node": "allow"
+    },
+    "file": {
+      "*": "ask",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      ".env*": "deny",
+      "**/node_modules/**": "deny",
+      "**/.git/**": "deny"
+    },
+    "read": {
+      "*": "allow",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "**/node_modules/**": "deny"
+    },
+    "edit": {
+      "*": "allow",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "**/node_modules/**": "deny"
+    },
+    "bash": "ask",
+    "glob": "allow",
+    "grep": "allow",
+    "list": "allow",
+    "webfetch": "ask",
+    "websearch": "ask",
+    "codesearch": "allow",
+    "todoread": "allow",
+    "todowrite": "ask",
+    "external_directory": "ask",
+    "doom_loop": "deny"
+  },
+  "tools": {
+    "write": true,
+    "edit": true,
+    "bash": true,
+    "read": true,
+    "glob": true,
+    "grep": true,
+    "list": true,
+    "task": true,
+    "skill": true,
+    "lsp": true,
+    "todoread": true,
+    "todowrite": true,
+    "webfetch": true,
+    "websearch": true,
+    "codesearch": true
+  },
+  "formatter": {
+    "biome": {
+      "disabled": false,
+      "command": ["npx", "biome", "format", "--write", "$FILE"],
+      "extensions": [".js", ".jsx", ".ts", ".tsx", ".json", ".jsonc"]
+    },
+    "prettier": {
+      "disabled": false,
+      "command": ["npx", "prettier", "--write", "$FILE"],
+      "extensions": [".css", ".scss", ".html", ".md", ".yaml", ".yml"]
+    }
+  },
+  "instructions": [
+    "Follow project rules: rules/general.md, rules/project.md",
+    "Stack-specific rules: rules/tauri.md (Rust/Tauri), rules/react.md (TypeScript/React), rules/laravel.md (PHP/Laravel)",
+    "Auto-format rule: rules/auto-format.md (language-based formatter selection)",
+    "Use stack-context skill to auto-detect stack and pull Context7 docs for Tauri/React/Laravel",
+    "Use self-improver skill to learn from docs, LSPs, and adapt features from OpenClaude/ClaudeCode/QwenCode",
+    "Prioritize Trae IDE integration and MCP service reuse where applicable",
+    "Maintain code readability, test coverage, and performance",
+    "Use approved skills for specialized tasks (testing, docs, Laravel, etc.)"
+  ],
+  "command": {
+    "build": {
+      "template": "npm run build",
+      "description": "Build the project using npm",
+      "agent": "core-builder"
+    },
+    "test": {
+      "template": "npm test",
+      "description": "Run project test suite",
+      "agent": "qa-tester"
+    },
+    "lint": {
+      "template": "npm run lint",
+      "description": "Run linter checks",
+      "agent": "qa-reviewer"
+    },
+    "improve": {
+      "template": "echo 'Running self-improvement analysis...'",
+      "description": "Analyze and enhance project configuration",
+      "agent": "docs-evolver"
+    },
+    "reflect": {
+      "template": "echo 'Running self-reflection...'",
+      "description": "Analyze and improve opencode configuration",
+      "agent": "docs-evolver"
+    },
+    "db:init": {
+      "template": "node tools/db-init.js",
+      "description": "Initialize database with schema and seed data",
+      "agent": "devops-ops"
+    },
+    "process:check": {
+      "template": "npx ts-node tools/process-check.ts",
+      "description": "Check running processes and system health",
+      "agent": "devops-ops"
+    },
+    "check-updates": {
+      "template": "powershell -File scripts/check-updates.ps1",
+      "description": "Check for available updates to dependencies",
+      "agent": "devops-ops"
+    },
+    "db:backup": {
+      "template": "powershell -File scripts/db-backup.ps1",
+      "description": "Backup database to local file",
+      "agent": "devops-ops"
+    }
+  },
+  "agent": {
+    "core-builder": {
+      "instructions": [
+        "CORE: High-speed implementation and direct file modification.",
+        "",
+        "WORKFLOW PATTERNS:",
+        "1. Read-Edit-Validate: Always read file first, make targeted edits, validate result",
+        "2. Batch tool calls: Group independent reads/edits in single message for speed",
+        "3. Use edit tool (not write) for modifications - preserves file structure",
+        "4. Use replaceAll for renaming variables/patterns across file",
+        "",
+        "ERROR RECOVERY:",
+        "- If edit fails (oldString not found), read file again to get fresh context",
+        "- If multiple matches found, provide more surrounding context to uniquely identify",
+        "- On tool errors, retry with adjusted parameters before escalating",
+        "",
+        "EFFICIENCY RULES:",
+        "- Use grep/glob to find files/patterns before reading (avoid sequential searches)",
+        "- Use LSP to verify syntax after edits when available",
+        "- Mimic existing code style, naming conventions, and patterns exactly",
+        "- Never add unnecessary comments unless explicitly requested",
+        "- Minimize output tokens - answer concisely with file_path:line_number references"
+      ],
+      "temperature": 0.2,
+      "tools": {
+        "skill": false,
+        "command": true,
+        "file": true,
+        "read": true,
+        "edit": true,
+        "grep": true,
+        "glob": true,
+        "lsp": true,
+        "todowrite": true
+      },
+      "permission": {
+        "file": {
+          "*": "ask",
+          "src/**": "allow",
+          "app/**": "allow",
+          "resources/**": "allow"
+        },
+        "read": "allow",
+        "edit": "allow",
+        "grep": "allow",
+        "glob": "allow",
+        "command": "ask"
+      },
+      "description": "CORE: High-speed implementation and direct file modification."
+    },
+    "core-planner": {
+      "instructions": ["Read-only analysis for planning. Do not modify files."],
+      "temperature": 0.1,
+      "permission": {
+        "skill": {
+          "internal-*": "allow"
+        },
+        "file": {
+          "*": "allow",
+          "edit": "deny"
+        }
+      },
+      "description": "CORE: Read-only strategic planning and architectural discovery."
+    },
+    "lead-orchestrator": {
+      "model": "opencode/hy3-review-free",
+      "instructions": ["C:\\opencode\\agents\\lead-orchestrator.md"],
+      "temperature": 0.2,
+      "tools": {
+        "skill": true,
+        "command": true,
+        "file": true,
+        "lsp": true,
+        "codesearch": true,
+        "todowrite": true,
+        "task": true
+      },
+      "description": "LEAD: Senior project orchestrator managing complex multi-agent handoffs."
+    },
+    "lead-architect": {
+      "instructions": ["C:\\opencode\\agents\\lead-architect.md"],
+      "tools": {
+        "file": true,
+        "command": true,
+        "skill": true,
+        "lsp": true
+      },
+      "description": "LEAD: High-level system design and architectural decision making."
+    },
+    "lead-product-manager": {
+      "instructions": ["C:\\opencode\\agents\\lead-product-manager.md"],
+      "tools": {
+        "file": true,
+        "command": true
+      },
+      "description": "LEAD: Task prioritization, requirements gathering, and project roadmap."
+    },
+    "frontend-ui-ux": {
+      "instructions": ["C:\\opencode\\agents\\frontend-ui-ux.md"],
+      "tools": {
+        "file": true,
+        "command": true,
+        "lsp": true,
+        "skill": true
+      },
+      "description": "FRONTEND: Premium UI design and UX implementation using ui-ux-pro-max."
+    },
+    "backend-api": {
+      "instructions": ["C:\\opencode\\agents\\backend-api.md"],
+      "tools": {
+        "file": true,
+        "command": true,
+        "lsp": true,
+        "skill": true
+      },
+      "description": "BACKEND: API design and implementation using fullstack-dev skills."
+    },
+    "backend-laravel": {
+      "instructions": ["C:\\opencode\\agents\\backend-laravel.md"],
+      "tools": {
+        "file": true,
+        "command": true,
+        "skill": true,
+        "lsp": true
+      },
+      "description": "BACKEND: Specialized Laravel 13 and Livewire 4 developer."
+    },
+    "backend-tauri": {
+      "instructions": ["C:\\opencode\\agents\\backend-tauri.md"],
+      "tools": {
+        "file": true,
+        "command": true,
+        "skill": true,
+        "lsp": true
+      },
+      "description": "BACKEND: Specialized Rust and Tauri desktop application developer."
+    },
+    "backend-systems": {
+      "instructions": ["C:\\opencode\\agents\\backend-systems.md"],
+      "tools": {
+        "file": true,
+        "command": true,
+        "lsp": true
+      },
+      "description": "BACKEND: Low-level systems, shell scripting, and infrastructure logic."
+    },
+    "qa-reviewer": {
+      "instructions": ["C:\\opencode\\agents\\qa-reviewer.md"],
+      "tools": {
+        "file": true,
+        "command": true,
+        "lsp": true
+      },
+      "description": "QUALITY: Senior code reviewer focusing on standards and performance."
+    },
+    "qa-tester": {
+      "instructions": ["C:\\opencode\\agents\\qa-tester.md"],
+      "tools": {
+        "file": true,
+        "command": true,
+        "skill": true
+      },
+      "description": "QUALITY: Test suite generation and automated verification."
+    },
+    "qa-security": {
+      "instructions": ["C:\\opencode\\agents\\qa-security.md"],
+      "temperature": 0.1,
+      "tools": {
+        "skill": true,
+        "command": true,
+        "file": true
+      },
+      "description": "QUALITY: Security vulnerability scanning and secret leak prevention."
+    },
+    "qa-debugger": {
+      "instructions": ["C:\\opencode\\agents\\qa-debugger.md"],
+      "temperature": 0.1,
+      "tools": {
+        "skill": true,
+        "command": true,
+        "file": true
+      },
+      "description": "QUALITY: Root cause analysis and browser-based troubleshooting."
+    },
+    "devops-ops": {
+      "instructions": ["C:\\opencode\\agents\\devops-ops.md"],
+      "tools": {
+        "file": true,
+        "command": true,
+        "skill": true
+      },
+      "description": "DEVOPS: Terminal execution and operational task runner."
+    },
+    "devops-mcp": {
+      "instructions": ["C:\\opencode\\agents\\devops-mcp.md"],
+      "tools": {
+        "command": true
+      },
+      "description": "DEVOPS: MCP server research and tool integration expert."
+    },
+    "docs-writer": {
+      "instructions": ["C:\\opencode\\agents\\docs-writer.md"],
+      "tools": {
+        "file": true,
+        "command": true
+      },
+      "description": "KNOWLEDGE: Technical documentation and content creation."
+    },
+    "docs-governor": {
+      "instructions": ["C:\\opencode\\agents\\docs-governor.md"],
+      "tools": {
+        "file": true,
+        "command": true
+      },
+      "description": "KNOWLEDGE: Documentation auditing and standard enforcement."
+    },
+    "docs-evolver": {
+      "instructions": ["C:\\opencode\\skills\\self-improver\\SKILL.md"],
+      "temperature": 0.2,
+      "tools": {
+        "skill": true,
+        "command": true,
+        "file": true,
+        "lsp": true,
+        "codesearch": true,
+        "websearch": true,
+        "webfetch": true,
+        "todowrite": true
+      },
+      "description": "KNOWLEDGE: System self-improvement and research-driven evolution."
+    }
+  },
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "reserved": 8192
+  },
+  "context": {
+    "include": ["**/*.ts", "**/*.tsx", "**/*.php", "**/*.rs", "**/*.md", "**/*.yaml", "**/*.yml"],
+    "exclude": [
+      "node_modules/**",
+      ".git/**",
+      "dist/**",
+      "build/**",
+      "*.env",
+      "*.log",
+      "**/__pycache__/**"
+    ]
+  }
+}

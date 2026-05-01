@@ -1,0 +1,412 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "opencode/hy3-preview-free",
+  "default_agent": "build",
+  "enabled_providers": ["opencode"],
+  "plugin": [
+    "C:\\opencode\\plugins\\index.ts"
+  ],
+  "provider": {
+    "opencode": {
+      "name": "opencode",
+      "options": {},
+      "models": {
+        "hy3-preview-free": {
+          "name": "hy3-preview-free",
+          "tool_call": true,
+          "reasoning": false
+        },
+        "hy3-review-free": {
+          "name": "hy3-review-free",
+          "tool_call": true,
+          "reasoning": true
+        }
+      }
+    }
+  },
+  "server": {
+    "port": 4096,
+    "hostname": "127.0.0.1",
+    "mdns": false,
+    "cors": ["http://127.0.0.1:8080", "http://"]
+  },
+  "mcp": {
+    "context7": {
+      "type": "local",
+      "command": ["npx", "-y", "@upstash/context7-mcp@latest"],
+      "enabled": true
+    },
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "C:\\opencode"],
+      "enabled": true
+    },
+    "memory": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-memory"],
+      "enabled": true
+    },
+    "git": {
+      "type": "local",
+      "command": ["uvx", "mcp-server-git"],
+      "enabled": true
+    },
+    "fetch": {
+      "type": "local",
+      "command": ["uvx", "mcp-server-fetch"],
+      "enabled": true
+    },
+    "brave-search": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-brave-search"],
+      "enabled": false
+    },
+    "puppeteer": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-puppeteer"],
+      "enabled": true
+    },
+    "sqlite": {
+      "type": "local",
+      "command": ["uvx", "mcp-server-sqlite", "--db-path", "C:\\opencode\\database.sqlite"],
+      "enabled": true
+    },
+    "postgres": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgres://localhost/postgres"
+      ],
+      "enabled": false
+    },
+    "github": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
+      "enabled": false
+    },
+    "slack": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-slack"],
+      "enabled": false
+    },
+    "sequential-thinking": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "enabled": true
+    },
+    "language-server": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-language-server"],
+      "enabled": true
+    }
+  },
+  "permission": {
+    "skill": {
+      "*": "allow",
+      "experimental-*": "ask",
+      "internal-*": "deny"
+    },
+    "command": {
+      "*": "ask",
+      "ls": "allow",
+      "git": "allow",
+      "npm": "allow",
+      "node": "allow"
+    },
+    "file": {
+      "*": "allow",
+      "*.env": "ask",
+      ".env*": "ask"
+    },
+    "read": {
+      "*": "allow",
+      "*.env": "deny",
+      "*.env.*": "deny"
+    },
+    "edit": "allow",
+    "bash": "ask",
+    "glob": "allow",
+    "grep": "allow",
+    "list": "allow",
+    "webfetch": "ask",
+    "websearch": "ask",
+    "codesearch": "allow",
+    "todoread": "allow",
+    "todowrite": "ask",
+    "external_directory": "ask",
+    "doom_loop": "deny"
+  },
+  "tools": {
+    "write": true,
+    "edit": true,
+    "bash": true,
+    "read": true,
+    "glob": true,
+    "grep": true,
+    "list": true,
+    "task": true,
+    "skill": true,
+    "lsp": true,
+    "todoread": true,
+    "todowrite": true,
+    "webfetch": true,
+    "websearch": true,
+    "codesearch": true
+  },
+  "formatter": {
+    "biome": {
+      "disabled": false,
+      "command": ["npx", "biome", "format", "--write", "$FILE"],
+      "extensions": [".js", ".jsx", ".ts", ".tsx", ".json", ".jsonc"]
+    },
+    "prettier": {
+      "disabled": false,
+      "command": ["npx", "prettier", "--write", "$FILE"],
+      "extensions": [".css", ".scss", ".html", ".md", ".yaml", ".yml"]
+    }
+  },
+  "instructions": [
+    "Follow project rules: rules/general.md, rules/project.md",
+    "Stack-specific rules: rules/tauri.md (Rust/Tauri), rules/react.md (TypeScript/React), rules/laravel.md (PHP/Laravel)",
+    "Auto-format rule: rules/auto-format.md (language-based formatter selection)",
+    "Use stack-context skill to auto-detect stack and pull Context7 docs for Tauri/React/Laravel",
+    "Use self-improver skill to learn from docs, LSPs, and adapt features from OpenClaude/ClaudeCode/QwenCode",
+    "Prioritize Trae IDE integration and MCP service reuse where applicable",
+    "Maintain code readability, test coverage, and performance",
+    "Use approved skills for specialized tasks (testing, docs, Laravel, etc.)"
+  ],
+  "command": {
+    "build": {
+      "template": "npm run build",
+      "description": "Build the project using npm",
+      "agent": "build"
+    },
+    "test": {
+      "template": "npm test",
+      "description": "Run project test suite",
+      "agent": "test-writer"
+    },
+    "lint": {
+      "template": "npm run lint",
+      "description": "Run linter checks",
+      "agent": "review"
+    },
+    "improve": {
+      "template": "node self-improver.js",
+      "description": "Run self-improver to analyze and enhance the project",
+      "agent": "self-improver"
+    },
+    "reflect": {
+      "template": "echo 'Running self-reflection...'",
+      "description": "Analyze and improve opencode configuration",
+      "agent": "self-improver"
+    }
+  },
+  "agent": {
+    "build": {
+      "instructions": [
+        "Implement the requested change directly, keep edits minimal, and keep replies short."
+      ],
+      "temperature": 0.3,
+      "tools": {
+        "skill": false,
+        "command": true,
+        "file": true
+      }
+    },
+    "plan": {
+      "instructions": ["Read-only analysis for planning without file modifications."],
+      "temperature": 0.1,
+      "permission": {
+        "skill": {
+          "internal-*": "allow"
+        },
+        "file": {
+          "*": "allow",
+          "edit": "deny"
+        }
+      }
+    },
+    "test-writer": {
+      "instructions": ["Generate comprehensive test suites."],
+      "temperature": 0.2,
+      "tools": {
+        "skill": false,
+        "command": true,
+        "file": true
+      },
+      "permission": {
+        "file": {
+          "*.test.*": "allow",
+          "*.spec.*": "allow",
+          "test_*.py": "allow"
+        }
+      }
+    },
+    "docs": {
+      "instructions": ["Generate and update documentation."],
+      "temperature": 0.3,
+      "tools": {
+        "skill": false,
+        "command": true,
+        "file": true
+      },
+      "permission": {
+        "file": {
+          "*.md": "allow",
+          "*.mdx": "allow"
+        }
+      }
+    },
+    "security": {
+      "instructions": ["Security vulnerability scanning."],
+      "temperature": 0.1,
+      "tools": {
+        "skill": false,
+        "command": true,
+        "file": true
+      }
+    },
+    "review": {
+      "instructions": ["Code quality analysis"],
+      "temperature": 0.2,
+      "tools": {
+        "skill": false,
+        "command": true,
+        "file": true
+      }
+    },
+    "debug": {
+      "instructions": ["Debugging and troubleshooting."],
+      "temperature": 0.1,
+      "tools": {
+        "skill": true,
+        "command": true,
+        "file": true
+      }
+    },
+    "project-orchestrator": {
+      "model": "opencode/hy3-review-free",
+      "instructions": ["C:\\opencode\\agents\\project-orchestrator.md"],
+      "temperature": 0.2,
+      "tools": {
+        "skill": true,
+        "command": true,
+        "file": true,
+        "lsp": true,
+        "codesearch": true,
+        "todowrite": true
+      },
+      "description": "Project-aware orchestration using Trae IDE's running context"
+    },
+    "code-reviewer": {
+      "instructions": ["C:\\opencode\\agents\\code-reviewer.md"],
+      "tools": { "file": true, "command": true }
+    },
+    "docs-governor": {
+      "instructions": ["C:\\opencode\\agents\\docs-governor.md"],
+      "tools": { "file": true, "command": true }
+    },
+    "documentation-writer": {
+      "instructions": ["C:\\opencode\\agents\\documentation-writer.md"],
+      "tools": { "file": true, "command": true }
+    },
+    "laravel-expert": {
+      "instructions": ["C:\\opencode\\agents\\laravel-expert.md"],
+      "tools": { "file": true, "command": true, "skill": true, "lsp": true }
+    },
+    "mcp-researcher": {
+      "instructions": ["C:\\opencode\\agents\\mcp-researcher.md"],
+      "tools": { "command": true }
+    },
+    "project-planner": {
+      "instructions": ["C:\\opencode\\agents\\project-planner.md"],
+      "tools": { "file": true, "command": true }
+    },
+    "task-runner": {
+      "instructions": ["C:\\opencode\\agents\\task-runner.md"],
+      "tools": { "file": true, "command": true, "skill": true }
+    },
+    "tauri-expert": {
+      "instructions": ["C:\\opencode\\agents\\tauri-expert.md"],
+      "tools": { "file": true, "command": true, "skill": true, "lsp": true }
+    },
+    "testing-expert": {
+      "instructions": ["C:\\opencode\\agents\\testing-expert.md"],
+      "tools": { "file": true, "command": true, "skill": true }
+    },
+    "self-improver": {
+      "instructions": ["C:\\opencode\\skills\\self-improver\\SKILL.md"],
+      "temperature": 0.2,
+      "tools": {
+        "skill": true,
+        "command": true,
+        "file": true,
+        "lsp": true,
+        "codesearch": true,
+        "websearch": true,
+        "webfetch": true,
+        "todowrite": true
+      },
+      "description": "Continuously improves the project by learning from docs, LSPs, and adapting features from OpenClaude/ClaudeCode/QwenCode"
+    },
+    "api": {
+      "instructions": ["C:\\opencode\\agents\\api.md"],
+      "tools": { "file": true, "command": true, "lsp": true }
+    },
+    "architect": {
+      "instructions": ["C:\\opencode\\agents\\architect.md"],
+      "tools": { "file": true, "command": true, "skill": true }
+    },
+    "enhanced-orchestrator": {
+      "model": "opencode/hy3-review-free",
+      "instructions": ["C:\\opencode\\agents\\enhanced-orchestrator.md"],
+      "temperature": 0.2,
+      "tools": {
+        "skill": true,
+        "command": true,
+        "file": true,
+        "lsp": true,
+        "codesearch": true,
+        "todowrite": true,
+        "task": true,
+        "webfetch": true,
+        "websearch": true
+      }
+    },
+    "systems": {
+      "instructions": ["C:\\opencode\\agents\\systems.md"],
+      "tools": { "file": true, "command": true, "lsp": true }
+    },
+    "ui": {
+      "instructions": ["C:\\opencode\\agents\\ui.md"],
+      "tools": { "file": true, "command": true, "lsp": true, "skill": true }
+    }
+  },
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "reserved": 4096
+  },
+  "lsp": {
+    "servers": {
+      "typescript": {
+        "command": ["npx", "typescript-language-server", "--stdio"],
+        "extensions": [".ts", ".tsx", ".js", ".jsx"],
+        "enabled": true
+      },
+      "rust": {
+        "command": ["rustup", "run", "stable", "rust-analyzer"],
+        "extensions": [".rs"],
+        "enabled": true
+      },
+      "php": {
+        "command": ["php", "vendor/bin/php-language-server"],
+        "extensions": [".php"],
+        "enabled": true
+      }
+    }
+  }
+}

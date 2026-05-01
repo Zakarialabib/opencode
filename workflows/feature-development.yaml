@@ -1,0 +1,68 @@
+name: Feature Development
+description: Standard workflow for developing a new feature using the Engineering Team
+version: 1.1.0
+trigger: manual
+phases:
+  - name: Strategy
+    description: Define requirements and high-level design
+    agents: [lead-product-manager, lead-orchestrator, lead-architect]
+    tasks:
+      - gather_requirements
+      - assess_technical_feasibility
+      - design_system_architecture
+      - create_milestone_plan
+    artifacts: [requirements.md, architecture.md, roadmap.json]
+  
+  - name: Design
+    description: Premium UI/UX design and API contracts
+    agents: [frontend-ui-ux, backend-api, lead-architect]
+    tasks:
+      - design_premium_ui_hsl
+      - define_api_contracts_json_api
+      - verify_tailwind_context
+    artifacts: [ui-mockups/, api-spec.yaml]
+    dependencies: [Strategy]
+  
+  - name: Implementation
+    description: Core development with real-time LSP context
+    agents: [core-builder, backend-laravel, backend-api, backend-tauri]
+    tasks:
+      - fetch_lsp_context
+      - implement_backend_logic
+      - implement_frontend_components
+      - verify_type_safety
+    artifacts: [src/, src-tauri/, app/]
+    dependencies: [Design]
+  
+  - name: Quality Assurance
+    description: Rigorous testing and security review
+    agents: [qa-tester, qa-reviewer, qa-security, qa-debugger]
+    tasks:
+      - run_automated_test_suites
+      - scan_for_secret_leaks
+      - perform_browser_reproduction
+      - conduct_senior_code_review
+    artifacts: [test-reports/, security-audit.md, qa-report.json]
+    dependencies: [Implementation]
+  
+  - name: Documentation & Evolution
+    description: Technical documentation and system adaptation
+    agents: [docs-writer, docs-governor, docs-evolver]
+    tasks:
+      - update_user_guides
+      - audit_documentation_governance
+      - learn_from_implementation_patterns
+    artifacts: [docs/, portal-update.md]
+    dependencies: [Quality Assurance]
+
+success_criteria:
+  - All tests pass (Pest/Vitest)
+  - No secret leaks detected
+  - UI meets ui-ux-pro-max standards
+  - Documentation updated in portal
+  - LSP diagnostics are clear
+
+notifications:
+  - on_start: notify engineering lead
+  - on_complete: update project portal
+  - on_failure: alert troubleshooter agent

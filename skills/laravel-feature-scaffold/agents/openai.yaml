@@ -1,0 +1,4 @@
+interface:
+  display_name: "Laravel Scaffold"
+  short_description: "Scaffold Laravel features"
+  default_prompt: "Use this skill to scaffold a Laravel feature with routes, controller, request, service, model flow, and tests."

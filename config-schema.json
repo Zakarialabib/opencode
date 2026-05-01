@@ -1,0 +1,351 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OpenCode Configuration Schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "pattern": "https://opencode\\.ai/config\\.json"
+    },
+    "model": {
+      "type": "string"
+    },
+    "default_agent": {
+      "type": "string"
+    },
+    "enabled_providers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "plugin": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "server": {
+      "type": "object",
+      "properties": {
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "hostname": {
+          "type": "string"
+        },
+        "mdns": {
+          "type": "boolean"
+        },
+        "cors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["port", "hostname"],
+      "additionalProperties": false
+    },
+    "provider": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "npm": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "options": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "models": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "tool_call": {
+                  "type": "boolean"
+                },
+                "reasoning": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "mcp": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["local", "remote"]
+          },
+          "command": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": ["type", "command"],
+        "additionalProperties": false
+      }
+    },
+    "permission": {
+      "type": "object",
+      "properties": {
+        "skill": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "enum": ["allow", "ask", "deny"]
+          }
+        },
+        "command": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "enum": ["allow", "ask", "deny"]
+          }
+        },
+        "file": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "enum": ["allow", "ask", "deny"]
+          }
+        },
+        "read": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "enum": ["allow", "ask", "deny"]
+          }
+        },
+        "edit": {
+          "type": "string",
+          "enum": ["allow", "ask", "deny"]
+        },
+        "bash": {
+          "type": "string",
+          "enum": ["allow", "ask", "deny"]
+        },
+        "glob": {
+          "type": "string",
+          "enum": ["allow", "ask", "deny"]
+        },
+        "grep": {
+          "type": "string",
+          "enum": ["allow", "ask", "deny"]
+        },
+        "list": {
+          "type": "string",
+          "enum": ["allow", "ask", "deny"]
+        },
+        "webfetch": {
+          "type": "string",
+          "enum": ["allow", "ask", "deny"]
+        },
+        "websearch": {
+          "type": "string",
+          "enum": ["allow", "ask", "deny"]
+        },
+        "codesearch": {
+          "type": "string",
+          "enum": ["allow", "ask", "deny"]
+        },
+        "todoread": {
+          "type": "string",
+          "enum": ["allow", "ask", "deny"]
+        },
+        "todowrite": {
+          "type": "string",
+          "enum": ["allow", "ask", "deny"]
+        },
+        "external_directory": {
+          "type": "string",
+          "enum": ["allow", "ask", "deny"]
+        },
+        "doom_loop": {
+          "type": "string",
+          "enum": ["allow", "ask", "deny"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "tools": {
+      "type": "object",
+      "properties": {
+        "write": { "type": "boolean" },
+        "edit": { "type": "boolean" },
+        "bash": { "type": "boolean" },
+        "read": { "type": "boolean" },
+        "glob": { "type": "boolean" },
+        "grep": { "type": "boolean" },
+        "list": { "type": "boolean" },
+        "task": { "type": "boolean" },
+        "skill": { "type": "boolean" },
+        "lsp": { "type": "boolean" },
+        "todoread": { "type": "boolean" },
+        "todowrite": { "type": "boolean" },
+        "webfetch": { "type": "boolean" },
+        "websearch": { "type": "boolean" },
+        "codesearch": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "formatter": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "disabled": { "type": "boolean" },
+          "command": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "extensions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["command", "extensions"],
+        "additionalProperties": false
+      }
+    },
+    "instructions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "command": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "template": { "type": "string" },
+          "description": { "type": "string" },
+          "agent": { "type": "string" }
+        },
+        "required": ["template", "description", "agent"],
+        "additionalProperties": false
+      }
+    },
+    "agent": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "model": { "type": "string" },
+          "instructions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "temperature": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 2
+          },
+          "tools": {
+            "type": "object",
+            "properties": {
+              "skill": { "type": "boolean" },
+              "command": { "type": "boolean" },
+              "file": { "type": "boolean" },
+              "lsp": { "type": "boolean" },
+              "todowrite": { "type": "boolean" },
+              "todoread": { "type": "boolean" },
+              "task": { "type": "boolean" },
+              "webfetch": { "type": "boolean" },
+              "websearch": { "type": "boolean" },
+              "codesearch": { "type": "boolean" },
+              "grep": { "type": "boolean" }
+            },
+            "additionalProperties": false
+          },
+          "permission": {
+            "type": "object",
+            "properties": {
+              "skill": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string",
+                  "enum": ["allow", "ask", "deny"]
+                }
+              },
+              "command": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string",
+                  "enum": ["allow", "ask", "deny"]
+                }
+              },
+              "file": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string",
+                  "enum": ["allow", "ask", "deny"]
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "description": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "compaction": {
+      "type": "object",
+      "properties": {
+        "auto": { "type": "boolean" },
+        "prune": { "type": "boolean" },
+        "reserved": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "$schema",
+    "model",
+    "default_agent",
+    "enabled_providers",
+    "plugin",
+    "server",
+    "provider",
+    "mcp",
+    "permission",
+    "tools",
+    "formatter",
+    "instructions",
+    "command",
+    "agent",
+    "compaction"
+  ],
+  "additionalProperties": false
+}

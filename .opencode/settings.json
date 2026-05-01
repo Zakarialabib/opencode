@@ -1,0 +1,19 @@
+{
+  "version": "1.0.0",
+  "description": "User-specific OpenCode configuration (OpenClaude pattern)",
+  "local_settings": {
+    "model": "opencode/hy3-preview-free",
+    "temperature": 0.2,
+    "tools": {
+      "auto-test-on-save": true,
+      "auto-format-on-save": true,
+      "lsp-integration": true
+    }
+  },
+  "adaptations": {
+    "from_claudecode": ["auto-test-on-save", "compact-mode"],
+    "from_qwencode": ["qwen-config", "local-llm-settings"],
+    "from_openclaude": [".opencode/ directory", "context7-integration"]
+  },
+  "last_updated": "2026-04-29T22:50:00Z"
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Docs Governance Audit"
+  short_description: "Audit docs against code"
+  default_prompt: "Use this skill to audit a large project's docs folder against the codebase and rank drift, redundancy, deprecations, missing docs, and improvement opportunities."

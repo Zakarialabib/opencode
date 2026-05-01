@@ -1,0 +1,4 @@
+interface:
+  display_name: "React Reuse Audit"
+  short_description: "Audit React reuse opportunities"
+  default_prompt: "Use this skill to audit a React codebase for reusable components, hooks, state boundaries, and extraction opportunities."

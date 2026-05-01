@@ -1,0 +1,77 @@
+{
+  "timestamp": "2026-04-30T12:19:30.409Z",
+  "environment": {
+    "stack": {
+      "tauri": false,
+      "react": false,
+      "laravel": false
+    },
+    "opencodeVersion": "opencode/hy3-preview-free",
+    "mcpServers": [
+      "context7",
+      "filesystem",
+      "memory",
+      "git",
+      "fetch",
+      "puppeteer",
+      "sqlite",
+      "sequential-thinking",
+      "language-server"
+    ],
+    "skillsCount": 15,
+    "pluginsCount": 5
+  },
+  "knowledge": {
+    "competitors": {
+      "openclaude": {
+        "url": "https://raw.githubusercontent.com/opencode-ai/opencode/main/readme.md",
+        "features": [
+          "context7-integration",
+          "multi-agent",
+          "skills-system",
+          "lsp-support"
+        ],
+        "checked": "2026-04-30T12:19:30.442Z"
+      },
+      "claudecode": {
+        "url": "https://docs.anthropic.com/en/docs/agents-and-tools/claude-code",
+        "features": [
+          "auto-test-on-save",
+          "git-integration",
+          "compact-mode",
+          "mcp-servers"
+        ],
+        "checked": "2026-04-30T12:19:30.442Z"
+      },
+      "qwencode": {
+        "url": "https://github.com/QwenLM/Qwen",
+        "features": [
+          "qwen-config",
+          "local-llm",
+          "code-completion",
+          "context-engineering"
+        ],
+        "checked": "2026-04-30T12:19:30.442Z"
+      }
+    }
+  },
+  "analysis": {},
+  "improvements": [
+    "0 improvements applied"
+  ],
+  "recommendations": [],
+  "adaptations": [
+    {
+      "source": "claudecode",
+      "feature": "auto-test-on-save",
+      "action": "suggest",
+      "description": "Add automatic test execution on file save"
+    },
+    {
+      "source": "qwencode",
+      "feature": "qwen-config",
+      "action": "suggest",
+      "description": "Consider Qwen-style config for local LLM settings"
+    }
+  ]
+}

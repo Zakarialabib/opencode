@@ -1,0 +1,54 @@
+name: Bug Fix
+description: Professional workflow for identifying, fixing, and verifying bugs
+version: 1.1.0
+trigger: manual
+phases:
+  - name: Triage & Reproduction
+    description: Understand and reproduce the bug using agent-browser
+    agents: [qa-debugger, lead-orchestrator]
+    tasks:
+      - reproduce_bug_via_agent_browser
+      - analyze_system_logs_and_lsp_diagnostics
+      - identify_root_cause_analysis
+    artifacts: [bug-report.md, browser-snapshots/]
+  
+  - name: Fix Implementation
+    description: Implement the fix with real-time context
+    agents: [core-builder, backend-api, frontend-ui-ux]
+    tasks:
+      - implement_technical_fix
+      - write_regression_tests_pest_vitest
+      - verify_lsp_syntax_check
+    artifacts: [fix-patch/, tests/]
+    dependencies: [Triage & Reproduction]
+  
+  - name: Verification
+    description: Verify the fix works correctly and hasn't regressed
+    agents: [qa-tester, qa-reviewer, qa-debugger]
+    tasks:
+      - run_automated_regression_tests
+      - verify_visual_consistency_in_browser
+      - perform_performance_benchmarking
+    artifacts: [verification-report.json, benchmark.md]
+    dependencies: [Fix Implementation]
+  
+  - name: Documentation
+    description: Document the fix and update troubleshooting guides
+    agents: [docs-writer, lead-product-manager]
+    tasks:
+      - update_release_notes
+      - update_internal_knowledge_base
+      - notify_stakeholders_of_resolution
+    artifacts: [changelog.md, docs/troubleshooting.md]
+    dependencies: [Verification]
+
+success_criteria:
+  - Root cause identified and resolved
+  - All regression tests pass
+  - No new LSP diagnostics introduced
+  - Visual verification via agent-browser complete
+
+notifications:
+  - on_start: alert troubleshooter
+  - on_complete: update ticket status
+  - on_failure: escalate to engineering lead

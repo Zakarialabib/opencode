@@ -1,0 +1,208 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-05-01T12:00:00Z",
+  "skills": [
+    {
+      "name": "database-design",
+      "displayName": "Database & Architecture Design",
+      "description": "Database architecture, serverless patterns, and query performance optimizations.",
+      "version": "1.0.0",
+      "category": "architecture",
+      "tags": ["database", "sql", "migration", "architecture"],
+      "triggers": [
+        "When the user requests a new feature involving data persistence.",
+        "When creating or modifying Backend Migrations or Database Models.",
+        "When designing offline-first storage mechanisms for the Frontend."
+      ],
+      "agents": ["lead-architect", "core-builder"],
+      "assets": ["assets/schema-proposal.md"],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "deep-research",
+      "displayName": "Deep Research",
+      "description": "Conduct comprehensive research on technical topics, gathering information from multiple sources.",
+      "version": "1.0.0",
+      "category": "research",
+      "tags": ["research", "analysis", "documentation"],
+      "agents": ["docs-evolver"],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "docs-governance-audit",
+      "displayName": "Documentation Governance Audit",
+      "description": "Audit and improve documentation quality, consistency, and completeness.",
+      "version": "1.0.0",
+      "category": "documentation",
+      "tags": ["documentation", "audit", "quality", "standards"],
+      "agents": ["docs-governor", "docs-writer"],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "git-release",
+      "displayName": "Git Release Management",
+      "description": "Manage git-based release processes including versioning and changelog generation.",
+      "version": "1.0.0",
+      "category": "devops",
+      "tags": ["git", "release", "versioning", "deployment"],
+      "agents": ["devops-ops", "core-builder"],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "laravel-feature-scaffold",
+      "displayName": "Laravel Feature Scaffold",
+      "description": "Generate boilerplate code for Laravel features including models, controllers, tests.",
+      "version": "1.0.0",
+      "category": "laravel",
+      "tags": ["laravel", "php", "mvc", "scaffolding"],
+      "agents": ["backend-laravel", "core-builder"],
+      "assets": ["laravel-feature-scaffold.lsp.json"],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "project-orchestration",
+      "displayName": "Project Orchestration",
+      "description": "Coordinate complex multi-agent workflows for large-scale project initiatives.",
+      "version": "1.0.0",
+      "category": "orchestration",
+      "tags": ["orchestration", "workflow", "planning", "coordination"],
+      "agents": ["lead-orchestrator"],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "react-reuse-audit",
+      "displayName": "React Reuse Audit",
+      "description": "Identify opportunities for component reuse and refactoring in React applications.",
+      "version": "1.0.0",
+      "category": "frontend",
+      "tags": ["react", "javascript", "components", "refactoring"],
+      "agents": ["qa-reviewer"],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "security-review",
+      "displayName": "Security Review",
+      "description": "Conduct security assessments and vulnerability scans on codebases.",
+      "version": "1.0.0",
+      "category": "security",
+      "tags": ["security", "vulnerability", "audit", "compliance"],
+      "agents": ["qa-security", "docs-evolver"],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "self-reflection",
+      "displayName": "Self-Reflection",
+      "description": "Analyze system performance and configuration effectiveness to generate optimization recommendations.",
+      "version": "1.0.0",
+      "category": "meta",
+      "tags": ["reflection", "optimization", "analysis", "improvement"],
+      "agents": ["lead-orchestrator", "lead-architect"],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "testing-strategy",
+      "displayName": "Testing Strategy",
+      "description": "Develop comprehensive testing strategies including unit, integration, and end-to-end tests.",
+      "version": "1.0.0",
+      "category": "testing",
+      "tags": ["testing", "qa", "test-automation", "quality"],
+      "agents": ["qa-tester"],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "stack-context",
+      "displayName": "Stack Context Engine",
+      "description": "Auto-detects Tauri/React/Laravel stack context and pulls relevant documentation using Context7.",
+      "version": "1.0.0",
+      "category": "context-engineering",
+      "tags": ["context", "documentation", "standards", "tauri", "react", "laravel", "context7"],
+      "triggers": [
+        "When starting work on any stack file (.rs, .tsx, .php)",
+        "When context switching between Rust/TypeScript/PHP",
+        "Before implementing features in any stack",
+        "During code review to validate stack conventions"
+      ],
+      "agents": [
+        "core-builder",
+        "core-planner",
+        "qa-debugger",
+        "qa-reviewer",
+        "backend-laravel",
+        "backend-tauri",
+        "lead-orchestrator"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "self-improver",
+      "displayName": "Self-Improver Engine",
+      "description": "Continuously improves the project by checking docs, using LSPs, and adapting best practices.",
+      "version": "1.0.0",
+      "category": "meta",
+      "tags": ["self-improvement", "meta", "learning", "adaptation", "opencode"],
+      "triggers": [
+        "When user asks to improve the project",
+        "When new skills/plugins are detected",
+        "To adapt features from OpenClaude/ClaudeCode/QwenCode"
+      ],
+      "agents": ["core-builder", "core-planner", "lead-orchestrator"],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "workflow-manager",
+      "displayName": "Workflow Manager",
+      "description": "Qwen Code-inspired task scheduling and workflow management for complex multi-step development tasks.",
+      "version": "1.0.0",
+      "category": "orchestration",
+      "tags": ["workflow", "task-scheduling", "subagents", "orchestration"],
+      "agents": ["lead-orchestrator", "core-planner"],
+      "entryPoint": "SKILL.md",
+      "assets": ["workflows/bug-fix.yaml", "workflows/feature-development.yaml"]
+    },
+    {
+      "name": "fullstack-dev",
+      "displayName": "Fullstack Developer",
+      "description": "Next.js, TypeScript, and Prisma expert patterns for fullstack web development.",
+      "version": "1.0.0",
+      "category": "web-development",
+      "tags": ["nextjs", "typescript", "prisma", "tailwind", "shadcn"],
+      "triggers": [
+        "When building web applications with Next.js",
+        "When creating UI components",
+        "When setting up database schemas"
+      ],
+      "agents": ["backend-api", "frontend-ui-ux"],
+      "entryPoint": "skills/fullstack-dev/SKILL.md"
+    },
+    {
+      "name": "ui-ux-pro-max",
+      "displayName": "UI/UX Pro Max",
+      "description": "Premium design standards and HSL palettes for UI/UX development.",
+      "version": "1.0.0",
+      "category": "design",
+      "tags": ["ui", "ux", "design", "components", "accessibility"],
+      "triggers": [
+        "When user asks for UI design",
+        "When improving UX flows",
+        "When generating design systems"
+      ],
+      "agents": ["frontend-ui-ux"],
+      "entryPoint": "skills/ui-ux-pro-max/SKILL.md"
+    },
+    {
+      "name": "agent-browser",
+      "displayName": "Agent Browser",
+      "description": "High-fidelity UI automation and debugging via Playwright for browser-based testing.",
+      "version": "1.0.0",
+      "category": "testing",
+      "tags": ["browser", "automation", "testing", "playwright", "debugging"],
+      "triggers": [
+        "When debugging UI-level bugs",
+        "When automating web interactions",
+        "When testing web UIs"
+      ],
+      "agents": ["qa-debugger"],
+      "entryPoint": "skills/agent-browser/SKILL.md"
+    }
+  ]
+}
