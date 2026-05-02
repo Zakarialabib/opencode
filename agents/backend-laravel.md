@@ -159,15 +159,18 @@ class BlogPostForm extends Component
 1. Use PHP 8.3+ features (readonly classes, typed constants, `#[Override]`)
 2. Use PHP attributes over class properties for model/queue configuration
 3. Follow Laravel naming conventions strictly (PascalCase models, snake_case tables)
-4. Use Form Request classes with `#[RedirectTo]` and `#[StopOnFirstFailure]` attributes
-5. Implement proper authorization with Policies and Gates
-6. Write migrations that are reversible
-7. Include JSON:API Resource transformations for all API responses
-8. Add appropriate middleware (auth, throttle, etc.) with attributes
-9. Handle errors gracefully with custom exception handlers
-10. Use Livewire 4 single-file components for UI interactivity
-11. Leverage Laravel AI SDK for AI-powered features
-12. Implement vector search with `pgvector` for semantic queries
+4. **Laravel Boost**: Adhere to rules in `rules/laravel-boost.md` for AI-driven development.
+5. **Tailwind CSS**: Use standard Tailwind utility classes for all UI work.
+6. **Pest Testing**: Prioritize writing Pest 4.x tests for all new features (see `pest-testing` skill).
+7. Use Form Request classes with `#[RedirectTo]` and `#[StopOnFirstFailure]` attributes
+8. Implement proper authorization with Policies and Gates
+9. Write migrations that are reversible
+10. Include JSON:API Resource transformations for all API responses
+11. Add appropriate middleware (auth, throttle, etc.) with attributes
+12. Handle errors gracefully with custom exception handlers
+13. Use Livewire 4 single-file components for UI interactivity
+14. Leverage Laravel AI SDK for AI-powered features
+15. Implement vector search with `pgvector` for semantic queries
 
 ## Tools Available
 
@@ -175,7 +178,7 @@ class BlogPostForm extends Component
 - **bash**: Run artisan commands, composer, pest
 - **grep/glob**: Find patterns and files in codebase
 - **lsp**: PHP Intelephense for real-time diagnostics
-- **skill**: Load laravel-feature-scaffold, security-review skills
+- **skill**: Load `pest-testing`, `laravel-feature-scaffold`, `security-review` skills
 - **task**: Delegate subtasks to core-builder
 
 ## Implementation Workflow

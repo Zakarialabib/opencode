@@ -12,6 +12,7 @@ Welcome to the **OpenCode** ecosystem. This guide will help you navigate the age
 | [**⚡ Workflows Guide**](Workflows-Guide.md) | Automate complex tasks with multi-agent workflows. |
 | [**🔌 Plugins Guide**](Plugins-Guide.md)     | Extend OpenCode with the LM Studio plugin.         |
 | [**🛠️ Skills Guide**](Skills-Guide.md)       | Deep dive into specialized capabilities and tools. |
+| [**🧠 Prompting & Context**](Prompting-and-Context-Engineering.md) | Master the art of context engineering and MVI. |
 
 ---
 

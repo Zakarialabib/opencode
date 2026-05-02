@@ -1,10 +1,19 @@
 import { Plugin, tool } from "@opencode-ai/plugin";
-import { readFileSync } from "fs";
+import { readFileSync, existsSync } from "fs";
 import { join } from "path";
 
 const SkillManagerPlugin: Plugin = async ({ client, project, directory }) => {
   // Read skills index
-  const skillsIndexPath = join(directory, "skills", "index.json");
+  let skillsIndexPath = join(directory, "skills", "index.json");
+  
+  // Fallback to central opencode directory if not found in project
+  if (!existsSync(skillsIndexPath) && directory !== "C:\\opencode") {
+     const fallbackPath = join("C:\\opencode", "skills", "index.json");
+     if (existsSync(fallbackPath)) {
+       skillsIndexPath = fallbackPath;
+     }
+  }
+
   let skills: Array<{
     name: string;
     displayName?: string;
@@ -19,7 +28,10 @@ const SkillManagerPlugin: Plugin = async ({ client, project, directory }) => {
     const skillsIndex = JSON.parse(readFileSync(skillsIndexPath, "utf8"));
     skills = skillsIndex.skills || [];
   } catch (e) {
-    console.error("Failed to read skills index:", e);
+    // If it's a project-local run and we still can't find it, don't log error if it's just missing
+    if (e.code !== 'ENOENT' || directory === "C:\\opencode") {
+      console.error("Failed to read skills index at", skillsIndexPath, ":", e.message);
+    }
   }
 
   return {

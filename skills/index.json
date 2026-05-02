@@ -203,6 +203,31 @@
       ],
       "agents": ["qa-debugger"],
       "entryPoint": "skills/agent-browser/SKILL.md"
+    },
+    {
+      "name": "config-doctor",
+      "displayName": "Config Doctor",
+      "description": "Audits and repairs OpenCode configuration, agents, and skill definitions for schema compliance.",
+      "version": "1.0.0",
+      "category": "meta",
+      "tags": ["config", "audit", "repair", "validation"],
+      "agents": ["lead-orchestrator", "devops-ops"],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "pest-testing",
+      "displayName": "Pest Testing",
+      "description": "Specialized skill for writing and running tests using Pest 4.x.",
+      "version": "1.0.0",
+      "category": "testing",
+      "tags": ["pest", "testing", "php", "laravel", "qa"],
+      "triggers": [
+        "When writing tests",
+        "When validating business logic",
+        "When checking code quality"
+      ],
+      "agents": ["backend-laravel", "qa-tester"],
+      "entryPoint": "pest-testing/SKILL.md"
     }
   ]
 }

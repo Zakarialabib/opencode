@@ -42,6 +42,14 @@ opencode --project-root C:\opencode
 3. Launches `opencode` with explicit `--project-root`
 4. Sets `OPENCODE_PROJECT_ROOT` environment variable
 
+> Note: The launcher expects the official OpenCode CLI to be installed and available on your PATH. If you installed a different package via `npm install` or the CLI is missing, install the official CLI with:
+>
+> ```powershell
+> npm install -g opencode
+> ```
+> 
+> Then retry `node C:\opencode\opencode-launch.js` or `opencode --project-root C:\opencode`.
+
 ## Test It
 
 ```bash

@@ -1,17 +1,6 @@
-name: self-improver
-displayName: Self-Improver Engine
-description: >
-  Continuously improves the project by checking docs (web, Context7,
-  opencode), using LSPs for code context, monitoring skills/plugins/scripts,
-  and adapting best practices from OpenClaude, QwenCode, ClaudeCode.
-  Auto-formats based on language detection.
-category: meta
-tags: [self-improvement, meta, learning, adaptation, opencode, claudecode, qwencode]
-agents: [core-builder, lead-orchestrator, docs-evolver]
-entryPoint: SKILL.md
----
-
 # Self-Improver Engine
+
+Continuously improves the project by checking docs (web, Context7, opencode), using LSPs for code context, monitoring skills/plugins/scripts, and adapting best practices from OpenClaude, QwenCode, ClaudeCode. Auto-formats based on language detection.
 
 ## Purpose
 Autonomously improve the project by:
@@ -79,7 +68,7 @@ Detect file extension → Apply formatter:
 |-----------|-----------|---------|
 | .rs | rustfmt | cargo fmt |
 | .ts, .tsx, .js, .jsx | biome | npx biome format --write $FILE |
-| .php | pint | ./vendor/bin/pint $FILE |
+| .php | pint | php artisan pint $FILE |
 | .py | black | black $FILE |
 | .md, .yaml, .yml | prettier | npx prettier --write $FILE |
 ```
@@ -171,14 +160,3 @@ When invoked, provide:
 3. **Always ask** before major config changes
 4. **Log all actions** to improvement.log
 5. **Rollback capability** via git
-
-## Example: Learning from OpenClaude
-```
-1. Fetch OpenClaude repo structure via GitHub MCP
-2. Compare with current opencode.json
-3. Identify missing features:
-   - OpenClaude has: "auto-test-on-save"
-   - Current: missing
-4. Suggest: Add "test-on-save" to config
-5. Implement if approved
-```

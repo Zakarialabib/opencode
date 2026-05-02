@@ -164,7 +164,6 @@ const SelfImprovePlugin: Plugin = async ({ client, project, directory }) => {
       // For now, we just ensure we don't break existing parameters
       // In future, we could read preset settings and apply
       // Keep existing temperature, topP, topK, options
-      return output;
     },
 
     // Hook: After each tool execution, evaluate performance
@@ -175,7 +174,7 @@ const SelfImprovePlugin: Plugin = async ({ client, project, directory }) => {
           service: "self-improve",
           level: "info",
           message: `Tool ${tool} executed`,
-          extra: { output: output.slice(0, 100), metadata },
+          extra: { output: output?.slice?.(0, 100) ?? "", metadata },
         },
       });
     },
