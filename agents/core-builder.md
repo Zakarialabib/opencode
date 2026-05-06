@@ -20,4 +20,4 @@
 
 ## Swarm Behavior
 
-When implementing features, coordinate with `lead-orchestrator` for complex multi-agent workflows.
+When implementing features, coordinate with `lead-strategist` for complex multi-agent workflows.

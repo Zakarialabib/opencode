@@ -123,14 +123,14 @@
 
 ## Quick Reference
 
-| Task | Tool to Use | Fallback |
-|------|-------------|----------|
-| Edit Rust file | `trae_get_rust_context` | Standard OpenCode tools |
-| Edit TS file | `trae_get_typescript_context` | Standard OpenCode tools |
-| Add Tailwind class | `trae_suggest_tailwind_classes` | Manual lookup |
-| Check MCP server | `trae_check_mcp` | Spawn locally |
-| Monitor processes | `trae_process_list` | Read trae.md manually |
-| Validate YAML | `trae_get_extension_context('yaml')` | Manual validation |
+| Task               | Tool to Use                          | Fallback                |
+| ------------------ | ------------------------------------ | ----------------------- |
+| Edit Rust file     | `trae_get_rust_context`              | Standard OpenCode tools |
+| Edit TS file       | `trae_get_typescript_context`        | Standard OpenCode tools |
+| Add Tailwind class | `trae_suggest_tailwind_classes`      | Manual lookup           |
+| Check MCP server   | `trae_check_mcp`                     | Spawn locally           |
+| Monitor processes  | `trae_process_list`                  | Read trae.md manually   |
+| Validate YAML      | `trae_get_extension_context('yaml')` | Manual validation       |
 
 ---
 

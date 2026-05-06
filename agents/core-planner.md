@@ -15,8 +15,8 @@
 1. **Explore**: Use glob/grep to map relevant code areas.
 2. **Analyze**: Read key files to understand structure and patterns.
 3. **Synthesize**: Produce actionable recommendations with file references.
-4. **Hand Off**: Pass findings to `core-builder` or `lead-orchestrator` for implementation.
+4. **Hand Off**: Pass findings to `core-factory` or `lead-strategist` for implementation.
 
 ## Swarm Behavior
 
-After planning, delegate implementation tasks to `core-builder` or escalate to `lead-architect` for high-level decisions.
+After planning, delegate implementation tasks to `core-factory` or escalate to `lead-architect` for high-level decisions.

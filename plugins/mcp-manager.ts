@@ -1,14 +1,15 @@
+import { parseJsonc } from "./jsonc-utils";
 import { Plugin, tool } from "@opencode-ai/plugin";
 import { readFileSync } from "fs";
 import { join } from "path";
 
 const MCPManagerPlugin: Plugin = async ({ client, project, directory }) => {
-  // Read MCP config from opencode.json
   const configPath = join(directory, "opencode.json");
   let mcpConfig: Record<string, any> = {};
 
   try {
-    const config = JSON.parse(readFileSync(configPath, "utf8"));
+    const content = readFileSync(configPath, "utf8");
+    const config = parseJsonc(content);
     mcpConfig = config.mcp || {};
   } catch (e) {
     console.error("Failed to read MCP config:", e);
@@ -29,7 +30,7 @@ const MCPManagerPlugin: Plugin = async ({ client, project, directory }) => {
             result += `### ${name}\n`;
             result += `- Status: ${cfg.enabled ? "✅ Enabled" : "❌ Disabled"}\n`;
             result += `- Type: ${cfg.type}\n`;
-            result += `- Command: \`${cfg.command?.join(" ") || "N/A"}\`\n`;
+            result += `- Command: ${cfg.command?.join(" ") || "N/A"}\n`;
             result += `- Timeout: ${cfg.timeout || "default"}ms\n\n`;
           }
           return result;
@@ -49,7 +50,7 @@ const MCPManagerPlugin: Plugin = async ({ client, project, directory }) => {
           let result = `## MCP Server: ${serverName}\n\n`;
           result += `- Status: ${cfg.enabled ? "✅ Enabled" : "❌ Disabled"}\n`;
           result += `- Type: ${cfg.type}\n`;
-          result += `- Command: \`${cfg.command?.join(" ") || "N/A"}\`\n`;
+          result += `- Command: ${cfg.command?.join(" ") || "N/A"}\n`;
           result += `- Timeout: ${cfg.timeout || "default"}ms\n`;
 
           if (cfg.enabled) {

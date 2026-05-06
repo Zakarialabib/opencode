@@ -49,6 +49,7 @@ Map figure images to figure numbers by parsing `<figure>` elements and their cap
 #### Pre-write Checklist (MANDATORY — read before writing any content)
 
 Before writing any slide content, internalize these rules:
+
 1. **Every slide must be self-contained.** Never write "see original paper", "refer to Figure X in the paper", "详见原文", or any similar reference that defers content to the source. If it's worth mentioning, show it.
 2. **All figures/tables get sequential numbering** (Figure 1, 2, 3... / Table 1, 2, 3...) in order of appearance — never copy the paper's original numbers.
 3. **Slide titles must state conclusions**, not describe content (see Section 5).
@@ -63,12 +64,12 @@ Experiments/Results → Ablation → Comparison → Conclusion → Q&A
 
 Slide count heuristics:
 
-| Instruction | Slides |
-|---|---|
-| Explicit count | Match exactly |
-| No count | 1–2 per point; 12–20 total |
-| "Brief" / "Short" | 8–12 |
-| "Full" / "Detailed" | 20–30 |
+| Instruction         | Slides                     |
+| ------------------- | -------------------------- |
+| Explicit count      | Match exactly              |
+| No count            | 1–2 per point; 12–20 total |
+| "Brief" / "Short"   | 8–12                       |
+| "Full" / "Detailed" | 20–30                      |
 
 Content density: ≤ 6 bullets per slide, ≤ 6 words per bullet.
 
@@ -80,22 +81,22 @@ Content density: ≤ 6 bullets per slide, ≤ 6 words per bullet.
 
 Native beamer `block`/`alertblock`/`exampleblock` are fine for **simple, standalone** blocks where you don't need precise control. But switch to `tcolorbox` (`ablock`/`fblock`/etc.) when any of the following apply:
 
-| Scenario | Use |
-|---|---|
-| Simple standalone block, no special alignment needs | Native `block` is OK |
-| Side-by-side blocks that must have **equal height** | `fblock`/`falertblock` (tcolorbox) — native blocks cannot guarantee equal heights |
+| Scenario                                                      | Use                                                                                  |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Simple standalone block, no special alignment needs           | Native `block` is OK                                                                 |
+| Side-by-side blocks that must have **equal height**           | `fblock`/`falertblock` (tcolorbox) — native blocks cannot guarantee equal heights    |
 | Need precise **background/frame color** beyond theme defaults | tcolorbox — native blocks inherit theme colors and are hard to override per-instance |
-| Need consistent **padding, border-radius, shadow** control | tcolorbox — `blocksty` gives uniform styling |
-| Vertically **stacked blocks** that need visual consistency | `ablock`/`aalertblock` (tcolorbox) — auto-height with uniform styling |
+| Need consistent **padding, border-radius, shadow** control    | tcolorbox — `blocksty` gives uniform styling                                         |
+| Vertically **stacked blocks** that need visual consistency    | `ablock`/`aalertblock` (tcolorbox) — auto-height with uniform styling                |
 
 **Rule of thumb:** If blocks appear side-by-side, need custom colors, or must look visually consistent across slides, use tcolorbox. For a quick single block on a simple slide, native `block` is acceptable.
 
 **Choose block type by layout relationship:**
 
-| Layout | Block Type | Rule |
-|---|---|---|
+| Layout                                 | Block Type                              | Rule                                                   |
+| -------------------------------------- | --------------------------------------- | ------------------------------------------------------ |
 | **Side-by-side** (left–right parallel) | `fblock` / `falertblock` (fixed height) | Both blocks **must** use the **same height** parameter |
-| **Stacked** (top–bottom vertical) | `ablock` / `aalertblock` (auto height) | Let content determine height naturally |
+| **Stacked** (top–bottom vertical)      | `ablock` / `aalertblock` (auto height)  | Let content determine height naturally                 |
 
 **Side-by-side** = two blocks that are conceptually parallel (e.g., "Problem vs Hypothesis", "Root Traits vs Shoot Traits", "Innovation vs Conclusion").
 **Stacked** = two blocks in one column, one above the other (e.g., image-text pages with "Key Findings" above "Genotype Differences" in the right column).
@@ -176,6 +177,7 @@ When a slide has two columns with stacked blocks, the **total height** of each c
 This does NOT mean every individual block must be the same height — blocks within a column can have different heights. But the left column's total occupied height must match the right column's total occupied height, so the slide looks visually balanced.
 
 **How to achieve this:**
+
 - Use `fblock` with explicit height parameters for all blocks
 - Calculate: left column total = `h1 + gap + h2` ; right column total = `h3 + gap + h4`
 - Ensure both totals are equal (e.g., both sum to 5.6cm)
@@ -228,12 +230,12 @@ After every compilation, check for content overflow. This is the most common cau
 
    **Repair strategy for occlusion:**
 
-   | Priority | Fix | When to use |
-   |---|---|---|
-   | 1 | **Give the image its own full-width slide** | Composite figures (3+ sub-panels) that need full width to be legible |
-   | 2 | **Select fewer sub-panels** | Show only the 1-2 most important panels on this slide, move rest to appendix |
-   | 3 | **Adjust column width ratio** | Give the image column more space (e.g., 0.58 left / 0.38 right) |
-   | 4 | **Reduce image width + increase right margin** | Shrink image so it fits entirely within its column boundary |
+   | Priority | Fix                                            | When to use                                                                  |
+   | -------- | ---------------------------------------------- | ---------------------------------------------------------------------------- |
+   | 1        | **Give the image its own full-width slide**    | Composite figures (3+ sub-panels) that need full width to be legible         |
+   | 2        | **Select fewer sub-panels**                    | Show only the 1-2 most important panels on this slide, move rest to appendix |
+   | 3        | **Adjust column width ratio**                  | Give the image column more space (e.g., 0.58 left / 0.38 right)              |
+   | 4        | **Reduce image width + increase right margin** | Shrink image so it fits entirely within its column boundary                  |
 
    **Prevention:** Before choosing a layout, estimate whether the image content fits within the allocated column width. Wide composite figures (4+ panels side-by-side) almost never fit in a half-width column — plan a full-width layout from the start.
 
@@ -241,13 +243,13 @@ After every compilation, check for content overflow. This is the most common cau
 
 When overflow is detected, apply fixes in this priority order:
 
-| Priority | Fix | When to use |
-|---|---|---|
-| 1 | **Reduce content** | Remove low-value bullets, shorten text, summarize |
-| 2 | **Shrink font locally** | Use `\small` or `\footnotesize` for the overflowing slide only |
-| 3 | **Adjust block heights** | Reduce `fblock` height parameters, rebalance column totals |
-| 4 | **Rebalance columns** | Move content between left/right columns; adjust width ratio |
-| 5 | **Split into two slides** | When content genuinely cannot fit — split by sub-topic |
+| Priority | Fix                       | When to use                                                    |
+| -------- | ------------------------- | -------------------------------------------------------------- |
+| 1        | **Reduce content**        | Remove low-value bullets, shorten text, summarize              |
+| 2        | **Shrink font locally**   | Use `\small` or `\footnotesize` for the overflowing slide only |
+| 3        | **Adjust block heights**  | Reduce `fblock` height parameters, rebalance column totals     |
+| 4        | **Rebalance columns**     | Move content between left/right columns; adjust width ratio    |
+| 5        | **Split into two slides** | When content genuinely cannot fit — split by sub-topic         |
 
 **NEVER ignore overflow.** Every slide must display all its content completely within the frame boundary. If a fix introduces new overflow elsewhere, iterate until all slides are clean.
 
@@ -313,15 +315,15 @@ In presentations, use **sequential numbering** (Figure 1, 2, 3...) independent o
 
 Frame titles should convey the **conclusion or key message** of the slide, not describe the figure or repeat the figure caption.
 
-| Bad (descriptive) | Good (conclusion-driven) |
-|---|---|
-| "RCS in Cotton Root Cross-sections" | "First Confirmation of RCS in Cotton" |
+| Bad (descriptive)                                  | Good (conclusion-driven)                                             |
+| -------------------------------------------------- | -------------------------------------------------------------------- |
+| "RCS in Cotton Root Cross-sections"                | "First Confirmation of RCS in Cotton"                                |
 | "Effect of GhSAG12 Silencing on Drought Tolerance" | "Silencing RCS-related Gene Significantly Reduces Drought Tolerance" |
-| "Relationship Between RCS and Endogenous Hormones" | "Endogenous Hormones Change Significantly with RCS Progression" |
-| "Five Endogenous Hormones During RCS" | "GA, ZR, IAA, BR, ABA All Decline with RCS Progression" |
-| "Research Background" | "Drought is the Primary Yield Constraint for Cotton" |
+| "Relationship Between RCS and Endogenous Hormones" | "Endogenous Hormones Change Significantly with RCS Progression"      |
+| "Five Endogenous Hormones During RCS"              | "GA, ZR, IAA, BR, ABA All Decline with RCS Progression"              |
+| "Research Background"                              | "Drought is the Primary Yield Constraint for Cotton"                 |
 
-**Self-check (MANDATORY):** After writing all slides, review every `\frametitle{}` and ask: *"Does this title tell the audience what to take away, or does it just describe what's on the slide?"* If descriptive, rewrite it as a conclusion. Background/outline/Q&A slides are exempt.
+**Self-check (MANDATORY):** After writing all slides, review every `\frametitle{}` and ask: _"Does this title tell the audience what to take away, or does it just describe what's on the slide?"_ If descriptive, rewrite it as a conclusion. Background/outline/Q&A slides are exempt.
 
 ### 6. Image Handling Guidelines
 
@@ -329,22 +331,22 @@ Frame titles should convey the **conclusion or key message** of the slide, not d
 
 Always use `height` + `keepaspectratio` to constrain images within the frame. Recommended max heights:
 
-| Layout | Max image height |
-|---|---|
-| Full-page image (centered) | `0.55\textheight` |
+| Layout                                           | Max image height  |
+| ------------------------------------------------ | ----------------- |
+| Full-page image (centered)                       | `0.55\textheight` |
 | Image in left column (with text blocks on right) | `0.45\textheight` |
 
 Always leave room for the figure caption below and the footer bar. **Never rely on `width` alone** — tall images will overflow the frame.
 
 #### Source Priority
 
-| Priority | Source | When to use |
-|---|---|---|
-| 1 (Best) | Original images from arXiv HTML version | Preferred for arXiv papers — download vector/high-res bitmaps directly |
-| 2 | Supplementary materials from authors | High-quality original figures |
-| 3 | `pdf.py extract.image` extraction | Non-arXiv papers — extract embedded images from PDF |
-| 4 | TikZ redraw | Only for simple geometric diagrams (flowcharts, arrow diagrams) when no original exists |
-| 5 (Last resort) | PDF page screenshot + precise crop | Acceptable ONLY if the crop contains **zero** surrounding text/captions/margins — any visible non-figure content is forbidden |
+| Priority        | Source                                  | When to use                                                                                                                   |
+| --------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| 1 (Best)        | Original images from arXiv HTML version | Preferred for arXiv papers — download vector/high-res bitmaps directly                                                        |
+| 2               | Supplementary materials from authors    | High-quality original figures                                                                                                 |
+| 3               | `pdf.py extract.image` extraction       | Non-arXiv papers — extract embedded images from PDF                                                                           |
+| 4               | TikZ redraw                             | Only for simple geometric diagrams (flowcharts, arrow diagrams) when no original exists                                       |
+| 5 (Last resort) | PDF page screenshot + precise crop      | Acceptable ONLY if the crop contains **zero** surrounding text/captions/margins — any visible non-figure content is forbidden |
 
 #### Precise Cropping from PDF
 
@@ -383,12 +385,12 @@ Use `\graphicspath{{figures/}}` in the preamble so `\includegraphics` only needs
 
 #### Vector vs Raster
 
-| Format | When to use |
-|---|---|
-| `.pdf` / `.eps` (vector) | Line art, flowcharts, plots — preferred, scales without loss |
-| `.png` (raster) | Photos, screenshots, experimental results — ensure resolution ≥ 150dpi |
-| `.jpg` (raster) | Photographic images — smaller file size |
-| ❌ `.svg` | Not directly supported by Beamer — convert to PDF first |
+| Format                   | When to use                                                            |
+| ------------------------ | ---------------------------------------------------------------------- |
+| `.pdf` / `.eps` (vector) | Line art, flowcharts, plots — preferred, scales without loss           |
+| `.png` (raster)          | Photos, screenshots, experimental results — ensure resolution ≥ 150dpi |
+| `.jpg` (raster)          | Photographic images — smaller file size                                |
+| ❌ `.svg`                | Not directly supported by Beamer — convert to PDF first                |
 
 Prefer vector formats (PDF/EPS). For experimental photos and other raster images, ensure sufficient resolution.
 
@@ -498,6 +500,7 @@ When one column contains an image (with optional caption) and the other contains
 When a table and block(s) are vertically stacked in the same column and serve as parallel semantic units (e.g., "data table" above "conclusion block"), they should have **equal width**. The key is to ensure both elements share the same width — there are multiple ways to achieve this:
 
 **Method 1: Wrap table in an ablock** (when a title makes sense for the table):
+
 ```latex
 \column{0.48\textwidth}
 \begin{ablock}{Experimental Data}
@@ -515,6 +518,7 @@ When a table and block(s) are vertically stacked in the same column and serve as
 ```
 
 **Method 2: Use tabularx with \linewidth without block** (when table doesn't need a title):
+
 ```latex
 \column{0.48\textwidth}
 {\footnotesize
@@ -531,6 +535,7 @@ When a table and block(s) are vertically stacked in the same column and serve as
 ```
 
 **Method 3: Use \resizebox{\linewidth}{!}{...}** (for fixed-width tables):
+
 ```latex
 \column{0.48\textwidth}
 \resizebox{\linewidth}{!}{%
@@ -549,11 +554,13 @@ When a table and block(s) are vertically stacked in the same column and serve as
 Choose the method based on context: Method 1 when the table benefits from a title, Method 2 for clean untitled tables, Method 3 when the table already has a fixed column layout.
 
 When NOT to equal-width align:
+
 - Full-page centered standalone tables — use `\centering` with natural width
 - Narrow tables (2-3 columns) — forcing full width looks sparse and hurts readability
 - Tables with only a footnote-style caption below — different semantic levels, different widths is fine
 
 **Top image + bottom text:**
+
 ```latex
 \begin{center}
   \includegraphics[height=0.40\textheight, keepaspectratio]{fig1.png}
@@ -566,13 +573,13 @@ When NOT to equal-width align:
 
 **When to redraw vs when to use original:**
 
-| Scenario | Action |
-|---|---|
-| Paper has clear, high-quality original figures | Use the original directly |
-| Original figure is low-resolution or blurry | Try arXiv HTML version first, otherwise redraw a simplified version |
-| Need to highlight a specific region of a figure | Use original + TikZ overlay annotations (arrows, boxes) |
-| Concept/schematic diagram with no original available | Draw a simplified version in TikZ |
-| Complex biological/chemical structure diagrams | Always use the original — do not attempt to redraw |
+| Scenario                                             | Action                                                              |
+| ---------------------------------------------------- | ------------------------------------------------------------------- |
+| Paper has clear, high-quality original figures       | Use the original directly                                           |
+| Original figure is low-resolution or blurry          | Try arXiv HTML version first, otherwise redraw a simplified version |
+| Need to highlight a specific region of a figure      | Use original + TikZ overlay annotations (arrows, boxes)             |
+| Concept/schematic diagram with no original available | Draw a simplified version in TikZ                                   |
+| Complex biological/chemical structure diagrams       | Always use the original — do not attempt to redraw                  |
 
 **Full TikZ rules → see Section 8.**
 
@@ -582,11 +589,11 @@ Navigation symbol removal is handled automatically by the chosen footer scheme. 
 
 **Footer scheme selection:**
 
-| Scenario | Scheme |
-|---|---|
-| User provides a paper/PDF to make slides | **Paper Presentation Navigation** (default for paper-based) |
-| General academic presentation / courseware (no specific paper) | **Progress Navigation Bar** |
-| User requests minimal footer | **Simple Footline** |
+| Scenario                                                       | Scheme                                                      |
+| -------------------------------------------------------------- | ----------------------------------------------------------- |
+| User provides a paper/PDF to make slides                       | **Paper Presentation Navigation** (default for paper-based) |
+| General academic presentation / courseware (no specific paper) | **Progress Navigation Bar**                                 |
+| User requests minimal footer                                   | **Simple Footline**                                         |
 
 **This is not optional.** When the scenario matches a row above, the corresponding scheme **must** be used. Do not fall back to the default Madrid footline or omit the navigation bar.
 
@@ -602,6 +609,7 @@ When the user provides a paper/PDF and asks for slides, use the paper navigation
 Copy `references/paper-navbar.tex` into your project directory before compiling. This file provides:
 
 **Top navigation bar:**
+
 - Beamer built-in `miniframes` — section names + small dots (one dot per slide)
 - Current section auto-highlighted
 - Subsection empty row removed (clean single-row layout)
@@ -668,6 +676,7 @@ The default footline should include at least frame numbers.
 ### 8. TikZ Usage Guidelines
 
 **TikZ is the last resort, not the first choice.** Always prefer original figures from the paper (extract via `pdf.py extract.image` or arXiv HTML). Only draw TikZ when no original figure exists, and only for **simple** diagrams:
+
 - Flowcharts, pipelines, comparison arrows, simple block diagrams
 - Geometric and structured layouts
 - You can verify it compiles correctly
@@ -676,13 +685,14 @@ The default footline should include at least frame numbers.
 
 **Simplify for slides (CRITICAL):** A slide is not a textbook. TikZ diagrams on slides must be **simplified abstractions**, not full architecture reproductions. If a diagram has too many nodes, small text, or dense connections, the audience cannot read it during a presentation.
 
-| Scenario | Wrong approach | Right approach |
-|---|---|---|
+| Scenario                 | Wrong approach                                                   | Right approach                                                                                      |
+| ------------------------ | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | Transformer architecture | Draw every Q/K/V split, softmax, residual connection, layer norm | Simplified block diagram: Input → Encoder (×N) → Decoder (×N) → Output, with key components labeled |
-| Multi-head attention | Draw all matrix operations and individual head computations | Abstract flow: Input → Linear projections → Parallel heads → Concat → Output |
-| Complex neural network | Reproduce every layer and skip connection | High-level block diagram with labeled stages |
+| Multi-head attention     | Draw all matrix operations and individual head computations      | Abstract flow: Input → Linear projections → Parallel heads → Concat → Output                        |
+| Complex neural network   | Reproduce every layer and skip connection                        | High-level block diagram with labeled stages                                                        |
 
 **Rules:**
+
 1. **Original figure available → use it. No TikZ.**
 2. **No original figure + simple diagram → draw with TikZ.** Maximum ~8-10 nodes per slide.
 3. **No original figure + complex diagram → do NOT draw with TikZ.** Use text/bullet description instead, or split into multiple simplified diagrams.
@@ -736,10 +746,10 @@ Match the user's query language. If the user writes in Chinese, produce Chinese 
 
 All slide titles, section headings, and block titles must use a **single language** — the same language as the slide body content. Do not mix languages in headings.
 
-| Slide language | Correct | Wrong |
-|---|---|---|
-| Chinese | Single-language Chinese heading | Mixed heading (e.g., adding "Outline" after the Chinese word for TOC) |
-| English | Single-language English heading | Mixed heading (e.g., "Outline" followed by a Chinese translation) |
+| Slide language | Correct                         | Wrong                                                                 |
+| -------------- | ------------------------------- | --------------------------------------------------------------------- |
+| Chinese        | Single-language Chinese heading | Mixed heading (e.g., adding "Outline" after the Chinese word for TOC) |
+| English        | Single-language English heading | Mixed heading (e.g., "Outline" followed by a Chinese translation)     |
 
 Examples: a Chinese deck should use purely Chinese headings without appending English translations; an English deck should use purely English headings without appending Chinese translations.
 
@@ -754,30 +764,33 @@ When the user provides a reference paper, thesis, or any source document:
 2. **Author name abbreviation is the ONLY permitted modification.** You may shorten author lists (e.g., "Guo C., Zhang K., Li M., ..." → "Guo C. et al.") for space constraints on the title page or footer. No other changes to author names are allowed — do not transliterate, translate, or reorder them.
 
    **Author name format:** Use `Surname Initial.` with comma separation. Always include spaces between names:
+
    ```latex
    \author[Guo C. et al.]{Guo C., Zhang K., Sun H., Zhu L., Zhang Y., Wang G., Li A., Bai Z., Liu L., Li C.}
    ```
+
    Never concatenate names without spaces (e.g., ❌ `CongcongGuo,KeZhang`).
 
 3. **Reference entries must preserve original language.** If a cited paper has a Chinese title, keep the Chinese title in the reference list. If it has an English title, keep English. Do not translate references to match the slide language.
 
 4. **Title page layout for bilingual scenarios.** When the slide language differs from the paper language (e.g., Chinese slides for an English paper), keep the original paper title in `\title{}` and put the translation in `\subtitle{}`. Never mix two languages at the same level:
+
    ```latex
    % ✅ Correct: English title + Chinese subtitle
    \title{Root Cortical Senescence Enhances Drought Tolerance in Cotton}
    \subtitle{根系皮层衰老增强棉花耐旱性}
-   
+
    % ❌ Wrong: two languages jammed into \title
    \title{Root Cortical Senescence Enhances Drought Tolerance in Cotton 根系皮层衰老增强棉花耐旱性}
    ```
 
-| Allowed | Forbidden |
-|---|---|
-| `Guo C. et al.` (abbreviated from full list) | Translating or transliterating author names between scripts/languages |
-| Keeping English paper title on Chinese slides | Translating paper title to match slide language |
-| Using `\scriptsize` for long author lists | Omitting authors entirely |
-| Abbreviating institution names | Translating institution names |
-| Original title in `\title{}` + translation in `\subtitle{}` | Mixing two languages in the same `\title{}` |
+| Allowed                                                     | Forbidden                                                             |
+| ----------------------------------------------------------- | --------------------------------------------------------------------- |
+| `Guo C. et al.` (abbreviated from full list)                | Translating or transliterating author names between scripts/languages |
+| Keeping English paper title on Chinese slides               | Translating paper title to match slide language                       |
+| Using `\scriptsize` for long author lists                   | Omitting authors entirely                                             |
+| Abbreviating institution names                              | Translating institution names                                         |
+| Original title in `\title{}` + translation in `\subtitle{}` | Mixing two languages in the same `\title{}`                           |
 
 ## Compilation Rules
 
@@ -820,11 +833,13 @@ Establish clear visual hierarchy with distinct size levels:
 ```
 
 **Document base size:** Choose an appropriate base size (`10pt`, `11pt`, or `12pt`) based on content density and audience distance. There is no fixed default — pick what fits the presentation best.
+
 ```latex
 \documentclass[aspectratio=169, 11pt]{beamer}   % Adjust pt as needed
 ```
 
 For content-heavy individual slides, use local font size commands:
+
 - Content-heavy slides: use `\small` or `\footnotesize` locally for that slide
 - Content-light slides: keep the chosen base size for comfortable reading
 - **Overflow warnings are critical**: if compilation produces `Overfull \vbox` or `Overfull \hbox` warnings, the content does not fit — reduce font size, reduce content, or split the slide. Never ignore overflow warnings.
@@ -841,18 +856,20 @@ For content-heavy individual slides, use local font size commands:
 #### Math Font Protection
 
 **Always add** for presentations with any math formulas:
+
 ```latex
 \usefonttheme{professionalfonts}
 ```
+
 Without this, Beamer overrides math fonts causing distorted formulas.
 
 #### Serif vs Sans-serif
 
-| Font Theme | Effect | Best For |
-|---|---|---|
-| `default` (sans-serif) | Modern, clean | Most scenarios, tech/engineering |
-| `serif` | More academic feel | Math-heavy, humanities papers |
-| `structurebold` | Bold structural elements | Clear hierarchy emphasis |
+| Font Theme             | Effect                   | Best For                         |
+| ---------------------- | ------------------------ | -------------------------------- |
+| `default` (sans-serif) | Modern, clean            | Most scenarios, tech/engineering |
+| `serif`                | More academic feel       | Math-heavy, humanities papers    |
+| `structurebold`        | Bold structural elements | Clear hierarchy emphasis         |
 
 ```latex
 \usefonttheme{default}            % Sans-serif (default)
@@ -897,16 +914,16 @@ Use bold **only** for: titles, best values in tables, key terms on first appeara
 
 When the user does not specify colors, pick a palette that fits the subject area or presentation tone. The **three-color semantic roles are unchanged** (blue = structural, red = warning/negative, green = positive/example) — only the hex values change.
 
-| # | Palette Name | myblue | myred | mygreen | Best For |
-|---|---|---|---|---|---|
-| 1 | **Classic Blue** (default) | `#2B5EA7` | `#C0392B` | `#27AE60` | General academic, engineering, CS |
-| 2 | **Deep Ocean** | `#1A3C6E` | `#B83230` | `#1E8C5A` | Formal conferences, physics, math |
-| 3 | **Teal Academic** | `#0E7C7B` | `#D35233` | `#2A9D6F` | Biology, ecology, environmental science |
-| 4 | **Slate Purple** | `#4A3F8A` | `#C44536` | `#3A8F6E` | Humanities, social science, psychology |
-| 5 | **Warm Earth** | `#6B4C3B` | `#C75C2E` | `#5B8C3E` | Agriculture, geology, archaeology |
-| 6 | **Steel Gray** | `#3D4F5F` | `#C0392B` | `#2E8B6E` | Corporate, business, economics |
-| 7 | **Burgundy** | `#7B2D4E` | `#C0392B` | `#2A7F62` | Medicine, clinical, health science |
-| 8 | **Midnight** | `#1B2A4A` | `#E74C3C` | `#16A085` | Tech keynote, AI/ML, astronomy |
+| #   | Palette Name               | myblue    | myred     | mygreen   | Best For                                |
+| --- | -------------------------- | --------- | --------- | --------- | --------------------------------------- |
+| 1   | **Classic Blue** (default) | `#2B5EA7` | `#C0392B` | `#27AE60` | General academic, engineering, CS       |
+| 2   | **Deep Ocean**             | `#1A3C6E` | `#B83230` | `#1E8C5A` | Formal conferences, physics, math       |
+| 3   | **Teal Academic**          | `#0E7C7B` | `#D35233` | `#2A9D6F` | Biology, ecology, environmental science |
+| 4   | **Slate Purple**           | `#4A3F8A` | `#C44536` | `#3A8F6E` | Humanities, social science, psychology  |
+| 5   | **Warm Earth**             | `#6B4C3B` | `#C75C2E` | `#5B8C3E` | Agriculture, geology, archaeology       |
+| 6   | **Steel Gray**             | `#3D4F5F` | `#C0392B` | `#2E8B6E` | Corporate, business, economics          |
+| 7   | **Burgundy**               | `#7B2D4E` | `#C0392B` | `#2A7F62` | Medicine, clinical, health science      |
+| 8   | **Midnight**               | `#1B2A4A` | `#E74C3C` | `#16A085` | Tech keynote, AI/ML, astronomy          |
 
 ```latex
 % Example: Teal Academic palette
@@ -921,11 +938,11 @@ When the user does not specify colors, pick a palette that fits the subject area
 
 Each color carries a fixed semantic meaning. **Never assign colors based on aesthetics or visual variety alone — always match color to content meaning.**
 
-| Color | Semantic meaning | When to use |
-|---|---|---|
-| `myblue` / `fblock` / `ablock` | **Neutral / structural / primary** | Default for most blocks — descriptions, methods, explanations, neutral content |
-| `myred` / `falertblock` / `aalertblock` | **Negative / warning / problem** | ONLY for: problems, limitations, risks, caveats, things that went wrong |
-| `mygreen` / `fexampleblock` / `aexampleblock` | **Positive / example / solution** | For: solutions, advantages, good results, examples, positive outcomes |
+| Color                                         | Semantic meaning                   | When to use                                                                    |
+| --------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------ |
+| `myblue` / `fblock` / `ablock`                | **Neutral / structural / primary** | Default for most blocks — descriptions, methods, explanations, neutral content |
+| `myred` / `falertblock` / `aalertblock`       | **Negative / warning / problem**   | ONLY for: problems, limitations, risks, caveats, things that went wrong        |
+| `mygreen` / `fexampleblock` / `aexampleblock` | **Positive / example / solution**  | For: solutions, advantages, good results, examples, positive outcomes          |
 
 **Hard rules:**
 
@@ -988,11 +1005,11 @@ When a slide presents a **comparison** (e.g., "before vs after", "problem vs sol
 
 Use color to reinforce meaning. If one side is the "problem" and the other is the "solution", their block colors must reflect this:
 
-| Semantic role | Block type | Color |
-|---|---|---|
-| Problem / limitation / before | `falertblock` | `myred` family |
-| Solution / advantage / after | `fexampleblock` | `mygreen` family |
-| Neutral / description | `fblock` | `myblue` family |
+| Semantic role                 | Block type      | Color            |
+| ----------------------------- | --------------- | ---------------- |
+| Problem / limitation / before | `falertblock`   | `myred` family   |
+| Solution / advantage / after  | `fexampleblock` | `mygreen` family |
+| Neutral / description         | `fblock`        | `myblue` family  |
 
 **Symmetry rule:** If one side uses `\alert{}` (red) to highlight a negative keyword (e.g., "Breaks layout"), the other side SHOULD use `\textcolor{mygreen}{}` to highlight the corresponding positive keyword (e.g., "Eliminates overhead"). Left-red-right-green pairing creates instant visual comprehension.
 
@@ -1020,11 +1037,11 @@ Use color to reinforce meaning. If one side is the "problem" and the other is th
 
 Tables that appear alongside tcolorbox blocks on the same slide should be wrapped in a tcolorbox block for visual consistency. A bare `tabular` environment next to styled blocks looks unfinished.
 
-| Scenario | Treatment |
-|---|---|
-| Table relates to a specific topic | Wrap in `ablock{Topic Title}` |
-| Table is a comparison/summary | Wrap in `ablock{Comparison}` or `aexampleblock{Summary}` |
-| Table is the only element on the slide | May remain unwrapped with `\centering` |
+| Scenario                               | Treatment                                                |
+| -------------------------------------- | -------------------------------------------------------- |
+| Table relates to a specific topic      | Wrap in `ablock{Topic Title}`                            |
+| Table is a comparison/summary          | Wrap in `ablock{Comparison}` or `aexampleblock{Summary}` |
+| Table is the only element on the slide | May remain unwrapped with `\centering`                   |
 
 ```latex
 % ✅ Correct: table wrapped in block, consistent with other blocks on slide
@@ -1051,12 +1068,12 @@ Tables that appear alongside tcolorbox blocks on the same slide should be wrappe
 
 When table cells represent qualitative values (good/bad, yes/no, high/low), use color to encode meaning instead of relying on text alone:
 
-| Value type | Color treatment |
-|---|---|
-| Positive / good / improved | `\textcolor{mygreen}{\textbf{value}}` |
-| Negative / bad / degraded | `\textcolor{myred}{value}` |
-| Neutral / baseline | Default text color |
-| Best in column/row | `\textcolor{mygreen}{\textbf{value}}` (bold + green) |
+| Value type                 | Color treatment                                      |
+| -------------------------- | ---------------------------------------------------- |
+| Positive / good / improved | `\textcolor{mygreen}{\textbf{value}}`                |
+| Negative / bad / degraded  | `\textcolor{myred}{value}`                           |
+| Neutral / baseline         | Default text color                                   |
+| Best in column/row         | `\textcolor{mygreen}{\textbf{value}}` (bold + green) |
 
 This makes tables scannable at a glance — the audience can see the pattern without reading every cell.
 
@@ -1078,14 +1095,15 @@ colframe=mygreen!100 % vivid green — too dominant
 
 All list environments on the same slide must use the **same bullet/numbering style**. Do not mix `itemize` (bullets) with `enumerate` (numbers) or custom circled numbers unless the semantic distinction is clear and intentional.
 
-| Scenario | Correct approach |
-|---|---|
-| All lists are unordered collections | Use `itemize` with consistent bullet style everywhere |
-| All lists are ordered steps/sequences | Use `enumerate` everywhere |
-| One list is steps, another is features | OK to differ — but document the semantic reason |
-| One block uses ❶❷❸, another uses • bullets | ❌ Inconsistent — pick one style |
+| Scenario                                   | Correct approach                                      |
+| ------------------------------------------ | ----------------------------------------------------- |
+| All lists are unordered collections        | Use `itemize` with consistent bullet style everywhere |
+| All lists are ordered steps/sequences      | Use `enumerate` everywhere                            |
+| One list is steps, another is features     | OK to differ — but document the semantic reason       |
+| One block uses ❶❷❸, another uses • bullets | ❌ Inconsistent — pick one style                      |
 
 **Circled numbers / custom list markers:**
+
 - If using circled numbers (❶❷❸❹), do NOT use raw Unicode characters — they may fail in some compilers
 - Use LaTeX-safe alternatives:
 
@@ -1108,12 +1126,12 @@ Technical terms, version numbers, short parenthetical units, and numeric express
 
 **Prevention techniques:**
 
-| Technique | When to use | Example |
-|---|---|---|
-| Non-breaking space `~` | Between number and unit | `202~LoC`, `3.5~GHz` |
-| `\mbox{...}` | Short phrase that must stay together | `\mbox{PyTorch 2.1}` |
-| `\hbox{...}` | Same as mbox, TeX primitive | `\hbox{CUDA 12.0}` |
-| `white-space: nowrap` equivalent: put in `\mbox{}` | Version strings, short labels | `\mbox{v2.0-beta}` |
+| Technique                                          | When to use                          | Example              |
+| -------------------------------------------------- | ------------------------------------ | -------------------- |
+| Non-breaking space `~`                             | Between number and unit              | `202~LoC`, `3.5~GHz` |
+| `\mbox{...}`                                       | Short phrase that must stay together | `\mbox{PyTorch 2.1}` |
+| `\hbox{...}`                                       | Same as mbox, TeX primitive          | `\hbox{CUDA 12.0}`   |
+| `white-space: nowrap` equivalent: put in `\mbox{}` | Version strings, short labels        | `\mbox{v2.0-beta}`   |
 
 ```latex
 % ❌ Bad: "202" and "LoC)" split across lines
@@ -1134,12 +1152,12 @@ When using a two-column layout, both columns should have comparable **content de
 
 **Fixes for sparse columns:**
 
-| Strategy | When to use |
-|---|---|
-| Add brief descriptions to each item | Items are bare labels (e.g., just baseline names) |
-| Split into two smaller blocks | Content naturally groups into sub-categories |
+| Strategy                                        | When to use                                                         |
+| ----------------------------------------------- | ------------------------------------------------------------------- |
+| Add brief descriptions to each item             | Items are bare labels (e.g., just baseline names)                   |
+| Split into two smaller blocks                   | Content naturally groups into sub-categories                        |
 | Reduce block height + add a supplementary block | Room for an extra block below (e.g., "Evaluation Metrics", "Notes") |
-| Adjust column width ratio | Give the denser column more space |
+| Adjust column width ratio                       | Give the denser column more space                                   |
 
 ```latex
 % ❌ Sparse: 7 bare items in a tall block, lots of wasted space
@@ -1192,6 +1210,7 @@ Overlays are **disabled by default** for all Beamer presentations. All slide con
 #### When overlays are OFF (default — all scenarios except courseware)
 
 Do NOT use any of the following:
+
 - `\item<N->` overlay markers on list items
 - `\uncover<N->{...}` or `\only<N->{...}` wrappers
 - `\pause` commands
@@ -1262,22 +1281,22 @@ This allows the instructor to present the problem, let students think, then reve
 
 ##### What to animate in courseware mode
 
-| Element | Animate? | Method |
-|---|---|---|
-| **Problem / question statement** | Always visible (overlay `<1->`) | No overlay needed — shown by default |
-| **Proof / solution / answer** | Revealed on step 2+ | `\uncover<2->{...}` wrapping the proof block |
-| **Hints (optional)** | Revealed between problem and proof | `\uncover<2->{hint}`, `\uncover<3->{proof}` |
-| **List items in proofs** | May be revealed step-by-step | `\item<N->` for each proof step |
-| **Non-problem slides** (background, outline, summary) | Static — no overlay | No overlay specs |
+| Element                                               | Animate?                           | Method                                       |
+| ----------------------------------------------------- | ---------------------------------- | -------------------------------------------- |
+| **Problem / question statement**                      | Always visible (overlay `<1->`)    | No overlay needed — shown by default         |
+| **Proof / solution / answer**                         | Revealed on step 2+                | `\uncover<2->{...}` wrapping the proof block |
+| **Hints (optional)**                                  | Revealed between problem and proof | `\uncover<2->{hint}`, `\uncover<3->{proof}`  |
+| **List items in proofs**                              | May be revealed step-by-step       | `\item<N->` for each proof step              |
+| **Non-problem slides** (background, outline, summary) | Static — no overlay                | No overlay specs                             |
 
 ##### What NOT to animate even in courseware mode
 
-| Element | Reason |
-|---|---|
-| Slide titles / frame titles | Must be visible from the start |
-| Section divider slides | Single-element, nothing to reveal |
-| Title / closing slides | No progressive content |
-| TOC / outline slides | Overview should be fully visible |
+| Element                                 | Reason                                   |
+| --------------------------------------- | ---------------------------------------- |
+| Slide titles / frame titles             | Must be visible from the start           |
+| Section divider slides                  | Single-element, nothing to reveal        |
+| Title / closing slides                  | No progressive content                   |
+| TOC / outline slides                    | Overview should be fully visible         |
 | Background / theory introduction slides | Not problem-solution format, keep static |
 
 ##### Consistency rules (MANDATORY — applies when overlays are used)
@@ -1344,15 +1363,16 @@ When a block contains a list, choose ONE level to animate — either animate the
 
 ### Theme Recommendations
 
-| Style | Recommended Theme | Notes |
-|---|---|---|
-| Modern / minimal | `metropolis` (install separately) | Clean, built-in progress bar, dark mode support |
-| Classic academic | `Madrid` + `\usecolortheme{dolphin}` | Reliable, widely used |
-| Structure-heavy | `Berlin` or `Warsaw` | Built-in section navigation |
-| Clean / corporate | `CambridgeUS` or `Boadilla` | Simple two-tone |
-| Ultra-minimal | `default` + custom `\setbeamercolor` | Maximum flexibility |
+| Style             | Recommended Theme                    | Notes                                           |
+| ----------------- | ------------------------------------ | ----------------------------------------------- |
+| Modern / minimal  | `metropolis` (install separately)    | Clean, built-in progress bar, dark mode support |
+| Classic academic  | `Madrid` + `\usecolortheme{dolphin}` | Reliable, widely used                           |
+| Structure-heavy   | `Berlin` or `Warsaw`                 | Built-in section navigation                     |
+| Clean / corporate | `CambridgeUS` or `Boadilla`          | Simple two-tone                                 |
+| Ultra-minimal     | `default` + custom `\setbeamercolor` | Maximum flexibility                             |
 
 For `metropolis`, add to preamble:
+
 ```latex
 \usetheme{metropolis}
 \metroset{progressbar=frametitle}  % progress bar in frame title
@@ -1366,20 +1386,22 @@ For `metropolis`, add to preamble:
 
 **Vertical alignment decision table (single source of truth):**
 
-| Layout type | Alignment | Notes |
-|---|---|---|
-| Block-block / text-text | `[T]` | Top edges align, visually cleanest |
-| Image-text | `[c]` | Image centers against text/block column |
+| Layout type                            | Alignment         | Notes                                                                                       |
+| -------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------- |
+| Block-block / text-text                | `[T]`             | Top edges align, visually cleanest                                                          |
+| Image-text                             | `[c]`             | Image centers against text/block column                                                     |
 | Image-text where `[c]` is insufficient | `[T]` + `\vspace` | Manually push image down to visual center (see Section 6 "Image Column Vertical Centering") |
 
 Do not duplicate these rules elsewhere — all alignment decisions reference this table.
 
 **Column widths:**
+
 - Total of both columns should not exceed `0.96\textwidth` to leave gap between columns
 - Give the wider side more space: e.g., image-heavy side gets `0.55\textwidth`, text side gets `0.42\textwidth`
 - For equal-width layouts: `0.48\textwidth` each
 
 **Content alignment within columns:**
+
 - Align block titles across columns: use `[T]` + same block type (both `fblock` with identical height)
 - Side-by-side blocks must use `fblock`/`falertblock` with the **same height parameter** (see Section 3)
 - Center images with `\centering`, keep text/lists left-aligned
@@ -1414,13 +1436,13 @@ ls /usr/share/fonts/truetype/
 
 **3. Handle based on search results**
 
-| Situation | Solution |
-|---|---|
-| Font exists on system but not in standard Fonts directory (macOS) | Copy to `~/Library/Fonts/` so the compiler can find it |
-| Font exists on system but not in standard Fonts directory (Linux) | Copy to `/usr/share/fonts/truetype/` then run `fc-cache -fv` |
-| Font does not exist on the system (macOS) | Download and install the font file to `~/Library/Fonts/` |
-| Font does not exist on the system (Linux) | Download the font file to `/usr/share/fonts/truetype/` then run `fc-cache -fv` |
-| Cannot install fonts (server / no permissions) | Switch to `fontset=fandol` (bundled open-source fonts with ctex) or `fontset=none` + manually specify available fonts |
+| Situation                                                         | Solution                                                                                                              |
+| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Font exists on system but not in standard Fonts directory (macOS) | Copy to `~/Library/Fonts/` so the compiler can find it                                                                |
+| Font exists on system but not in standard Fonts directory (Linux) | Copy to `/usr/share/fonts/truetype/` then run `fc-cache -fv`                                                          |
+| Font does not exist on the system (macOS)                         | Download and install the font file to `~/Library/Fonts/`                                                              |
+| Font does not exist on the system (Linux)                         | Download the font file to `/usr/share/fonts/truetype/` then run `fc-cache -fv`                                        |
+| Cannot install fonts (server / no permissions)                    | Switch to `fontset=fandol` (bundled open-source fonts with ctex) or `fontset=none` + manually specify available fonts |
 
 **4. Verify**
 
@@ -1432,12 +1454,12 @@ When fonts are missing, **do not** bypass compilation errors by deleting font re
 
 ### fontset Selection Reference
 
-| Scenario | Recommendation |
-|---|---|
-| macOS + need native Chinese font consistency | `fontset=mac` (ensure fonts are installed in standard paths) |
-| Linux / server / no system fonts | `fontset=fandol` (open-source fonts bundled with ctex) |
-| Need specific custom fonts | `fontset=none` + `\setCJKmainfont` / `\setCJKsansfont` manual specification |
-| Using a user-provided `.sty` template | Keep the template's original fontset setting — only fix font installation |
+| Scenario                                     | Recommendation                                                              |
+| -------------------------------------------- | --------------------------------------------------------------------------- |
+| macOS + need native Chinese font consistency | `fontset=mac` (ensure fonts are installed in standard paths)                |
+| Linux / server / no system fonts             | `fontset=fandol` (open-source fonts bundled with ctex)                      |
+| Need specific custom fonts                   | `fontset=none` + `\setCJKmainfont` / `\setCJKsansfont` manual specification |
+| Using a user-provided `.sty` template        | Keep the template's original fontset setting — only fix font installation   |
 
 ### Example: Missing Kaiti SC on macOS
 

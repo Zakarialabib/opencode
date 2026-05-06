@@ -6,7 +6,7 @@ read_when:
   - Extracting structured data from pages
   - Filling forms programmatically
   - Testing web UIs
-metadata: {"opencode":{"emoji":"🌐","requires":{"bins":["node","npm"]}}}
+metadata: { "opencode": { "emoji": "🌐", "requires": { "bins": ["node", "npm"] } } }
 allowed-tools: Bash(agent-browser:*)
 ---
 

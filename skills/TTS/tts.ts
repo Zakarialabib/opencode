@@ -1,5 +1,5 @@
-import ZAI from "z-ai-web-dev-sdk";
 import fs from "fs";
+import ZAI from "z-ai-web-dev-sdk";
 
 async function main(text: string, outFile: string) {
   try {

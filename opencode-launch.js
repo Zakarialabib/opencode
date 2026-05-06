@@ -78,9 +78,16 @@ function launch() {
   // or just append it to ensure the CLI knows where to start.
   // Actually, we can just change cwd.
   const args = [...process.argv.slice(2)];
-  
-  const globalBin = path.join(process.env.APPDATA || 'C:/laragon/bin/nodejs/node-v22', 'npm', 'node_modules', 'opencode-ai', 'bin', 'opencode');
-  const laragonBin = 'C:/laragon/bin/nodejs/node-v22/node_modules/opencode-ai/bin/opencode';
+
+  const globalBin = path.join(
+    process.env.APPDATA || "C:/laragon/bin/nodejs/node-v22",
+    "npm",
+    "node_modules",
+    "opencode-ai",
+    "bin",
+    "opencode"
+  );
+  const laragonBin = "C:/laragon/bin/nodejs/node-v22/node_modules/opencode-ai/bin/opencode";
   const targetBin = fs.existsSync(laragonBin) ? laragonBin : globalBin;
 
   const child = spawn("node", [targetBin, ...args], {

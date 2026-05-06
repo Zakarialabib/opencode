@@ -1,54 +1,232 @@
 name: Bug Fix
-description: Professional workflow for identifying, fixing, and verifying bugs
-version: 1.1.0
+description: Advanced workflow for identifying, fixing, and verifying bugs with intelligent orchestration and MCP integration
+version: 2.0.0
 trigger: manual
+
+# Global MCP servers available to all phases
+mcp_servers:
+  - context7
+  - memory
+  - sequential-thinking
+  - git
+  - filesystem
+  - fetch
+
+# Global environment variables
+env:
+  DEBUG: "true"
+  LOG_LEVEL: verbose
+
 phases:
-  - name: Triage & Reproduction
-    description: Understand and reproduce the bug using agent-browser
-    agents: [qa-debugger, lead-orchestrator]
+  - name: Triage & Analysis
+    description: Understand, reproduce, and analyze the bug using agent-browser and intelligent routing
+    agents: [qa-guardian, lead-strategist, core-factory]
+    use_agent_router: true
     tasks:
       - reproduce_bug_via_agent_browser
       - analyze_system_logs_and_lsp_diagnostics
-      - identify_root_cause_analysis
-    artifacts: [bug-report.md, browser-snapshots/]
-  
+      - identify_root_cause_with_thinking
+      - search_similar_issues
+      - capture_browser_snapshots
+      - analyze_stack_traces
+    artifacts: [bug-report.md, browser-snapshots/, stack-trace.json, root-cause.md]
+    mcp_tools:
+      context7: [fetch_library_docs, search_documentation]
+      fetch: [fetch_markdown, fetch_html]
+      memory: [create_entities, add_observations, search_nodes]
+      sequential-thinking: [sequentialthinking]
+      git: [log, diff, blame]
+    exit_criteria:
+      - bug-report.md contains reproduction steps
+      - root-cause.md identifies root cause with confidence >80%
+      - stack-trace.json contains full error details
+
   - name: Fix Implementation
-    description: Implement the fix with real-time context
-    agents: [core-builder, backend-api, frontend-ui-ux]
+    description: Implement the fix with real-time context, tests, and continuous validation
+    agents: [core-factory, backend-api, frontend-ui-ux, backend-laravel]
+    use_agent_router: true
     tasks:
       - implement_technical_fix
       - write_regression_tests_pest_vitest
+      - add_unit_tests_for_fix
       - verify_lsp_syntax_check
-    artifacts: [fix-patch/, tests/]
-    dependencies: [Triage & Reproduction]
-  
-  - name: Verification
-    description: Verify the fix works correctly and hasn't regressed
-    agents: [qa-tester, qa-reviewer, qa-debugger]
+      - update_related_documentation
+      - implement_additional_edge_cases
+    artifacts: [fix-patch/, tests/, updated-files.md]
+    dependencies: [Triage & Analysis]
+    mcp_tools:
+      context7: [fetch_library_docs]
+      sqlite: [write_query, read_query]
+      git: [add, commit, diff]
+      filesystem: [read_file, write_file]
+      sequential-thinking: [sequentialthinking]
+    parallel_groups:
+      - [implement_technical_fix, update_related_documentation]
+      - [write_regression_tests_pest_vitest, add_unit_tests_for_fix]
+    retry_policy:
+      max_attempts: 3
+      backoff: exponential
+      retry_on: [test_failure, lsp_error]
+    exit_criteria:
+      - Fix addresses root cause identified in Triage phase
+      - All new tests pass
+      - No LSP diagnostics introduced
+      - Code follows project rules
+
+  - name: Verification & Testing
+    description: Comprehensive verification, regression testing, and performance validation
+    agents: [qa-guardian]
     tasks:
       - run_automated_regression_tests
       - verify_visual_consistency_in_browser
       - perform_performance_benchmarking
-    artifacts: [verification-report.json, benchmark.md]
+      - conduct_security_scan_on_changes
+      - validate_accessibility_compliance
+      - run_load_testing_if_needed
+    artifacts: [verification-report.json, benchmark.md, security-scan.json, test-coverage.md]
     dependencies: [Fix Implementation]
-  
-  - name: Documentation
-    description: Document the fix and update troubleshooting guides
-    agents: [docs-writer, lead-product-manager]
+    mcp_tools:
+      context7: [fetch_library_docs]
+      sqlite: [read_query]
+      git: [diff, log, show]
+      sequential-thinking: [sequentialthinking]
+      fetch: [fetch_markdown]
+    parallel_groups:
+      - [run_automated_regression_tests, verify_visual_consistency_in_browser]
+      - [conduct_security_scan_on_changes, validate_accessibility_compliance]
+    exit_criteria:
+      - All regression tests pass with >80% coverage
+      - Visual verification via agent-browser shows no issues
+      - Performance within acceptable SLA
+      - No security vulnerabilities introduced
+
+  - name: Documentation & Closure
+    description: Document the fix, update troubleshooting guides, and notify stakeholders
+    agents: [docs-curator, lead-strategist]
     tasks:
       - update_release_notes
       - update_internal_knowledge_base
+      - update_troubleshooting_guide
+      - create_fix_summary_for_stakeholders
+      - update_api_documentation_if_needed
       - notify_stakeholders_of_resolution
-    artifacts: [changelog.md, docs/troubleshooting.md]
-    dependencies: [Verification]
+    artifacts: [changelog.md, docs/troubleshooting.md, fix-summary.md, notification-log.md]
+    dependencies: [Verification & Testing]
+    mcp_tools:
+      context7: [fetch_library_docs]
+      memory: [create_entities, add_observations, search_nodes]
+      git: [add, commit, push, tag]
+    exit_criteria:
+      - changelog.md updated with fix details
+      - docs/troubleshooting.md includes new issue
+      - Stakeholders notified
+      - Fix tagged in git
 
+# Workflow-level success criteria
 success_criteria:
-  - Root cause identified and resolved
-  - All regression tests pass
+  - Root cause identified and resolved with >90% confidence
+  - All regression tests pass with >80% coverage
   - No new LSP diagnostics introduced
   - Visual verification via agent-browser complete
+  - Performance benchmarks within SLA
+  - Security scan passes
+  - Documentation updated
+  - Stakeholders notified
 
+# Notification hooks
 notifications:
-  - on_start: alert troubleshooter
-  - on_complete: update ticket status
-  - on_failure: escalate to engineering lead
+  on_start:
+    - notify: [lead-strategist, qa-guardian]
+    - channel: slack
+    - template: bug-triage-started.md
+  on_phase_complete:
+    - notify: [lead-strategist]
+    - channel: internal-dashboard
+    - log_to: memory MCP
+  on_complete:
+    - update: project-portal
+    - notify: [stakeholders]
+    - generate: fix-summary.md
+    - tag_release: v.next
+  on_failure:
+    - alert: [lead-architect, qa-guardian]
+    - escalate_to: lead-strategist
+    - create: incident-report.md
+    - notify: oncall-engineer
+  on_rollback:
+    - notify: [all-agents]
+    - revert_using: git MCP
+    - notify: stakeholders-of-rollback
+
+# Error handling and recovery
+error_handling:
+  strategy: continue-on-non-critical
+  max_retries_per_task: 3
+  fallback_agent: qa-guardian
+  rollback_on_critical: true
+  log_errors_to: memory MCP
+  critical_errors:
+    - security_vulnerability_detected
+    - data_loss_risk
+    - performance_degradation >50%
+
+# Integration with agent-router
+agent_routing:
+  enabled: true
+  scoring_weights:
+    keyword_match: 2
+    skill_match: 3
+    mcp_capability: 1
+  fallback_strategy: use_qa_guardian
+  cache_routing_decisions: true
+  route_based_on:
+    - bug_type
+    - affected_component
+    - error_severity
+
+# Integration with MCP servers
+mcp_integration:
+  context7:
+    purpose: Documentation and code examples for fix
+    phases: [all]
+    cache_results: true
+  memory:
+    purpose: Persistent state and historical bug tracking
+    phases: [Triage & Analysis, Documentation & Closure]
+    persist_workflow_state: true
+    track_bug_history: true
+  sequential-thinking:
+    purpose: Root cause analysis and fix planning
+    phases: [Triage & Analysis, Fix Implementation]
+    max_thinking_steps: 15
+  git:
+    purpose: Version control and blame analysis
+    phases: [all]
+    auto_commit: false
+    track_blame: true
+  fetch:
+    purpose: Search for similar issues and solutions
+    phases: [Triage & Analysis]
+    cache_results: true
+  sqlite:
+    purpose: Test data and bug tracking database
+    phases: [Fix Implementation, Verification & Testing]
+    database: database.sqlite
+    track_bug_metrics: true
+
+# Performance monitoring
+performance:
+  track_metrics:
+    - time_to_triage
+    - time_to_fix
+    - time_to_verify
+    - regression_count
+  store_metrics_in: sqlite MCP
+  generate_report: performance-report.md
+
+# Security scanning configuration
+security:
+  scan_on_phases: [Fix Implementation, Verification & Testing]
+  tools: [qa-guardian, secret-scan]
+  fail_on: [critical, high]
+  report_to: security-team

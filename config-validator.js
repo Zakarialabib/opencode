@@ -1,6 +1,6 @@
-const Ajv = require('ajv');
-const fs = require('fs');
-const path = require('path');
+const Ajv = require("ajv");
+const fs = require("fs");
+const path = require("path");
 
 class ConfigValidator {
   constructor(schemaPath) {
@@ -13,7 +13,7 @@ class ConfigValidator {
 
   loadSchema(schemaPath) {
     try {
-      const schemaContent = fs.readFileSync(schemaPath, 'utf8');
+      const schemaContent = fs.readFileSync(schemaPath, "utf8");
       this.schema = JSON.parse(schemaContent);
       return true;
     } catch (error) {
@@ -24,43 +24,45 @@ class ConfigValidator {
 
   validateConfig(config) {
     if (!this.schema) {
-      throw new Error('No schema loaded for validation');
+      throw new Error("No schema loaded for validation");
     }
 
     const validate = this.ajv.compile(this.schema);
     const valid = validate(config);
-    
+
     if (!valid) {
       return {
         valid: false,
-        errors: validate.errors.map(error => ({
+        errors: validate.errors.map((error) => ({
           message: error.message,
           path: error.instancePath ? error.instancePath.slice(1) : [],
           schemaPath: error.schemaPath,
           keyword: error.keyword,
-          params: error.params
-        }))
+          params: error.params,
+        })),
       };
     }
-    
+
     return { valid: true, errors: [] };
   }
 
   validateConfigFile(filePath) {
     try {
-      const configContent = fs.readFileSync(filePath, 'utf8');
+      const configContent = fs.readFileSync(filePath, "utf8");
       const config = JSON.parse(configContent);
       return this.validateConfig(config);
     } catch (error) {
       return {
         valid: false,
-        errors: [{
-          message: `Failed to parse config file: ${error.message}`,
-          path: [],
-          schemaPath: '',
-          keyword: 'type',
-          params: { type: 'object' }
-        }]
+        errors: [
+          {
+            message: `Failed to parse config file: ${error.message}`,
+            path: [],
+            schemaPath: "",
+            keyword: "type",
+            params: { type: "object" },
+          },
+        ],
       };
     }
   }

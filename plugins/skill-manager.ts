@@ -3,8 +3,21 @@ import { readFileSync } from "fs";
 import { join } from "path";
 
 const SkillManagerPlugin: Plugin = async ({ client, project, directory }) => {
-  // Read skills index
-  const skillsIndexPath = join(directory, "skills", "index.json");
+  // Read skills index - try opencode/skills first (deployed layout), then skills/ (legacy)
+  const candidates = [
+    join(directory, "opencode", "skills", "index.json"),
+    join(directory, "skills", "index.json"),
+  ];
+  let skillsIndexPath: string | null = null;
+  for (const candidate of candidates) {
+    try {
+      readFileSync(candidate, "utf8");
+      skillsIndexPath = candidate;
+      break;
+    } catch {
+      continue;
+    }
+  }
   let skills: Array<{
     name: string;
     displayName?: string;
@@ -15,11 +28,15 @@ const SkillManagerPlugin: Plugin = async ({ client, project, directory }) => {
     entryPoint: string;
   }> = [];
 
-  try {
-    const skillsIndex = JSON.parse(readFileSync(skillsIndexPath, "utf8"));
-    skills = skillsIndex.skills || [];
-  } catch (e) {
-    console.error("Failed to read skills index:", e);
+  if (skillsIndexPath) {
+    try {
+      const skillsIndex = JSON.parse(readFileSync(skillsIndexPath, "utf8"));
+      skills = skillsIndex.skills || [];
+    } catch (e) {
+      console.error("Failed to read skills index:", e);
+    }
+  } else {
+    console.error("Failed to find skills index in:", candidates);
   }
 
   return {

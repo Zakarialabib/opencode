@@ -8,12 +8,12 @@ Produce publication-grade PDFs from `.tex` source files compiled with Tectonic. 
 
 ## Environment Preparation
 
-
 The binary of Tectonic lands at `scripts/tectonic`.
 
 ### Compilation — Always Use the Wrapper Script
 
 All compilations **must** go through `scripts/pdf.py convert.latex`. It handles:
+
 - Stripping noisy package-download logs
 - Filtering progress chatter
 - Surfacing genuine errors and warnings
@@ -40,12 +40,12 @@ Before touching `.tex` code, determine the document's category and let that shap
 
 ### Recognising the Document Type
 
-| Type | Typical outputs | Key concern |
-|------|----------------|-------------|
-| **Scholarly** | Journal articles, conference proceedings, regulatory specs | Rigorous adherence to academic conventions; bibliography accuracy |
-| **Utilitarian** | Technical reports, reference manuals, product specs | Pack maximum information while preserving scannability |
-| **Persuasive** | Funding proposals, pitch documents, project roadmaps | Clean professionalism throughout, with one or two visual high-points (title page, KPI dashboards) |
-| **Expressive** | Design portfolios, brand guidebooks, showcases | Bold typographic and chromatic choices; deliberate rule-breaking that amplifies impact |
+| Type            | Typical outputs                                            | Key concern                                                                                       |
+| --------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| **Scholarly**   | Journal articles, conference proceedings, regulatory specs | Rigorous adherence to academic conventions; bibliography accuracy                                 |
+| **Utilitarian** | Technical reports, reference manuals, product specs        | Pack maximum information while preserving scannability                                            |
+| **Persuasive**  | Funding proposals, pitch documents, project roadmaps       | Clean professionalism throughout, with one or two visual high-points (title page, KPI dashboards) |
+| **Expressive**  | Design portfolios, brand guidebooks, showcases             | Bold typographic and chromatic choices; deliberate rule-breaking that amplifies impact            |
 
 ### Fallback Aesthetic (No Style Specified)
 
@@ -72,11 +72,11 @@ Introduce these components on your own initiative whenever the content benefits 
 
 The wrapper classifies compiler output into three tiers:
 
-| Tier | Impact | Required response |
-|------|--------|-------------------|
-| **Errors** | Build aborts | Resolve before anything else |
-| **Layout defects** | Overfull / underfull boxes, unavailable font shapes, missing glyphs | Repair prior to delivery |
-| **Advisories** | Remaining warnings | Assess individually; fix whenever feasible |
+| Tier               | Impact                                                              | Required response                          |
+| ------------------ | ------------------------------------------------------------------- | ------------------------------------------ |
+| **Errors**         | Build aborts                                                        | Resolve before anything else               |
+| **Layout defects** | Overfull / underfull boxes, unavailable font shapes, missing glyphs | Repair prior to delivery                   |
+| **Advisories**     | Remaining warnings                                                  | Assess individually; fix whenever feasible |
 
 **Never acceptable**: shrugging off warnings with "they don't affect the final PDF." Every diagnostic merits investigation.
 
@@ -85,6 +85,7 @@ The wrapper classifies compiler output into three tiers:
 A single generation turn can comfortably handle roughly **500 lines** of TeX.
 
 **When to split**:
+
 - Anticipated output exceeds 5 pages, **or**
 - Three or more heavyweight elements are present (wide tables, block equations, TikZ graphics)
 
@@ -132,10 +133,12 @@ Stitch modules together with `\input{chapter1}`, `\input{chapter2}`, etc.
 ### Rule 4 — TeX Source Hygiene
 
 **Prohibited patterns**:
+
 - Emoji glyphs (no native LaTeX engine supports them)
 - Markdown `*asterisk*` formatting (generates compile-time errors)
 
 **Use instead**:
+
 ```latex
 \textbf{bold text}
 \emph{emphasised text}
@@ -156,6 +159,7 @@ These are frequent model-generation slips — catch them proactively.
 Interactive navigation is a baseline professional expectation.
 
 #### 6.1 Table of Contents
+
 ```latex
 \tableofcontents   % Entries are auto-linked courtesy of hyperref
 \listoffigures
@@ -165,6 +169,7 @@ Interactive navigation is a baseline professional expectation.
 #### 6.2 Internal Cross-References
 
 **Attach labels** right after each numbered element:
+
 ```latex
 \section{Background}\label{sec:bg}
 
@@ -184,6 +189,7 @@ Interactive navigation is a baseline professional expectation.
 ```
 
 **Cite these labels** (each produces a live hyperlink):
+
 ```latex
 As noted in Section~\ref{sec:bg}...
 Figure~\ref{fig:overview} illustrates...
@@ -193,6 +199,7 @@ See page~\pageref{sec:bg}...
 ```
 
 **Good habits**:
+
 - Place a non-breaking space `~` before `\ref` to avoid orphaned line breaks
 - Prefer `\eqref{}` for equations (auto-wraps the number in parentheses)
 - Adopt a consistent label-prefix convention: `sec:`, `fig:`, `tab:`, `eq:`, `lst:`
@@ -200,6 +207,7 @@ See page~\pageref{sec:bg}...
 #### 6.3 Bibliography
 
 **Superscript numerals (preferred academic style)**:
+
 ```latex
 \usepackage[numbers,super,sort&compress]{natbib}
 \bibliographystyle{unsrtnat}
@@ -211,6 +219,7 @@ Several studies\cite{a,b,c} agree...    % → agree^[1–3]
 ```
 
 **Numeric bracket alternative**:
+
 ```latex
 \usepackage[numbers]{natbib}
 \bibliographystyle{plainnat}
@@ -221,6 +230,7 @@ Several studies\cite{a,b,c} agree...    % → agree^[1–3]
 ```
 
 **biblatex pathway**:
+
 ```latex
 \usepackage[backend=biber,style=numeric-comp]{biblatex}
 \addbibresource{refs.bib}
@@ -230,6 +240,7 @@ Per~\cite{smith2023}...
 ```
 
 #### 6.4 External Links
+
 ```latex
 \url{https://example.com}
 \href{https://example.com}{Visible label}
@@ -237,6 +248,7 @@ Per~\cite{smith2023}...
 ```
 
 #### 6.5 PDF Metadata & Outline
+
 ```latex
 \hypersetup{
     pdftitle={Document Title},
@@ -245,11 +257,13 @@ Per~\cite{smith2023}...
     pdfkeywords={keyword1, keyword2}
 }
 ```
+
 Bookmark trees are auto-generated from `\section` / `\chapter` hierarchy.
 
 #### 6.6 Why Multiple Passes Matter
 
 Label resolution requires at least two compilation passes:
+
 ```bash
 # Resolve section / figure / table labels
 python3 scripts/pdf.py convert.latex main.tex --runs 2
@@ -262,55 +276,63 @@ If `??` placeholders persist after two passes, verify that every `\label` string
 
 #### 6.7 Navigation Troubleshooting
 
-| Observation | Root cause | Resolution |
-|-------------|-----------|------------|
-| `??` in place of numbers | Only a single pass was run | Recompile with `--runs 2` |
-| All links render in black | hyperref colour options omitted | Enable `colorlinks=true` |
-| TOC items are not clickable | hyperref package missing | Load the package |
-| `[?]` beside citations | `.bib` path incorrect or biber step skipped | Confirm path; rebuild |
-| Bookmark pane empty | `bookmarks` option set to false | Switch to `bookmarks=true` |
+| Observation                 | Root cause                                  | Resolution                 |
+| --------------------------- | ------------------------------------------- | -------------------------- |
+| `??` in place of numbers    | Only a single pass was run                  | Recompile with `--runs 2`  |
+| All links render in black   | hyperref colour options omitted             | Enable `colorlinks=true`   |
+| TOC items are not clickable | hyperref package missing                    | Load the package           |
+| `[?]` beside citations      | `.bib` path incorrect or biber step skipped | Confirm path; rebuild      |
+| Bookmark pane empty         | `bookmarks` option set to false             | Switch to `bookmarks=true` |
 
 ---
 
 ## Package Catalogue
 
 ### Foundational
+
 - `hyperref` (Rule 3)
 - `geometry` (Rule 3)
 - `listings` — `\lstset{basicstyle=\ttfamily\small, numbers=left, backgroundcolor=\color{gray!5}}`
 - `enumitem` — `\setlist[itemize]{itemsep=0.3em, leftmargin=1.5em}`
 
 ### Tabular
+
 `booktabs` · `longtable` · `multirow` · `array` · `colortbl`
 
 ### Visual & Charting
+
 `tikz` · `pgfplots` · `float` · `wrapfig` · `subfig` / `subcaption`
 
 ### International & Typography
+
 `fontspec` (XeLaTeX / LuaLaTeX) · `ctex`
 
 ### Mathematical
+
 `amsmath` · `amssymb` · `amsthm` · `natbib` · `biblatex` · `siunitx`
 
 ### Algorithmic & Domain-Specific
+
 `algorithm` + `algpseudocode` · `chemfig`
 
 ### Page Design
+
 `tcolorbox` · `fancyhdr` · `titlesec` · `tocloft` · `multicol` · `setspace` · `microtype` · `parskip` · `adjustbox` · `marginnote`
 
 ### Code Listings
+
 `listings` · `minted` (depends on Pygments)
 
 ---
 
 ## Scripts & Backends
 
-| Script | Purpose |
-|--------|---------|
+| Script                 | Purpose                                                              |
+| ---------------------- | -------------------------------------------------------------------- |
 | `pdf.py convert.latex` | Tectonic wrapper — log sanitisation, error highlighting, PDF metrics |
 
-| Engine | Notes |
-|--------|-------|
+| Engine   | Notes                                                                  |
+| -------- | ---------------------------------------------------------------------- |
 | Tectonic | Stand-alone LaTeX engine; packages are fetched transparently on demand |
 
 ---
@@ -318,6 +340,7 @@ If `??` placeholders persist after two passes, verify that every `\label` string
 ## Operational Notes
 
 ### CJK Without Manual Font Setup
+
 Tectonic resolves CJK font bundles on the fly — zero manual installation:
 
 ```latex
@@ -325,18 +348,21 @@ Tectonic resolves CJK font bundles on the fly — zero manual installation:
 ```
 
 ### Cold-Start Latency
+
 The very first compilation of a new document triggers package downloads:
+
 - Initial build: 1–5 min (depends on network speed)
 - Repeat builds with warm cache: 10–30 s
 
 ### Working Without Internet
+
 Previously fetched packages are stored under `~/.cache/Tectonic/`. When offline, only cached packages are available; attempting to use a new one will fail.
 
 ### Tectonic vs a Full TeX Live Installation
 
-| Dimension | Tectonic | Traditional pdflatex |
-|-----------|----------|---------------------|
-| Package acquisition | On-demand, transparent | Manual via `tlmgr` |
-| Multi-pass compilation | Handled by the engine | Explicit re-invocations required |
-| Reference resolution | Automatic | Requires bibtex/biber cycles |
-| Disk footprint | Single binary | Full TeX Live ≈ 4 GB |
+| Dimension              | Tectonic               | Traditional pdflatex             |
+| ---------------------- | ---------------------- | -------------------------------- |
+| Package acquisition    | On-demand, transparent | Manual via `tlmgr`               |
+| Multi-pass compilation | Handled by the engine  | Explicit re-invocations required |
+| Reference resolution   | Automatic              | Requires bibtex/biber cycles     |
+| Disk footprint         | Single binary          | Full TeX Live ≈ 4 GB             |

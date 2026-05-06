@@ -7,6 +7,7 @@ This skill enables OpenCode agents to orchestrate project tasks using Trae IDE's
 ## When to Use
 
 Use this skill when:
+
 - Working on SignSync project (Tauri + SolidJS + Laravel)
 - Need deep code intelligence from Trae's language servers
 - Want to leverage Trae's running MCP servers
@@ -33,6 +34,7 @@ Use tool: trae_process_health
 Expected output: Should show MCP servers, extension hosts, language servers.
 
 If Trae's not running:
+
 - Start Trae IDE
 - Open the project in Trae
 - Regenerate `trae.md` if needed
@@ -41,15 +43,15 @@ If Trae's not running:
 
 Based on the task, determine what Trae context you need:
 
-| Task Type | Context Needed | Tool to Use |
-|-----------|----------------|-------------|
-| Rust code editing | rust-analyzer | `trae_get_rust_context(filePath)` |
-| TypeScript editing | TypeScript language server | `trae_get_typescript_context(filePath)` |
-| CSS/Tailwind editing | Tailwind extension | `trae_suggest_tailwind_classes(query)` |
-| Config editing (YAML/JSON) | YAML/JSON language server | `trae_get_extension_context('yaml')` |
-| Documentation lookup | context7 MCP | `mcp_context7_*` tools |
-| Persistent memory | knowledge-graph MCP | `mcp_knowledge-graph_*` tools |
-| Process monitoring | Trae process tree | `trae_monitor_signsync` |
+| Task Type                  | Context Needed             | Tool to Use                             |
+| -------------------------- | -------------------------- | --------------------------------------- |
+| Rust code editing          | rust-analyzer              | `trae_get_rust_context(filePath)`       |
+| TypeScript editing         | TypeScript language server | `trae_get_typescript_context(filePath)` |
+| CSS/Tailwind editing       | Tailwind extension         | `trae_suggest_tailwind_classes(query)`  |
+| Config editing (YAML/JSON) | YAML/JSON language server  | `trae_get_extension_context('yaml')`    |
+| Documentation lookup       | context7 MCP               | `mcp_context7_*` tools                  |
+| Persistent memory          | knowledge-graph MCP        | `mcp_knowledge-graph_*` tools           |
+| Process monitoring         | Trae process tree          | `trae_monitor_signsync`                 |
 
 ### Step 3: Check Context Availability
 
@@ -62,6 +64,7 @@ Use tool: trae_extension_status
 ```
 
 If a service isn't running:
+
 - For MCP servers: Check Trae's extension host
 - For language servers: Open a file of that type in Trae
 - For extensions: Enable them in Trae's extensions panel
@@ -73,11 +76,13 @@ Now execute the task using Trae's context:
 **Example: Editing Rust File**
 
 1. Get Rust context:
+
    ```
    Use tool: trae_get_rust_context("src-tauri/src/main.rs", "Watchdog")
    ```
 
 2. Read the file:
+
    ```
    Use Read tool to read the file
    ```
@@ -93,6 +98,7 @@ Now execute the task using Trae's context:
 **Example: Adding Tailwind Classes**
 
 1. Get Tailwind context:
+
    ```
    Use tool: trae_suggest_tailwind_classes("flex")
    ```
@@ -115,6 +121,7 @@ Use tool: trae_top_processes('memory', 5)
 ```
 
 If a critical process dies:
+
 - Alert the user
 - Check logs with `trae_process_list`
 - Restart the service in Trae if needed
@@ -180,23 +187,25 @@ After completing the task, validate using Trae's context:
 
 ## Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| `trae.md` not found | Generate it from Trae IDE or create empty process tree |
-| MCP server not found | Check Trae's extension host is running |
-| Language server not responding | Open a file of that type in Trae |
-| Extension not found | Enable extension in Trae's extensions panel |
-| Process tree outdated | Regenerate `trae.md` from Trae |
+| Issue                          | Solution                                               |
+| ------------------------------ | ------------------------------------------------------ |
+| `trae.md` not found            | Generate it from Trae IDE or create empty process tree |
+| MCP server not found           | Check Trae's extension host is running                 |
+| Language server not responding | Open a file of that type in Trae                       |
+| Extension not found            | Enable extension in Trae's extensions panel            |
+| Process tree outdated          | Regenerate `trae.md` from Trae                         |
 
 ## Example Prompts
 
 **Good prompts that trigger this skill**:
+
 - "Improve the Watchdog implementation using Trae's rust-analyzer context"
 - "Add Tailwind classes to SignSync UI, check Trae's extension first"
 - "Monitor SignSync build process using Trae's process tree"
 - "Use Trae's context7 MCP to lookup Tauri documentation"
 
 **Bad prompts (won't trigger skill)**:
+
 - "Edit this file" (no Trae context mentioned)
 - "Run build" (no monitoring requested)
 - "Add CSS classes" (no Tailwind extension mentioned)

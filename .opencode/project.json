@@ -1,7 +1,0 @@
-{
-  "version": "1.0.0",
-  "project_root": "C:\\opencode",
-  "config_file": "C:\\opencode\\opencode.json",
-  "auto_start": true,
-  "launch_command": "node C:\\opencode\\opencode-launch.js"
-}

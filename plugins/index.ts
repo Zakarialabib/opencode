@@ -170,12 +170,14 @@ const SelfImprovePlugin: Plugin = async ({ client, project, directory }) => {
     // Hook: After each tool execution, evaluate performance
     "tool.execute.after": async ({ tool }: any, { output, metadata }: any) => {
       // Log tool usage patterns for optimization analysis
+      const outputStr = output ? String(output) : "";
+      const truncatedOutput = outputStr.length > 100 ? outputStr.slice(0, 100) : outputStr;
       await client.app.log({
         body: {
           service: "self-improve",
           level: "info",
           message: `Tool ${tool} executed`,
-          extra: { output: output.slice(0, 100), metadata },
+          extra: { output: truncatedOutput, metadata },
         },
       });
     },
@@ -232,7 +234,7 @@ const SelfImprovePlugin: Plugin = async ({ client, project, directory }) => {
             .enum([
               "core-builder",
               "core-planner",
-              "lead-orchestrator",
+              "lead-strategist",
               "lead-architect",
               "frontend-ui-ux",
               "backend-api",
@@ -269,22 +271,45 @@ const SelfImprovePlugin: Plugin = async ({ client, project, directory }) => {
 
       // LM Studio model discovery tool
       lmstudio_models: tool({
-        description: "List available models from LM Studio server",
+        description: "List available models from LM Studio and show all provider models",
         args: {},
         async execute() {
           await ensureUrls();
           const health = await healthCheckLmStudio(nativeUrl!);
-          if (!health.healthy) {
-            return `Cannot fetch models: LM Studio is unreachable (${health.error})`;
+          let result = "";
+
+          // LM Studio models
+          if (health.healthy) {
+            const lmResult = await fetchModels(nativeUrl!);
+            if (lmResult.error) {
+              result += `❌ Error fetching LM Studio models: ${lmResult.error}\n\n`;
+            } else if (lmResult.models.length === 0) {
+              result += `⚠️ No models loaded in LM Studio. Load a model first.\n\n`;
+            } else {
+              result += `## LM Studio Models (${lmResult.models.length})\n\n`;
+              for (const m of lmResult.models) {
+                result += `- \`${m}\`\n`;
+              }
+              result += "\n";
+            }
+          } else {
+            result += `❌ LM Studio is unreachable: ${health.error}\n\n`;
           }
-          const result = await fetchModels(nativeUrl!);
-          if (result.error) {
-            return `Failed to fetch models: ${result.error}`;
-          }
-          if (result.models.length === 0) {
-            return "No models found. Ensure a model is loaded in LM Studio.";
-          }
-          return `Available models:\n${result.models.map((m) => `- ${m}`).join("\n")}`;
+
+          // Cerebras models
+          result += `## Cerebras Models (API)\n\n`;
+          result += `- \`qwen-3-235b-a22b-instruct-2507\` (Tool calling: ✅, Reasoning: ✅)\n`;
+          result += `- \`zai-glm-4.7\` (Tool calling: ❌, Reasoning: ✅)\n\n`;
+
+          // OpenCode-Go models
+          result += `## OpenCode-Go Models (API)\n\n`;
+          result += `- \`kimi-k2.6\` (Tool calling: ✅, Reasoning: ✅)\n`;
+          result += `- \`glm-5.1\` (Tool calling: ✅, Reasoning: ✅)\n`;
+          result += `- \`qwen3.6-plus\` (Tool calling: ✅, Reasoning: ✅)\n\n`;
+
+          result += `💡 Use \`/model <provider>/<model>\` to switch models.`;
+
+          return result;
         },
       }),
 

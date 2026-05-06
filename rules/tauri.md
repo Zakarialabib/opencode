@@ -1,7 +1,9 @@
 # Tauri (Rust) Stack Rules
 
 ## Context7 Documentation Sources
+
 When working on Tauri backend, always pull docs from:
+
 - **tauri** → `@tauri-apps/tauri` (v2)
 - **tauri-cli** → `@tauri-apps/cli`
 - **rust** → `rust-lang/rust`
@@ -14,6 +16,7 @@ Use Context7 MCP tool: `context7_resolve-library-id` then `context7_query-docs`
 ## Coding Standards
 
 ### Rust (Tauri Backend)
+
 - Follow **Rust API Guidelines**: https://rust-lang.github.io/api-guidelines/
 - Use `rustfmt` for formatting (config: `rustfmt.toml`)
 - Use `clippy` for linting: `cargo clippy -- -D warnings`
@@ -23,6 +26,7 @@ Use Context7 MCP tool: `context7_resolve-library-id` then `context7_query-docs`
 - **State management**: Use `tauri::Manager::manage()` for app state
 
 ### Tauri-Specific
+
 - Commands: Always use `#[tauri::command]` attribute
 - State: Define struct with `tauri::State` for shared data
 - IPC: Use `invoke()` from `@tauri-apps/api` in frontend
@@ -30,15 +34,17 @@ Use Context7 MCP tool: `context7_resolve-library-id` then `context7_query-docs`
 - Window config: Use `tauri.conf.json` not programmatic creation
 
 ## Tools & Commands
-| Tool | Command | Purpose |
-|------|----------|---------|
-| **rustfmt** | `cargo fmt` | Format Rust code |
-| **clippy** | `cargo clippy` | Lint Rust code |
-| **tauri-cli** | `cargo tauri dev` | Dev server |
-| **tauri-cli** | `cargo tauri build` | Production build |
-| **bindgen** | (auto) | FFI bindings if needed |
+
+| Tool          | Command             | Purpose                |
+| ------------- | ------------------- | ---------------------- |
+| **rustfmt**   | `cargo fmt`         | Format Rust code       |
+| **clippy**    | `cargo clippy`      | Lint Rust code         |
+| **tauri-cli** | `cargo tauri dev`   | Dev server             |
+| **tauri-cli** | `cargo tauri build` | Production build       |
+| **bindgen**   | (auto)              | FFI bindings if needed |
 
 ## Project Structure
+
 ```
 src-tauri/
 ├── src/
@@ -51,6 +57,7 @@ src-tauri/
 ```
 
 ## Common Patterns
+
 ```rust
 // Tauri command with state
 #[tauri::command]
@@ -67,6 +74,7 @@ enum AppError {
 ```
 
 ## When to Use This Stack
+
 - Building desktop app backend logic
 - Need system-level access (files, hardware)
 - Performance-critical operations

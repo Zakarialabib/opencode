@@ -27,10 +27,7 @@ Using OKLCH for perceptually uniform color scales:
 ### Programmatic Scale Generation
 
 ```tsx
-function generateColorScale(
-  hue: number,
-  saturation: number = 100,
-): Record<string, string> {
+function generateColorScale(hue: number, saturation: number = 100): Record<string, string> {
   const lightnessStops = [
     { name: "50", l: 97 },
     { name: "100", l: 93 },
@@ -46,10 +43,7 @@ function generateColorScale(
   ];
 
   return Object.fromEntries(
-    lightnessStops.map(({ name, l }) => [
-      name,
-      `hsl(${hue}, ${saturation}%, ${l}%)`,
-    ]),
+    lightnessStops.map(({ name, l }) => [name, `hsl(${hue}, ${saturation}%, ${l}%)`])
   );
 }
 
@@ -190,8 +184,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const root = document.documentElement;
 
     if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
         ? "dark"
         : "light";
       setResolvedTheme(systemTheme);
@@ -238,11 +231,7 @@ export function useTheme() {
 function hexToRgb(hex: string): [number, number, number] {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if (!result) throw new Error("Invalid hex color");
-  return [
-    parseInt(result[1], 16),
-    parseInt(result[2], 16),
-    parseInt(result[3], 16),
-  ];
+  return [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)];
 }
 
 function getLuminance(r: number, g: number, b: number): number {
@@ -270,7 +259,7 @@ function meetsWCAG(
   foreground: string,
   background: string,
   size: "normal" | "large" = "normal",
-  level: "AA" | "AAA" = "AA",
+  level: "AA" | "AAA" = "AA"
 ): boolean {
   const ratio = getContrastRatio(foreground, background);
 
@@ -303,7 +292,7 @@ function getAccessibleTextColor(backgroundColor: string): string {
 function findAccessibleShade(
   textColor: string,
   backgroundScale: string[],
-  minContrast: number = 4.5,
+  minContrast: number = 4.5
 ): string | null {
   for (const shade of backgroundScale) {
     if (getContrastRatio(textColor, shade) >= minContrast) {
@@ -319,11 +308,7 @@ function findAccessibleShade(
 ### Harmony Functions
 
 ```tsx
-type HarmonyType =
-  | "complementary"
-  | "triadic"
-  | "analogous"
-  | "split-complementary";
+type HarmonyType = "complementary" | "triadic" | "analogous" | "split-complementary";
 
 function generateHarmony(baseHue: number, type: HarmonyType): number[] {
   switch (type) {
@@ -341,15 +326,12 @@ function generateHarmony(baseHue: number, type: HarmonyType): number[] {
 }
 
 // Generate palette from harmony
-function generateHarmoniousPalette(
-  baseHue: number,
-  type: HarmonyType,
-): Record<string, string> {
+function generateHarmoniousPalette(baseHue: number, type: HarmonyType): Record<string, string> {
   const hues = generateHarmony(baseHue, type);
   const names = ["primary", "secondary", "tertiary"];
 
   return Object.fromEntries(
-    hues.map((hue, i) => [names[i] || `color-${i}`, `hsl(${hue}, 70%, 50%)`]),
+    hues.map((hue, i) => [names[i] || `color-${i}`, `hsl(${hue}, 70%, 50%)`])
   );
 }
 ```

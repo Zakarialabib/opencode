@@ -14,7 +14,7 @@
         "When creating or modifying Backend Migrations or Database Models.",
         "When designing offline-first storage mechanisms for the Frontend."
       ],
-      "agents": ["lead-architect", "core-builder"],
+      "agents": ["lead-architect", "core-factory"],
       "assets": ["assets/schema-proposal.md"],
       "entryPoint": "SKILL.md"
     },
@@ -25,7 +25,7 @@
       "version": "1.0.0",
       "category": "research",
       "tags": ["research", "analysis", "documentation"],
-      "agents": ["docs-evolver"],
+      "agents": ["docs-curator"],
       "entryPoint": "SKILL.md"
     },
     {
@@ -35,7 +35,7 @@
       "version": "1.0.0",
       "category": "documentation",
       "tags": ["documentation", "audit", "quality", "standards"],
-      "agents": ["docs-governor", "docs-writer"],
+      "agents": ["docs-curator"],
       "entryPoint": "SKILL.md"
     },
     {
@@ -45,7 +45,7 @@
       "version": "1.0.0",
       "category": "devops",
       "tags": ["git", "release", "versioning", "deployment"],
-      "agents": ["devops-ops", "core-builder"],
+      "agents": ["devops-engineer", "core-factory"],
       "entryPoint": "SKILL.md"
     },
     {
@@ -55,7 +55,7 @@
       "version": "1.0.0",
       "category": "laravel",
       "tags": ["laravel", "php", "mvc", "scaffolding"],
-      "agents": ["backend-laravel", "core-builder"],
+      "agents": ["backend-laravel", "core-factory"],
       "assets": ["laravel-feature-scaffold.lsp.json"],
       "entryPoint": "SKILL.md"
     },
@@ -66,7 +66,7 @@
       "version": "1.0.0",
       "category": "orchestration",
       "tags": ["orchestration", "workflow", "planning", "coordination"],
-      "agents": ["lead-orchestrator"],
+      "agents": ["lead-strategist"],
       "entryPoint": "SKILL.md"
     },
     {
@@ -76,7 +76,7 @@
       "version": "1.0.0",
       "category": "frontend",
       "tags": ["react", "javascript", "components", "refactoring"],
-      "agents": ["qa-reviewer"],
+      "agents": ["qa-guardian"],
       "entryPoint": "SKILL.md"
     },
     {
@@ -86,7 +86,7 @@
       "version": "1.0.0",
       "category": "security",
       "tags": ["security", "vulnerability", "audit", "compliance"],
-      "agents": ["qa-security", "docs-evolver"],
+      "agents": ["qa-guardian", "docs-curator"],
       "entryPoint": "SKILL.md"
     },
     {
@@ -96,7 +96,7 @@
       "version": "1.0.0",
       "category": "meta",
       "tags": ["reflection", "optimization", "analysis", "improvement"],
-      "agents": ["lead-orchestrator", "lead-architect"],
+      "agents": ["lead-strategist", "lead-architect"],
       "entryPoint": "SKILL.md"
     },
     {
@@ -106,7 +106,7 @@
       "version": "1.0.0",
       "category": "testing",
       "tags": ["testing", "qa", "test-automation", "quality"],
-      "agents": ["qa-tester"],
+      "agents": ["qa-guardian"],
       "entryPoint": "SKILL.md"
     },
     {
@@ -122,15 +122,7 @@
         "Before implementing features in any stack",
         "During code review to validate stack conventions"
       ],
-      "agents": [
-        "core-builder",
-        "core-planner",
-        "qa-debugger",
-        "qa-reviewer",
-        "backend-laravel",
-        "backend-tauri",
-        "lead-orchestrator"
-      ],
+      "agents": ["core-factory", "lead-strategist"],
       "entryPoint": "SKILL.md"
     },
     {
@@ -145,7 +137,7 @@
         "When new skills/plugins are detected",
         "To adapt features from OpenClaude/ClaudeCode/QwenCode"
       ],
-      "agents": ["core-builder", "core-planner", "lead-orchestrator"],
+      "agents": ["core-factory", "lead-strategist"],
       "entryPoint": "SKILL.md"
     },
     {
@@ -155,7 +147,7 @@
       "version": "1.0.0",
       "category": "orchestration",
       "tags": ["workflow", "task-scheduling", "subagents", "orchestration"],
-      "agents": ["lead-orchestrator", "core-planner"],
+      "agents": ["lead-strategist", "core-factory"],
       "entryPoint": "SKILL.md",
       "assets": ["workflows/bug-fix.yaml", "workflows/feature-development.yaml"]
     },
@@ -201,7 +193,7 @@
         "When automating web interactions",
         "When testing web UIs"
       ],
-      "agents": ["qa-debugger"],
+      "agents": ["qa-guardian"],
       "entryPoint": "skills/agent-browser/SKILL.md"
     }
   ]

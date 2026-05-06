@@ -1,20 +1,23 @@
 name: self-improver
 displayName: Self-Improver Engine
 description: >
-  Continuously improves the project by checking docs (web, Context7,
-  opencode), using LSPs for code context, monitoring skills/plugins/scripts,
-  and adapting best practices from OpenClaude, QwenCode, ClaudeCode.
-  Auto-formats based on language detection.
+Continuously improves the project by checking docs (web, Context7,
+opencode), using LSPs for code context, monitoring skills/plugins/scripts,
+and adapting best practices from OpenClaude, QwenCode, ClaudeCode.
+Auto-formats based on language detection.
 category: meta
 tags: [self-improvement, meta, learning, adaptation, opencode, claudecode, qwencode]
-agents: [core-builder, lead-orchestrator, docs-evolver]
+agents: [core-factory, lead-strategist, docs-evolver]
 entryPoint: SKILL.md
+
 ---
 
 # Self-Improver Engine
 
 ## Purpose
+
 Autonomously improve the project by:
+
 1. **Learning** from opencode docs, Context7, web docs
 2. **Analyzing** code via LSPs (rust-analyzer, TS server, PHP)
 3. **Monitoring** skills repos, plugins, scripts for updates
@@ -24,6 +27,7 @@ Autonomously improve the project by:
 ## Workflow
 
 ### Phase 1: Environment Scan
+
 ```
 1. Detect project stack (Tauri/Rust, React/TS, Laravel/PHP)
 2. Load relevant LSP contexts (rust-analyzer, TS server, PHP)
@@ -32,6 +36,7 @@ Autonomously improve the project by:
 ```
 
 ### Phase 2: Knowledge Gathering
+
 ```
 1. Pull opencode docs via Context7:
    - context7_resolve-library-id: "opencode"
@@ -49,6 +54,7 @@ Autonomously improve the project by:
 ```
 
 ### Phase 3: Analysis via LSP
+
 ```
 1. Rust files → rust-analyzer context
    - Check: trae_get_rust_context(filePath)
@@ -64,6 +70,7 @@ Autonomously improve the project by:
 ```
 
 ### Phase 4: GLM Skill Audit
+
 ```
 1. Scan glm-skills/ directory
 2. Read glm-skills/glm-skills.json registry
@@ -72,6 +79,7 @@ Autonomously improve the project by:
 ```
 
 ### Phase 5: Auto-Format by Language
+
 ```
 Detect file extension → Apply formatter:
 
@@ -85,6 +93,7 @@ Detect file extension → Apply formatter:
 ```
 
 ### Phase 5: Adaptation & Improvement
+
 ```
 1. Compare current config with best practices:
    - OpenClaude: Check .opencode/ config patterns
@@ -106,6 +115,7 @@ Detect file extension → Apply formatter:
 ## Integration Points
 
 ### With LSP Tools
+
 ```typescript
 // Get LSP context before editing
 const rustContext = await trae_get_rust_context("src/main.rs");
@@ -113,6 +123,7 @@ const tsContext = await trae_get_typescript_context("src/App.tsx");
 ```
 
 ### With Context7
+
 ```
 1. context7_resolve-library-id → "opencode"
 2. context7_query-docs → "self-improvement patterns"
@@ -120,6 +131,7 @@ const tsContext = await trae_get_typescript_context("src/App.tsx");
 ```
 
 ### With Filesystem Monitoring
+
 ```
 Monitor these paths for changes:
 - skills/ → new skills available
@@ -160,12 +172,14 @@ When invoked, provide:
 ```
 
 ## When to Use
+
 - **Proactively**: On file save (if configured)
 - **Scheduled**: Daily/weekly improvement runs
 - **On request**: User asks "improve the project"
 - **Context switch**: When moving between stacks
 
 ## Safety Guards
+
 1. **Never auto-commit** without permission
 2. **Never delete** files automatically
 3. **Always ask** before major config changes
@@ -173,6 +187,7 @@ When invoked, provide:
 5. **Rollback capability** via git
 
 ## Example: Learning from OpenClaude
+
 ```
 1. Fetch OpenClaude repo structure via GitHub MCP
 2. Compare with current opencode.json

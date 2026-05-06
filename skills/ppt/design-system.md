@@ -14,34 +14,34 @@ The color system is the **only hard constraint**. All colors used in the deck mu
 
 Eight levels are derived from a single Primary color:
 
-| Level | Lightness | Usage Examples |
-|-------|-----------|---------------|
-| `primary-100` | Darkest (L≈8%) | Dark backgrounds, dramatic pages |
-| `primary-90` | Dark (L≈15%) | Title bars, dark blocks, overlays |
-| `primary-80` | **Main color** | Headings, primary UI elements |
-| `primary-60` | Medium dark (L≈45%) | Subheadings, icons, secondary elements |
-| `primary-40` | Medium light (L≈60%) | Muted text, dividers, subtle accents |
-| `primary-20` | Light (L≈80%) | Borders, light decorations, tints |
-| `primary-10` | Very light (L≈90%) | Card fills, surface backgrounds |
-| `primary-5` | Near white (L≈96%) | Page tints, hover states, subtle surfaces |
+| Level         | Lightness            | Usage Examples                            |
+| ------------- | -------------------- | ----------------------------------------- |
+| `primary-100` | Darkest (L≈8%)       | Dark backgrounds, dramatic pages          |
+| `primary-90`  | Dark (L≈15%)         | Title bars, dark blocks, overlays         |
+| `primary-80`  | **Main color**       | Headings, primary UI elements             |
+| `primary-60`  | Medium dark (L≈45%)  | Subheadings, icons, secondary elements    |
+| `primary-40`  | Medium light (L≈60%) | Muted text, dividers, subtle accents      |
+| `primary-20`  | Light (L≈80%)        | Borders, light decorations, tints         |
+| `primary-10`  | Very light (L≈90%)   | Card fills, surface backgrounds           |
+| `primary-5`   | Near white (L≈96%)   | Page tints, hover states, subtle surfaces |
 
 **Generation method**: From the Primary HSL (H, S, L) — keep H constant; dark levels S×1.1, light levels S×0.3; assign L per the table.
 
 ### 1.2 Semantic Colors
 
-| Token | Value | Purpose |
-|-------|-------|---------|
-| `background` | `#FFFFFF` | Default page base |
-| `surface` | `primary-5` | Tinted content area base |
-| `surface-card` | `#FFFFFF` | Card base (floats above surface) |
-| `text-primary` | `primary-80` | Primary text |
-| `text-secondary` | `primary-60` | Secondary text |
-| `text-muted` | `primary-40` | Annotations, footnotes |
-| `on-dark` | `#FFFFFF` | Text on dark backgrounds |
+| Token               | Value                   | Purpose                            |
+| ------------------- | ----------------------- | ---------------------------------- |
+| `background`        | `#FFFFFF`               | Default page base                  |
+| `surface`           | `primary-5`             | Tinted content area base           |
+| `surface-card`      | `#FFFFFF`               | Card base (floats above surface)   |
+| `text-primary`      | `primary-80`            | Primary text                       |
+| `text-secondary`    | `primary-60`            | Secondary text                     |
+| `text-muted`        | `primary-40`            | Annotations, footnotes             |
+| `on-dark`           | `#FFFFFF`               | Text on dark backgrounds           |
 | `on-dark-secondary` | `rgba(255,255,255,0.7)` | Secondary text on dark backgrounds |
-| `border` | `primary-10` | Dividers, borders |
-| `accent` | Defined by theme | Highlight color |
-| `on-accent` | `#FFFFFF` | Text on accent color |
+| `border`            | `primary-10`            | Dividers, borders                  |
+| `accent`            | Defined by theme        | Highlight color                    |
+| `on-accent`         | `#FFFFFF`               | Text on accent color               |
 
 ### 1.3 Color Rules
 
@@ -67,12 +67,14 @@ These are high-level design intentions. Interpret them freely.
 ### 2.1.1 Deck-Wide Consistency Rules
 
 **What MUST stay uniform across the entire deck** (changing these = unprofessional):
+
 - Body text font and font size (e.g., always 15pt Microsoft YaHei)
 - Page left/right margins (e.g., always 48pt)
 - Primary color palette (same theme throughout)
 - Accent color (same accent variant throughout, or intentional A/B mixing as documented)
 
 **What SHOULD vary across slides** (sameness = monotony):
+
 - Layout structure (grid, split, list, focus, timeline, etc.)
 - Background treatment (white, surface, dark, photo, gradient)
 - Card style (shadow, outline, solid, accent-bar, dark card)
@@ -86,12 +88,14 @@ These are high-level design intentions. Interpret them freely.
 Not all whitespace is bad. The key is **intent**.
 
 **Intentional whitespace (good — preserve it):**
+
 - KPI / big-number pages: Large number centered with breathing room → dramatic focus
 - Quote / pullout pages: Single sentence with generous margins → elegant emphasis
 - Photo + caption pages: Image dominates, text is minimal → visual storytelling
 - Title / divider pages: Bold text with open space → transition signal
 
 **Accidental whitespace (bad — fix it):**
+
 - Bullet list with 3 items occupying only 1/3 of the slide → expand or add visuals
 - Card grid with small cards clustered at the top, bottom 60% empty → enlarge cards, increase padding
 - Text block in the upper-left corner with nothing else on the page → redistribute content
@@ -143,17 +147,17 @@ Not all whitespace is bad. The key is **intent**.
 
 These are **rendering engine limitations**, not design choices. Violating them causes broken output.
 
-| Constraint | Reason |
-|-----------|--------|
-| Slide canvas: 720×405pt (16:9) | Fixed PPTX dimensions |
-| `background-image` only works on `<body>`, not on `<div>` | html2pptx engine limitation |
-| Don't use `flex-wrap` for multi-row grids — use separate flex containers per row | html2pptx drops wrapped rows |
-| Don't use negative margins | Causes text stacking in PPT (elements become independent text boxes) |
-| `font-family` must include a CJK font name | Required for correct font mapping |
-| Images must be local file paths, not URLs | html2pptx reads from filesystem |
-| Content that exceeds 405pt height will overflow — split into multiple slides instead | No scroll in PPT |
-| Multi-column equal-width cards: use explicit `width` + `flex-shrink:0`, not `flex:1` | Prevents uneven stretching |
-| Titles and short labels: use `white-space:nowrap` | Prevents unexpected line breaks in conversion |
+| Constraint                                                                           | Reason                                                               |
+| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| Slide canvas: 720×405pt (16:9)                                                       | Fixed PPTX dimensions                                                |
+| `background-image` only works on `<body>`, not on `<div>`                            | html2pptx engine limitation                                          |
+| Don't use `flex-wrap` for multi-row grids — use separate flex containers per row     | html2pptx drops wrapped rows                                         |
+| Don't use negative margins                                                           | Causes text stacking in PPT (elements become independent text boxes) |
+| `font-family` must include a CJK font name                                           | Required for correct font mapping                                    |
+| Images must be local file paths, not URLs                                            | html2pptx reads from filesystem                                      |
+| Content that exceeds 405pt height will overflow — split into multiple slides instead | No scroll in PPT                                                     |
+| Multi-column equal-width cards: use explicit `width` + `flex-shrink:0`, not `flex:1` | Prevents uneven stretching                                           |
+| Titles and short labels: use `white-space:nowrap`                                    | Prevents unexpected line breaks in conversion                        |
 
 ---
 
@@ -161,50 +165,50 @@ These are **rendering engine limitations**, not design choices. Violating them c
 
 ### Recommended Font Size Range
 
-| Role | Suggested Size | Weight |
-|------|---------------|--------|
-| Display / decorative number (ghost) | 80–100pt | Bold |
-| Hero focal metric (single-stat page) | 56–88pt | Bold |
-| Hero / cover title | 40–48pt | Bold |
-| KPI dashboard numbers | 36–48pt | Bold |
-| Section title | 28–34pt | Bold |
-| Page title (in title bar) | 26–30pt | Bold |
-| Card / sub heading | 20–24pt | Bold |
-| Body text | 14–16pt | Normal |
-| Annotations / footnotes | 12–13pt | Normal |
-| Captions / tiny labels | 10–12pt | Normal |
-| Tag / chip label | 10–11pt | Normal |
+| Role                                 | Suggested Size | Weight |
+| ------------------------------------ | -------------- | ------ |
+| Display / decorative number (ghost)  | 80–100pt       | Bold   |
+| Hero focal metric (single-stat page) | 56–88pt        | Bold   |
+| Hero / cover title                   | 40–48pt        | Bold   |
+| KPI dashboard numbers                | 36–48pt        | Bold   |
+| Section title                        | 28–34pt        | Bold   |
+| Page title (in title bar)            | 26–30pt        | Bold   |
+| Card / sub heading                   | 20–24pt        | Bold   |
+| Body text                            | 14–16pt        | Normal |
+| Annotations / footnotes              | 12–13pt        | Normal |
+| Captions / tiny labels               | 10–12pt        | Normal |
+| Tag / chip label                     | 10–11pt        | Normal |
 
 **Ghost number technique**: Large decorative numbers (80–100pt) at very low opacity (`color:rgba(255,255,255,0.05)` on dark backgrounds, or `color:rgba(0,0,0,0.04)` on light) add visual depth without competing with readable content. Use as background layer behind chapter numbers, inside TOC cards, or behind section titles.
 
 ### Common Spacing Values
 
-| Usage | Suggested |
-|-------|-----------|
-| Page left/right margins | 48pt |
-| Page top margin | 40pt |
-| Bottom safe zone | ≥36pt |
-| Between heading and body | 8-16pt |
-| Between cards | 12-20pt |
-| Card internal padding | 16-24pt |
+| Usage                    | Suggested |
+| ------------------------ | --------- |
+| Page left/right margins  | 48pt      |
+| Page top margin          | 40pt      |
+| Bottom safe zone         | ≥36pt     |
+| Between heading and body | 8-16pt    |
+| Between cards            | 12-20pt   |
+| Card internal padding    | 16-24pt   |
 
 ### Width Reference (720pt total)
 
-| Layout | Approximate Column Widths |
-|--------|--------------------------|
-| Full width (with margins) | ~624pt |
-| Two columns | ~296pt each (16pt gap) |
-| Three columns | ~192pt each (16pt×2 gaps) |
-| Four columns | ~140pt each (16pt×3 gaps) |
+| Layout                    | Approximate Column Widths |
+| ------------------------- | ------------------------- |
+| Full width (with margins) | ~624pt                    |
+| Two columns               | ~296pt each (16pt gap)    |
+| Three columns             | ~192pt each (16pt×2 gaps) |
+| Four columns              | ~140pt each (16pt×3 gaps) |
 
 ### Height Reference (405pt total)
 
-| Component | Approximate Height |
-|-----------|--------------------|
-| Title bar | ~56pt |
-| Single text line (15pt body) | ~23pt |
-| KPI number line (40pt) | ~40pt |
-| Card padding (top+bottom) | ~32-48pt |
+| Component                    | Approximate Height |
+| ---------------------------- | ------------------ |
+| Title bar                    | ~56pt              |
+| Single text line (15pt body) | ~23pt              |
+| KPI number line (40pt)       | ~40pt              |
+| Card padding (top+bottom)    | ~32-48pt           |
 
 ---
 

@@ -276,4 +276,3 @@ const IdeMcpBridgePlugin: Plugin = async ({ client, project, directory }) => {
 };
 
 export default IdeMcpBridgePlugin;
-

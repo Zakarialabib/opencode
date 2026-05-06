@@ -18,10 +18,11 @@
     "prettier-plugin-tailwindcss": "^0.7.2"
   },
   "scripts": {
+    "start": "node opencode-launch.js",
     "setup": "powershell -ExecutionPolicy Bypass -File setup.ps1",
     "db:init": "node tools/db-init.js",
     "lint": "npm run lint:biome && npm run lint:prettier",
-    "lint:biome": "npx biome format --write .",
+    "lint:biome": "npx @biomejs/biome format --write .",
     "lint:prettier": "npx prettier --write .",
     "test": "echo \"No tests specified\" && exit 0"
   }

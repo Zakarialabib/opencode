@@ -24,16 +24,15 @@ bash "$SKILL_DIR/setup.sh"    # Interactive environment check + install
 > If the request matches **any** trigger below, **skip the PPTX workflow entirely**.
 > Read **[`beamer.md`](beamer.md)** in this directory and follow its instructions.
 
-| Trigger | Typical phrasing |
-|---------|-----------------|
-| Reading / summarizing a paper to make slides | "read this PDF and make slides", "make slides from this paper" |
-| Academic / scientific / research presentation | "conference talk", "research presentation", "academic presentation" |
-| Thesis or dissertation defense | "thesis defense", "proposal defense", "defense slides" |
-| Any scholarly audience presentation | "academic PPT", "paper presentation", "research talk" |
-| STEM / science courseware | "STEM slides", "science lecture", "math/physics/chemistry courseware" |
-| User mentions a "paper" or "thesis" in any language | "present this paper", "talk about this thesis", "summarize this article into slides" |
-| Uploaded file is clearly an academic paper | "make slides from this", "help me present this" — where the uploaded PDF contains academic indicators (abstract, keywords, references, DOI, author affiliations, journal name) in the first 3 pages |
-
+| Trigger                                             | Typical phrasing                                                                                                                                                                                    |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Reading / summarizing a paper to make slides        | "read this PDF and make slides", "make slides from this paper"                                                                                                                                      |
+| Academic / scientific / research presentation       | "conference talk", "research presentation", "academic presentation"                                                                                                                                 |
+| Thesis or dissertation defense                      | "thesis defense", "proposal defense", "defense slides"                                                                                                                                              |
+| Any scholarly audience presentation                 | "academic PPT", "paper presentation", "research talk"                                                                                                                                               |
+| STEM / science courseware                           | "STEM slides", "science lecture", "math/physics/chemistry courseware"                                                                                                                               |
+| User mentions a "paper" or "thesis" in any language | "present this paper", "talk about this thesis", "summarize this article into slides"                                                                                                                |
+| Uploaded file is clearly an academic paper          | "make slides from this", "help me present this" — where the uploaded PDF contains academic indicators (abstract, keywords, references, DOI, author affiliations, journal name) in the first 3 pages |
 
 > **Beamer output format: PDF-style slides only.**
 >
@@ -71,16 +70,16 @@ python ooxml/scripts/unpack.py <office_file> <output_dir>
 
 #### Key file structures
 
-| Path | Contents |
-|------|----------|
-| `ppt/presentation.xml` | Main metadata and slide references |
-| `ppt/slides/slide{N}.xml` | Per-slide content |
-| `ppt/notesSlides/notesSlide{N}.xml` | Speaker notes |
-| `ppt/comments/modernComment_*.xml` | Slide comments |
-| `ppt/slideLayouts/` | Layout templates |
-| `ppt/slideMasters/` | Master slide templates |
-| `ppt/theme/` | Theme and styling |
-| `ppt/media/` | Images and other media |
+| Path                                | Contents                           |
+| ----------------------------------- | ---------------------------------- |
+| `ppt/presentation.xml`              | Main metadata and slide references |
+| `ppt/slides/slide{N}.xml`           | Per-slide content                  |
+| `ppt/notesSlides/notesSlide{N}.xml` | Speaker notes                      |
+| `ppt/comments/modernComment_*.xml`  | Slide comments                     |
+| `ppt/slideLayouts/`                 | Layout templates                   |
+| `ppt/slideMasters/`                 | Master slide templates             |
+| `ppt/theme/`                        | Theme and styling                  |
+| `ppt/media/`                        | Images and other media             |
 
 #### Typography and color extraction
 
@@ -92,51 +91,57 @@ python ooxml/scripts/unpack.py <office_file> <output_dir>
 
 ---
 
-
 ## Creating a new PowerPoint presentation **using a template**
 
 When the user upload a pptx file,and do not ask you to create a fully new pptx,you must create a presentation that follows an existing template's design, you'll need to duplicate and re-arrange template slides before then replacing placeholder content.
 
 ### Workflow
+
 1. **Extract template text AND create visual thumbnail grid**:
-   * Extract text: `python -m markitdown template.pptx > template-content.md`
-   * Read `template-content.md`: Read the entire file. **NEVER set any range limits.**
-   * Create thumbnail grids: `python scripts/thumbnail.py template.pptx`
-   * See [Creating Thumbnail Grids](#creating-thumbnail-grids) section for details
+   - Extract text: `python -m markitdown template.pptx > template-content.md`
+   - Read `template-content.md`: Read the entire file. **NEVER set any range limits.**
+   - Create thumbnail grids: `python scripts/thumbnail.py template.pptx`
+   - See [Creating Thumbnail Grids](#creating-thumbnail-grids) section for details
 
 2. **Analyze template and save inventory to a file**:
-   * **Visual Analysis**: Review thumbnail grid(s) to understand layouts and design patterns
-   * Create and save `template-inventory.md` containing:
+   - **Visual Analysis**: Review thumbnail grid(s) to understand layouts and design patterns
+   - Create and save `template-inventory.md` containing:
+
      ```markdown
      # Template Inventory Analysis
+
      **Total Slides: [count]**
      **IMPORTANT: Slides are 0-indexed (first slide = 0, last slide = count-1)**
 
      ## [Category Name]
+
      - Slide 0: [Layout code if available] - Description/purpose
      - Slide 1: [Layout code] - Description/purpose
-     [... EVERY slide must be listed ...]
+       [... EVERY slide must be listed ...]
      ```
 
 3. **Create presentation outline based on template inventory**:
-   * Choose layouts that match your content structure
-   * **CRITICAL: Match layout structure to actual content**:
+   - Choose layouts that match your content structure
+   - **CRITICAL: Match layout structure to actual content**:
      - Single-column layouts: Use for unified narrative or single topic
      - Two-column layouts: Use ONLY when you have exactly 2 distinct items
      - Three-column layouts: Use ONLY when you have exactly 3 distinct items
      - Image + text layouts: Use ONLY when you have actual images
      - Count your actual content pieces BEFORE selecting layout
-   * Save `outline.md` with content AND template mapping
+   - Save `outline.md` with content AND template mapping
 
 4. **Duplicate, reorder, and delete slides using `rearrange.py`**:
+
    ```bash
    python scripts/rearrange.py template.pptx working.pptx 0,34,34,50,52
    ```
 
 5. **Extract ALL text using the `inventory.py` script**:
+
    ```bash
    python scripts/inventory.py working.pptx text-inventory.json
    ```
+
    Read `text-inventory.json` entirely. **NEVER set range limits.**
 
 6. **Generate replacement text and save to JSON file**:
@@ -144,7 +149,7 @@ When the user upload a pptx file,and do not ask you to create a fully new pptx,y
    - Add `"paragraphs"` field to shapes that need content
    - **ALL text shapes from inventory will be cleared** unless you provide "paragraphs"
    - Paragraphs with bullets are automatically left-aligned
-   - **Do NOT include bullet symbols** (bullet, -, *) in text — they're added automatically
+   - **Do NOT include bullet symbols** (bullet, -, \*) in text — they're added automatically
    - Save to `replacement-text.json`
 
    **CRITICAL — JSON generation rules (learned from practice):**
@@ -175,13 +180,13 @@ When creating a new PowerPoint presentation from scratch, use the **Design Syste
 
 Before ANY design work, classify the presentation into one of the five scenes below:
 
-| Scene | Keywords / Triggers |
-|-------|-------------------|
-| **Teaching / Training** | course, teaching, training, lecture, courseware, knowledge points, lesson plan |
-| **Work Report / Review** | report, review, summary, retrospective, OKR, KPI, quarterly, annual |
-| **Proposal / Pitch** | proposal, plan, pitch, investor, roadshow, business plan |
+| Scene                         | Keywords / Triggers                                                                                                                                            |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Teaching / Training**       | course, teaching, training, lecture, courseware, knowledge points, lesson plan                                                                                 |
+| **Work Report / Review**      | report, review, summary, retrospective, OKR, KPI, quarterly, annual                                                                                            |
+| **Proposal / Pitch**          | proposal, plan, pitch, investor, roadshow, business plan                                                                                                       |
 | **Thesis Defense / Academic** | thesis, defense, research, academic, topic, graduation project — **→ if source is a paper/PDF or audience is academic, read [`beamer.md`](beamer.md) instead** |
-| **General** | None of the above, or user did not specify |
+| **General**                   | None of the above, or user did not specify                                                                                                                     |
 
 ### Step 1 — Select Theme (MANDATORY)
 
@@ -192,6 +197,7 @@ Read [`themes.md`](themes.md) and select a theme based on scene and content tone
 **Accent variant selection**: Each theme offers 3 accent colors (A = default, B, C). Choose the variant that best matches the content tone. You may also mix — e.g., use accent-A for most slides and accent-B for emphasis pages — but keep the primary palette constant.
 
 Theme selection tips:
+
 - Work report → Ocean or Graphite
 - Proposal / pitch → Ocean, Sandstone, or Twilight
 - Teaching / courseware → Forest or Ocean
@@ -218,11 +224,13 @@ Read [`html2pptx.md`](html2pptx.md) completely from start to finish. **NEVER set
 ### Step 4 — Plan Slide Sequence
 
 For each slide, decide:
+
 1. Which **component** from [`components.md`](components.md) to use as a starting point (or design from scratch)
 2. What **content** to fill in — **be generous with content; fill the slide**
 3. How to **remix** the component — change spacing, font sizes, card styles, backgrounds, proportions to create variety
 
 **KEY PRINCIPLES**:
+
 - Read [`components.md`](components.md) for available starting points
 - Also read [`data-viz-components.md`](data-viz-components.md) for data visualization components
 - **Adjacent slides MUST look distinctly different** — vary layout structure, background, card treatment
@@ -233,6 +241,7 @@ For each slide, decide:
 - **Tables are a great way to enrich content** — use `content-table*` or `content-chart-*` from components.md whenever content involves structured data, feature comparisons, schedules, or multi-attribute lists
 
 **Anti-whitespace strategies** (use when a slide feels empty):
+
 - Increase font sizes (e.g., body from 15pt to 17pt, headings from 22pt to 26pt)
 - Add colored background blocks or sections
 - Use a darker or tinted background instead of pure white
@@ -241,9 +250,10 @@ For each slide, decide:
 - Use a photo background with mask overlay
 - Switch from a text-heavy layout to a visual-heavy one
 
-**Note: Not all whitespace is bad.** KPI pages, quote pages, and big-number focus pages are *designed* to have generous whitespace — that's intentional emphasis. Only fix whitespace on content-heavy pages (bullet lists, card grids, text blocks) where it looks accidental. See design-system.md §2.2 for the full distinction.
+**Note: Not all whitespace is bad.** KPI pages, quote pages, and big-number focus pages are _designed_ to have generous whitespace — that's intentional emphasis. Only fix whitespace on content-heavy pages (bullet lists, card grids, text blocks) where it looks accidental. See design-system.md §2.2 for the full distinction.
 
 **Slide sequence pattern** (recommended):
+
 ```
 1. Cover → PREFER cover-photo-mask (with downloaded photo + theme mask)
          → Fallback: cover-dark-hero (no photo needed) or cover-split
@@ -263,6 +273,7 @@ Background rhythm target: ~40% white, ~25% surface/tinted, ~20% dark, ~15% photo
 ### Step 5 — Generate HTML from Components
 
 For each slide:
+
 1. Start from a component template in `components.md`, or design from scratch
 2. Replace all `${variable}` placeholders with actual theme color values
 3. Replace placeholder text with actual content
@@ -272,12 +283,12 @@ For each slide:
    - **Card styles**: Use the **Card Style Cookbook** in components.md to swap between shadow/outline/solid/accent-bar/dark card styles. No 2 adjacent slides should use the same card style.
    - **Title bars**: All content slides must use the **same header style** — pick one title bar variant from components.md and apply it consistently across every content page.
    - **Dark pages**: Use the **Dark Background Content Templates** in components.md for rhythm-breaking dark slides. Aim for at least 1 dark content page per 4 slides.
-6. **Fill the slide**: If there's visible empty space, increase font sizes, add visual elements, expand padding, or use a colored/photo background. A well-filled slide looks professional; excessive whitespace looks unfinished.
-
+7. **Fill the slide**: If there's visible empty space, increase font sizes, add visual elements, expand padding, or use a colored/photo background. A well-filled slide looks professional; excessive whitespace looks unfinished.
 
 ### Step 5.8 — Visual Diversity Check (RECOMMENDED)
 
 Before converting to PPTX, do a quick scan of your slide sequence:
+
 - Are adjacent slides visually distinct (different layout, background, card style)?
 - Is there enough variety across the deck (multiple layout structures, card treatments, background approaches)?
 - Is there at least one dramatic "rhythm breaker" page?
@@ -288,29 +299,30 @@ If the answer to any is "no", revise before proceeding.
 ### Step 6 — Convert and Validate
 
 1. Create and run a JavaScript file using [`html2pptx.js`](scripts/html2pptx.js) to convert HTML slides to PowerPoint:
+
    ```javascript
-   const pptxgen = require('pptxgenjs');
-   const html2pptx = require('./html2pptx');
-   
+   const pptxgen = require("pptxgenjs");
+   const html2pptx = require("./html2pptx");
+
    const pptx = new pptxgen();
-   pptx.layout = 'LAYOUT_16x9';
-   
+   pptx.layout = "LAYOUT_16x9";
+
    // Optional: custom font configuration
-   const fontConfig = { cjk: 'Microsoft YaHei', latin: 'Corbel' };
-   
+   const fontConfig = { cjk: "Microsoft YaHei", latin: "Corbel" };
+
    // Process ALL slides with warnings collection
    const allWarnings = [];
    for (const htmlFile of slideFiles) {
      const { slide, placeholders, warnings } = await html2pptx(htmlFile, pptx, { fontConfig });
      allWarnings.push(...warnings);
    }
-   
+
    // Add charts to placeholder areas if any
    if (placeholders.length > 0) {
-       slide.addChart(pptx.charts.LINE, chartData, placeholders[0]);
+     slide.addChart(pptx.charts.LINE, chartData, placeholders[0]);
    }
-   
-   await pptx.writeFile('output.pptx');
+
+   await pptx.writeFile("output.pptx");
    ```
 
 2. **Check warnings**: Review `warnings` output. **Blocking issues** (overflow, font < 11pt) must be fixed. **Non-blocking warnings** (bounds, balance, density) are suggestions — use judgment on whether to fix them.
@@ -319,6 +331,7 @@ If the answer to any is "no", revise before proceeding.
    ```bash
    python scripts/thumbnail.py output.pptx workspace/thumbnails --cols 4
    ```
+
    - Read and carefully examine the thumbnail image for:
      - **Text cutoff**: Text being cut off by header bars, shapes, or slide edges
      - **Text overlap**: Text overlapping with other text or shapes
@@ -348,6 +361,7 @@ If major issues are found, fix and regenerate. Minor imperfections are acceptabl
 These rules are split into **engine constraints** (violating them causes broken output) and **design principles** (ensuring quality).
 
 **Engine Constraints (technical — cannot be violated):**
+
 ```
 [ENGINE] Slide canvas is 720×405pt — content exceeding this overflows
 [ENGINE] All colors must come from the theme color scale — no arbitrary grays (#666 #999 #DDD)
@@ -362,6 +376,7 @@ These rules are split into **engine constraints** (violating them causes broken 
 ```
 
 **Design Principles (creative quality — strongly encouraged):**
+
 ```
 [DESIGN] Adjacent slides should use different layouts, backgrounds, and card styles
 [DESIGN] Every content slide should have at least one visual focal point
@@ -383,13 +398,12 @@ These rules are split into **engine constraints** (violating them causes broken 
 When editing slides in an existing PowerPoint presentation, work with raw Office Open XML (OOXML) format.
 
 ### Workflow
+
 1. **MANDATORY - READ ENTIRE FILE**: Read [`ooxml.md`](ooxml.md) (~500 lines) completely from start to finish. **NEVER set any range limits when reading this file.**
 2. Unpack the presentation: `python ooxml/scripts/unpack.py <office_file> <output_dir>`
 3. Edit the XML files (primarily `ppt/slides/slide{N}.xml` and related files)
 4. **CRITICAL**: Validate immediately after each edit: `python ooxml/scripts/validate.py <dir> --original <file>`
 5. Pack the final presentation: `python ooxml/scripts/pack.py <input_directory> <office_file>`
-
-
 
 ## Creating Thumbnail Grids
 
@@ -398,6 +412,7 @@ python scripts/thumbnail.py template.pptx [output_prefix]
 ```
 
 **Features**:
+
 - Creates: `thumbnails.jpg` (or `thumbnails-1.jpg`, `thumbnails-2.jpg` for large decks)
 - Default: 5 columns, max 30 slides per grid (5x6)
 - Custom prefix: `python scripts/thumbnail.py template.pptx my-grid`
@@ -407,6 +422,7 @@ python scripts/thumbnail.py template.pptx [output_prefix]
 ## Converting Slides to Images
 
 1. **Convert PPTX to PDF**:
+
    ```bash
    soffice --headless --convert-to pdf template.pptx
    ```
@@ -417,7 +433,9 @@ python scripts/thumbnail.py template.pptx [output_prefix]
    ```
 
 ## Code Style Guidelines
+
 **IMPORTANT**: When generating code for PPTX operations:
+
 - Write concise code
 - Avoid verbose variable names and redundant operations
 - Avoid unnecessary print statements

@@ -22,6 +22,7 @@ AMiner 是全球领先的学术数据平台，提供学者、论文、机构、�
 所有 API 调用需要在请求头中携带 `Authorization: <your_token>`。
 
 **获取方式：**
+
 1. 前往 [AMiner 控制台](https://open.aminer.cn/open/board?tab=control) 登录并生成 API Token
 2. 若不了解如何操作，请参阅 [开放平台文档](https://open.aminer.cn/open/doc)
 
@@ -54,6 +55,7 @@ python scripts/aminer_client.py --token <TOKEN> --action patent_search --query "
 ```
 
 也可以直接调用单个 API：
+
 ```bash
 python scripts/aminer_client.py --token <TOKEN> --action raw \
   --api paper_search --params '{"title": "BERT", "page": 0, "size": 5}'
@@ -85,14 +87,14 @@ python scripts/aminer_client.py --token <TOKEN> --action raw \
 
 当用户说“查论文”时，先判断目标是“找 ID”、“做筛选”、“做问答”还是“做分析报表”，再选 API：
 
-| API | 侧重点 | 适用场景 | 成本 |
-|---|---|---|---|
-| `paper_search` | 标题检索、快速拿 `paper_id` | 已知论文标题，先定位目标论文 | 免费 |
-| `paper_search_pro` | 多条件检索与排序（作者/机构/期刊/关键词） | 主题检索、按引用量或年份排序 | ¥0.01/次 |
-| `paper_qa_search` | 自然语言问答/主题词检索 | 用户用自然语言描述需求，先走语义检索 | ¥0.05/次 |
-| `paper_list_by_search_venue` | 返回更完整论文信息（适合分析） | 需要更丰富字段做分析/报告 | ¥0.30/次 |
-| `paper_list_by_keywords` | 多关键词批量检索 | 批量专题拉取（如 AlphaFold + protein folding） | ¥0.10/次 |
-| `paper_detail_by_condition` | 年份+期刊维度拉详情 | 期刊年度监控、选刊分析 | ¥0.20/次 |
+| API                          | 侧重点                                    | 适用场景                                       | 成本     |
+| ---------------------------- | ----------------------------------------- | ---------------------------------------------- | -------- |
+| `paper_search`               | 标题检索、快速拿 `paper_id`               | 已知论文标题，先定位目标论文                   | 免费     |
+| `paper_search_pro`           | 多条件检索与排序（作者/机构/期刊/关键词） | 主题检索、按引用量或年份排序                   | ¥0.01/次 |
+| `paper_qa_search`            | 自然语言问答/主题词检索                   | 用户用自然语言描述需求，先走语义检索           | ¥0.05/次 |
+| `paper_list_by_search_venue` | 返回更完整论文信息（适合分析）            | 需要更丰富字段做分析/报告                      | ¥0.30/次 |
+| `paper_list_by_keywords`     | 多关键词批量检索                          | 批量专题拉取（如 AlphaFold + protein folding） | ¥0.10/次 |
+| `paper_detail_by_condition`  | 年份+期刊维度拉详情                       | 期刊年度监控、选刊分析                         | ¥0.20/次 |
 
 推荐路由（默认）：
 
@@ -110,6 +112,7 @@ python scripts/aminer_client.py --token <TOKEN> --action raw \
 **适用场景**：了解某位学者的完整学术画像，包括简介、研究方向、发表论文、专利、科研项目。
 
 **调用链：**
+
 ```
 学者搜索（name → person_id）
     ↓
@@ -122,11 +125,13 @@ python scripts/aminer_client.py --token <TOKEN> --action raw \
 ```
 
 **命令：**
+
 ```bash
 python scripts/aminer_client.py --token <TOKEN> --action scholar_profile --name "Yann LeCun"
 ```
 
 **输出示例字段：**
+
 - 基本信息：姓名、机构、职称、性别
 - 个人简介（中英文）
 - 研究兴趣与领域
@@ -143,6 +148,7 @@ python scripts/aminer_client.py --token <TOKEN> --action scholar_profile --name 
 **适用场景**：根据论文标题或关键词，获取论文完整信息及引用关系。
 
 **调用链：**
+
 ```
 论文搜索 / 论文搜索pro（title/keyword → paper_id）
     ↓
@@ -154,6 +160,7 @@ python scripts/aminer_client.py --token <TOKEN> --action scholar_profile --name 
 ```
 
 **命令：**
+
 ```bash
 # 按标题搜索
 python scripts/aminer_client.py --token <TOKEN> --action paper_deep_dive --title "BERT"
@@ -170,6 +177,7 @@ python scripts/aminer_client.py --token <TOKEN> --action paper_deep_dive \
 **适用场景**：分析某机构的学者规模、论文产出、专利数量，适合竞品研究或合作评估。
 
 **调用链：**
+
 ```
 机构消歧pro（原始字符串 → org_id，处理别名/全称差异）
     ↓
@@ -183,6 +191,7 @@ python scripts/aminer_client.py --token <TOKEN> --action paper_deep_dive \
 > 若有多个同名机构，机构搜索会返回候选列表，可结合机构消歧 pro 精确匹配。
 
 **命令：**
+
 ```bash
 python scripts/aminer_client.py --token <TOKEN> --action org_analysis --org "MIT"
 # 指定原始字符串（含缩写/别名）
@@ -196,6 +205,7 @@ python scripts/aminer_client.py --token <TOKEN> --action org_analysis --org "Mas
 **适用场景**：追踪某期刊特定年份的论文，用于投稿调研或研究热点分析。
 
 **调用链：**
+
 ```
 期刊搜索（name → venue_id）
     ↓
@@ -207,6 +217,7 @@ python scripts/aminer_client.py --token <TOKEN> --action org_analysis --org "Mas
 ```
 
 **命令：**
+
 ```bash
 python scripts/aminer_client.py --token <TOKEN> --action venue_papers --venue "NeurIPS" --year 2023
 ```
@@ -218,6 +229,7 @@ python scripts/aminer_client.py --token <TOKEN> --action venue_papers --venue "N
 **适用场景**：用自然语言或结构化关键词智能搜索论文，支持 SCI 过滤、引用量排序、作者/机构限定。
 
 **核心 API**：`论文问答搜索`（¥0.05/次），支持：
+
 - `query`：自然语言提问，系统自动拆解为关键词
 - `topic_high/middle/low`：精细控制关键词权重（嵌套数组 OR/AND 逻辑）
 - `sci_flag`：只看 SCI 论文
@@ -225,6 +237,7 @@ python scripts/aminer_client.py --token <TOKEN> --action venue_papers --venue "N
 - `author_terms / org_terms`：限定作者或机构
 
 **命令：**
+
 ```bash
 # 自然语言问答
 python scripts/aminer_client.py --token <TOKEN> --action paper_qa \
@@ -244,6 +257,7 @@ python scripts/aminer_client.py --token <TOKEN> --action paper_qa \
 **适用场景**：搜索特定技术领域的专利，或获取某学者/机构的专利组合。
 
 **调用链（独立搜索）：**
+
 ```
 专利搜索（query → patent_id）
     ↓
@@ -251,6 +265,7 @@ python scripts/aminer_client.py --token <TOKEN> --action paper_qa \
 ```
 
 **调用链（经由学者/机构）：**
+
 ```
 学者搜索 → 学者专利（patent_id 列表）
 机构消歧 → 机构专利（patent_id 列表）
@@ -259,6 +274,7 @@ python scripts/aminer_client.py --token <TOKEN> --action paper_qa \
 ```
 
 **命令：**
+
 ```bash
 python scripts/aminer_client.py --token <TOKEN> --action patent_search --query "量子计算芯片"
 python scripts/aminer_client.py --token <TOKEN> --action scholar_patents --name "张首晟"
@@ -270,36 +286,36 @@ python scripts/aminer_client.py --token <TOKEN> --action scholar_patents --name 
 
 > 完整参数说明请阅读 `references/api-catalog.md`
 
-| # | 标题 | 方法 | 价格 | 接口路径（基础域名：datacenter.aminer.cn/gateway/open_platform） |
-|---|------|------|------|------|
-| 1 | 论文问答搜索 | POST | ¥0.05 | `/api/paper/qa/search` |
-| 2 | 学者搜索 | POST | 免费 | `/api/person/search` |
-| 3 | 论文搜索 | GET | 免费 | `/api/paper/search` |
-| 4 | 论文搜索pro | GET | ¥0.01 | `/api/paper/search/pro` |
-| 5 | 专利搜索 | POST | 免费 | `/api/patent/search` |
-| 6 | 机构搜索 | POST | 免费 | `/api/organization/search` |
-| 7 | 期刊搜索 | POST | 免费 | `/api/venue/search` |
-| 8 | 学者详情 | GET | ¥1.00 | `/api/person/detail` |
-| 9 | 学者项目 | GET | ¥3.00 | `/api/project/person/v3/open` |
-| 10 | 学者论文 | GET | ¥1.50 | `/api/person/paper/relation` |
-| 11 | 学者专利 | GET | ¥1.50 | `/api/person/patent/relation` |
-| 12 | 学者画像 | GET | ¥0.50 | `/api/person/figure` |
-| 13 | 论文信息 | POST | 免费 | `/api/paper/info` |
-| 14 | 论文详情 | GET | ¥0.01 | `/api/paper/detail` |
-| 15 | 论文引用 | GET | ¥0.10 | `/api/paper/relation` |
-| 16 | 专利信息 | GET | 免费 | `/api/patent/info` |
-| 17 | 专利详情 | GET | ¥0.01 | `/api/patent/detail` |
-| 18 | 机构详情 | POST | ¥0.01 | `/api/organization/detail` |
-| 19 | 机构专利 | GET | ¥0.10 | `/api/organization/patent/relation` |
-| 20 | 机构学者 | GET | ¥0.50 | `/api/organization/person/relation` |
-| 21 | 机构论文 | GET | ¥0.10 | `/api/organization/paper/relation` |
-| 22 | 期刊详情 | POST | ¥0.20 | `/api/venue/detail` |
-| 23 | 期刊论文 | POST | ¥0.10 | `/api/venue/paper/relation` |
-| 24 | 机构消歧 | POST | ¥0.01 | `/api/organization/na` |
-| 25 | 机构消歧pro | POST | ¥0.05 | `/api/organization/na/pro` |
-| 26 | 论文搜索接口 | GET | ¥0.30 | `/api/paper/list/by/search/venue` |
-| 27 | 论文批量查询 | GET | ¥0.10 | `/api/paper/list/citation/by/keywords` |
-| 28 | 按年份与期刊获取论文详情 | GET | ¥0.20 | `/api/paper/platform/allpubs/more/detail/by/ts/org/venue` |
+| #   | 标题                     | 方法 | 价格  | 接口路径（基础域名：datacenter.aminer.cn/gateway/open_platform） |
+| --- | ------------------------ | ---- | ----- | ---------------------------------------------------------------- |
+| 1   | 论文问答搜索             | POST | ¥0.05 | `/api/paper/qa/search`                                           |
+| 2   | 学者搜索                 | POST | 免费  | `/api/person/search`                                             |
+| 3   | 论文搜索                 | GET  | 免费  | `/api/paper/search`                                              |
+| 4   | 论文搜索pro              | GET  | ¥0.01 | `/api/paper/search/pro`                                          |
+| 5   | 专利搜索                 | POST | 免费  | `/api/patent/search`                                             |
+| 6   | 机构搜索                 | POST | 免费  | `/api/organization/search`                                       |
+| 7   | 期刊搜索                 | POST | 免费  | `/api/venue/search`                                              |
+| 8   | 学者详情                 | GET  | ¥1.00 | `/api/person/detail`                                             |
+| 9   | 学者项目                 | GET  | ¥3.00 | `/api/project/person/v3/open`                                    |
+| 10  | 学者论文                 | GET  | ¥1.50 | `/api/person/paper/relation`                                     |
+| 11  | 学者专利                 | GET  | ¥1.50 | `/api/person/patent/relation`                                    |
+| 12  | 学者画像                 | GET  | ¥0.50 | `/api/person/figure`                                             |
+| 13  | 论文信息                 | POST | 免费  | `/api/paper/info`                                                |
+| 14  | 论文详情                 | GET  | ¥0.01 | `/api/paper/detail`                                              |
+| 15  | 论文引用                 | GET  | ¥0.10 | `/api/paper/relation`                                            |
+| 16  | 专利信息                 | GET  | 免费  | `/api/patent/info`                                               |
+| 17  | 专利详情                 | GET  | ¥0.01 | `/api/patent/detail`                                             |
+| 18  | 机构详情                 | POST | ¥0.01 | `/api/organization/detail`                                       |
+| 19  | 机构专利                 | GET  | ¥0.10 | `/api/organization/patent/relation`                              |
+| 20  | 机构学者                 | GET  | ¥0.50 | `/api/organization/person/relation`                              |
+| 21  | 机构论文                 | GET  | ¥0.10 | `/api/organization/paper/relation`                               |
+| 22  | 期刊详情                 | POST | ¥0.20 | `/api/venue/detail`                                              |
+| 23  | 期刊论文                 | POST | ¥0.10 | `/api/venue/paper/relation`                                      |
+| 24  | 机构消歧                 | POST | ¥0.01 | `/api/organization/na`                                           |
+| 25  | 机构消歧pro              | POST | ¥0.05 | `/api/organization/na/pro`                                       |
+| 26  | 论文搜索接口             | GET  | ¥0.30 | `/api/paper/list/by/search/venue`                                |
+| 27  | 论文批量查询             | GET  | ¥0.10 | `/api/paper/list/citation/by/keywords`                           |
+| 28  | 按年份与期刊获取论文详情 | GET  | ¥0.20 | `/api/paper/platform/allpubs/more/detail/by/ts/org/venue`        |
 
 ---
 

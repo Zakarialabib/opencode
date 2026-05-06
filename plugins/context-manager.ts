@@ -1,3 +1,4 @@
+import { parseJsonc, stringifyJson } from "./jsonc-utils";
 import { Plugin, tool } from "@opencode-ai/plugin";
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
@@ -7,14 +8,15 @@ const ContextManagerPlugin: Plugin = async ({ client, project, directory }) => {
 
   const readConfig = (): Record<string, any> | null => {
     try {
-      return JSON.parse(readFileSync(configPath, "utf8"));
+      const content = readFileSync(configPath, "utf8");
+      return parseJsonc(content);
     } catch (e) {
       return null;
     }
   };
 
   const writeConfig = (config: Record<string, any>) => {
-    writeFileSync(configPath, JSON.stringify(config, null, 2));
+    writeFileSync(configPath, stringifyJson(config));
   };
 
   return {

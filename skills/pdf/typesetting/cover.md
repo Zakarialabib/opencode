@@ -18,15 +18,15 @@
 
 ## When to Include a Cover
 
-| Document Type | Cover Needed | Notes |
-|---------------|-------------|-------|
-| Formal report (annual, research, white paper) | ✅ Required | Conveys professionalism |
-| Proposal / plan | ✅ Required | First impression is everything |
-| Resume | ❌ Not needed | Content itself is the cover |
-| Menu / flyer / card | ❌ Not needed | Single page or function-oriented |
-| Invitation | ❌ Not needed | The front side IS the cover |
-| Lab report / academic paper | ⚠️ Situational | Add when template requires it |
-| Portfolio / lookbook | ✅ Required | Cover sets the tone |
+| Document Type                                 | Cover Needed   | Notes                            |
+| --------------------------------------------- | -------------- | -------------------------------- |
+| Formal report (annual, research, white paper) | ✅ Required    | Conveys professionalism          |
+| Proposal / plan                               | ✅ Required    | First impression is everything   |
+| Resume                                        | ❌ Not needed  | Content itself is the cover      |
+| Menu / flyer / card                           | ❌ Not needed  | Single page or function-oriented |
+| Invitation                                    | ❌ Not needed  | The front side IS the cover      |
+| Lab report / academic paper                   | ⚠️ Situational | Add when template requires it    |
+| Portfolio / lookbook                          | ✅ Required    | Cover sets the tone              |
 
 ---
 
@@ -77,6 +77,7 @@ ANCHOR_FOOTER_Y = H * 0.90
 ### Bounding Box Containment
 
 Each block has a **maximum bounding box** defined by two consecutive anchors:
+
 - Block can grow downward within `[own_anchor_Y, next_anchor_Y - min_gap]`
 - If content exceeds its bounding box → trigger overflow protection (see Part 3)
 - Blocks NEVER consume space belonging to adjacent blocks
@@ -89,12 +90,12 @@ Use **weight**, **letter-spacing**, and **opacity** to create hierarchy - not ju
 
 ### Mandatory Type Roles
 
-| Role | Size | Weight | Letter-Spacing | Line-Height | Opacity | Purpose |
-|------|------|--------|----------------|-------------|---------|---------|
-| **Kicker / Footer** (decorative text) | 16pt | Regular | 3pt (very wide) | - | 60% | Wide spacing + transparency makes 16pt text feel delicate and recessive |
-| **Summary / Description** (summary paragraph) 🆕 | 16-18pt | Regular | normal | **1.6** | 85% | **Fill visual space** - 2-4 lines of descriptive text that prevents empty covers |
-| **Meta / Subtitle** (secondary text) | 20-22pt | Light / Regular | normal | 1.4 | 85% | Comfortable reading rhythm, clear secondary hierarchy |
-| **Hero Title** (main title) | 45-65pt (CJK: 50-80pt) | Black / Heavy (extra bold) | normal-tight | **1.15** (multi-line) | 100% | Must create overwhelming scale contrast; visually dominates the page. CJK characters need +15-20% size to match Latin visual weight |
+| Role                                             | Size                   | Weight                     | Letter-Spacing  | Line-Height           | Opacity | Purpose                                                                                                                             |
+| ------------------------------------------------ | ---------------------- | -------------------------- | --------------- | --------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **Kicker / Footer** (decorative text)            | 16pt                   | Regular                    | 3pt (very wide) | -                     | 60%     | Wide spacing + transparency makes 16pt text feel delicate and recessive                                                             |
+| **Summary / Description** (summary paragraph) 🆕 | 16-18pt                | Regular                    | normal          | **1.6**               | 85%     | **Fill visual space** - 2-4 lines of descriptive text that prevents empty covers                                                    |
+| **Meta / Subtitle** (secondary text)             | 20-22pt                | Light / Regular            | normal          | 1.4                   | 85%     | Comfortable reading rhythm, clear secondary hierarchy                                                                               |
+| **Hero Title** (main title)                      | 45-65pt (CJK: 50-80pt) | Black / Heavy (extra bold) | normal-tight    | **1.15** (multi-line) | 100%    | Must create overwhelming scale contrast; visually dominates the page. CJK characters need +15-20% size to match Latin visual weight |
 
 ### 🔴 Data-to-Drawer Binding Rule
 
@@ -102,15 +103,16 @@ Use **weight**, **letter-spacing**, and **opacity** to create hierarchy - not ju
 
 When users provide structured information (company name + report name/type), they must be bound to typography drawers by these rules:
 
-| User Data Field | Bound to Typography Role | Notes |
-|-------------|-------------|------|
-| **Company/entity name** (e.g. "GREENTECH") | **Hero Title** (45-65pt Heavy) | Company name is the **absolute visual center**, largest font, heaviest weight |
+| User Data Field                                              | Bound to Typography Role                           | Notes                                                                                               |
+| ------------------------------------------------------------ | -------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| **Company/entity name** (e.g. "GREENTECH")                   | **Hero Title** (45-65pt Heavy)                     | Company name is the **absolute visual center**, largest font, heaviest weight                       |
 | **Report type/subtitle** (e.g. "2025 Annual Report Summary") | **Kicker** (16pt, letter-spacing 3pt, opacity 60%) | Report name is decorative supplementary text, placed in small text position at top-left/above title |
-| **Summary/description** | **Summary** (16-18pt) | Detailed description text |
-| **Date/author/version** | **Meta** (20-22pt) | Auxiliary information |
-| **Document number/org signature** | **Footer** (16pt, opacity 60%) | Bottom closing |
+| **Summary/description**                                      | **Summary** (16-18pt)                              | Detailed description text                                                                           |
+| **Date/author/version**                                      | **Meta** (20-22pt)                                 | Auxiliary information                                                                               |
+| **Document number/org signature**                            | **Footer** (16pt, opacity 60%)                     | Bottom closing                                                                                      |
 
 **Mapping priority (when ambiguous):**
+
 1. If user provides only one name → treat as company/entity name, bind to Hero Title
 2. If user provides two names → shorter/more brand-like → Hero Title; longer/descriptive → Kicker or Summary
 3. If user explicitly labels "title" and "subtitle" → title → Hero Title, subtitle → Kicker
@@ -123,6 +125,7 @@ When users provide structured information (company name + report name/type), the
 **Why:** A cover with only a title and date looks barren. The Summary block physically fills 2-4 lines of space, preventing the "empty field" aesthetic.
 
 **Auto-generation rule:** When no summary/description is provided:
+
 ```python
 # Generate a default summary
 if not summary_text:
@@ -132,6 +135,7 @@ if not summary_text:
 ```
 
 **Constraints:**
+
 - Width: template-specific (typically `W * 0.5` to `W * 0.6`)
 - Lines: 2-4 lines (auto-wrap at width boundary)
 - Never truncate summary - if too long, reduce to 4 lines max with `...`
@@ -149,12 +153,12 @@ if not summary_text:
 
 All cover elements must be rendered in strict layer order. No exceptions.
 
-| Layer | Z-Index | Contents | Rules |
-|-------|---------|----------|-------|
-| **Layer 0** (base) | 0 | Background fill (white / light gray) | Always rendered first; full page |
-| **Layer 1** (background) | 1 | Grids, watermark letters, decorative blocks, large clipped graphics | **MUST enable clip-path** - background elements may extend beyond logical bounds but must be clipped to page physical bounds. Never let background elements inflate PDF page size. |
-| **Layer 2** (structure) | 2 | Ultra-thin divider lines, sidebars, corner crop marks | Structural guides that define spatial zones |
-| **Layer 3** (content) | 3 | All readable text content | Rendered last, always on top |
+| Layer                    | Z-Index | Contents                                                            | Rules                                                                                                                                                                              |
+| ------------------------ | ------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Layer 0** (base)       | 0       | Background fill (white / light gray)                                | Always rendered first; full page                                                                                                                                                   |
+| **Layer 1** (background) | 1       | Grids, watermark letters, decorative blocks, large clipped graphics | **MUST enable clip-path** - background elements may extend beyond logical bounds but must be clipped to page physical bounds. Never let background elements inflate PDF page size. |
+| **Layer 2** (structure)  | 2       | Ultra-thin divider lines, sidebars, corner crop marks               | Structural guides that define spatial zones                                                                                                                                        |
+| **Layer 3** (content)    | 3       | All readable text content                                           | Rendered last, always on top                                                                                                                                                       |
 
 ### Clip-Path Enforcement
 
@@ -165,7 +169,7 @@ All cover elements must be rendered in strict layer order. No exceptions.
 .cover-bg-layer {
   position: absolute;
   inset: 0;
-  overflow: hidden;  /* MANDATORY */
+  overflow: hidden; /* MANDATORY */
   z-index: 1;
 }
 ```
@@ -191,6 +195,7 @@ canvas.restoreState()
 **Root cause:** clip/overflow scope not closed in time, causing subsequently rendered text to be clipped by the same clip rect.
 
 **Iron rule (HTML/CSS - canonical cover implementation):**
+
 ```html
 <!-- ✅ CORRECT - overflow:hidden only on Layer 1 -->
 <div class="cover-layer-1" style="position:absolute; inset:0; overflow:hidden; z-index:1;">
@@ -207,11 +212,13 @@ canvas.restoreState()
 <div class="cover-container" style="overflow:hidden;">
   <div class="layer-1">...</div>
   <div class="layer-2">...</div>
-  <div class="layer-3">...</div>  <!-- Text gets clipped! -->
+  <div class="layer-3">...</div>
+  <!-- Text gets clipped! -->
 </div>
 ```
 
 **Iron rule (ReportLab - body page background element reference):**
+
 ```python
 # ✅ CORRECT - clip only wraps Layer 1
 canvas.saveState()
@@ -233,9 +240,18 @@ canvas.restoreState()
 
 ```css
 /* Creative (HTML): Same principle */
-.cover-bg-layer  { overflow: hidden; z-index: 1; }  /* clip only on background layer */
-.cover-line-layer { overflow: visible; z-index: 2; } /* lines not clipped */
-.cover-text-layer { overflow: visible; z-index: 3; } /* text not clipped */
+.cover-bg-layer {
+  overflow: hidden;
+  z-index: 1;
+} /* clip only on background layer */
+.cover-line-layer {
+  overflow: visible;
+  z-index: 2;
+} /* lines not clipped */
+.cover-text-layer {
+  overflow: visible;
+  z-index: 3;
+} /* text not clipped */
 ```
 
 ### 🔴 No Page Border/Frame
@@ -245,6 +261,7 @@ canvas.restoreState()
 **Root cause:** ReportLab's `Frame()` defaults to `showBoundary=0`, but if set to `1` or `True`, it shows a border. Also `canvas.rect()` may accidentally draw a full-page rectangle.
 
 **Iron rule:**
+
 ```python
 # Cover page Frame must have showBoundary=0
 Frame(x, y, w, h, showBoundary=0)  # Always 0
@@ -270,17 +287,18 @@ doc = SimpleDocTemplate(..., showBoundary=0)  # Always 0 in production
 **Symptom:** Decorative lines on the cover (Layer 2 dividers, corner marks, sidebar edges) are flush against or overlapping with text.
 
 **Iron rule:**
+
 ```
 Minimum spacing between decorative lines and any text content = U (= W * 0.05)
 i.e., at least 1 U of whitespace between line edges and text edges
 ```
 
-| Line Type | Minimum Spacing | Notes |
-|---------|---------|------|
-| Horizontal divider | `U` above and below the line | Line must not be flush against title or body text |
-| Vertical sidebar edge | `U` to the right of the line | Text inside sidebar must maintain spacing from the edge |
-| Corner marks / crop marks | `1.5 * U` from mark endpoint to nearest text | Marks must not touch text |
-| Ultra-thick anchor line (Template 01) | `2 * U` to the right of the line | Thick line and title need ample breathing room |
+| Line Type                             | Minimum Spacing                              | Notes                                                   |
+| ------------------------------------- | -------------------------------------------- | ------------------------------------------------------- |
+| Horizontal divider                    | `U` above and below the line                 | Line must not be flush against title or body text       |
+| Vertical sidebar edge                 | `U` to the right of the line                 | Text inside sidebar must maintain spacing from the edge |
+| Corner marks / crop marks             | `1.5 * U` from mark endpoint to nearest text | Marks must not touch text                               |
+| Ultra-thick anchor line (Template 01) | `2 * U` to the right of the line             | Thick line and title need ample breathing room          |
 
 ```python
 # Example: Template 01 vertical thick line to title spacing
@@ -306,11 +324,13 @@ All templates inherit the A0.0-A0.3 architecture rules above.
 **Design intent:** A single bold vertical line on the left anchors all visual weight. The thick line eliminates left-side floating. Clean, data-driven, authoritative.
 
 ### Layer 1 - Background
+
 - Full-page grid pattern: horizontal + vertical lines at ~50pt intervals
 - Grid color: primary color at **2% opacity** (white background, nearly invisible)
 - Grid line width: `0.5pt`
 
 ### Layer 2 - Structure
+
 - **Left anchor line:** Start `(0.12*W, 0.1*H)`, End `(0.12*W, 0.9*H)`. Line width = **6pt**, primary color.
 - **Meta separator line:** At `Y_meta - 10pt`, from `X_content` to `X_content + W*0.4`, line width = **1pt**, primary color at 40% opacity.
 
@@ -318,14 +338,15 @@ All templates inherit the A0.0-A0.3 architecture rules above.
 
 **Content left edge: `X_content = 0.12*W + 30pt`** (offset from the thick line)
 
-| Drawer | Y-Anchor | Content | Constraints |
-|--------|----------|---------|-------------|
-| **A - Kicker** | `0.15 * H` | Report type / subtitle (e.g. "2025 Annual Report Summary") | 16pt, Regular, letter-spacing 3pt, opacity 60%, uppercase |
-| **B - Hero Title** | `0.30 * H` | **Company/entity name** (e.g. "GREENTECH") | 45-65pt (CJK: 50-80pt), Heavy. Company name is the visual center |
-| **C - Summary** 🆕 | `0.50 * H` | 2-3 lines descriptive text about the report | 16-18pt, Regular, line-height 1.6, opacity 85%. **Width limit: `W * 0.6`**, auto-wrap. This drawer fills the mid-page void |
-| **D - Meta/Date** | `0.75 * H` | Author, org, date | 16-20pt, Regular. Top edge separated by the 1pt meta line |
+| Drawer             | Y-Anchor   | Content                                                    | Constraints                                                                                                                |
+| ------------------ | ---------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| **A - Kicker**     | `0.15 * H` | Report type / subtitle (e.g. "2025 Annual Report Summary") | 16pt, Regular, letter-spacing 3pt, opacity 60%, uppercase                                                                  |
+| **B - Hero Title** | `0.30 * H` | **Company/entity name** (e.g. "GREENTECH")                 | 45-65pt (CJK: 50-80pt), Heavy. Company name is the visual center                                                           |
+| **C - Summary** 🆕 | `0.50 * H` | 2-3 lines descriptive text about the report                | 16-18pt, Regular, line-height 1.6, opacity 85%. **Width limit: `W * 0.6`**, auto-wrap. This drawer fills the mid-page void |
+| **D - Meta/Date**  | `0.75 * H` | Author, org, date                                          | 16-20pt, Regular. Top edge separated by the 1pt meta line                                                                  |
 
 ### Best For
+
 Technology reports, data analysis, dashboard summaries, technical white papers
 
 ---
@@ -335,21 +356,24 @@ Technology reports, data analysis, dashboard summaries, technical white papers
 **Design intent:** Top-bottom symmetry. Top bar provides structural weight, bottom-right info block creates diagonal balance. Solves the "empty edges" problem.
 
 ### Layer 1 - Background
+
 - **Background giant year watermark:** Text = current year (e.g. "2026"), **Max font size = 180pt**, measure rendered width - if it exceeds `W * 0.85`, scale down proportionally. Position: `X = W - 20pt` (right edge), `Y = 0.15*H`. Color = primary at **4% opacity**. Font weight = Black. ⚠️ **Full-display iron rule: watermark text must be 100% within the visible page area - cropping is strictly forbidden. Prefer reducing font size over truncation.**
 
 ### Layer 2 - Structure
+
 - **Top bar (skyline):** Rectangle at `(0, 0)`, width = `W`, height = **15pt**, primary color fill. Edge-to-edge.
 - **Right info accent line (edge seal):** Vertical line at `X = 0.88*W`, from `Y = 0.75*H` to `Y = 0.88*H`. Line width = **4pt**, primary color.
 
 ### Layer 3 - Content
 
-| Drawer | Position | Content | Constraints |
-|--------|----------|---------|-------------|
-| **Left upper - Title group** | `X = 0.12*W`, `Y = 0.15*H` | Kicker (report type/subtitle, 16pt) → Hero Title (company/entity name, 45-65pt / CJK 50-80pt, Heavy) | Stack downward from anchor |
-| **Mid-left - Summary** 🆕 | `X = 0.12*W`, `Y = 0.50*H` | Descriptive paragraph | 16-18pt, Regular, line-height 1.6. **Width limit: `W * 0.5`** |
-| **Right lower - Meta** | Right-aligned at `X = 0.88*W - 20pt`, `Y = 0.70*H` | Date, version, author | **Right-aligned**, 16-20pt. Must hug the 4pt accent line |
+| Drawer                       | Position                                           | Content                                                                                              | Constraints                                                   |
+| ---------------------------- | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| **Left upper - Title group** | `X = 0.12*W`, `Y = 0.15*H`                         | Kicker (report type/subtitle, 16pt) → Hero Title (company/entity name, 45-65pt / CJK 50-80pt, Heavy) | Stack downward from anchor                                    |
+| **Mid-left - Summary** 🆕    | `X = 0.12*W`, `Y = 0.50*H`                         | Descriptive paragraph                                                                                | 16-18pt, Regular, line-height 1.6. **Width limit: `W * 0.5`** |
+| **Right lower - Meta**       | Right-aligned at `X = 0.88*W - 20pt`, `Y = 0.70*H` | Date, version, author                                                                                | **Right-aligned**, 16-20pt. Must hug the 4pt accent line      |
 
 ### Best For
+
 Annual reports, financial summaries, investor documents, corporate governance reports
 
 ---
@@ -359,9 +383,11 @@ Annual reports, financial summaries, investor documents, corporate governance re
 **Design intent:** Everything hard-left. Right-side watermark counterbalances the asymmetry. Solves the "right half is empty" bug.
 
 ### Layer 1 - Background
+
 - **Right-side vertical watermark (load-bearing wall):** Extract a short English word (e.g. "REPORT"). **Auto-scaling font size:** `Max_Font_Size = 180pt`, measure total height after rotation - if it exceeds `H * 0.85`, scale down proportionally. **Rotate 90° clockwise** (or use vertical text mode). Anchor at `X = 0.85*W`, vertically centered: `Y = (H - rendered_text_width) / 2`. Color = primary at **3% opacity**. ⚠️ **Full-display iron rule: watermark text must be 100% within the visible page area - cropping is strictly forbidden. Prefer reducing font size over truncation.**
 
 ### Layer 2 - Structure
+
 - **Color dash (visual guide line):** At `(0.12*W, 0.15*H)`, draw a horizontal bar: width = **50pt**, height = **5pt**, primary color.
 - **Meta accent line:** At `(0.12*W, Y_meta)`, vertical line: height = meta text block height, width = **2pt**, primary color at 50% opacity.
 
@@ -369,16 +395,17 @@ Annual reports, financial summaries, investor documents, corporate governance re
 
 **Unified left edge: `X = 0.12*W`**
 
-| Drawer | Y-Anchor | Content | Constraints |
-|--------|----------|---------|-------------|
-| **A - Color dash** | `0.15 * H` | Structure element (not text) | 50pt × 5pt bar |
-| **B - Kicker** | `0.20 * H` | Report type / subtitle | 16pt, Regular, letter-spacing 3pt, uppercase, opacity 60% |
-| **C - Hero Title** | `0.28 * H` | **Company/entity name** | 45-65pt (CJK: 50-80pt), Heavy |
-| **D - Summary** 🆕 | `0.45 * H` | Descriptive paragraph (key anti-void element) | 16-18pt, Regular, line-height 1.6. **Width limit: `W * 0.55`** (must not collide with right watermark) |
-| **E - Meta** | `0.70 * H` | Author, org, version | 20pt, Regular, line-height 2.0. Left of the 2pt accent line |
-| **F - Footer** | `0.90 * H` | Date + doc number, right-aligned at `X = 0.88*W` | 16pt, Regular, opacity 60% |
+| Drawer             | Y-Anchor   | Content                                          | Constraints                                                                                            |
+| ------------------ | ---------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| **A - Color dash** | `0.15 * H` | Structure element (not text)                     | 50pt × 5pt bar                                                                                         |
+| **B - Kicker**     | `0.20 * H` | Report type / subtitle                           | 16pt, Regular, letter-spacing 3pt, uppercase, opacity 60%                                              |
+| **C - Hero Title** | `0.28 * H` | **Company/entity name**                          | 45-65pt (CJK: 50-80pt), Heavy                                                                          |
+| **D - Summary** 🆕 | `0.45 * H` | Descriptive paragraph (key anti-void element)    | 16-18pt, Regular, line-height 1.6. **Width limit: `W * 0.55`** (must not collide with right watermark) |
+| **E - Meta**       | `0.70 * H` | Author, org, version                             | 20pt, Regular, line-height 2.0. Left of the 2pt accent line                                            |
+| **F - Footer**     | `0.90 * H` | Date + doc number, right-aligned at `X = 0.88*W` | 16pt, Regular, opacity 60%                                                                             |
 
 ### Best For
+
 White papers, project proposals, government documents, technical standards
 
 ---
@@ -388,6 +415,7 @@ White papers, project proposals, government documents, technical standards
 **Design intent:** Abandon all-over scattered layout. Four corner crop marks form an invisible "force field box" that concentrates all content dead center.
 
 ### Layer 2 - Structure
+
 - Set safety margin `M = 0.08 * W`
 - **Four corner marks** at inner corners: `(M, M)`, `(W-M, M)`, `(M, H-M)`, `(W-M, H-M)`
 - Each mark: L-shaped, arm length = **30pt**, line width = **2pt**, primary color at 60% opacity
@@ -398,25 +426,29 @@ White papers, project proposals, government documents, technical standards
 **This template FORBIDS hardcoded absolute Y coordinates.**
 
 **Centering algorithm (mandatory):**
+
 1. Pre-compose ALL text elements (kicker + title + summary + meta) into a single virtual Text Block
 2. Calculate the block's total rendered height `Block_H`
 3. Position block: `X = 0` (full width, center-aligned text), `Y = (H - Block_H) / 2`
 4. **This guarantees the content group is vertically centered regardless of how much content there is**
 
 **Internal spacing within the centered block:**
+
 - Kicker → Title: `24pt`
 - Title → Summary: `20pt`
 - Summary → Meta: `40pt`
 
 ### Type Scale
-| Role | Size | Notes |
-|------|------|-------|
-| Kicker | 16pt | Uppercase, letter-spacing 4pt, opacity 50%. Bound to report type/subtitle |
+
+| Role       | Size    | Notes                                                                                                     |
+| ---------- | ------- | --------------------------------------------------------------------------------------------------------- |
+| Kicker     | 16pt    | Uppercase, letter-spacing 4pt, opacity 50%. Bound to report type/subtitle                                 |
 | Hero Title | 48-60pt | Heavy - slightly smaller than other templates to fit center composition. **Bound to company/entity name** |
-| Summary 🆕 | 16-18pt | Regular, line-height 1.6, center-aligned, width ≤ `W * 0.6` |
-| Meta | 16pt | Regular, opacity 60%, at bottom of group |
+| Summary 🆕 | 16-18pt | Regular, line-height 1.6, center-aligned, width ≤ `W * 0.6`                                               |
+| Meta       | 16pt    | Regular, opacity 60%, at bottom of group                                                                  |
 
 ### Best For
+
 Gallery catalogs, design portfolios, exhibition materials, luxury brand documents
 
 ---
@@ -426,18 +458,20 @@ Gallery catalogs, design portfolios, exhibition materials, luxury brand document
 **Design intent:** "Left-upper to right-lower" diagonal visual flow. The two text groups create tension across whitespace. The gap IS the design.
 
 ### Layer 2 - Structure
+
 - **Binding dashed line:** At `X = 0.08*W`, from `Y = 0.05*H` to `Y = 0.95*H`. Line width = **1pt**, dashed (dash 6pt, gap 8pt), color = light gray (#d0d0d0, 40% opacity).
 
 ### Layer 3 - Content
 
-| Group | Position | Content | Constraints |
-|-------|----------|---------|-------------|
-| **Upper-left group** | Anchor: `X = 0.15*W`, `Y = 0.20*H` | Kicker (report type/subtitle, 16pt gap) → Hero Title (company/entity name, 45-65pt / CJK 50-80pt, Heavy) | Left-aligned. Width limit: `W * 0.7` |
-| **Lower-right group** 🆕 | Anchor: `X = 0.45*W`, `Y = 0.60*H` | Summary + Meta + Footer | **Left-aligned** (NOT right-aligned - intentional asymmetry). A **3pt vertical accent line** of height = group text height is drawn at `X = 0.45*W - 12pt` as a visual anchor. Line-height 2.0 for meta, 24pt gap before footer |
+| Group                    | Position                           | Content                                                                                                  | Constraints                                                                                                                                                                                                                     |
+| ------------------------ | ---------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Upper-left group**     | Anchor: `X = 0.15*W`, `Y = 0.20*H` | Kicker (report type/subtitle, 16pt gap) → Hero Title (company/entity name, 45-65pt / CJK 50-80pt, Heavy) | Left-aligned. Width limit: `W * 0.7`                                                                                                                                                                                            |
+| **Lower-right group** 🆕 | Anchor: `X = 0.45*W`, `Y = 0.60*H` | Summary + Meta + Footer                                                                                  | **Left-aligned** (NOT right-aligned - intentional asymmetry). A **3pt vertical accent line** of height = group text height is drawn at `X = 0.45*W - 12pt` as a visual anchor. Line-height 2.0 for meta, 24pt gap before footer |
 
 **Visual effect:** Upper-left and lower-right groups are "pulled apart" across the diagonal. The empty top-right and bottom-left create tension, not emptiness.
 
 ### Best For
+
 Creative reports, editorial layouts, art direction documents, brand guidelines
 
 ---
@@ -470,21 +504,23 @@ These create 4 zones:
 
 ### Layer 3 - Content (STRICT zone containment)
 
-| Zone | Content | X Range | Y Range | Notes |
-|------|---------|---------|---------|-------|
-| **A** | Kicker / report type | `0.10*W` - `0.90*W` | `0.15*H` - `0.23*H` | Left-aligned at `X = 0.12*W` |
-| **B** | **Hero Title (company/entity name)** | `0.10*W` - `0.43*W` | `0.28*H` - `0.70*H` | **Width = `0.33*W`**. Font must be large enough to physically fill the cell. Text wraps at boundary. |
-| **C** | **Summary text** 🆕 | `0.48*W` - `0.90*W` | `0.28*H` - `0.70*H` | **Must contain substantial descriptive text** - this zone MUST be filled. 16-18pt, Regular, line-height 1.6. This is the primary anti-empty-page mechanism. |
-| **D** | Footer / date / number | `0.10*W` - `0.90*W` | `0.78*H` - `0.88*H` | Can split: left part + right-aligned part |
+| Zone  | Content                              | X Range             | Y Range             | Notes                                                                                                                                                       |
+| ----- | ------------------------------------ | ------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **A** | Kicker / report type                 | `0.10*W` - `0.90*W` | `0.15*H` - `0.23*H` | Left-aligned at `X = 0.12*W`                                                                                                                                |
+| **B** | **Hero Title (company/entity name)** | `0.10*W` - `0.43*W` | `0.28*H` - `0.70*H` | **Width = `0.33*W`**. Font must be large enough to physically fill the cell. Text wraps at boundary.                                                        |
+| **C** | **Summary text** 🆕                  | `0.48*W` - `0.90*W` | `0.28*H` - `0.70*H` | **Must contain substantial descriptive text** - this zone MUST be filled. 16-18pt, Regular, line-height 1.6. This is the primary anti-empty-page mechanism. |
+| **D** | Footer / date / number               | `0.10*W` - `0.90*W` | `0.78*H` - `0.88*H` | Can split: left part + right-aligned part                                                                                                                   |
 
 ### Zone Overflow Protection (MANDATORY)
 
 If text in Zone B or C exceeds the vertical boundary (Y > `0.70*H`):
+
 1. **Step 1:** Reduce font size by 2pt increments (minimum: 16pt for summary, 40pt for title)
 2. **Step 2:** If still overflows, truncate with `...` ellipsis
 3. **NEVER** let text cross a grid line - the grid is sacred
 
 **Hard width enforcement:**
+
 ```python
 # Zone B: title MUST wrap within its cell width
 zone_b_max_width = 0.33 * W
@@ -496,6 +532,7 @@ zone_c_max_width = 0.42 * W  # (0.90 - 0.48) * W
 ```
 
 ### Best For
+
 Swiss-style design, data-heavy reports, structured corporate documents, annual reports
 
 ---
@@ -505,10 +542,12 @@ Swiss-style design, data-heavy reports, structured corporate documents, annual r
 **Design intent:** A massive solid-color sidebar provides gravitas. The right side can be loosely arranged - the pillar holds everything together.
 
 ### Layer 1 - Background
+
 - **Left sidebar block (giant sidebar pillar):** Rectangle at `(0, 0)`, width = **`0.1*W`** (~80pt on A4), height = `H`. Primary color fill.
 - **Sidebar watermark:** Inside the sidebar, render a short word (doc type or year) rotated **-90°**, white at **15% opacity**, vertically centered within the sidebar. **Auto-scaling font size:** `Max_Font_Size = H * 0.5`, measure total height after rotation - if it exceeds `H * 0.85`, scale down proportionally. ⚠️ **Full-display iron rule: watermark text must be 100% within the visible page area - cropping is strictly forbidden.**
 
 ### Layer 2 - Structure
+
 - **Bottom horizontal line:** At `Y = 0.90*H`, from `X = Left_Edge` to `X = 0.90*W`. Line width = **1pt**, primary color at 30% opacity.
 
 ### Layer 3 - Content
@@ -516,23 +555,26 @@ Swiss-style design, data-heavy reports, structured corporate documents, annual r
 **Safety boundary: `Left_Edge = 0.1*W + 40pt`** - ALL text must start at or right of this line. Zero tolerance for collision with sidebar.
 
 **Layout uses relative vertical centering:**
+
 1. Compose full text group: Kicker + Hero Title + Summary + Meta
 2. Calculate total group height
 3. Position group at `X = Left_Edge`, `Y = (H - group_height) / 2` (vertically centered)
 
-| Element | Notes |
-|---------|-------|
-| Kicker | 16pt, Regular, uppercase, letter-spacing 3pt, opacity 60%. Bound to report type/subtitle |
-| Hero Title | 45-65pt, Heavy. **Bound to company/entity name** |
-| Summary 🆕 | 16-18pt, Regular, line-height 1.6. Width ≤ `0.90*W - Left_Edge` |
-| Meta | 20pt, Regular, line-height 1.8 |
+| Element    | Notes                                                                                    |
+| ---------- | ---------------------------------------------------------------------------------------- |
+| Kicker     | 16pt, Regular, uppercase, letter-spacing 3pt, opacity 60%. Bound to report type/subtitle |
+| Hero Title | 45-65pt, Heavy. **Bound to company/entity name**                                         |
+| Summary 🆕 | 16-18pt, Regular, line-height 1.6. Width ≤ `0.90*W - Left_Edge`                          |
+| Meta       | 20pt, Regular, line-height 1.8                                                           |
 
 **Footer (separate from centered group):**
+
 - On/just above the bottom horizontal line at `Y = 0.90*H - 10pt`
 - Left-aligned date at `X = Left_Edge`, right-aligned org name at `X = 0.90*W`
 - 16pt, Regular, opacity 60%
 
 ### Best For
+
 Government/institutional reports, legal documents, formal project deliverables, bidding documents
 
 ---
@@ -541,18 +583,18 @@ Government/institutional reports, legal documents, formal project deliverables, 
 
 Template selection uses a two-dimensional matrix: **Intent** (from `visual_framework.md` 5-intent system) × **Document Type**. This replaces the old "Document Tone" classification and aligns with the Intent Mapping Table in `creative.md`.
 
-| Intent | Document Type | Recommended Templates | Default |
-|--------|---------------|----------------------|---------|
-| **Calm** | Healthcare / Wellness / Minimalist | 04 Museum, 01 HUD | **04** |
-| **Calm** | Academic / Research | 06 Swiss Grid, 03 Monolith | **06** |
-| **Tension** | Crisis / Alert / Disruption | 01 HUD, 05 Diagonal | **01** |
-| **Energy** | Marketing / Creative / Design | 05 Diagonal, 06 Swiss Grid | **05** |
-| **Energy** | Technology / Data | 01 HUD, 06 Swiss Grid | **01** |
-| **Authority** | Formal / Corporate / Financial | 02 Corporate, 03 Monolith | **03** |
-| **Authority** | Government / Bidding | 07 Sidebar, 03 Monolith, **11 Institutional** | **07** |
-| **Authority** | Thesis proposal / Dissertation cover | **11 Institutional** | **11** |
-| **Authority** | Luxury / Editorial | 03 Monolith, 05 Diagonal | **03** |
-| **Warmth** | Food / Lifestyle / Home | 04 Museum, 05 Diagonal | **04** |
+| Intent        | Document Type                        | Recommended Templates                         | Default |
+| ------------- | ------------------------------------ | --------------------------------------------- | ------- |
+| **Calm**      | Healthcare / Wellness / Minimalist   | 04 Museum, 01 HUD                             | **04**  |
+| **Calm**      | Academic / Research                  | 06 Swiss Grid, 03 Monolith                    | **06**  |
+| **Tension**   | Crisis / Alert / Disruption          | 01 HUD, 05 Diagonal                           | **01**  |
+| **Energy**    | Marketing / Creative / Design        | 05 Diagonal, 06 Swiss Grid                    | **05**  |
+| **Energy**    | Technology / Data                    | 01 HUD, 06 Swiss Grid                         | **01**  |
+| **Authority** | Formal / Corporate / Financial       | 02 Corporate, 03 Monolith                     | **03**  |
+| **Authority** | Government / Bidding                 | 07 Sidebar, 03 Monolith, **11 Institutional** | **07**  |
+| **Authority** | Thesis proposal / Dissertation cover | **11 Institutional**                          | **11**  |
+| **Authority** | Luxury / Editorial                   | 03 Monolith, 05 Diagonal                      | **03**  |
+| **Warmth**    | Food / Lifestyle / Home              | 04 Museum, 05 Diagonal                        | **04**  |
 
 > **Legacy mapping:** "Formal/Corporate" tone → Authority intent, "Minimalist" tone → Calm intent, "Luxurious/Editorial" tone → Authority intent.
 
@@ -579,6 +621,7 @@ This detects text-vs-decorative-line overlaps by rendering the HTML and measurin
 The minimum gap between any text element and any decorative line is **1U (= 5% of page width ≈ 40px on A4)**. This catches the exact bug shown in the "text overlapping decorative lines" screenshots.
 
 **If the check fails:**
+
 1. Adjust the decorative line's Y position to maintain ≥ 1U gap from the nearest text
 2. Or adjust the text block's position/size to avoid the overlap
 3. Re-run `cover_validate.js` until it passes (exit code 0)
@@ -590,6 +633,7 @@ The minimum gap between any text element and any decorative line is **1U (= 5% o
 **Rule:** Hero title must NEVER exceed its template's width boundary.
 
 **Algorithm:**
+
 1. Measure the rendered width of the hero title string at the target font size
 2. If `rendered_width > max_width`:
    - Word-wrap at boundary (CJK: any character; Latin: space/hyphen; Mixed: CJK/Latin boundaries)
@@ -689,6 +733,7 @@ if not summary_text or summary_text.strip() == "":
 **All watermark text in the background layer (Layer 1) must be 100% within the visible page area. Cropping, truncation, or extending beyond page boundaries is strictly forbidden.**
 
 **Applicable scope:**
+
 - Template 02 giant year watermark
 - Template 03 right-side vertical watermark
 - Template 07 sidebar watermark
@@ -711,6 +756,7 @@ def safe_watermark_size(text, font, max_size, available_space):
 ```
 
 **Rules:**
+
 1. Horizontal text: rendered width must not exceed `W * 0.90` (5% safety margin on each side)
 2. Vertical/rotated text: rendered height must not exceed `H * 0.85` (7.5% safety margin top and bottom)
 3. If exceeded, scale down font size proportionally - never truncate
@@ -760,21 +806,23 @@ hline_width = min(hline_width, available_width)
 ### HTML/CSS Implementation
 
 For HTML/Playwright covers, use relative sizing:
+
 ```css
 /* Vertical line spans the content block */
 .vline {
   position: absolute;
-  top: var(--content-top);     /* align with first text element */
+  top: var(--content-top); /* align with first text element */
   bottom: var(--content-bottom); /* align with last text element */
 }
 
 /* Horizontal divider: min-width matches text container */
 .hline {
-  width: max(100%, 200px);     /* at least as wide as parent text container */
+  width: max(100%, 200px); /* at least as wide as parent text container */
 }
 ```
 
 **Checklist:**
+
 - [ ] Every vertical line's height matches its adjacent text block span (± 1U padding)
 - [ ] Every horizontal line's width ≥ widest text element in its zone
 - [ ] No decorative line is shorter than the text it accompanies
@@ -811,11 +859,11 @@ else:
 
 ### Anchor Adjustment Rules
 
-| Content Volume | Title Anchor | Summary Anchor | Meta Anchor |
-|---------------|-------------|----------------|-------------|
-| **Sparse** (fill < 50%) | Centered mode | Centered mode | Centered mode |
-| **Normal** (fill 50-80%) | `H * 0.30` | `H * 0.48` | `H * 0.70` |
-| **Dense** (fill > 80%) | `H * 0.20` | `H * 0.40` | `H * 0.65` |
+| Content Volume           | Title Anchor  | Summary Anchor | Meta Anchor   |
+| ------------------------ | ------------- | -------------- | ------------- |
+| **Sparse** (fill < 50%)  | Centered mode | Centered mode  | Centered mode |
+| **Normal** (fill 50-80%) | `H * 0.30`    | `H * 0.48`     | `H * 0.70`    |
+| **Dense** (fill > 80%)   | `H * 0.20`    | `H * 0.40`     | `H * 0.65`    |
 
 ### CJK Title Size Compensation
 
@@ -834,16 +882,19 @@ CJK Summary:       17-20pt (Latin: 16-18pt)
 ```css
 /* Vertical centering mode for sparse content */
 .cover.sparse-content .center-block {
-  justify-content: center;  /* flexbox vertical center */
+  justify-content: center; /* flexbox vertical center */
 }
 
 /* CJK title size bump */
-.title:lang(zh), .title:lang(ja), .title:lang(ko) {
-  font-size: clamp(50pt, 8vw, 80pt);  /* larger than Latin range */
+.title:lang(zh),
+.title:lang(ja),
+.title:lang(ko) {
+  font-size: clamp(50pt, 8vw, 80pt); /* larger than Latin range */
 }
 ```
 
 **Checklist:**
+
 - [ ] No cover has >40% dead whitespace at the bottom
 - [ ] Content is visually centered on the page (optical center, not mathematical)
 - [ ] CJK titles are 15-20% larger than equivalent Latin titles
@@ -857,38 +908,80 @@ CJK Summary:       17-20pt (Latin: 16-18pt)
 
 **Iron rule:** When using `top: XX%` (or `bottom: XX%`) to position child elements, the containing block MUST have a **deterministic height** — one of:
 
-| Method | Example | When to use |
-|--------|---------|-------------|
-| Explicit `height` | `height: 100%` or `height: var(--h)` | Wrapper spans full page |
-| `top` + `bottom` pair | `top: 0; bottom: 0;` | Wrapper stretches between two edges |
-| `inset: 0` | `inset: 0;` | Shorthand for full-page wrapper |
+| Method                | Example                              | When to use                         |
+| --------------------- | ------------------------------------ | ----------------------------------- |
+| Explicit `height`     | `height: 100%` or `height: var(--h)` | Wrapper spans full page             |
+| `top` + `bottom` pair | `top: 0; bottom: 0;`                 | Wrapper stretches between two edges |
+| `inset: 0`            | `inset: 0;`                          | Shorthand for full-page wrapper     |
 
 **Preferred pattern — flat structure with px values (safest):**
+
 ```css
 /* ✅ CORRECT: children positioned directly in .cover with px values */
-.cover { position: relative; width: 794px; height: 1123px; }
-.kicker   { position: absolute; top: 225px;  left: 95px; }
-.title    { position: absolute; top: 292px;  left: 95px; }
-.summary  { position: absolute; top: 539px;  left: 95px; }
-.meta     { position: absolute; top: 786px;  left: 95px; }
+.cover {
+  position: relative;
+  width: 794px;
+  height: 1123px;
+}
+.kicker {
+  position: absolute;
+  top: 225px;
+  left: 95px;
+}
+.title {
+  position: absolute;
+  top: 292px;
+  left: 95px;
+}
+.summary {
+  position: absolute;
+  top: 539px;
+  left: 95px;
+}
+.meta {
+  position: absolute;
+  top: 786px;
+  left: 95px;
+}
 ```
 
 **Acceptable — wrapper with deterministic height:**
+
 ```css
 /* ✅ OK: wrapper has inset:0, so height = parent height = 1123px */
-.content-left { position: absolute; inset: 0; width: 55%; }
-.title   { position: absolute; top: 26%; }  /* 26% of 1123px = 292px ✓ */
+.content-left {
+  position: absolute;
+  inset: 0;
+  width: 55%;
+}
+.title {
+  position: absolute;
+  top: 26%;
+} /* 26% of 1123px = 292px ✓ */
 ```
 
 **Forbidden — wrapper with no height:**
+
 ```css
 /* ❌ BANNED: .content-left has no height/bottom, percentage top is undefined */
-.content-left { position: absolute; left: 12%; top: 0; width: 55%; }
-.title   { position: absolute; top: 26%; }  /* 26% of WHAT? → collapse → overlap */
-.summary { position: absolute; top: 48%; }  /* stacks on top of title */
+.content-left {
+  position: absolute;
+  left: 12%;
+  top: 0;
+  width: 55%;
+}
+.title {
+  position: absolute;
+  top: 26%;
+} /* 26% of WHAT? → collapse → overlap */
+.summary {
+  position: absolute;
+  top: 48%;
+} /* stacks on top of title */
 ```
 
 **Quick self-check before writing cover CSS:**
+
 1. For every element with `top: XX%` — trace upward: does the containing block have a known height?
 2. If unsure → use `px` values instead (calculate from `var(--h)` manually: `26% × 1123 = 292px`)
 3. If using a grouping wrapper → give it `inset: 0` or explicit `height: 100%`
@@ -920,13 +1013,13 @@ Cover background = Pure white / very light gray / primary at 5-8% opacity
 
 > ⚠️ These are **examples for reference**. In normal workflow, run `palette.cascade --title "<title>" --mode minimal --format css` to generate the actual cover colors. Do NOT copy these hex values directly.
 
-| Name | Primary | Secondary | Background | Use Case |
-|------|---------|-----------|------------|----------|
-| Ink Stone | `#1a1a2e` | `#4a4a5e` | `#fafafa` | Business, formal |
-| Indigo | `#1e3a5f` | `#2d5f8a` | `#f5f8fb` | Technology, reports |
-| Warm Chestnut | `#5c3d2e` | `#8a6b5a` | `#faf6f3` | Culture, branding |
-| Moss Green | `#2d4a3e` | `#4a7a6a` | `#f5f8f6` | Nature, health |
-| Deep Crimson | `#6b2d3e` | `#9a4a5e` | `#faf5f6` | Traditional, elegant |
+| Name          | Primary   | Secondary | Background | Use Case             |
+| ------------- | --------- | --------- | ---------- | -------------------- |
+| Ink Stone     | `#1a1a2e` | `#4a4a5e` | `#fafafa`  | Business, formal     |
+| Indigo        | `#1e3a5f` | `#2d5f8a` | `#f5f8fb`  | Technology, reports  |
+| Warm Chestnut | `#5c3d2e` | `#8a6b5a` | `#faf6f3`  | Culture, branding    |
+| Moss Green    | `#2d4a3e` | `#4a7a6a` | `#f5f8f6`  | Nature, health       |
+| Deep Crimson  | `#6b2d3e` | `#9a4a5e` | `#faf5f6`  | Traditional, elegant |
 
 ---
 
@@ -935,6 +1028,7 @@ Cover background = Pure white / very light gray / primary at 5-8% opacity
 > **Academic covers are exempt from PART 4 color rules.** Academic papers, theses, and research reports traditionally use dark backgrounds with light text - this is the established scholarly visual language. Templates 08-10 follow LaTeX title page conventions translated to HTML/CSS.
 
 **All 3 templates share these rules:**
+
 - Page size: `width: 794px; height: 1123px` (A4 at 96dpi)
 - Full-bleed dark background (edge-to-edge, no margins)
 - Serif font for titles (Playfair Display / Noto Serif SC), sans-serif for metadata
@@ -981,55 +1075,151 @@ Cover background = Pure white / very light gray / primary at 5-8% opacity
 **Best for:** Research papers, technical reports, arXiv preprints
 
 **HTML structure:**
+
 ```html
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Noto+Serif+SC:wght@400;700;900&family=Inter:wght@300;400;500&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
-  <style>
-    @page { size: 794px 1123px; margin: 0; }
-    :root {
-      --c-bg: #162032;
-      --c-accent: #8B7E5A;
-      --c-text: #FFFFFF;
-      --c-muted: #8898A8;
-      --c-footer: #607080;
-    }
-    html, body { margin: 0; padding: 0; width: 794px; height: 1123px; background: var(--c-bg); color: var(--c-text); font-family: 'Inter', 'Noto Sans SC', sans-serif; }
-    @media screen {
-      html { height: auto; display: flex; justify-content: center; min-height: 100vh; background: var(--c-bg); }
-      body { transform-origin: top center; scale: min(1, calc(100vw / 794), calc(100vh / 1123)); margin: 0 auto; box-shadow: 0 0 60px rgba(0,0,0,0.3); }
-    }
-    .cover { width: 794px; height: 1123px; position: relative; box-sizing: border-box; }
-    .vline { position: absolute; left: 57px; top: 76px; bottom: 76px; width: 2.5px; background: var(--c-accent); }
-    .hline { position: absolute; left: 83px; right: 76px; bottom: 132px; height: 0.5px; background: var(--c-accent); }
-    .content { position: absolute; left: 83px; right: 76px; top: 0; bottom: 0; }
-    .label { position: absolute; top: 132px; font-size: 9pt; color: var(--c-accent); letter-spacing: 3px; text-transform: uppercase; font-family: 'Inter', 'Noto Sans SC', sans-serif; }
-    .title { position: absolute; top: 228px; font-size: 32pt; font-weight: 700; line-height: 1.3; font-family: 'Playfair Display', 'Noto Serif SC', serif; color: var(--c-text); max-width: 580px; }
-    .subtitle { position: absolute; top: 530px; font-size: 12pt; line-height: 1.5; color: var(--c-muted); max-width: 500px; }
-    .authors { position: absolute; top: 680px; font-size: 12pt; color: var(--c-text); }
-    .institution { position: absolute; top: 740px; font-size: 10pt; color: var(--c-muted); line-height: 1.4; }
-    .footer { position: absolute; bottom: 76px; left: 0; right: 0; display: flex; justify-content: space-between; font-size: 9pt; color: var(--c-footer); }
-  </style>
-</head>
-<body>
-  <div class="cover">
-    <div class="vline"></div>
-    <div class="hline"></div>
-    <div class="content">
-      <div class="label"><!-- LABEL --></div>
-      <div class="title"><!-- TITLE --></div>
-      <div class="subtitle"><!-- SUBTITLE --></div>
-      <div class="authors"><!-- AUTHORS --></div>
-      <div class="institution"><!-- INSTITUTION --></div>
-      <div class="footer">
-        <span><!-- FOOTER_LEFT --></span>
-        <span><!-- FOOTER_RIGHT --></span>
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Noto+Serif+SC:wght@400;700;900&family=Inter:wght@300;400;500&family=Noto+Sans+SC:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      @page {
+        size: 794px 1123px;
+        margin: 0;
+      }
+      :root {
+        --c-bg: #162032;
+        --c-accent: #8b7e5a;
+        --c-text: #ffffff;
+        --c-muted: #8898a8;
+        --c-footer: #607080;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 794px;
+        height: 1123px;
+        background: var(--c-bg);
+        color: var(--c-text);
+        font-family: "Inter", "Noto Sans SC", sans-serif;
+      }
+      @media screen {
+        html {
+          height: auto;
+          display: flex;
+          justify-content: center;
+          min-height: 100vh;
+          background: var(--c-bg);
+        }
+        body {
+          transform-origin: top center;
+          scale: min(1, calc(100vw / 794), calc(100vh / 1123));
+          margin: 0 auto;
+          box-shadow: 0 0 60px rgba(0, 0, 0, 0.3);
+        }
+      }
+      .cover {
+        width: 794px;
+        height: 1123px;
+        position: relative;
+        box-sizing: border-box;
+      }
+      .vline {
+        position: absolute;
+        left: 57px;
+        top: 76px;
+        bottom: 76px;
+        width: 2.5px;
+        background: var(--c-accent);
+      }
+      .hline {
+        position: absolute;
+        left: 83px;
+        right: 76px;
+        bottom: 132px;
+        height: 0.5px;
+        background: var(--c-accent);
+      }
+      .content {
+        position: absolute;
+        left: 83px;
+        right: 76px;
+        top: 0;
+        bottom: 0;
+      }
+      .label {
+        position: absolute;
+        top: 132px;
+        font-size: 9pt;
+        color: var(--c-accent);
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        font-family: "Inter", "Noto Sans SC", sans-serif;
+      }
+      .title {
+        position: absolute;
+        top: 228px;
+        font-size: 32pt;
+        font-weight: 700;
+        line-height: 1.3;
+        font-family: "Playfair Display", "Noto Serif SC", serif;
+        color: var(--c-text);
+        max-width: 580px;
+      }
+      .subtitle {
+        position: absolute;
+        top: 530px;
+        font-size: 12pt;
+        line-height: 1.5;
+        color: var(--c-muted);
+        max-width: 500px;
+      }
+      .authors {
+        position: absolute;
+        top: 680px;
+        font-size: 12pt;
+        color: var(--c-text);
+      }
+      .institution {
+        position: absolute;
+        top: 740px;
+        font-size: 10pt;
+        color: var(--c-muted);
+        line-height: 1.4;
+      }
+      .footer {
+        position: absolute;
+        bottom: 76px;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: space-between;
+        font-size: 9pt;
+        color: var(--c-footer);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="cover">
+      <div class="vline"></div>
+      <div class="hline"></div>
+      <div class="content">
+        <div class="label"><!-- LABEL --></div>
+        <div class="title"><!-- TITLE --></div>
+        <div class="subtitle"><!-- SUBTITLE --></div>
+        <div class="authors"><!-- AUTHORS --></div>
+        <div class="institution"><!-- INSTITUTION --></div>
+        <div class="footer">
+          <span><!-- FOOTER_LEFT --></span>
+          <span><!-- FOOTER_RIGHT --></span>
+        </div>
       </div>
     </div>
-  </div>
-</body>
+  </body>
 </html>
 ```
 
@@ -1072,54 +1262,151 @@ Cover background = Pure white / very light gray / primary at 5-8% opacity
 **Best for:** Top journal submissions, IEEE/ACM papers, theses
 
 **HTML structure:**
+
 ```html
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Noto+Serif+SC:wght@400;700;900&family=Inter:wght@300;400;500&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
-  <style>
-    @page { size: 794px 1123px; margin: 0; }
-    :root {
-      --c-bg: #162032;
-      --c-accent: #4A90C4;
-      --c-text: #FFFFFF;
-      --c-muted: #90A8C0;
-    }
-    html, body { margin: 0; padding: 0; width: 794px; height: 1123px; background: var(--c-bg); color: var(--c-text); font-family: 'Inter', 'Noto Sans SC', sans-serif; }
-    @media screen {
-      html { height: auto; display: flex; justify-content: center; min-height: 100vh; background: var(--c-bg); }
-      body { transform-origin: top center; scale: min(1, calc(100vw / 794), calc(100vh / 1123)); margin: 0 auto; box-shadow: 0 0 60px rgba(0,0,0,0.3); }
-    }
-    .cover { width: 794px; height: 1123px; position: relative; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; }
-    .rule-top, .rule-bottom { position: absolute; left: 114px; right: 114px; height: 2px; background: var(--c-accent); }
-    .rule-top { top: 114px; }
-    .rule-bottom { bottom: 114px; }
-    .center-block { position: absolute; top: 0; bottom: 0; left: 114px; right: 114px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-    .label { font-size: 9pt; color: var(--c-accent); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 40px; font-family: 'Inter', 'Noto Sans SC', sans-serif; }
-    .title { font-size: 30pt; font-weight: 700; line-height: 1.3; font-family: 'Playfair Display', 'Noto Serif SC', serif; margin-bottom: 24px; max-width: 500px; }
-    .subtitle { font-size: 14pt; color: var(--c-muted); margin-bottom: 40px; max-width: 450px; line-height: 1.5; }
-    .divider { width: 114px; height: 0.5px; background: var(--c-accent); margin-bottom: 40px; }
-    .authors { font-size: 12pt; margin-bottom: 12px; }
-    .institution { font-size: 10pt; color: var(--c-muted); line-height: 1.4; }
-    .footer { position: absolute; bottom: 57px; left: 114px; right: 114px; text-align: center; font-size: 9pt; color: var(--c-muted); }
-  </style>
-</head>
-<body>
-  <div class="cover">
-    <div class="rule-top"></div>
-    <div class="rule-bottom"></div>
-    <div class="center-block">
-      <div class="label"><!-- LABEL --></div>
-      <div class="title"><!-- TITLE --></div>
-      <div class="subtitle"><!-- SUBTITLE --></div>
-      <div class="divider"></div>
-      <div class="authors"><!-- AUTHORS --></div>
-      <div class="institution"><!-- INSTITUTION --></div>
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Noto+Serif+SC:wght@400;700;900&family=Inter:wght@300;400;500&family=Noto+Sans+SC:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      @page {
+        size: 794px 1123px;
+        margin: 0;
+      }
+      :root {
+        --c-bg: #162032;
+        --c-accent: #4a90c4;
+        --c-text: #ffffff;
+        --c-muted: #90a8c0;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 794px;
+        height: 1123px;
+        background: var(--c-bg);
+        color: var(--c-text);
+        font-family: "Inter", "Noto Sans SC", sans-serif;
+      }
+      @media screen {
+        html {
+          height: auto;
+          display: flex;
+          justify-content: center;
+          min-height: 100vh;
+          background: var(--c-bg);
+        }
+        body {
+          transform-origin: top center;
+          scale: min(1, calc(100vw / 794), calc(100vh / 1123));
+          margin: 0 auto;
+          box-shadow: 0 0 60px rgba(0, 0, 0, 0.3);
+        }
+      }
+      .cover {
+        width: 794px;
+        height: 1123px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-sizing: border-box;
+      }
+      .rule-top,
+      .rule-bottom {
+        position: absolute;
+        left: 114px;
+        right: 114px;
+        height: 2px;
+        background: var(--c-accent);
+      }
+      .rule-top {
+        top: 114px;
+      }
+      .rule-bottom {
+        bottom: 114px;
+      }
+      .center-block {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 114px;
+        right: 114px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      .label {
+        font-size: 9pt;
+        color: var(--c-accent);
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        margin-bottom: 40px;
+        font-family: "Inter", "Noto Sans SC", sans-serif;
+      }
+      .title {
+        font-size: 30pt;
+        font-weight: 700;
+        line-height: 1.3;
+        font-family: "Playfair Display", "Noto Serif SC", serif;
+        margin-bottom: 24px;
+        max-width: 500px;
+      }
+      .subtitle {
+        font-size: 14pt;
+        color: var(--c-muted);
+        margin-bottom: 40px;
+        max-width: 450px;
+        line-height: 1.5;
+      }
+      .divider {
+        width: 114px;
+        height: 0.5px;
+        background: var(--c-accent);
+        margin-bottom: 40px;
+      }
+      .authors {
+        font-size: 12pt;
+        margin-bottom: 12px;
+      }
+      .institution {
+        font-size: 10pt;
+        color: var(--c-muted);
+        line-height: 1.4;
+      }
+      .footer {
+        position: absolute;
+        bottom: 57px;
+        left: 114px;
+        right: 114px;
+        text-align: center;
+        font-size: 9pt;
+        color: var(--c-muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="cover">
+      <div class="rule-top"></div>
+      <div class="rule-bottom"></div>
+      <div class="center-block">
+        <div class="label"><!-- LABEL --></div>
+        <div class="title"><!-- TITLE --></div>
+        <div class="subtitle"><!-- SUBTITLE --></div>
+        <div class="divider"></div>
+        <div class="authors"><!-- AUTHORS --></div>
+        <div class="institution"><!-- INSTITUTION --></div>
+      </div>
+      <div class="footer"><!-- FOOTER --></div>
     </div>
-    <div class="footer"><!-- FOOTER --></div>
-  </div>
-</body>
+  </body>
 </html>
 ```
 
@@ -1161,52 +1448,135 @@ Cover background = Pure white / very light gray / primary at 5-8% opacity
 **Best for:** Chinese journal submissions, theses with keywords, formal academic reports
 
 **HTML structure:**
+
 ```html
 <!DOCTYPE html>
 <html lang="zh">
-<head>
-  <meta charset="UTF-8">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <style>
-    @page { size: 794px 1123px; margin: 0; }
-    :root {
-      --c-bg: #162032;
-      --c-accent: #4A90C4;
-      --c-text: #FFFFFF;
-      --c-muted: #90A8C0;
-    }
-    html, body { margin: 0; padding: 0; width: 794px; height: 1123px; background: var(--c-bg); color: var(--c-text); font-family: 'Noto Sans SC', 'Inter', sans-serif; }
-    .cover { width: 794px; height: 1123px; position: relative; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; }
-    .rule-top, .rule-bottom { position: absolute; left: 114px; right: 114px; height: 2px; background: var(--c-accent); }
-    .rule-top { top: 114px; }
-    .rule-bottom { bottom: 114px; }
-    .center-block { position: absolute; top: 0; bottom: 0; left: 114px; right: 114px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-    .label { font-size: 9pt; color: var(--c-accent); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 40px; }
-    .title { font-size: 34pt; font-weight: 700; line-height: 1.3; font-family: 'Noto Serif SC', serif; margin-bottom: 20px; max-width: 500px; }
-    .subtitle { font-size: 14pt; color: var(--c-muted); margin-bottom: 40px; max-width: 450px; line-height: 1.5; }
-    .divider { width: 152px; height: 0.5px; background: var(--c-accent); margin-bottom: 40px; }
-    .keywords { font-size: 11pt; color: var(--c-muted); line-height: 1.8; max-width: 400px; }
-    .footer { position: absolute; bottom: 57px; left: 114px; right: 114px; text-align: center; font-size: 9pt; color: var(--c-muted); }
-  </style>
-</head>
-<body>
-  <div class="cover">
-    <div class="rule-top"></div>
-    <div class="rule-bottom"></div>
-    <div class="center-block">
-      <div class="label"><!-- LABEL --></div>
-      <div class="title"><!-- TITLE --></div>
-      <div class="subtitle"><!-- SUBTITLE --></div>
-      <div class="divider"></div>
-      <div class="keywords">
-        <!-- KEYWORD 1 --><br>
-        <!-- KEYWORD 2 --><br>
-        <!-- KEYWORD 3 -->
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      @page {
+        size: 794px 1123px;
+        margin: 0;
+      }
+      :root {
+        --c-bg: #162032;
+        --c-accent: #4a90c4;
+        --c-text: #ffffff;
+        --c-muted: #90a8c0;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 794px;
+        height: 1123px;
+        background: var(--c-bg);
+        color: var(--c-text);
+        font-family: "Noto Sans SC", "Inter", sans-serif;
+      }
+      .cover {
+        width: 794px;
+        height: 1123px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-sizing: border-box;
+      }
+      .rule-top,
+      .rule-bottom {
+        position: absolute;
+        left: 114px;
+        right: 114px;
+        height: 2px;
+        background: var(--c-accent);
+      }
+      .rule-top {
+        top: 114px;
+      }
+      .rule-bottom {
+        bottom: 114px;
+      }
+      .center-block {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 114px;
+        right: 114px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      .label {
+        font-size: 9pt;
+        color: var(--c-accent);
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        margin-bottom: 40px;
+      }
+      .title {
+        font-size: 34pt;
+        font-weight: 700;
+        line-height: 1.3;
+        font-family: "Noto Serif SC", serif;
+        margin-bottom: 20px;
+        max-width: 500px;
+      }
+      .subtitle {
+        font-size: 14pt;
+        color: var(--c-muted);
+        margin-bottom: 40px;
+        max-width: 450px;
+        line-height: 1.5;
+      }
+      .divider {
+        width: 152px;
+        height: 0.5px;
+        background: var(--c-accent);
+        margin-bottom: 40px;
+      }
+      .keywords {
+        font-size: 11pt;
+        color: var(--c-muted);
+        line-height: 1.8;
+        max-width: 400px;
+      }
+      .footer {
+        position: absolute;
+        bottom: 57px;
+        left: 114px;
+        right: 114px;
+        text-align: center;
+        font-size: 9pt;
+        color: var(--c-muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="cover">
+      <div class="rule-top"></div>
+      <div class="rule-bottom"></div>
+      <div class="center-block">
+        <div class="label"><!-- LABEL --></div>
+        <div class="title"><!-- TITLE --></div>
+        <div class="subtitle"><!-- SUBTITLE --></div>
+        <div class="divider"></div>
+        <div class="keywords">
+          <!-- KEYWORD 1 --><br />
+          <!-- KEYWORD 2 --><br />
+          <!-- KEYWORD 3 -->
+        </div>
       </div>
+      <div class="footer"><!-- FOOTER --></div>
     </div>
-    <div class="footer"><!-- FOOTER --></div>
-  </div>
-</body>
+  </body>
 </html>
 ```
 
@@ -1260,128 +1630,188 @@ Cover background = Pure white / very light gray / primary at 5-8% opacity
 | `date` | Optional | "2026年4月", "April 2026" |
 
 **HTML structure:**
+
 ```html
 <!DOCTYPE html>
 <html lang="zh">
-<head>
-  <meta charset="UTF-8">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
-  <style>
-    @page { size: 794px 1123px; margin: 0; }
-    :root {
-      --c-bg: #ffffff;
-      --c-text: #1a1a1a;
-      --c-accent: #1a1a1a;
-      --c-muted: #4a4a4a;
-      --c-line: #333333;
-    }
-    html, body { margin: 0; padding: 0; width: 794px; height: 1123px; background: var(--c-bg); color: var(--c-text); font-family: 'Noto Sans SC', 'Inter', sans-serif; }
-    @media screen {
-      html { height: auto; display: flex; justify-content: center; min-height: 100vh; background: #e8e8e8; }
-      body { transform-origin: top center; scale: min(1, calc(100vw / 794), calc(100vh / 1123)); margin: 0 auto; box-shadow: 0 0 60px rgba(0,0,0,0.15); }
-    }
-    .cover {
-      width: 794px; height: 1123px; position: relative; box-sizing: border-box;
-    }
-    /* Black border frame - inset 5% from page edge */
-    .border-frame {
-      position: absolute;
-      top: 56px; left: 40px; right: 40px; bottom: 56px;
-      border: 2.5px solid var(--c-accent);
-      pointer-events: none;
-    }
-    /* Content area inside frame */
-    .content {
-      position: absolute;
-      top: 56px; left: 40px; right: 40px; bottom: 56px;
-      display: flex; flex-direction: column; align-items: center;
-      padding: 60px 50px;
-      box-sizing: border-box;
-    }
-    .institution {
-      font-size: 30pt; font-weight: 700; letter-spacing: 6px;
-      font-family: 'Noto Serif SC', 'Playfair Display', serif;
-      text-align: center; margin-bottom: 30px;
-      max-width: 580px;
-    }
-    .thick-divider {
-      width: 70%; height: 2px; background: var(--c-accent);
-      margin-bottom: 40px;
-    }
-    .doc-type {
-      font-size: 22pt; font-weight: 400; letter-spacing: 4px;
-      text-align: center; margin-bottom: 50px;
-      color: var(--c-text);
-    }
-    .title {
-      font-size: 26pt; font-weight: 700; line-height: 1.4;
-      font-family: 'Noto Serif SC', 'Playfair Display', serif;
-      text-align: center; margin-bottom: 60px;
-      max-width: 520px;
-    }
-    .fields-block {
-      width: 400px; margin-bottom: auto;
-    }
-    .field-row {
-      display: flex; align-items: baseline;
-      margin-bottom: 28px; font-size: 14pt;
-    }
-    .field-label {
-      white-space: nowrap; margin-right: 12px;
-      color: var(--c-text); font-weight: 400;
-      letter-spacing: 2px;
-    }
-    .field-value {
-      flex: 1; text-align: center;
-      border-bottom: 1px solid var(--c-line);
-      padding-bottom: 4px; min-height: 24px;
-      font-family: 'Noto Sans SC', 'Inter', sans-serif;
-    }
-    .date-block {
-      font-size: 14pt; color: var(--c-muted);
-      text-align: center; letter-spacing: 2px;
-      margin-top: auto; padding-top: 30px;
-    }
-  </style>
-</head>
-<body>
-  <div class="cover">
-    <div class="border-frame"></div>
-    <div class="content">
-      <div class="institution"><!-- INSTITUTION --></div>
-      <div class="thick-divider"></div>
-      <div class="doc-type"><!-- DOC_TYPE --></div>
-      <div class="title"><!-- TITLE --></div>
-      <div class="fields-block">
-        <div class="field-row">
-          <span class="field-label"><!-- LABEL_1 --></span>
-          <span class="field-value"><!-- VALUE_1 --></span>
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      @page {
+        size: 794px 1123px;
+        margin: 0;
+      }
+      :root {
+        --c-bg: #ffffff;
+        --c-text: #1a1a1a;
+        --c-accent: #1a1a1a;
+        --c-muted: #4a4a4a;
+        --c-line: #333333;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 794px;
+        height: 1123px;
+        background: var(--c-bg);
+        color: var(--c-text);
+        font-family: "Noto Sans SC", "Inter", sans-serif;
+      }
+      @media screen {
+        html {
+          height: auto;
+          display: flex;
+          justify-content: center;
+          min-height: 100vh;
+          background: #e8e8e8;
+        }
+        body {
+          transform-origin: top center;
+          scale: min(1, calc(100vw / 794), calc(100vh / 1123));
+          margin: 0 auto;
+          box-shadow: 0 0 60px rgba(0, 0, 0, 0.15);
+        }
+      }
+      .cover {
+        width: 794px;
+        height: 1123px;
+        position: relative;
+        box-sizing: border-box;
+      }
+      /* Black border frame - inset 5% from page edge */
+      .border-frame {
+        position: absolute;
+        top: 56px;
+        left: 40px;
+        right: 40px;
+        bottom: 56px;
+        border: 2.5px solid var(--c-accent);
+        pointer-events: none;
+      }
+      /* Content area inside frame */
+      .content {
+        position: absolute;
+        top: 56px;
+        left: 40px;
+        right: 40px;
+        bottom: 56px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 60px 50px;
+        box-sizing: border-box;
+      }
+      .institution {
+        font-size: 30pt;
+        font-weight: 700;
+        letter-spacing: 6px;
+        font-family: "Noto Serif SC", "Playfair Display", serif;
+        text-align: center;
+        margin-bottom: 30px;
+        max-width: 580px;
+      }
+      .thick-divider {
+        width: 70%;
+        height: 2px;
+        background: var(--c-accent);
+        margin-bottom: 40px;
+      }
+      .doc-type {
+        font-size: 22pt;
+        font-weight: 400;
+        letter-spacing: 4px;
+        text-align: center;
+        margin-bottom: 50px;
+        color: var(--c-text);
+      }
+      .title {
+        font-size: 26pt;
+        font-weight: 700;
+        line-height: 1.4;
+        font-family: "Noto Serif SC", "Playfair Display", serif;
+        text-align: center;
+        margin-bottom: 60px;
+        max-width: 520px;
+      }
+      .fields-block {
+        width: 400px;
+        margin-bottom: auto;
+      }
+      .field-row {
+        display: flex;
+        align-items: baseline;
+        margin-bottom: 28px;
+        font-size: 14pt;
+      }
+      .field-label {
+        white-space: nowrap;
+        margin-right: 12px;
+        color: var(--c-text);
+        font-weight: 400;
+        letter-spacing: 2px;
+      }
+      .field-value {
+        flex: 1;
+        text-align: center;
+        border-bottom: 1px solid var(--c-line);
+        padding-bottom: 4px;
+        min-height: 24px;
+        font-family: "Noto Sans SC", "Inter", sans-serif;
+      }
+      .date-block {
+        font-size: 14pt;
+        color: var(--c-muted);
+        text-align: center;
+        letter-spacing: 2px;
+        margin-top: auto;
+        padding-top: 30px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="cover">
+      <div class="border-frame"></div>
+      <div class="content">
+        <div class="institution"><!-- INSTITUTION --></div>
+        <div class="thick-divider"></div>
+        <div class="doc-type"><!-- DOC_TYPE --></div>
+        <div class="title"><!-- TITLE --></div>
+        <div class="fields-block">
+          <div class="field-row">
+            <span class="field-label"><!-- LABEL_1 --></span>
+            <span class="field-value"><!-- VALUE_1 --></span>
+          </div>
+          <div class="field-row">
+            <span class="field-label"><!-- LABEL_2 --></span>
+            <span class="field-value"><!-- VALUE_2 --></span>
+          </div>
+          <div class="field-row">
+            <span class="field-label"><!-- LABEL_3 --></span>
+            <span class="field-value"><!-- VALUE_3 --></span>
+          </div>
+          <div class="field-row">
+            <span class="field-label"><!-- LABEL_4 --></span>
+            <span class="field-value"><!-- VALUE_4 --></span>
+          </div>
+          <div class="field-row">
+            <span class="field-label"><!-- LABEL_5 --></span>
+            <span class="field-value"><!-- VALUE_5 --></span>
+          </div>
         </div>
-        <div class="field-row">
-          <span class="field-label"><!-- LABEL_2 --></span>
-          <span class="field-value"><!-- VALUE_2 --></span>
-        </div>
-        <div class="field-row">
-          <span class="field-label"><!-- LABEL_3 --></span>
-          <span class="field-value"><!-- VALUE_3 --></span>
-        </div>
-        <div class="field-row">
-          <span class="field-label"><!-- LABEL_4 --></span>
-          <span class="field-value"><!-- VALUE_4 --></span>
-        </div>
-        <div class="field-row">
-          <span class="field-label"><!-- LABEL_5 --></span>
-          <span class="field-value"><!-- VALUE_5 --></span>
-        </div>
+        <div class="date-block"><!-- DATE --></div>
       </div>
-      <div class="date-block"><!-- DATE --></div>
     </div>
-  </div>
-</body>
+  </body>
 </html>
 ```
 
 **Layout rules:**
+
 1. **Border frame**: 2.5pt solid black, inset ~5% from all page edges (40px left/right, 56px top/bottom on A4 at 96dpi). This is the defining visual element.
 2. **Institution name**: Centered, serif, 28-34pt Bold, letter-spacing 4-6px. For CJK names, use wider letter-spacing (6px). For Latin names, use standard (3px).
 3. **Thick divider**: 2pt solid line, 70% width, separates institution from content below.
@@ -1395,6 +1825,7 @@ When the user provides structured metadata (name, student ID, advisor, etc.), au
 
 **Variant 11B - Double border:**
 For extra formality (government documents, official submissions), replace the single border with a double border (outer 2.5pt + inner 1pt, 6px gap):
+
 ```css
 .border-frame {
   border: 2.5px solid var(--c-accent);
@@ -1409,20 +1840,20 @@ For extra formality (government documents, official submissions), replace the si
 
 ### Academic Template Selection Guide
 
-| Scenario | Template | Rationale |
-|----------|----------|-----------|
-| arXiv preprint, technical report | **08** (Vertical Anchor) | Left-aligned, data-dense feel |
-| IEEE/ACM paper, English thesis | **09** (Symmetric) | Classic bilateral symmetry |
-| Chinese thesis, journal with keywords | **10** (Journal) | CJK-optimized, keyword block |
-| **Thesis proposal, institutional cover, government doc** | **11** (Institutional) | **White bg, black border frame, structured field slots** |
-| Light/formal academic (white bg) | **01-07** (standard templates) | Use standard cover system |
-
+| Scenario                                                 | Template                       | Rationale                                                |
+| -------------------------------------------------------- | ------------------------------ | -------------------------------------------------------- |
+| arXiv preprint, technical report                         | **08** (Vertical Anchor)       | Left-aligned, data-dense feel                            |
+| IEEE/ACM paper, English thesis                           | **09** (Symmetric)             | Classic bilateral symmetry                               |
+| Chinese thesis, journal with keywords                    | **10** (Journal)               | CJK-optimized, keyword block                             |
+| **Thesis proposal, institutional cover, government doc** | **11** (Institutional)         | **White bg, black border frame, structured field slots** |
+| Light/formal academic (white bg)                         | **01-07** (standard templates) | Use standard cover system                                |
 
 Covers support a **background decoration layer** rendered behind all foreground content (Layer 1). This layer adds subtle depth through supergraphics, typographic watermarks, and blueprint hairlines.
 
 See → `typesetting/cover-backgrounds.md` - complete specification with modules, recipes, and constraint matrix.
 
 **Quick reference:**
+
 - **Recipe A (Minimalist Modern)**: Deep-space arc only - safest, max whitespace
 - **Recipe B (Engineering Academic)**: Coordinate cross + vertical spine text - precision, engineering feel
 - **Recipe C (Stable & Authoritative)**: Angle slash + bottom bleed text - heavy, authoritative
@@ -1433,10 +1864,10 @@ See → `typesetting/cover-backgrounds.md` - complete specification with modules
 
 # PART 6: CHANGELOG
 
-| Version | Date | Changes |
-|---------|------|---------|
-| V1.0 | - | Initial 7 layouts (Diagonal Tension, Vertical Axis, etc.) |
-| V2.0 | 2026-04-03 | Complete rewrite. Absolute Anchor Grid; Z-index layers; Typography Weight System; 7 new templates with percentage coordinates; Code-level safety. |
+| Version  | Date           | Changes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| -------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| V1.0     | -              | Initial 7 layouts (Diagonal Tension, Vertical Axis, etc.)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| V2.0     | 2026-04-03     | Complete rewrite. Absolute Anchor Grid; Z-index layers; Typography Weight System; 7 new templates with percentage coordinates; Code-level safety.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | **V2.1** | **2026-04-03** | **Summary Block upgrade.** Added mandatory Summary/Description drawer to all 7 templates (anti-void iron rule). Introduced base spacing unit `U = W * 0.05`. Refined Hero Title range to 45-65pt. Added S3.4 Hard Width Boundary Enforcement + S3.5 Mandatory Summary Auto-Generation. Template 01: added Summary drawer at Y=0.45*H. Template 02: added Summary at Y=0.45*H + refined watermark to 180pt. Template 03: added Summary at Y=0.40*H with W*0.55 width guard. Template 04: Summary included in center-calculated block. Template 05: lower-right group expanded with Summary + 3pt accent line. Template 06: Zone C explicitly designated for substantial summary text. Template 07: sidebar width changed to `0.1*W` (~80pt), content uses relative vertical centering. |
-| **V2.2** | **2026-04-07** | **Intent system unification + Template 11.** Part 2 Template Selection Guide migrated from "Document Tone" to Intent × Document Type matrix (aligned with `visual_framework.md` 5-intent system and `creative.md` Intent Mapping Table). Added Template 11 (Institutional) - white bg + black border frame + structured field slots for thesis proposals, dissertations, and institutional documents. Academic Template Selection Guide updated. |
-| **V3.0** | **2026-04-07** | **Color unification + Layout balance overhaul.** (1) All template CSS variables renamed to `--c-` prefix (`--c-bg`, `--c-accent`, `--c-text`, `--c-muted`) for palette system alignment. Hardcoded hex values replaced with CSS variables. Palette tables marked as fallback defaults with `palette.cascade` as canonical source. (2) Added S3.7 Line-Length Alignment - vertical/horizontal lines must match text span. (3) Added S3.8 Vertical Balance - adaptive centering for sparse content, CJK title size compensation (50-80pt vs Latin 45-65pt), anchor points shifted down (title H*0.30, summary H*0.50, meta H*0.70). (4) Output cleanliness rules - no version numbers, draft labels, or process artifacts in final PDF. |
+| **V2.2** | **2026-04-07** | **Intent system unification + Template 11.** Part 2 Template Selection Guide migrated from "Document Tone" to Intent × Document Type matrix (aligned with `visual_framework.md` 5-intent system and `creative.md` Intent Mapping Table). Added Template 11 (Institutional) - white bg + black border frame + structured field slots for thesis proposals, dissertations, and institutional documents. Academic Template Selection Guide updated.                                                                                                                                                                                                                                                                                                                                      |
+| **V3.0** | **2026-04-07** | **Color unification + Layout balance overhaul.** (1) All template CSS variables renamed to `--c-` prefix (`--c-bg`, `--c-accent`, `--c-text`, `--c-muted`) for palette system alignment. Hardcoded hex values replaced with CSS variables. Palette tables marked as fallback defaults with `palette.cascade` as canonical source. (2) Added S3.7 Line-Length Alignment - vertical/horizontal lines must match text span. (3) Added S3.8 Vertical Balance - adaptive centering for sparse content, CJK title size compensation (50-80pt vs Latin 45-65pt), anchor points shifted down (title H*0.30, summary H*0.50, meta H\*0.70). (4) Output cleanliness rules - no version numbers, draft labels, or process artifacts in final PDF.                                                |

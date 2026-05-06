@@ -4,7 +4,7 @@ import sys
 import argparse
 
 def safe_filename(title):
-    # 移除非法文件名字符
+    # Remove illegal filename characters
     return re.sub(r'[\\/*?:"<>|]', "", title).strip()
 
 def main():
@@ -12,7 +12,7 @@ def main():
     parser.add_argument("--title", required=True, help="Report title (used as filename)")
     args = parser.parse_args()
     
-    # 从标准输入 (STDIN) 读取所有内容，这不会受到 Shell 参数长度限制
+    # Read all content from standard input (STDIN), not limited by shell parameter length
     try:
         content = sys.stdin.read()
         if not content:

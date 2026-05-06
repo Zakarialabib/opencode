@@ -61,6 +61,7 @@ python3 scripts/pdf.py convert.latex main.tex --keep-logs
 ```
 
 **Core elements:**
+
 - `\documentclass{beamer}` — Presentation document class
 - Preamble — Theme, colors, fonts, global settings
 - `\begin{frame}...\end{frame}` — Each frame = one slide
@@ -73,29 +74,29 @@ Beamer themes consist of five independent layers that can be freely combined:
 
 ### 3.1 Presentation Themes (control overall layout)
 
-| Theme | Features | Suitable For |
-|---|---|---|
-| `default` | Minimal, no decoration | Formal academic, minimalist |
-| `Madrid` | Bottom info bar + section navigation | University courses, academic talks |
-| `Berlin` | Top mini-frames + side color blocks | Long technical presentations |
-| `Warsaw` | Top circular navigation + gradient title | Structured content |
-| `CambridgeUS` | Two-tone minimalist | Math-heavy presentations |
-| `Boadilla` | Clean footer | Business, concise style |
-| `Singapore` | Top dot navigation | Modern feel, multi-section |
-| `AnnArbor` | Yellow-blue dual tone | Michigan style |
-| `Antibes` | Blue sidebar tree | Multi-subsection structure |
-| `Bergen` | Blue title bar | Formal academic |
-| `Copenhagen` | Top bar + navigation | Classic blue scheme |
-| `Darmstadt` | Top progress dots | Multi-section structure |
-| `Dresden` | Top mini-frames | Similar to Berlin |
-| `Frankfurt` | Top dots | Clear section structure |
-| `Goettingen` | Right sidebar | Navigation-focused |
-| `Luebeck` | Top blue bar | Clean modern |
-| `Malmoe` | Minimal title | Content-first |
-| `Montpellier` | Top tree navigation | Hierarchical content |
-| `Pittsburgh` | No color blocks, minimal | White scheme |
-| `Rochester` | Dark title | Dark scheme |
-| `Szeged` | Blue title bar | Hungarian style |
+| Theme         | Features                                 | Suitable For                       |
+| ------------- | ---------------------------------------- | ---------------------------------- |
+| `default`     | Minimal, no decoration                   | Formal academic, minimalist        |
+| `Madrid`      | Bottom info bar + section navigation     | University courses, academic talks |
+| `Berlin`      | Top mini-frames + side color blocks      | Long technical presentations       |
+| `Warsaw`      | Top circular navigation + gradient title | Structured content                 |
+| `CambridgeUS` | Two-tone minimalist                      | Math-heavy presentations           |
+| `Boadilla`    | Clean footer                             | Business, concise style            |
+| `Singapore`   | Top dot navigation                       | Modern feel, multi-section         |
+| `AnnArbor`    | Yellow-blue dual tone                    | Michigan style                     |
+| `Antibes`     | Blue sidebar tree                        | Multi-subsection structure         |
+| `Bergen`      | Blue title bar                           | Formal academic                    |
+| `Copenhagen`  | Top bar + navigation                     | Classic blue scheme                |
+| `Darmstadt`   | Top progress dots                        | Multi-section structure            |
+| `Dresden`     | Top mini-frames                          | Similar to Berlin                  |
+| `Frankfurt`   | Top dots                                 | Clear section structure            |
+| `Goettingen`  | Right sidebar                            | Navigation-focused                 |
+| `Luebeck`     | Top blue bar                             | Clean modern                       |
+| `Malmoe`      | Minimal title                            | Content-first                      |
+| `Montpellier` | Top tree navigation                      | Hierarchical content               |
+| `Pittsburgh`  | No color blocks, minimal                 | White scheme                       |
+| `Rochester`   | Dark title                               | Dark scheme                        |
+| `Szeged`      | Blue title bar                           | Hungarian style                    |
 
 ```latex
 \usetheme{Madrid}
@@ -103,23 +104,23 @@ Beamer themes consist of five independent layers that can be freely combined:
 
 ### 3.2 Color Themes
 
-| Color Theme | Dominant Color |
-|---|---|
-| `default` | Dark blue |
-| `albatross` | Yellow tones |
-| `beaver` | Dark red / maroon |
-| `beetle` | Gray-blue |
-| `crane` | Orange-yellow |
-| `dolphin` | Blue-white |
-| `dove` | Gray-white (near monochrome) |
-| `fly` | Gray tones |
-| `lily` | Red-blue |
-| `orchid` | Purple tones |
-| `rose` | Pink |
-| `seagull` | Gray |
-| `seahorse` | Blue-purple |
-| `whale` | Deep sea blue |
-| `wolverine` | Yellow-blue contrast |
+| Color Theme | Dominant Color               |
+| ----------- | ---------------------------- |
+| `default`   | Dark blue                    |
+| `albatross` | Yellow tones                 |
+| `beaver`    | Dark red / maroon            |
+| `beetle`    | Gray-blue                    |
+| `crane`     | Orange-yellow                |
+| `dolphin`   | Blue-white                   |
+| `dove`      | Gray-white (near monochrome) |
+| `fly`       | Gray tones                   |
+| `lily`      | Red-blue                     |
+| `orchid`    | Purple tones                 |
+| `rose`      | Pink                         |
+| `seagull`   | Gray                         |
+| `seahorse`  | Blue-purple                  |
+| `whale`     | Deep sea blue                |
+| `wolverine` | Yellow-blue contrast         |
 
 ```latex
 \usecolortheme{dolphin}
@@ -549,6 +550,7 @@ Combine with `pgfpages` to compress multiple frames onto one page:
 ```
 
 Output PDF with notes: add in preamble:
+
 ```latex
 \setbeameroption{show notes on second screen=right}
 ```
@@ -693,6 +695,7 @@ Output PDF with notes: add in preamble:
 ```
 
 Compile:
+
 ```bash
 python3 scripts/pdf.py convert.latex main.tex --runs 2
 ```
@@ -701,21 +704,21 @@ python3 scripts/pdf.py convert.latex main.tex --runs 2
 
 ## 8. Common Issues & Fixes
 
-| Issue | Cause | Fix |
-|---|---|---|
-| CJK characters display as boxes | Missing CJK font package | Add `\usepackage[fontset=fandol]{ctex}` |
-| `??` appears in ToC or references | Only compiled once | Add `--runs 2` |
-| `[fragile]` missing error | verbatim/lstlisting frame | Add `[fragile]` after `\begin{frame}` |
-| Overlay not working | Forgot `\pause` or `<n->` in frame | Check overlay specification syntax |
-| TikZ compilation failure | Missing tikzlibrary | Add `\usetikzlibrary{...}` |
-| Math font distortion | Missing professionalfonts | Add `\usefonttheme{professionalfonts}` |
-| Frame exceeds one page (content overflow) | Too much content | Add `[allowframebreaks]` or split frame |
+| Issue                                     | Cause                              | Fix                                     |
+| ----------------------------------------- | ---------------------------------- | --------------------------------------- |
+| CJK characters display as boxes           | Missing CJK font package           | Add `\usepackage[fontset=fandol]{ctex}` |
+| `??` appears in ToC or references         | Only compiled once                 | Add `--runs 2`                          |
+| `[fragile]` missing error                 | verbatim/lstlisting frame          | Add `[fragile]` after `\begin{frame}`   |
+| Overlay not working                       | Forgot `\pause` or `<n->` in frame | Check overlay specification syntax      |
+| TikZ compilation failure                  | Missing tikzlibrary                | Add `\usetikzlibrary{...}`              |
+| Math font distortion                      | Missing professionalfonts          | Add `\usefonttheme{professionalfonts}`  |
+| Frame exceeds one page (content overflow) | Too much content                   | Add `[allowframebreaks]` or split frame |
 
 ---
 
 ## 9. Dependencies
 
-| Tool | Purpose |
-|---|---|
-| `scripts/tectonic` | LaTeX compilation engine (local binary) |
+| Tool                           | Purpose                                         |
+| ------------------------------ | ----------------------------------------------- |
+| `scripts/tectonic`             | LaTeX compilation engine (local binary)         |
 | `scripts/pdf.py convert.latex` | Tectonic wrapper with log filtering + PDF stats |

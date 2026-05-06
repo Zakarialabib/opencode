@@ -1,642 +1,707 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>OpenCode | Documentation Portal</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css"
+    />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Inter:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        :root {
-            --primary: #6366f1;
-            --primary-hover: #4f46e5;
-            --bg: #0f172a;
-            --sidebar-bg: rgba(30, 41, 59, 0.7);
-            --card-bg: rgba(30, 41, 59, 0.5);
-            --text: #f1f5f9;
-            --text-dim: #94a3b8;
-            --glass-border: rgba(255, 255, 255, 0.1);
+      :root {
+        --primary: #6366f1;
+        --primary-hover: #4f46e5;
+        --bg: #0f172a;
+        --sidebar-bg: rgba(30, 41, 59, 0.7);
+        --card-bg: rgba(30, 41, 59, 0.5);
+        --text: #f1f5f9;
+        --text-dim: #94a3b8;
+        --glass-border: rgba(255, 255, 255, 0.1);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--bg);
+        color: var(--text);
+        height: 100vh;
+        display: flex;
+        overflow: hidden;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: "Outfit", sans-serif;
+        margin-bottom: 1rem;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        width: 300px;
+        background: var(--sidebar-bg);
+        backdrop-filter: blur(12px);
+        border-right: 1px solid var(--glass-border);
+        padding: 2rem;
+        display: flex;
+        flex-column: column;
+        gap: 2rem;
+        z-index: 10;
+      }
+
+      .logo {
+        font-size: 1.5rem;
+        font-weight: 600;
+        background: linear-gradient(135deg, #818cf8, #c084fc);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .nav-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .nav-item {
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: var(--text-dim);
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .nav-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text);
+      }
+
+      .nav-item.active {
+        background: rgba(99, 102, 241, 0.15);
+        color: var(--primary);
+        border-left: 3px solid var(--primary);
+      }
+
+      /* Main Content */
+      .main-content {
+        flex: 1;
+        padding: 3rem;
+        overflow-y: auto;
+        position: relative;
+      }
+
+      .content-card {
+        max-width: 900px;
+        margin: 0 auto;
+        background: var(--card-bg);
+        backdrop-filter: blur(8px);
+        border: 1px solid var(--glass-border);
+        padding: 3rem;
+        border-radius: 24px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        animation: fadeIn 0.4s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        to {
+          opacity: 1;
+          transform: translateY(0);
         }
+      }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            height: 100vh;
-            display: flex;
-            overflow: hidden;
-        }
+      /* Markdown Styling */
+      .markdown-body {
+        line-height: 1.6;
+      }
 
-        h1, h2, h3, h4 {
-            font-family: 'Outfit', sans-serif;
-            margin-bottom: 1rem;
-        }
+      .markdown-body h1 {
+        font-size: 2.5rem;
+        margin-top: 0;
+      }
+      .markdown-body h2 {
+        font-size: 1.75rem;
+        margin-top: 2rem;
+        border-bottom: 1px solid var(--glass-border);
+        padding-bottom: 0.5rem;
+      }
+      .markdown-body p {
+        margin-bottom: 1.25rem;
+      }
+      .markdown-body code {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.9em;
+      }
+      .markdown-body pre {
+        margin-bottom: 1.5rem;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--glass-border);
+      }
+      .markdown-body table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 1.5rem;
+      }
+      .markdown-body th,
+      .markdown-body td {
+        padding: 0.75rem;
+        border: 1px solid var(--glass-border);
+        text-align: left;
+      }
+      .markdown-body th {
+        background: rgba(255, 255, 255, 0.05);
+      }
 
-        /* Sidebar */
-        .sidebar {
-            width: 300px;
-            background: var(--sidebar-bg);
-            backdrop-filter: blur(12px);
-            border-right: 1px solid var(--glass-border);
-            padding: 2rem;
-            display: flex;
-            flex-column: column;
-            gap: 2rem;
-            z-index: 10;
-        }
+      .callout {
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid;
+      }
+      .callout-tip {
+        background: rgba(16, 185, 129, 0.1);
+        border-color: #10b981;
+      }
+      .callout-note {
+        background: rgba(59, 130, 246, 0.1);
+        border-color: #3b82f6;
+      }
+      .callout-important {
+        background: rgba(245, 158, 11, 0.1);
+        border-color: #f59e0b;
+      }
+      .callout-caution {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: #ef4444;
+      }
 
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 600;
-            background: linear-gradient(135deg, #818cf8, #c084fc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 2rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .nav-list {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .nav-item {
-            padding: 0.75rem 1rem;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            color: var(--text-dim);
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .nav-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text);
-        }
-
-        .nav-item.active {
-            background: rgba(99, 102, 241, 0.15);
-            color: var(--primary);
-            border-left: 3px solid var(--primary);
-        }
-
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            padding: 3rem;
-            overflow-y: auto;
-            position: relative;
-        }
-
-        .content-card {
-            max-width: 900px;
-            margin: 0 auto;
-            background: var(--card-bg);
-            backdrop-filter: blur(8px);
-            border: 1px solid var(--glass-border);
-            padding: 3rem;
-            border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.4s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Markdown Styling */
-        .markdown-body {
-            line-height: 1.6;
-        }
-
-        .markdown-body h1 { font-size: 2.5rem; margin-top: 0; }
-        .markdown-body h2 { font-size: 1.75rem; margin-top: 2rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.5rem; }
-        .markdown-body p { margin-bottom: 1.25rem; }
-        .markdown-body code { background: rgba(0,0,0,0.3); padding: 0.2rem 0.4rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; }
-        .markdown-body pre { margin-bottom: 1.5rem; border-radius: 12px; overflow: hidden; border: 1px solid var(--glass-border); }
-        .markdown-body table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
-        .markdown-body th, .markdown-body td { padding: 0.75rem; border: 1px solid var(--glass-border); text-align: left; }
-        .markdown-body th { background: rgba(255,255,255,0.05); }
-
-        .callout {
-            padding: 1rem;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
-            border-left: 4px solid;
-        }
-        .callout-tip { background: rgba(16, 185, 129, 0.1); border-color: #10b981; }
-        .callout-note { background: rgba(59, 130, 246, 0.1); border-color: #3b82f6; }
-        .callout-important { background: rgba(245, 158, 11, 0.1); border-color: #f59e0b; }
-        .callout-caution { background: rgba(239, 68, 68, 0.1); border-color: #ef4444; }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="sidebar">
-        <div>
-            <div class="logo">
-                <span>🌌</span> OpenCode Docs
-            </div>
-            <ul class="nav-list">
-                <li class="nav-item active" onclick="loadPage('home')"><span>🏠</span> User Guide</li>
-                <li class="nav-item" onclick="loadPage('agents')"><span>👥</span> Engineering Team</li>
-                <li class="nav-item" onclick="loadPage('workflows')"><span>⚡</span> Workflows</li>
-                <li class="nav-item" onclick="loadPage('plugins')"><span>🔌</span> Plugins</li>
-                <li class="nav-item" onclick="loadPage('skills')"><span>🛠️</span> Skills Guide</li>
-                <li class="nav-item" onclick="loadPage('catalog')"><span>📚</span> GLM Catalog</li>
-            </ul>
-        </div>
+      <div>
+        <div class="logo"><span>🌌</span> OpenCode Docs</div>
+        <ul class="nav-list">
+          <li class="nav-item active" onclick="loadPage('home')"><span>🏠</span> User Guide</li>
+          <li class="nav-item" onclick="loadPage('agents')"><span>👥</span> Engineering Team</li>
+          <li class="nav-item" onclick="loadPage('workflows')"><span>⚡</span> Workflows</li>
+          <li class="nav-item" onclick="loadPage('plugins')"><span>🔌</span> Plugins</li>
+          <li class="nav-item" onclick="loadPage('skills')"><span>🛠️</span> Skills Guide</li>
+          <li class="nav-item" onclick="loadPage('catalog')"><span>📚</span> GLM Catalog</li>
+        </ul>
+      </div>
     </div>
 
     <div class="main-content">
-        <div class="content-card" id="content">
-            <!-- Content loaded here -->
-        </div>
+      <div class="content-card" id="content">
+        <!-- Content loaded here -->
+      </div>
     </div>
 
     <script>
-        const pages = {
-            home: `# 🌌 OpenCode User Guide
+              const pages = {
+                  home: `# 🌌 OpenCode User Guide
 
-Welcome to the **OpenCode** ecosystem. This guide will help you navigate the powerful agentic framework, leverage built-in skills, and automate your development workflow.
+      Welcome to the **OpenCode** ecosystem. This guide will help you navigate the powerful agentic framework, leverage built-in skills, and automate your development workflow.
 
----
+      ---
 
-## 🧭 Navigation
+      ## 🧭 Navigation
 
-| Section | Description |
-| :--- | :--- |
-| [**🤖 Agents Guide**](Agents-Guide.md) | Meet your AI team and learn how to orchestrate them. |
-| [**⚡ Workflows Guide**](Workflows-Guide.md) | Automate complex tasks with multi-agent workflows. |
-| [**🔌 Plugins Guide**](Plugins-Guide.md) | Extend OpenCode with community and built-in plugins. |
-| [**🛠️ Skills Guide**](Skills-Guide.md) | Deep dive into specialized capabilities and tools. |
-| [**📚 GLM Skills Catalog**](GLM-Skills-Catalog.md) | A complete directory of 40+ specialized GLM skills. |
+      | Section | Description |
+      | :--- | :--- |
+      | [**🤖 Agents Guide**](Agents-Guide.md) | Meet your AI team and learn how to orchestrate them. |
+      | [**⚡ Workflows Guide**](Workflows-Guide.md) | Automate complex tasks with multi-agent workflows. |
+      | [**🔌 Plugins Guide**](Plugins-Guide.md) | Extend OpenCode with community and built-in plugins. |
+      | [**🛠️ Skills Guide**](Skills-Guide.md) | Deep dive into specialized capabilities and tools. |
+      | [**📚 GLM Skills Catalog**](GLM-Skills-Catalog.md) | A complete directory of 40+ specialized GLM skills. |
 
----
+      ---
 
-## 🚀 Getting Started
+      ## 🚀 Getting Started
 
-OpenCode is designed to be your autonomous coding partner. Unlike simple chat interfaces, OpenCode uses a **Swarm Architecture** where specialized agents collaborate to solve problems.
+      OpenCode is designed to be your autonomous coding partner. Unlike simple chat interfaces, OpenCode uses a **Swarm Architecture** where specialized agents collaborate to solve problems.
 
-### Core Philosophy
-1. **Plan Before Action**: Always use the \`plan\` agent or \`project-planner\` before major changes.
-2. **Specialization Wins**: Use the right agent for the right task (e.g., \`laravel-expert\` for PHP, \`ui\` for CSS).
-3. **Continuous Improvement**: The system learns from your codebase and its own mistakes via the \`self-improver\`.
+      ### Core Philosophy
+      1. **Plan Before Action**: Always use the `plan` agent or `project-planner` before major changes.
+      2. **Specialization Wins**: Use the right agent for the right task (e.g., `laravel-expert` for PHP, `ui` for CSS).
+      3. **Continuous Improvement**: The system learns from your codebase and its own mistakes via the `self-improver`.
 
-### The Magic Command
-The primary entry point for complex tasks is often a workflow:
-\`\`\`bash
-/workflow run feature-development
-\`\`\`
-This triggers a multi-phase process: **Plan ➔ Implement ➔ Review ➔ Test**.
+      ### The Magic Command
+      The primary entry point for complex tasks is often a workflow:
+      \`\`\`bash
+      /workflow run feature-development
+      \`\`\`
+      This triggers a multi-phase process: **Plan ➔ Implement ➔ Review ➔ Test**.
 
----
+      ---
 
-## 🛠️ Essential Tools
+      ## 🛠️ Essential Tools
 
-OpenCode integrates several high-performance tools:
-- **MCP Servers**: Standardized access to Filesystem, SQLite, Git, and Browser.
-- **LSP Integration**: Real-time code analysis and type checking.
-- **Auto-Formatters**: Built-in support for Biome and Prettier.
+      OpenCode integrates several high-performance tools:
+      - **MCP Servers**: Standardized access to Filesystem, SQLite, Git, and Browser.
+      - **LSP Integration**: Real-time code analysis and type checking.
+      - **Auto-Formatters**: Built-in support for Biome and Prettier.
 
----
+      ---
 
-## 💡 Quick Tips
-- **@[docs]**: Mention this to give agents access to the documentation directory.
-- **Self-Improvement**: Run \`node self-improver.js\` periodically to keep the system sharp.
-- **Context Management**: Use the \`opencode-dcp\` plugin to keep your token usage efficient.
+      ## 💡 Quick Tips
+      - **@[docs]**: Mention this to give agents access to the documentation directory.
+      - **Self-Improvement**: Run \`node self-improver.js\` periodically to keep the system sharp.
+      - **Context Management**: Use the \`opencode-dcp\` plugin to keep your token usage efficient.
 
----
+      ---
 
-> [!TIP]
-> Need help with a specific stack? Check out the [**Skills Guide**](Skills-Guide.md) to see how OpenCode auto-detects your project type.`,
-            agents: `# 🤖 Agents Guide
+      > [!TIP]
+      > Need help with a specific stack? Check out the [**Skills Guide**](Skills-Guide.md) to see how OpenCode auto-detects your project type.`,
+                  agents: `# 🤖 Agents Guide
 
-OpenCode features a diverse team of **18+ specialized agents**. Each agent is optimized for specific phases of the software development lifecycle.
+      OpenCode features a diverse team of **18+ specialized agents**. Each agent is optimized for specific phases of the software development lifecycle.
 
----
+      ---
 
-## 👥 The Core Team
+      ## 👥 The Core Team
 
-| Agent | Primary Role | When to Use |
-| :--- | :--- | :--- |
-| **\`project-orchestrator\`** | Team Lead | Managing complex, multi-file changes and high-level logic. |
-| **\`build\`** | Implementer | Fast, minimal edits and direct implementation. |
-| **\`plan\`** | Architect | Read-only analysis and strategy without making changes. |
-| **\`code-reviewer\`** | Quality Guard | Analyzing code for performance, security, and standards. |
-| **\`laravel-expert\`** | PHP Specialist | Deep knowledge of Laravel 13, Livewire 4, and PHP 8.3. |
-| **\`tauri-expert\`** | Rust Specialist | Building cross-platform desktop apps with Rust/Tauri. |
-| **\`ui\`** | Designer | Crafting premium CSS, animations, and responsive layouts. |
-| **\`self-improver\`** | System Admin | Analyzing the project and suggesting architectural upgrades. |
+      | Agent | Primary Role | When to Use |
+      | :--- | :--- | :--- |
+      | **\`project-orchestrator\`** | Team Lead | Managing complex, multi-file changes and high-level logic. |
+      | **\`build\`** | Implementer | Fast, minimal edits and direct implementation. |
+      | **\`plan\`** | Architect | Read-only analysis and strategy without making changes. |
+      | **\`code-reviewer\`** | Quality Guard | Analyzing code for performance, security, and standards. |
+      | **\`laravel-expert\`** | PHP Specialist | Deep knowledge of Laravel 13, Livewire 4, and PHP 8.3. |
+      | **\`tauri-expert\`** | Rust Specialist | Building cross-platform desktop apps with Rust/Tauri. |
+      | **\`ui\`** | Designer | Crafting premium CSS, animations, and responsive layouts. |
+      | **\`self-improver\`** | System Admin | Analyzing the project and suggesting architectural upgrades. |
 
----
+      ---
 
-## 🎯 How to Orchestrate Agents
+      ## 🎯 How to Orchestrate Agents
 
-### Switching Agents
-You can switch the active agent at any time:
-\`\`\`bash
-/agent laravel-expert
-\`\`\`
+      ### Switching Agents
+      You can switch the active agent at any time:
+      \`\`\`bash
+      /agent laravel-expert
+      \`\`\`
 
-### Best Practices for Prompting
-1. **Be Specific**: Instead of "Fix the bug," say "Use \`laravel-expert\` to fix the validation error in \`UserRequest.php\`."
-2. **Provide Context**: Mention relevant files or the \`@[docs]\` directory.
-3. **Use the "Plan First" Pattern**:
-   - Ask \`plan\` to outline the changes.
-   - Once satisfied, ask \`build\` to implement them.
-   - Ask \`code-reviewer\` to verify.
+      ### Best Practices for Prompting
+      1. **Be Specific**: Instead of "Fix the bug," say "Use \`laravel-expert\` to fix the validation error in \`UserRequest.php\`."
+      2. **Provide Context**: Mention relevant files or the \`@[docs]\` directory.
+      3. **Use the "Plan First" Pattern**:
+         - Ask \`plan\` to outline the changes.
+         - Once satisfied, ask \`build\` to implement them.
+         - Ask \`code-reviewer\` to verify.
 
----
+      ---
 
-## 📂 Custom Agent Definitions
+      ## 📂 Custom Agent Definitions
 
-Agents are defined in two places:
-1. **\`opencode.json\`**: Global configuration and permissions.
-2. **\`agents/*.md\`**: Detailed system instructions for each agent.
+      Agents are defined in two places:
+      1. **\`opencode.json\`**: Global configuration and permissions.
+      2. **\`agents/*.md\`**: Detailed system instructions for each agent.
 
-### Example: Customizing an Agent
-To modify the \`ui\` agent, edit \`agents/ui.md\`. You can add specific design preferences or color palettes there to ensure consistency across your project.
+      ### Example: Customizing an Agent
+      To modify the \`ui\` agent, edit \`agents/ui.md\`. You can add specific design preferences or color palettes there to ensure consistency across your project.
 
----
+      ---
 
-## 🛠️ Specialized Agents Reference
+      ## 🛠️ Specialized Agents Reference
 
-### **Documentation & Governance**
-- **\`docs-governor\`**: Ensures documentation stays in sync with code.
-- **\`documentation-writer\`**: Automatically generates technical docs from source.
+      ### **Documentation & Governance**
+      - **\`docs-governor\`**: Ensures documentation stays in sync with code.
+      - **\`documentation-writer\`**: Automatically generates technical docs from source.
 
-### **Testing & Security**
-- **\`testing-expert\`**: Generates comprehensive Vitest, Jest, or PHPUnit suites.
-- **\`security\`**: Scans for vulnerabilities and \`.env\` leaks.
+      ### **Testing & Security**
+      - **\`testing-expert\`**: Generates comprehensive Vitest, Jest, or PHPUnit suites.
+      - **\`security\`**: Scans for vulnerabilities and \`.env\` leaks.
 
-### **Research & Tools**
-- **\`mcp-researcher\`**: Explores available MCP tools and their capabilities.
-- **\`task-runner\`**: Optimized for executing terminal commands and parsing output.
+      ### **Research & Tools**
+      - **\`mcp-researcher\`**: Explores available MCP tools and their capabilities.
+      - **\`task-runner\`**: Optimized for executing terminal commands and parsing output.
 
----
+      ---
 
-> [!IMPORTANT]
-> Some agents have restricted permissions. For example, the \`plan\` agent is **read-only** by default to prevent accidental modifications during the discovery phase.`,
-            workflows: `# ⚡ Workflows Guide
+      > [!IMPORTANT]
+      > Some agents have restricted permissions. For example, the \`plan\` agent is **read-only** by default to prevent accidental modifications during the discovery phase.`,
+                  workflows: `# ⚡ Workflows Guide
 
-Workflows are automated, multi-agent sequences designed to handle complex development tasks without manual intervention between steps.
+      Workflows are automated, multi-agent sequences designed to handle complex development tasks without manual intervention between steps.
 
----
+      ---
 
-## 🏃 Running a Workflow
+      ## 🏃 Running a Workflow
 
-Use the \`/workflow\` command to manage and execute workflows:
+      Use the \`/workflow\` command to manage and execute workflows:
 
-\`\`\`bash
-/workflow list            # See available workflows
-/workflow run bug-fix     # Start the bug fixing automation
-\`\`\`
+      \`\`\`bash
+      /workflow list            # See available workflows
+      /workflow run bug-fix     # Start the bug fixing automation
+      \`\`\`
 
----
+      ---
 
-## 🏗️ Core Workflows
+      ## 🏗️ Core Workflows
 
-OpenCode comes with several pre-defined workflows in the \`workflows/\` directory:
+      OpenCode comes with several pre-defined workflows in the \`workflows/\` directory:
 
-### 1. \`feature-development\`
-**Phases**:
-- **Plan**: \`project-planner\` analyzes requirements and creates a task list.
-- **Implement**: \`build\` executes the changes step-by-step.
-- **Review**: \`code-reviewer\` checks for issues.
-- **Test**: \`testing-expert\` ensures everything works.
+      ### 1. \`feature-development\`
+      **Phases**:
+      - **Plan**: \`project-planner\` analyzes requirements and creates a task list.
+      - **Implement**: \`build\` executes the changes step-by-step.
+      - **Review**: \`code-reviewer\` checks for issues.
+      - **Test**: \`testing-expert\` ensures everything works.
 
-### 2. \`bug-fix\`
-**Phases**:
-- **Reproduce**: Attempts to create a failing test case.
-- **Fix**: \`debug\` agent identifies and resolves the root cause.
-- **Verify**: Runs tests to ensure the fix is successful and no regressions occur.
+      ### 2. \`bug-fix\`
+      **Phases**:
+      - **Reproduce**: Attempts to create a failing test case.
+      - **Fix**: \`debug\` agent identifies and resolves the root cause.
+      - **Verify**: Runs tests to ensure the fix is successful and no regressions occur.
 
----
+      ---
 
-## 🛠️ How it Works: The Workflow Engine
+      ## 🛠️ How it Works: The Workflow Engine
 
-The \`workflow-engine.js\` at the project root is responsible for:
-- Parsing YAML workflow definitions.
-- Spawning agents with specific contexts.
-- Passing output from one agent as input to the next.
-- Handling errors and retries.
+      The \`workflow-engine.js\` at the project root is responsible for:
+      - Parsing YAML workflow definitions.
+      - Spawning agents with specific contexts.
+      - Passing output from one agent as input to the next.
+      - Handling errors and retries.
 
----
+      ---
 
-## ✍️ Creating Custom Workflows
+      ## ✍️ Creating Custom Workflows
 
-Workflows are defined in YAML. Create a new file in \`workflows/\` (e.g., \`workflows/deploy.yaml\`):
+      Workflows are defined in YAML. Create a new file in \`workflows/\` (e.g., \`workflows/deploy.yaml\`):
 
-\`\`\`yaml
-name: Deployment Preparation
-steps:
-  - name: Audit
-    agent: security
-    task: "Check for any exposed credentials or vulnerable dependencies."
-  - name: Build
-    agent: build
-    task: "Run npm run build and report any warnings."
-  - name: Documentation
-    agent: docs-governor
-    task: "Update the changelog with recent changes."
-\`\`\`
+      \`\`\`yaml
+      name: Deployment Preparation
+      steps:
+        - name: Audit
+          agent: security
+          task: "Check for any exposed credentials or vulnerable dependencies."
+        - name: Build
+          agent: build
+          task: "Run npm run build and report any warnings."
+        - name: Documentation
+          agent: docs-governor
+          task: "Update the changelog with recent changes."
+      \`\`\`
 
----
+      ---
 
-## 💡 Pro Tips
+      ## 💡 Pro Tips
 
-- **Checkpointing**: The engine saves the state after each step. If a workflow fails, you can often resume from the last successful step.
-- **Manual Intervention**: You can insert a "wait for user" step in your YAML if you want to approve a plan before implementation starts.
-- **Tool Access**: Workflows have full access to all configured MCP tools and skills.
+      - **Checkpointing**: The engine saves the state after each step. If a workflow fails, you can often resume from the last successful step.
+      - **Manual Intervention**: You can insert a "wait for user" step in your YAML if you want to approve a plan before implementation starts.
+      - **Tool Access**: Workflows have full access to all configured MCP tools and skills.
 
----
+      ---
 
-> [!NOTE]
-> Workflows are the best way to leverage the "Swarm" power of OpenCode. They turn a series of manual prompts into a single, reliable automation.`,
-            plugins: `# 🔌 Plugins Guide
+      > [!NOTE]
+      > Workflows are the best way to leverage the "Swarm" power of OpenCode. They turn a series of manual prompts into a single, reliable automation.`,
+                  plugins: `# 🔌 Plugins Guide
 
-Plugins extend the core functionality of OpenCode, providing new commands, UI enhancements, and background capabilities.
+      Plugins extend the core functionality of OpenCode, providing new commands, UI enhancements, and background capabilities.
 
----
+      ---
 
-## 🛠️ Managing Plugins
+      ## 🛠️ Managing Plugins
 
-Plugins are registered in \`opencode.json\` under the \`plugin\` array. Most plugins are installed via \`npm\` and then activated in the config.
+      Plugins are registered in \`opencode.json\` under the \`plugin\` array. Most plugins are installed via \`npm\` and then activated in the config.
 
----
+      ---
 
-## 🌟 Essential Plugins
+      ## 🌟 Essential Plugins
 
-### 1. **Dynamic Context Pruning (\`opencode-dcp\`)**
-- **Purpose**: Prevents "context bloat" by intelligently removing old tool outputs.
-- **Benefit**: Saves tokens and keeps the agent focused on the current task.
+      ### 1. **Dynamic Context Pruning (\`opencode-dcp\`)**
+      - **Purpose**: Prevents "context bloat" by intelligently removing old tool outputs.
+      - **Benefit**: Saves tokens and keeps the agent focused on the current task.
 
-### 2. **Background Agents (\`opencode-background-agents\`)**
-- **Purpose**: Spawn async agents that work while you keep typing.
-- **Command**: \`/bg "Task description"\`
+      ### 2. **Background Agents (\`opencode-background-agents\`)**
+      - **Purpose**: Spawn async agents that work while you keep typing.
+      - **Command**: \`/bg "Task description"\`
 
-### 3. **CC Safety Net (\`cc-safety-net\`)**
-- **Purpose**: A security layer that intercepts dangerous commands like \`rm -rf /\` or \`git push --force\`.
-- **Status**: Always active by default in the recommended setup.
+      ### 3. **CC Safety Net (\`cc-safety-net\`)**
+      - **Purpose**: A security layer that intercepts dangerous commands like \`rm -rf /\` or \`git push --force\`.
+      - **Status**: Always active by default in the recommended setup.
 
-### 4. **Oh My OpenCode (\`oh-my-opencode\`)**
-- **Purpose**: Adds the \`ulw\` (Ultrawork) keyword for automatic task decomposition.
-- **Usage**: Just start a prompt with \`ulw\` to trigger the swarm.
+      ### 4. **Oh My OpenCode (\`oh-my-opencode\`)**
+      - **Purpose**: Adds the \`ulw\` (Ultrawork) keyword for automatic task decomposition.
+      - **Usage**: Just start a prompt with \`ulw\` to trigger the swarm.
 
----
+      ---
 
-## ⚙️ Configuration Example
+      ## ⚙️ Configuration Example
 
-To enable and configure a plugin, add it to your \`opencode.json\`:
+      To enable and configure a plugin, add it to your \`opencode.json\`:
 
-\`\`\`json
-{
-  "plugins": {
-    "opencode-dcp": {
-      "threshold": 0.8,
-      "preserveRecent": 15
-    }
-  }
-}
-\`\`\`
-
----
-
-## 🚀 Built-in Bridges
-
-OpenCode includes specialized "Bridges" to integrate with other tools:
-- **Trae Bridge**: Connects OpenCode directly to the Trae IDE's terminal and context.
-- **LSP Bridge**: Allows agents to "see" what your IDE sees (type errors, definitions).
-
----
-
-## 📝 Creating Your Own Plugin
-
-OpenCode plugins are typically Node.js modules that export a standard interface. They can:
-- Add new \`/\` commands.
-- Intercept tool calls (pre/post hooks).
-- Modify the system prompt dynamically.
-
-Check \`plugins/index.ts\` for the entry point of custom local plugins.
-
----
-
-> [!CAUTION]
-> Always install plugins from trusted sources. Since plugins have access to your terminal and filesystem, they should be audited carefully.`,
-            skills: `# 🛠️ Skills Guide
-
-Skills are specialized capabilities that agents can "load" to handle specific technologies or complex workflows.
-
----
-
-## 🧐 What is a Skill?
-
-A skill is a directory containing a \`SKILL.md\` file. This file acts as a "manual" for the agent, providing:
-- **Instructions**: How to use specific tools (e.g., \`agent-browser\`).
-- **Best Practices**: Coding standards for a stack (e.g., Laravel 13).
-- **Workflows**: Step-by-step guides for common tasks.
-
----
-
-## 📂 Skill Categories
-
-### 1. **Core Skills (\`skills/\`)**
-These are built-in skills managed by the OpenCode core team:
-- **\`stack-context\`**: Automatically detects if you are in a React, Laravel, or Tauri project.
-- **\`self-improver\`**: The engine that helps OpenCode evolve.
-- **\`security-review\`**: Specialized auditing for secrets and vulnerabilities.
-
-### 2. **GLM Skills (\`glm-skills/\`)**
-A massive collection of **40+ community-driven skills**. These cover everything from web browsing to academic search.
-- See the full list in the [**GLM Skills Catalog**](GLM-Skills-Catalog.md).
-
----
-
-## 🚀 Using Skills
-
-### Automatic Loading
-Most skills are loaded automatically when an agent needs them. For example, if you ask the \`ui\` agent to "Fix the layout," it will load the \`ui-ux-pro-max\` skill from the GLM library.
-
-### Manual Activation
-You can explicitly tell an agent to use a skill:
-\`\`\`bash
-/skill load agent-browser
-agent-browser open https://example.com
-\`\`\`
-
----
-
-## 🎨 Spotlight: The UI/UX Skill
-
-The \`ui-ux-pro-max\` skill (found in \`glm-skills/ui-ux-pro-max\`) provides agents with:
-- Premium color palettes (HSL-based).
-- Modern design patterns (Glassmorphism, Neumorphism).
-- Responsive grid systems.
-
-When you use the \`ui\` agent, it leverages this skill to ensure your web apps look premium and "WOW" the user.
-
----
-
-## ✍️ Creating a Skill
-
-1. Create a folder in \`skills/\`.
-2. Add a \`SKILL.md\` file.
-3. Define the \`---` metadata header at the top.
-4. Provide clear, concise instructions for the agent.
-
-Example \`SKILL.md\` header:
-\`\`\`markdown
----
-name: My Custom Skill
-description: Handles XYZ tasks with precision.
-allowed-tools: Bash(my-tool:*)
----
-\`\`\`
-
----
-
-> [!TIP]
-> Use the \`skill-creator\` skill to help you draft new skill definitions! It knows exactly how to format the \`SKILL.md\` for maximum agent compatibility.`,
-            catalog: `# 📚 GLM Skills Catalog
-
-The \`glm-skills\` directory contains a rich library of specialized capabilities. Agents can leverage these to perform complex tasks outside of standard coding.
-
----
-
-## 🌐 Browser & Web
-| Skill | Purpose |
-| :--- | :--- |
-| **\`agent-browser\`** | Headless browser automation (Click, Type, Snapshot). |
-| **\`web-reader\`** | Optimized for reading and summarizing long web articles. |
-| **\`seo-content-writer\`** | Generates web content optimized for search engines. |
-| **\`web-shader-extractor\`** | Specialized tool for extracting and analyzing WebGL shaders. |
-
-## 💻 Development & Design
-| Skill | Purpose |
-| :--- | :--- |
-| **\`coding-agent\`** | Advanced coding workflows (Plan -> Implement -> Verify). |
-| **\`fullstack-dev\`** | Next.js 16, TypeScript, and Prisma expert instructions. |
-| **\`ui-ux-pro-max\`** | Premium UI/UX design standards and component patterns. |
-| **\`image-generation\`** | Interface for AI image generation tools. |
-| **\`video-generation\`** | Interface for AI video generation tools. |
-
-## 📊 Analysis & Research
-| Skill | Purpose |
-| :--- | :--- |
-| **\`qingyan-research\`** | Deep academic and technical research agent. |
-| **\`market-research-reports\`** | Structured templates for market analysis. |
-| **\`finance\`** | Financial data analysis and stock market insights. |
-| **\`contentanalysis\`** | Deep linguistic and sentiment analysis of text. |
-
-## 📄 Document Processing
-| Skill | Purpose |
-| :--- | :--- |
-| **\`pdf\`** | Parsing and interacting with PDF documents. |
-| **\`docx\`** | Generating and editing Microsoft Word files. |
-| **\`xlsx\`** | Advanced Excel automation and data processing. |
-| **\`ppt\`** | Creating and formatting PowerPoint presentations. |
-
-## 🛠️ System Tools
-| Skill | Purpose |
-| :--- | :--- |
-| **\`skill-creator\`** | An agent dedicated to helping you build *more* skills. |
-| **\`skill-vetter\`** | Audits existing skills for security and efficiency. |
-| **\`auto-target-tracker\`** | Project management and milestone tracking. |
-
----
-
-## 📂 Full List of Available Skills
-You can find these in \`c:\\opencode\\glm-skills\\\`:
-
-- \`ASR\` (Speech Recognition)
-- \`TTS\` (Text-to-Speech)
-- \`VLM\` (Visual Language Model)
-- \`ai-news-collectors\`
-- \`aminer-academic-search\`
-- \`anti-pua\`
-- \`blog-writer\`
-- \`charts\` (Data visualization)
-- \`dream-interpreter\`
-- \`interview-designer\`
-- \`mindfulness-meditation\`
-- \`podcast-generate\`
-- \`storyboard-manager\`
-- ... and many more.
-
----
-
-## 💡 How to use a GLM Skill
-Each folder contains a \`SKILL.md\`. To learn how to use a specific skill (e.g., \`agent-browser\`), simply open its file:
-\`c:\\opencode\\glm-skills\\agent-browser\\SKILL.md\`
-
-Agents are trained to read these files whenever they need to use the tools provided by the skill.
-
----
-
-> [!TIP]
-> Use the **\`skill-finder-cn\`** skill if you are looking for specific community-contributed skills from the Zhipu AI ecosystem.`
-        };
-
-        function formatCallouts(html) {
-            return html
-                .replace(/> \[!TIP\]\n> (.*)/g, '<div class="callout callout-tip"><strong>💡 Tip:</strong> $1</div>')
-                .replace(/> \[!NOTE\]\n> (.*)/g, '<div class="callout callout-note"><strong>ℹ️ Note:</strong> $1</div>')
-                .replace(/> \[!IMPORTANT\]\n> (.*)/g, '<div class="callout callout-important"><strong>⚠️ Important:</strong> $1</div>')
-                .replace(/> \[!CAUTION\]\n> (.*)/g, '<div class="callout callout-caution"><strong>🛑 Caution:</strong> $1</div>');
+      \`\`\`json
+      {
+        "plugins": {
+          "opencode-dcp": {
+            "threshold": 0.8,
+            "preserveRecent": 15
+          }
         }
+      }
+      \`\`\`
 
-        function loadPage(pageKey) {
-            // Update active state
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            const index = ['home', 'agents', 'workflows', 'plugins', 'skills', 'catalog'].indexOf(pageKey);
-            document.querySelectorAll('.nav-item')[index].classList.add('active');
+      ---
 
-            const contentDiv = document.getElementById('content');
-            
-            // Animation reset
-            contentDiv.style.animation = 'none';
-            contentDiv.offsetHeight; // trigger reflow
-            contentDiv.style.animation = null;
+      ## 🚀 Built-in Bridges
 
-            // Render Markdown
-            let md = pages[pageKey];
-            
-            // Basic fix for internal links in markdown
-            md = md.replace(/\.md/g, ''); 
+      OpenCode includes specialized "Bridges" to integrate with other tools:
+      - **Trae Bridge**: Connects OpenCode directly to the Trae IDE's terminal and context.
+      - **LSP Bridge**: Allows agents to "see" what your IDE sees (type errors, definitions).
 
-            let html = marked.parse(md);
-            html = formatCallouts(html);
-            
-            contentDiv.innerHTML = `<div class="markdown-body">${html}</div>`;
-            
-            // Highlight code
-            Prism.highlightAll();
-        }
+      ---
 
-        // Initialize with home
-        loadPage('home');
+      ## 📝 Creating Your Own Plugin
+
+      OpenCode plugins are typically Node.js modules that export a standard interface. They can:
+      - Add new \`/\` commands.
+      - Intercept tool calls (pre/post hooks).
+      - Modify the system prompt dynamically.
+
+      Check \`plugins/index.ts\` for the entry point of custom local plugins.
+
+      ---
+
+      > [!CAUTION]
+      > Always install plugins from trusted sources. Since plugins have access to your terminal and filesystem, they should be audited carefully.`,
+                  skills: `# 🛠️ Skills Guide
+
+      Skills are specialized capabilities that agents can "load" to handle specific technologies or complex workflows.
+
+      ---
+
+      ## 🧐 What is a Skill?
+
+      A skill is a directory containing a \`SKILL.md\` file. This file acts as a "manual" for the agent, providing:
+      - **Instructions**: How to use specific tools (e.g., \`agent-browser\`).
+      - **Best Practices**: Coding standards for a stack (e.g., Laravel 13).
+      - **Workflows**: Step-by-step guides for common tasks.
+
+      ---
+
+      ## 📂 Skill Categories
+
+      ### 1. **Core Skills (\`skills/\`)**
+      These are built-in skills managed by the OpenCode core team:
+      - **\`stack-context\`**: Automatically detects if you are in a React, Laravel, or Tauri project.
+      - **\`self-improver\`**: The engine that helps OpenCode evolve.
+      - **\`security-review\`**: Specialized auditing for secrets and vulnerabilities.
+
+      ### 2. **GLM Skills (\`glm-skills/\`)**
+      A massive collection of **40+ community-driven skills**. These cover everything from web browsing to academic search.
+      - See the full list in the [**GLM Skills Catalog**](GLM-Skills-Catalog.md).
+
+      ---
+
+      ## 🚀 Using Skills
+
+      ### Automatic Loading
+      Most skills are loaded automatically when an agent needs them. For example, if you ask the \`ui\` agent to "Fix the layout," it will load the \`ui-ux-pro-max\` skill from the GLM library.
+
+      ### Manual Activation
+      You can explicitly tell an agent to use a skill:
+      \`\`\`bash
+      /skill load agent-browser
+      agent-browser open https://example.com
+      \`\`\`
+
+      ---
+
+      ## 🎨 Spotlight: The UI/UX Skill
+
+      The \`ui-ux-pro-max\` skill (found in \`glm-skills/ui-ux-pro-max\`) provides agents with:
+      - Premium color palettes (HSL-based).
+      - Modern design patterns (Glassmorphism, Neumorphism).
+      - Responsive grid systems.
+
+      When you use the \`ui\` agent, it leverages this skill to ensure your web apps look premium and "WOW" the user.
+
+      ---
+
+      ## ✍️ Creating a Skill
+
+      1. Create a folder in \`skills/\`.
+      2. Add a \`SKILL.md\` file.
+      3. Define the \`---` metadata header at the top.
+      4. Provide clear, concise instructions for the agent.
+
+      Example \`SKILL.md\` header:
+      \`\`\`markdown
+      ---
+      name: My Custom Skill
+      description: Handles XYZ tasks with precision.
+      allowed-tools: Bash(my-tool:*)
+      ---
+      \`\`\`
+
+      ---
+
+      > [!TIP]
+      > Use the \`skill-creator\` skill to help you draft new skill definitions! It knows exactly how to format the \`SKILL.md\` for maximum agent compatibility.`,
+                  catalog: `# 📚 GLM Skills Catalog
+
+      The \`glm-skills\` directory contains a rich library of specialized capabilities. Agents can leverage these to perform complex tasks outside of standard coding.
+
+      ---
+
+      ## 🌐 Browser & Web
+      | Skill | Purpose |
+      | :--- | :--- |
+      | **\`agent-browser\`** | Headless browser automation (Click, Type, Snapshot). |
+      | **\`web-reader\`** | Optimized for reading and summarizing long web articles. |
+      | **\`seo-content-writer\`** | Generates web content optimized for search engines. |
+      | **\`web-shader-extractor\`** | Specialized tool for extracting and analyzing WebGL shaders. |
+
+      ## 💻 Development & Design
+      | Skill | Purpose |
+      | :--- | :--- |
+      | **\`coding-agent\`** | Advanced coding workflows (Plan -> Implement -> Verify). |
+      | **\`fullstack-dev\`** | Next.js 16, TypeScript, and Prisma expert instructions. |
+      | **\`ui-ux-pro-max\`** | Premium UI/UX design standards and component patterns. |
+      | **\`image-generation\`** | Interface for AI image generation tools. |
+      | **\`video-generation\`** | Interface for AI video generation tools. |
+
+      ## 📊 Analysis & Research
+      | Skill | Purpose |
+      | :--- | :--- |
+      | **\`qingyan-research\`** | Deep academic and technical research agent. |
+      | **\`market-research-reports\`** | Structured templates for market analysis. |
+      | **\`finance\`** | Financial data analysis and stock market insights. |
+      | **\`contentanalysis\`** | Deep linguistic and sentiment analysis of text. |
+
+      ## 📄 Document Processing
+      | Skill | Purpose |
+      | :--- | :--- |
+      | **\`pdf\`** | Parsing and interacting with PDF documents. |
+      | **\`docx\`** | Generating and editing Microsoft Word files. |
+      | **\`xlsx\`** | Advanced Excel automation and data processing. |
+      | **\`ppt\`** | Creating and formatting PowerPoint presentations. |
+
+      ## 🛠️ System Tools
+      | Skill | Purpose |
+      | :--- | :--- |
+      | **\`skill-creator\`** | An agent dedicated to helping you build *more* skills. |
+      | **\`skill-vetter\`** | Audits existing skills for security and efficiency. |
+      | **\`auto-target-tracker\`** | Project management and milestone tracking. |
+
+      ---
+
+      ## 📂 Full List of Available Skills
+      You can find these in \`c:\\opencode\\glm-skills\\\`:
+
+      - \`ASR\` (Speech Recognition)
+      - \`TTS\` (Text-to-Speech)
+      - \`VLM\` (Visual Language Model)
+      - \`ai-news-collectors\`
+      - \`aminer-academic-search\`
+      - \`anti-pua\`
+      - \`blog-writer\`
+      - \`charts\` (Data visualization)
+      - \`dream-interpreter\`
+      - \`interview-designer\`
+      - \`podcast-generate\`
+      - \`storyboard-manager\`
+      - ... and many more.
+
+      ---
+
+      ## 💡 How to use a GLM Skill
+      Each folder contains a \`SKILL.md\`. To learn how to use a specific skill (e.g., \`agent-browser\`), simply open its file:
+      \`c:\\opencode\\glm-skills\\agent-browser\\SKILL.md\`
+
+      Agents are trained to read these files whenever they need to use the tools provided by the skill.
+
+      ---
+
+      > [!TIP]
+      > Use the **\`skill-finder-cn\`** skill if you are looking for specific community-contributed skills from the Zhipu AI ecosystem.`
+              };
+
+              function formatCallouts(html) {
+                  return html
+                      .replace(/> \[!TIP\]\n> (.*)/g, '<div class="callout callout-tip"><strong>💡 Tip:</strong> $1</div>')
+                      .replace(/> \[!NOTE\]\n> (.*)/g, '<div class="callout callout-note"><strong>ℹ️ Note:</strong> $1</div>')
+                      .replace(/> \[!IMPORTANT\]\n> (.*)/g, '<div class="callout callout-important"><strong>⚠️ Important:</strong> $1</div>')
+                      .replace(/> \[!CAUTION\]\n> (.*)/g, '<div class="callout callout-caution"><strong>🛑 Caution:</strong> $1</div>');
+              }
+
+              function loadPage(pageKey) {
+                  // Update active state
+                  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                  const index = ['home', 'agents', 'workflows', 'plugins', 'skills', 'catalog'].indexOf(pageKey);
+                  document.querySelectorAll('.nav-item')[index].classList.add('active');
+
+                  const contentDiv = document.getElementById('content');
+
+                  // Animation reset
+                  contentDiv.style.animation = 'none';
+                  contentDiv.offsetHeight; // trigger reflow
+                  contentDiv.style.animation = null;
+
+                  // Render Markdown
+                  let md = pages[pageKey];
+
+                  // Basic fix for internal links in markdown
+                  md = md.replace(/\.md/g, '');
+
+                  let html = marked.parse(md);
+                  html = formatCallouts(html);
+
+                  contentDiv.innerHTML = `<div class="markdown-body">${html}</div>`;
+
+                  // Highlight code
+                  Prism.highlightAll();
+              }
+
+              // Initialize with home
+              loadPage('home');
     </script>
-</body>
+  </body>
 </html>

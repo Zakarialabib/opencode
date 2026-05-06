@@ -1,84 +1,85 @@
 # 🤖 Software Engineering Team (Agents)
 
-OpenCode uses a **Swarm Architecture** where 19 specialized agents collaborate to solve problems. Each agent belongs to a specific domain with tailored tools and instructions.
+OpenCode uses specialized agents configured in `opencode.json` to handle different aspects of software development. Each agent has tailored tools, instructions, and a specific role.
 
 ---
 
-## 🏛️ Leadership & Orchestration
+## 🏛️ Leadership & Strategy
 
-These agents oversee project strategy and coordinate the team.
+These agents oversee project strategy, architecture, and coordination.
 
-| Agent                      | Role                | Key Skills                             | Temperature |
-| :------------------------- | :------------------ | :------------------------------------- | :---------- |
-| **`lead-orchestrator`**    | Engineering Lead    | workflow-manager, Task tool delegation | 0.2         |
-| **`lead-architect`**       | Technical Architect | System design, architectural decisions | default     |
-| **`lead-product-manager`** | Product Manager     | Requirements, prioritization, roadmap  | default     |
+| Agent                 | Role                | Key Skills                                               | Temperature |
+| :-------------------- | :------------------ | :------------------------------------------------------- | :---------- |
+| **`lead-strategist`** | Strategic Lead      | workflow-manager, Task tool delegation, architecture     | 0.2         |
+| **`lead-architect`**  | Technical Architect | System design, architectural decisions, Context7, Memory | 0.2         |
 
-## 🔧 Core Agents
+---
 
-High-speed implementation and planning specialists.
+## 🔧 Core Implementation
 
-| Agent              | Role                      | Focus                                      |
-| :----------------- | :------------------------ | :----------------------------------------- |
-| **`core-builder`** | Implementation Specialist | Direct file modification, batch operations |
-| **`core-planner`** | Strategic Planner         | Read-only analysis, architecture discovery |
+High-speed implementation and direct file editing specialists.
+
+| Agent              | Role                  | Focus                                                                         |
+| :----------------- | :-------------------- | :---------------------------------------------------------------------------- |
+| **`core-factory`** | Implementation Engine | Merged builder/planner - direct file modification, batch operations, planning |
+
+---
 
 ## 🎨 Frontend & Design
 
 Responsible for user-facing experience and premium UI.
 
-| Agent                | Role           | Key Skills                                               |
-| :------------------- | :------------- | :------------------------------------------------------- |
-| **`frontend-ui-ux`** | UI/UX Engineer | `ui-ux-pro-max`, `react-reuse-audit`, `image-generation` |
+| Agent                | Role           | Key Skills                                            |
+| :------------------- | :------------- | :---------------------------------------------------- |
+| **`frontend-ui-ux`** | UI/UX Engineer | `ui-ux-pro-max`, `react-reuse-audit`, `fullstack-dev` |
+
+---
 
 ## ⚙️ Backend Development
 
 Implementation experts for various technology stacks.
 
-| Agent                 | Role               | Focus                           | Key Skills                 |
-| :-------------------- | :----------------- | :------------------------------ | :------------------------- |
-| **`backend-api`**     | API Developer      | REST/GraphQL, Prisma            | `fullstack-dev`            |
-| **`backend-laravel`** | Laravel Specialist | Laravel 13, Livewire 4, PHP 8.3 | `laravel-feature-scaffold` |
-| **`backend-tauri`**   | Tauri Specialist   | Rust, Tauri desktop apps        | Tauri ecosystem            |
-| **`backend-systems`** | Systems Engineer   | Shell scripting, infrastructure | Low-level systems          |
+| Agent                 | Role               | Focus                         | Key Skills                 |
+| :-------------------- | :----------------- | :---------------------------- | :------------------------- |
+| **`backend-api`**     | API Developer      | REST/GraphQL, Prisma, Express | `fullstack-dev`            |
+| **`backend-laravel`** | Laravel Specialist | Laravel, Livewire, PHP 8.3    | `laravel-feature-scaffold` |
+| **`backend-tauri`**   | Tauri Specialist   | Rust, Tauri desktop apps      | Tauri ecosystem            |
+
+---
 
 ## 🔍 Quality Assurance
 
 Ensuring reliability, performance, and security.
 
-| Agent             | Role                 | Focus                                  | Temperature |
-| :---------------- | :------------------- | :------------------------------------- | :---------- |
-| **`qa-reviewer`** | Senior Code Reviewer | Standards, performance, architecture   | default     |
-| **`qa-tester`**   | Test Engineer        | Vitest, Pest, PHPUnit, cargo test      | default     |
-| **`qa-security`** | Security Specialist  | Vulnerability scanning, secret leaks   | 0.1         |
-| **`qa-debugger`** | Troubleshooter       | Browser debugging, root cause analysis | 0.1         |
+| Agent             | Role       | Focus                                     | Temperature |
+| :---------------- | :--------- | :---------------------------------------- | :---------- |
+| **`qa-guardian`** | Unified QA | Code review, testing, security, debugging | 0.1         |
+
+---
 
 ## 🚀 Operations & Knowledge
 
 Infrastructure, documentation, and continuous improvement.
 
-| Agent               | Role                  | Focus                                      | Temperature |
-| :------------------ | :-------------------- | :----------------------------------------- | :---------- |
-| **`devops-ops`**    | Operations Agent      | Terminal execution, operational tasks      | default     |
-| **`devops-mcp`**    | MCP Specialist        | MCP server research and integration        | default     |
-| **`docs-writer`**   | Tech Writer           | Technical documentation                    | default     |
-| **`docs-governor`** | Documentation Auditor | Governance, standards enforcement          | default     |
-| **`docs-evolver`**  | Evolution Engine      | `self-improver`, research-driven evolution | 0.2         |
+| Agent                 | Role              | Focus                                                           | Temperature |
+| :-------------------- | :---------------- | :-------------------------------------------------------------- | :---------- |
+| **`devops-engineer`** | Operations Agent  | Terminal execution, operational tasks, MCP management           | 0.1         |
+| **`docs-curator`**    | Knowledge Manager | Documentation, self-improvement, system evolution, web research | 0.2         |
 
 ---
 
-## 🎯 Team Orchestration Logic
+## 🎯 Agent Orchestration Logic
 
-The `lead-orchestrator` uses the **Task tool** for SubAgent delegation following the ANALYZE→PLAN→DELEGATE→SYNTHESIZE→VERIFY pattern.
+The `lead-strategist` coordinates complex tasks using the **Task tool** for SubAgent delegation following the ANALYZE→PLAN→DELEGATE→SYNTHESIZE→VERIFY pattern.
 
 **Example flow for "Add real-time notifications":**
 
-1. **`lead-product-manager`**: Defines requirements
-2. **`lead-architect`**: Outlines WebSocket architecture
-3. **`backend-api`**: Implements server-side logic
-4. **`frontend-ui-ux`**: Builds premium toast notification UI
-5. **`qa-tester`**: Writes integration tests
-6. **`qa-reviewer`**: Performs final quality check
+1. **`lead-strategist`**: Defines requirements and outlines architecture
+2. **`lead-architect`**: Details technical implementation approach
+3. **`backend-api`** or **`backend-laravel`**: Implements server-side logic
+4. **`frontend-ui-ux`**: Builds UI components
+5. **`qa-guardian`**: Performs quality check, testing, and security review
+6. **`docs-curator`**: Updates documentation
 
 ---
 
@@ -86,10 +87,16 @@ The `lead-orchestrator` uses the **Task tool** for SubAgent delegation following
 
 Each agent has tailored tool access defined in `opencode.json`:
 
-- **Core agents**: read, edit, grep, glob, lsp, todowrite
-- **Lead agents**: All core tools + task (SubAgent delegation), skill loading
-- **QA agents**: read, command, lsp, skill (security-review, testing-strategy)
-- **DevOps agents**: file, command, skill (git-release, deep-research)
+- **core-factory**: read, write, edit, bash, skill, grep, glob, todowrite
+- **lead-strategist**: skill, bash, read, lsp, codesearch, todowrite, task
+- **lead-architect**: read, write, edit, bash, skill, lsp, codesearch, task, mcp, context7, memory, sequential-thinking
+- **frontend-ui-ux**: read, write, edit, bash, skill, lsp, codesearch, task, mcp, context7, memory, sequential-thinking
+- **backend-api**: read, write, edit, bash, skill, lsp
+- **backend-laravel**: read, write, edit, bash, skill, lsp
+- **backend-tauri**: read, write, edit, bash, skill, lsp
+- **qa-guardian**: read, write, edit, bash, skill, lsp
+- **devops-engineer**: read, bash, skill
+- **docs-curator**: read, write, edit, bash, skill, codesearch, websearch, webfetch, todowrite
 
 ---
 
@@ -101,13 +108,27 @@ Each agent has tailored tool access defined in `opencode.json`:
 /agent frontend-ui-ux
 ```
 
-### Delegate to Agent (via lead-orchestrator)
+### Delegate to Agent (via lead-strategist)
 
 ```
 "Add user authentication to the Laravel app"
 ```
 
-The lead-orchestrator will decompose and delegate to: `core-planner` → `backend-laravel` → `docs-writer` → `qa-reviewer` → `qa-tester`
+The lead-strategist will decompose and delegate to: `lead-architect` → `backend-laravel` → `docs-curator` → `qa-guardian`
+
+---
+
+## 📝 Note on Agent Files
+
+Additional agent definition files exist in the `agents/` directory for reference and planning:
+
+- `agents/lead-strategist.md`, `agents/core-factory.md`, `agents/core-planner.md`
+- `agents/backend-systems.md`, `agents/devops-mcp.md`, `agents/devops-ops.md`
+- `agents/docs-governor.md`, `agents/docs-writer.md`
+- `agents/qa-reviewer.md`, `agents/qa-tester.md`, `agents/qa-security.md`, `agents/qa-debugger.md`
+- `agents/lead-product-manager.md`
+
+These represent planned or legacy agent configurations. The currently active agents are defined in `opencode.json`.
 
 ---
 

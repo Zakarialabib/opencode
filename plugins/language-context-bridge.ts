@@ -19,7 +19,15 @@ interface TraeProcess {
 
 interface LanguageServerInfo {
   name: string;
-  type: "rust-analyzer" | "typescript" | "json" | "markdown" | "yaml" | "tailwind" | "php" | "unknown";
+  type:
+    | "rust-analyzer"
+    | "typescript"
+    | "json"
+    | "markdown"
+    | "yaml"
+    | "tailwind"
+    | "php"
+    | "unknown";
   process?: TraeProcess;
   isRunningInTrae: boolean;
   capabilities?: string[];
@@ -90,13 +98,24 @@ function findLanguageServers(processes: TraeProcess[]): LanguageServerInfo[] {
       });
     }
 
-    if (name.includes("intelephense") || cmd.includes("intelephense") || name.includes("php-language-server")) {
+    if (
+      name.includes("intelephense") ||
+      cmd.includes("intelephense") ||
+      name.includes("php-language-server")
+    ) {
       servers.push({
         name: "PHP Language Server (Intelephense)",
         type: "php",
         process: proc,
         isRunningInTrae: true,
-        capabilities: ["symbols", "types", "diagnostics", "completion", "references", "laravel-support"],
+        capabilities: [
+          "symbols",
+          "types",
+          "diagnostics",
+          "completion",
+          "references",
+          "laravel-support",
+        ],
       });
     }
 

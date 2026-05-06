@@ -1,68 +1,221 @@
 name: Feature Development
-description: Standard workflow for developing a new feature using the Engineering Team
-version: 1.1.0
+description: Advanced workflow for developing a new feature using intelligent orchestration with agent routing and MCP integration
+version: 2.0.0
 trigger: manual
+
+# Global MCP servers available to all phases
+mcp_servers:
+  - context7
+  - memory
+  - sequential-thinking
+  - git
+  - filesystem
+
+# Global environment variables for all phases
+env:
+  NODE_ENV: development
+  LARAVEL_ENV: local
+
 phases:
-  - name: Strategy
-    description: Define requirements and high-level design
-    agents: [lead-product-manager, lead-orchestrator, lead-architect]
+  - name: Strategy & Analysis
+    description: Define requirements, analyze existing patterns, and create technical plan using intelligent agent routing
+    agents: [lead-strategist, lead-architect, core-factory]
+    # Agent router will select the best agent based on task analysis
+    use_agent_router: true
     tasks:
-      - gather_requirements
+      - gather_requirements_and_user_stories
+      - analyze_existing_codebase_patterns
       - assess_technical_feasibility
       - design_system_architecture
       - create_milestone_plan
-    artifacts: [requirements.md, architecture.md, roadmap.json]
-  
-  - name: Design
-    description: Premium UI/UX design and API contracts
-    agents: [frontend-ui-ux, backend-api, lead-architect]
+      - route_to_best_specialist
+    artifacts: [requirements.md, architecture.md, roadmap.json, agent-routing-report.json]
+    # MCP tools used in this phase
+    mcp_tools:
+      context7: [fetch_library_docs, search_documentation]
+      memory: [create_entities, add_observations]
+      sequential-thinking: [sequentialthinking]
+    # Success criteria for this phase
+    exit_criteria:
+      - requirements.md exists and is complete
+      - architecture.md includes component diagram
+      - roadmap.json has phased milestones
+      - agent-routing-report.json identifies specialist agents
+
+  - name: Design & Planning
+    description: Premium UI/UX design, API contracts, and detailed implementation plan
+    agents: [frontend-ui-ux, backend-api, lead-architect, backend-laravel]
+    use_agent_router: true
     tasks:
-      - design_premium_ui_hsl
-      - define_api_contracts_json_api
-      - verify_tailwind_context
-    artifacts: [ui-mockups/, api-spec.yaml]
-    dependencies: [Strategy]
-  
+      - design_premium_ui_with_hsl_palette
+      - define_api_contracts_openapi
+      - create_database_schema_design
+      - plan_component_architecture
+      - verify_tailwind_design_system
+      - generate_ui_mockups
+    artifacts: [ui-mockups/, api-spec.yaml, schema.sql, component-diagram.md]
+    dependencies: [Strategy & Analysis]
+    mcp_tools:
+      context7: [fetch_library_docs]
+      sqlite: [read_query]
+      sequential-thinking: [sequentialthinking]
+    parallel_groups:
+      - [design_premium_ui_with_hsl_palette, generate_ui_mockups]
+      - [define_api_contracts_openapi, create_database_schema_design]
+    exit_criteria:
+      - api-spec.yaml is valid OpenAPI 3.0
+      - ui-mockups/ contains all screens
+      - schema.sql passes validation
+
   - name: Implementation
-    description: Core development with real-time LSP context
-    agents: [core-builder, backend-laravel, backend-api, backend-tauri]
+    description: Core development with real-time LSP context, parallel execution, and continuous integration
+    agents: [core-factory, backend-laravel, backend-api, backend-tauri, frontend-ui-ux]
+    use_agent_router: true
     tasks:
-      - fetch_lsp_context
-      - implement_backend_logic
+      - fetch_lsp_context_and_types
+      - implement_backend_logic_with_tests
       - implement_frontend_components
-      - verify_type_safety
-    artifacts: [src/, src-tauri/, app/]
-    dependencies: [Design]
-  
-  - name: Quality Assurance
-    description: Rigorous testing and security review
-    agents: [qa-tester, qa-reviewer, qa-security, qa-debugger]
+      - implement_api_endpoints
+      - setup_database_migrations
+      - configure_routes_and_middleware
+      - verify_type_safety_and_linting
+    artifacts: [src/, src-tauri/, app/, database/migrations/]
+    dependencies: [Design & Planning]
+    mcp_tools:
+      context7: [fetch_library_docs]
+      sqlite: [write_query, read_query]
+      git: [add, commit, push]
+      filesystem: [read_file, write_file]
+    parallel_groups:
+      - [implement_backend_logic_with_tests, implement_api_endpoints]
+      - [implement_frontend_components, setup_database_migrations]
+    retry_policy:
+      max_attempts: 3
+      backoff: exponential
+    exit_criteria:
+      - All tests pass (Pest/Vitest)
+      - No LSP diagnostics errors
+      - Code follows project rules
+
+  - name: Quality Assurance & Security
+    description: Rigorous testing, security audit, performance benchmarking, and browser validation
+    agents: [qa-guardian]
     tasks:
       - run_automated_test_suites
-      - scan_for_secret_leaks
-      - perform_browser_reproduction
+      - scan_for_security_vulnerabilities
+      - check_for_secret_leaks
+      - perform_browser_e2e_testing
       - conduct_senior_code_review
-    artifacts: [test-reports/, security-audit.md, qa-report.json]
+      - run_performance_benchmarks
+      - validate_accessibility_standards
+    artifacts: [test-reports/, security-audit.md, qa-report.json, performance-metrics.json]
     dependencies: [Implementation]
-  
+    mcp_tools:
+      context7: [fetch_library_docs]
+      sqlite: [read_query]
+      git: [diff, log]
+      sequential-thinking: [sequentialthinking]
+    parallel_groups:
+      - [run_automated_test_suites, perform_browser_e2e_testing]
+      - [scan_for_security_vulnerabilities, check_for_secret_leaks]
+    exit_criteria:
+      - All tests pass with >80% coverage
+      - No high/critical security issues
+      - No secret leaks detected
+      - Performance within SLA
+
   - name: Documentation & Evolution
-    description: Technical documentation and system adaptation
-    agents: [docs-writer, docs-governor, docs-evolver]
+    description: Technical documentation, system evolution, and knowledge transfer
+    agents: [docs-curator]
     tasks:
-      - update_user_guides
+      - update_user_and_api_documentation
       - audit_documentation_governance
       - learn_from_implementation_patterns
-    artifacts: [docs/, portal-update.md]
-    dependencies: [Quality Assurance]
+      - update_portal_and_wikis
+      - generate_changelog
+      - create_deployment_guide
+    artifacts: [docs/, portal-update.md, changelog.md, deployment-guide.md]
+    dependencies: [Quality Assurance & Security]
+    mcp_tools:
+      context7: [fetch_library_docs]
+      memory: [create_entities, add_observations, search_nodes]
+      git: [add, commit, push]
+    exit_criteria:
+      - docs/ updated with new feature
+      - changelog.md reflects changes
+      - deployment-guide.md is complete
 
+# Workflow-level success criteria
 success_criteria:
-  - All tests pass (Pest/Vitest)
+  - All phase exit criteria met
+  - All tests pass (Pest/Vitest/Jest)
   - No secret leaks detected
   - UI meets ui-ux-pro-max standards
   - Documentation updated in portal
   - LSP diagnostics are clear
+  - Code review approved
+  - Performance benchmarks met
+  - Security audit passed
 
+# Notification hooks
 notifications:
-  - on_start: notify engineering lead
-  - on_complete: update project portal
-  - on_failure: alert troubleshooter agent
+  on_start:
+    - notify: [lead-strategist, lead-architect]
+    - channel: email
+    - template: workflow-started.md
+  on_phase_complete:
+    - notify: [lead-strategist]
+    - channel: slack
+    - log_to: memory MCP
+  on_complete:
+    - update: project-portal
+    - notify: [stakeholders]
+    - generate: release-notes.md
+  on_failure:
+    - alert: [lead-architect, qa-guardian]
+    - escalate_to: lead-strategist
+    - create: incident-report.md
+  on_rollback:
+    - notify: [all-agents]
+    - revert_using: git MCP
+
+# Error handling and recovery
+error_handling:
+  strategy: continue-on-non-critical
+  max_retries_per_task: 3
+  fallback_agent: qa-guardian
+  rollback_on_critical: true
+  log_errors_to: memory MCP
+
+# Integration with agent-router
+agent_routing:
+  enabled: true
+  scoring_weights:
+    keyword_match: 2
+    skill_match: 3
+    mcp_capability: 1
+  fallback_strategy: use_lead_strategist
+  cache_routing_decisions: true
+
+# Integration with MCP servers
+mcp_integration:
+  context7:
+    purpose: Documentation and code examples
+    phases: [all]
+    cache_results: true
+  memory:
+    purpose: Persistent state across phases
+    phases: [Strategy & Analysis, Documentation & Evolution]
+    persist_workflow_state: true
+  sequential-thinking:
+    purpose: Step-by-step reasoning
+    phases: [Strategy & Analysis, Design & Planning]
+    max_thinking_steps: 10
+  git:
+    purpose: Version control per phase
+    phases: [Implementation, Quality Assurance & Security, Documentation & Evolution]
+    auto_commit: true
+  sqlite:
+    purpose: Test data and state management
+    phases: [Design & Planning, Implementation, Quality Assurance & Security]
+    database: database.sqlite

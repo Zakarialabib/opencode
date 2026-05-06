@@ -66,10 +66,18 @@ const AGENT_RULES = [
     description: "High-level system design and architectural decision making",
   },
   {
-    agent: "lead-orchestrator",
-    keywords: ["orchestrate", "multi-agent", "delegate", "workflow", "coordinate", "complex"],
+    agent: "lead-strategist",
+    keywords: [
+      "orchestrate",
+      "multi-agent",
+      "delegate",
+      "workflow",
+      "coordinate",
+      "complex",
+      "strategy",
+    ],
     skills: ["workflow-manager", "project-orchestration"],
-    description: "Senior project orchestrator managing complex multi-agent handoffs",
+    description: "Strategic orchestrator managing complex multi-agent workflows and coordination",
   },
   {
     agent: "core-builder",
@@ -187,7 +195,7 @@ const AgentRouterPlugin: Plugin = async ({ client, project, directory }) => {
           const matches = routeTask(task);
 
           if (matches.length === 0) {
-            return `No specific agent matched for task: "${task}". Defaulting to lead-orchestrator for analysis.`;
+            return `No specific agent matched for task: "${task}". Defaulting to lead-strategist for analysis.`;
           }
 
           const bestMatch = matches[0];

@@ -103,12 +103,12 @@ python3 "$PDF_SKILL_DIR/scripts/pdf.py" form.fill input.pdf -o filled.pdf \
 
 **Value rules:**
 
-| Type | Value | Example |
-|------|-------|---------|
-| text | Free string | `"name": "Jane Doe"` |
-| checkbox | `"true"` / `"false"` (auto-converts to PDF states) | `"agree": "true"` |
-| radio | One of `radio_options[].value` | `"gender": "/Choice1"` |
-| dropdown | One of `choice_options[].value` | `"country": "US"` |
+| Type     | Value                                              | Example                |
+| -------- | -------------------------------------------------- | ---------------------- |
+| text     | Free string                                        | `"name": "Jane Doe"`   |
+| checkbox | `"true"` / `"false"` (auto-converts to PDF states) | `"agree": "true"`      |
+| radio    | One of `radio_options[].value`                     | `"gender": "/Choice1"` |
+| dropdown | One of `choice_options[].value`                    | `"country": "US"`      |
 
 For complex forms, use `form.detail` and `form.render` for deeper inspection:
 
@@ -122,6 +122,7 @@ python3 "$PDF_SKILL_DIR/scripts/pdf.py" form.render input.pdf -o ./pages/       
 For PDFs without interactive fields (scanned forms, image-based). All four steps are mandatory.
 
 **Step 1 — Render pages as PNG** (required):
+
 ```bash
 python3 "$PDF_SKILL_DIR/scripts/pdf.py" form.render input.pdf -o ./pages/
 ```
@@ -140,9 +141,9 @@ To determine bbox coordinates: open the rendered PNG in an image viewer or use P
         {
           "id": "last_name",
           "hint": "Last name field",
-          "label": {"tag": "Last name", "bbox": [30, 125, 95, 142]},
-          "target": {"bbox": [100, 125, 280, 142]},
-          "ink": {"value": "Simpson", "size": 14, "color": "000000"}
+          "label": { "tag": "Last name", "bbox": [30, 125, 95, 142] },
+          "target": { "bbox": [100, 125, 280, 142] },
+          "ink": { "value": "Simpson", "size": 14, "color": "000000" }
         }
       ]
     }
@@ -153,6 +154,7 @@ To determine bbox coordinates: open the rendered PNG in an image viewer or use P
 Schema: `pg` = 1-based page, `dims` = [w,h] in pixels, `label.bbox` / `target.bbox` = [left, top, right, bottom], `ink` = {value, size?, color?, font?}. Label and target boxes must NOT intersect.
 
 **Step 3 — Validate bounding boxes** (required):
+
 ```bash
 # Auto-check for intersections
 python3 "$PDF_SKILL_DIR/scripts/pdf.py" form.check-bbox fields.json
@@ -164,6 +166,7 @@ python3 "$PDF_SKILL_DIR/scripts/pdf.py" form.validate 1 fields.json page1.png va
 Fix any issues, regenerate, re-check. Red rectangles must only cover input areas.
 
 **Step 4 — Fill via annotations**:
+
 ```bash
 python3 "$PDF_SKILL_DIR/scripts/pdf.py" form.annotate input.pdf fields.json -o filled.pdf
 ```
@@ -202,6 +205,7 @@ When user provides a reference PDF to match:
 ```
 
 **Key principles:**
+
 - Match the spirit, not the pixels — exact replication from PDF is impractical
 - Prefer original source files (.docx/.html/.tex) over PDF when available
 - Declare font substitutions upfront; don't silently fall back
@@ -214,6 +218,7 @@ When user provides a reference PDF to match:
 ### Office → PDF (LibreOffice)
 
 **Simple conversion** (no TOC needed):
+
 ```bash
 python3 "$PDF_SKILL_DIR/scripts/pdf.py" convert.office input.docx -o output.pdf
 ```
@@ -221,6 +226,7 @@ python3 "$PDF_SKILL_DIR/scripts/pdf.py" convert.office input.docx -o output.pdf
 **When to use the 5-step DOCX Pipeline instead**: If the DOCX has (or should have) a Table of Contents, always use §DOCX Pipeline below. Signs: the document has 3+ headings, or the user mentions "table of contents" / "TOC", or the document already contains a TOC section. When in doubt, run `python3 "$PDF_SKILL_DIR/scripts/toc_validate.py" fix-docx input.docx -o fixed.docx` — if it returns `no_toc_needed`, a simple conversion is fine.
 
 Or directly:
+
 ```bash
 soffice --headless --convert-to pdf --outdir ./output input.docx
 ```
@@ -230,6 +236,7 @@ soffice --headless --convert-to pdf --outdir ./output input.docx
 **macOS path**: `/Applications/LibreOffice.app/Contents/MacOS/soffice`
 
 **Gotchas:**
+
 - soffice allows only one instance at a time; close existing LibreOffice windows or use `--env:UserInstallation=file:///tmp/libreoffice_tmp`
 - Missing Chinese fonts → squares. Ensure SimHei/SimSun are installed.
 - Large files (>50MB) may take 1-2 min; set reasonable timeout
@@ -241,12 +248,12 @@ soffice --headless --convert-to pdf --outdir ./output input.docx
 
 Use openpyxl + HTML + Playwright. Let data shape drive layout:
 
-| Factor | Decision |
-|--------|----------|
-| Columns ≤ 6 | Portrait |
-| Columns > 6 | Landscape |
-| Font size | Scale inversely with column count |
-| Styling | Follow user requirements or source file style; if unspecified, use defaults from `typesetting/palette.md` |
+| Factor      | Decision                                                                                                  |
+| ----------- | --------------------------------------------------------------------------------------------------------- |
+| Columns ≤ 6 | Portrait                                                                                                  |
+| Columns > 6 | Landscape                                                                                                 |
+| Font size   | Scale inversely with column count                                                                         |
+| Styling     | Follow user requirements or source file style; if unspecified, use defaults from `typesetting/palette.md` |
 
 ### §DOCX Pipeline (5-Step with TOC)
 
@@ -261,17 +268,21 @@ Step 5: soffice     → Convert final DOCX to PDF + pages.clean
 ```
 
 **Step 1 — Pass 1 Convert**:
+
 ```bash
 python3 "$PDF_SKILL_DIR/scripts/pdf.py" convert.office input.docx -o pass1.pdf
 ```
 
 **Step 2 — Clean Blank Pages**:
+
 ```bash
 python3 "$PDF_SKILL_DIR/scripts/pdf.py" pages.clean pass1.pdf -o pass1_clean.pdf
 ```
+
 If `blank_pages_removed == 0`, use pass1.pdf directly.
 
 **Step 3 — Fix TOC**:
+
 ```bash
 python3 "$PDF_SKILL_DIR/scripts/toc_validate.py" fix-docx input.docx -o fixed.docx
 ```
@@ -281,6 +292,7 @@ Auto-detects and fixes: placeholder TOC, stale TOC (>50% drift), empty TOC, miss
 Check output `action` field: `fixed` → use fixed.docx, `skipped` → use original, `no_toc_needed` → skip to Step 5 with pass1 PDF.
 
 **Step 4 — Fix Page Numbers**:
+
 ```bash
 python3 "$PDF_SKILL_DIR/scripts/toc_validate.py" fix-pages fixed.docx pass1_clean.pdf -o final.docx
 ```
@@ -288,6 +300,7 @@ python3 "$PDF_SKILL_DIR/scripts/toc_validate.py" fix-pages fixed.docx pass1_clea
 Corrects PAGEREF display text using actual page positions from pass1 + TOC page offset.
 
 **Step 5 — Final Convert + Clean**:
+
 ```bash
 python3 "$PDF_SKILL_DIR/scripts/pdf.py" convert.office final.docx -o output.pdf
 python3 "$PDF_SKILL_DIR/scripts/pdf.py" pages.clean output.pdf -o output_clean.pdf
@@ -305,15 +318,15 @@ Issues caught: `CONV_TOC_LOST` (TOC disappeared), `CONV_HINT_LEAKED` (placeholde
 
 ## Caveats
 
-| Topic | Detail |
-|-------|--------|
+| Topic          | Detail                                             |
+| -------------- | -------------------------------------------------- |
 | Encrypted PDFs | Not supported. User must decrypt externally first. |
-| < 50 MB | Instant |
-| 50–200 MB | 1–2 minutes |
-| > 200 MB | Split first, or extend timeout |
-| Memory | ~2-3× input file size |
-| Merge failure | Partial output may remain; delete and retry |
-| Split failure | Some page files may exist; inspect output dir |
-| Form fill | Original never modified; always writes new file |
+| < 50 MB        | Instant                                            |
+| 50–200 MB      | 1–2 minutes                                        |
+| > 200 MB       | Split first, or extend timeout                     |
+| Memory         | ~2-3× input file size                              |
+| Merge failure  | Partial output may remain; delete and retry        |
+| Split failure  | Some page files may exist; inspect output dir      |
+| Form fill      | Original never modified; always writes new file    |
 
 For edge cases (OCR, batch processing, poppler-utils, qpdf, performance tuning), load `briefs/process-advanced.md`.
