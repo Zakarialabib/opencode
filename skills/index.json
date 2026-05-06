@@ -220,6 +220,111 @@
       ],
       "agents": ["backend-laravel", "qa-tester"],
       "entryPoint": "pest-testing/SKILL.md"
+    },
+    {
+      "name": "xlsx",
+      "displayName": "XLSX Spreadsheet",
+      "description": "Create and manipulate Excel spreadsheets with formatting, formulas, and data analysis.",
+      "version": "1.0.0",
+      "category": "documents",
+      "tags": ["excel", "spreadsheet", "xlsx", "data", "formulas", "charts"],
+      "triggers": [
+        "When creating Excel files",
+        "When working with spreadsheet data",
+        "When generating reports with tables"
+      ],
+      "agents": ["docs-writer"],
+      "entryPoint": "xlsx/SKILL.md"
+    },
+    {
+      "name": "docx",
+      "displayName": "DOCX Document",
+      "description": "Create and edit Word documents with formatting, styles, tables, and images.",
+      "version": "1.0.0",
+      "category": "documents",
+      "tags": ["word", "document", "docx", "reports", "formatting"],
+      "triggers": [
+        "When creating Word documents",
+        "When generating formal reports",
+        "When creating documentation"
+      ],
+      "agents": ["docs-writer"],
+      "entryPoint": "docx/SKILL.md"
+    },
+    {
+      "name": "pdf",
+      "displayName": "PDF Generation",
+      "description": "Generate PDF documents with text, images, tables, and professional formatting.",
+      "version": "1.0.0",
+      "category": "documents",
+      "tags": ["pdf", "document", "reports", "export"],
+      "triggers": [
+        "When exporting to PDF",
+        "When creating printable documents",
+        "When generating reports as PDF"
+      ],
+      "agents": ["docs-writer"],
+      "entryPoint": "pdf/SKILL.md"
+    },
+    {
+      "name": "ppt",
+      "displayName": "PowerPoint Presentation",
+      "description": "Create PowerPoint presentations with slides, layouts, charts, and visual content.",
+      "version": "1.0.0",
+      "category": "documents",
+      "tags": ["powerpoint", "presentation", "ppt", "slides", "deck"],
+      "triggers": [
+        "When creating presentations",
+        "When building slide decks",
+        "When presenting research or reports"
+      ],
+      "agents": ["docs-writer"],
+      "entryPoint": "ppt/SKILL.md"
+    },
+    {
+      "name": "coding-agent",
+      "displayName": "Coding Agent Patterns",
+      "description": "Agent development patterns, best practices, and implementation guidelines for building AI agents.",
+      "version": "1.0.0",
+      "category": "development",
+      "tags": ["agent", "patterns", "development", "ai", "best-practices"],
+      "triggers": [
+        "When developing new agents",
+        "When improving agent capabilities",
+        "When following agent patterns"
+      ],
+      "agents": ["core-builder"],
+      "entryPoint": "coding-agent/SKILL.md"
+    },
+    {
+      "name": "content-strategy",
+      "displayName": "Content Strategy",
+      "description": "Content planning, strategy development, and editorial calendar management for marketing and documentation.",
+      "version": "1.0.0",
+      "category": "marketing",
+      "tags": ["content", "strategy", "planning", "marketing", "editorial"],
+      "triggers": [
+        "When planning content strategy",
+        "When creating editorial calendars",
+        "When developing marketing content"
+      ],
+      "agents": ["marketing-mode", "docs-writer"],
+      "entryPoint": "content-strategy/SKILL.md"
+    },
+    {
+      "name": "market-research-reports",
+      "displayName": "Market Research Reports",
+      "description": "Generate comprehensive market research reports with data analysis, charts, and insights.",
+      "version": "1.0.0",
+      "category": "research",
+      "tags": ["market", "research", "reports", "analysis", "competitive"],
+      "triggers": [
+        "When conducting market research",
+        "When generating competitive analysis",
+        "When creating research reports"
+      ],
+      "agents": ["docs-writer", "marketing-mode"],
+      "entryPoint": "market-research-reports/SKILL.md"
     }
   ]
 }
