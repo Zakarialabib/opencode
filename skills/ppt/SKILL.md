@@ -328,6 +328,7 @@ If the answer to any is "no", revise before proceeding.
 2. **Check warnings**: Review `warnings` output. **Blocking issues** (overflow, font < 11pt) must be fixed. **Non-blocking warnings** (bounds, balance, density) are suggestions — use judgment on whether to fix them.
 
 3. **Visual validation**: Generate thumbnails and inspect for layout issues:
+
    ```bash
    python scripts/thumbnail.py output.pptx workspace/thumbnails --cols 4
    ```

@@ -182,6 +182,66 @@
       "entryPoint": "skills/ui-ux-pro-max/SKILL.md"
     },
     {
+      "name": "visual-design-foundations",
+      "displayName": "Visual Design Foundations",
+      "description": "Typography, color theory, spacing systems, and iconography principles for cohesive visual designs.",
+      "version": "1.0.0",
+      "category": "design",
+      "tags": ["typography", "color", "spacing", "iconography", "design-tokens"],
+      "triggers": [
+        "When establishing design tokens",
+        "When building or improving a design system",
+        "When selecting typography or color palettes"
+      ],
+      "agents": ["frontend-ui-ux"],
+      "entryPoint": "skills/visual-design-foundations/SKILL.md"
+    },
+    {
+      "name": "charts",
+      "displayName": "Charts & Data Visualization",
+      "description": "Professional chart and diagram creation including bar, line, pie, flowcharts, and dashboards.",
+      "version": "1.0.0",
+      "category": "data-visualization",
+      "tags": ["charts", "diagrams", "dashboard", "data-viz", "echarts", "d3", "mermaid"],
+      "triggers": [
+        "When user asks for charts, graphs, or diagrams",
+        "When building dashboards",
+        "When visualizing data or metrics"
+      ],
+      "agents": ["frontend-ui-ux"],
+      "entryPoint": "skills/charts/SKILL.md"
+    },
+    {
+      "name": "image-generation",
+      "displayName": "AI Image Generation",
+      "description": "Generate images, icons, and visual assets using AI for UI components and marketing.",
+      "version": "1.0.0",
+      "category": "assets",
+      "tags": ["image", "ai", "generation", "icons", "assets", "marketing"],
+      "triggers": [
+        "When user needs icons or illustrations",
+        "When generating UI assets",
+        "When creating hero images or marketing visuals"
+      ],
+      "agents": ["frontend-ui-ux"],
+      "entryPoint": "skills/image-generation/SKILL.md"
+    },
+    {
+      "name": "image-understand",
+      "displayName": "Image Analysis",
+      "description": "Analyze and understand images for design improvement and asset evaluation.",
+      "version": "1.0.0",
+      "category": "assets",
+      "tags": ["image", "analysis", "understanding", "design", "assets"],
+      "triggers": [
+        "When analyzing existing images or designs",
+        "When improving UI assets",
+        "When evaluating visual content"
+      ],
+      "agents": ["frontend-ui-ux"],
+      "entryPoint": "skills/image-understand/SKILL.md"
+    },
+    {
       "name": "agent-browser",
       "displayName": "Agent Browser",
       "description": "High-fidelity UI automation and debugging via Playwright for browser-based testing.",
