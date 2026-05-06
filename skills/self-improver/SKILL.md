@@ -14,6 +14,8 @@ entryPoint: SKILL.md
 
 # Self-Improver Engine
 
+Continuously improves the project by checking docs (web, Context7, opencode), using LSPs for code context, monitoring skills/plugins/scripts, and adapting best practices from OpenClaude, QwenCode, ClaudeCode. Auto-formats based on language detection.
+
 ## Purpose
 
 Autonomously improve the project by:
@@ -87,7 +89,7 @@ Detect file extension → Apply formatter:
 |-----------|-----------|---------|
 | .rs | rustfmt | cargo fmt |
 | .ts, .tsx, .js, .jsx | biome | npx biome format --write $FILE |
-| .php | pint | ./vendor/bin/pint $FILE |
+| .php | pint | php artisan pint $FILE |
 | .py | black | black $FILE |
 | .md, .yaml, .yml | prettier | npx prettier --write $FILE |
 ```

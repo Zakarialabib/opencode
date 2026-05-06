@@ -40,26 +40,28 @@ function launch() {
   console.log(`   CWD: ${cwd}`);
   console.log(`   Script dir: ${scriptDir}`);
 
-  // Try CWD first, then script directory
-  let projectRoot = findProjectRoot(cwd);
+  console.log(`✅ Project root: ${cwd}`);
 
-  if (!projectRoot) {
-    projectRoot = findProjectRoot(scriptDir);
+  // Try CWD first, then script directory for config
+  let configRoot = findProjectRoot(cwd);
+
+  if (!configRoot) {
+    configRoot = findProjectRoot(scriptDir);
   }
 
-  if (!projectRoot) {
-    console.error("❌ Could not find opencode.json");
+  if (!configRoot) {
+    console.error("❌ Could not find opencode.json in CWD or config directory");
     console.error("   Searched from:", cwd);
     console.error("   And from:", scriptDir);
     console.error("\n   Please run from the project directory or specify --project-root");
     process.exit(1);
   }
 
-  console.log(`✅ Found project root: ${projectRoot}`);
+  console.log(`✅ Found config root: ${configRoot}`);
 
   // Read config to verify
   try {
-    const configPath = path.join(projectRoot, "opencode.json");
+    const configPath = path.join(configRoot, "opencode.json");
     const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
     console.log(`   Config: ${config.model || "no model set"}`);
     console.log(`   Agents: ${Object.keys(config.agent || {}).length}`);
@@ -77,7 +79,10 @@ function launch() {
   // Pass projectRoot as the first positional argument if no other commands are specified,
   // or just append it to ensure the CLI knows where to start.
   // Actually, we can just change cwd.
+  // Pass projectRoot as the first positional argument if no other commands are specified,
+  // or just append it to ensure the CLI knows where to start.
   const args = [...process.argv.slice(2)];
+<<<<<<< HEAD
 
   const globalBin = path.join(
     process.env.APPDATA || "C:/laragon/bin/nodejs/node-v22",
@@ -89,16 +94,78 @@ function launch() {
   );
   const laragonBin = "C:/laragon/bin/nodejs/node-v22/node_modules/opencode-ai/bin/opencode";
   const targetBin = fs.existsSync(laragonBin) ? laragonBin : globalBin;
+=======
+  const configPath = path.join(configRoot, "opencode.json");
+  const centralScriptsDir = path.join(configRoot, "scripts");
+>>>>>>> 4e2483480b34d40eff453ea77b91781da0415ee6
 
-  const child = spawn("node", [targetBin, ...args], {
-    stdio: "inherit",
-    shell: false,
-    cwd: projectRoot,
-    env: {
-      ...process.env,
-      OPENCODE_PROJECT_ROOT: projectRoot,
-    },
-  });
+  // Ensure config exists in CWD for the actual CLI to find it if it doesn't respect environment variables
+  const localConfigPath = path.join(cwd, "opencode.json");
+  if (!fs.existsSync(localConfigPath)) {
+    console.log(`   Copying central config to project root for CLI discovery...`);
+    try {
+      fs.copyFileSync(configPath, localConfigPath);
+    } catch (e) {
+      console.warn(`   ⚠️ Failed to copy config: ${e.message}`);
+    }
+  }
+
+  const env = {
+    ...process.env,
+    OPENCODE_PROJECT_ROOT: cwd,
+    OPENCODE_CONFIG: configPath,
+    OPENCODE_CONFIG_DIR: configRoot,
+    PATH: `${centralScriptsDir}${path.delimiter}${process.env.PATH}`,
+  };
+
+  function runCommand(command, commandArgs = []) {
+    let finalCommand = command;
+    let finalArgs = [...commandArgs, ...args];
+
+    // On Windows, if we are not using shell: true, we must point to the .cmd or .exe
+    if (process.platform === "win32") {
+      if (command === "npm") {
+        finalCommand = "npm.cmd";
+      } else if (command === "opencode" && !command.endsWith(".exe") && !command.endsWith(".cmd") && !command.endsWith(".bat")) {
+         finalCommand = "opencode.cmd";
+      }
+    }
+
+    return spawn(finalCommand, finalArgs, {
+      stdio: "inherit",
+      shell: false,
+      cwd: cwd, // Always run in original CWD
+      env,
+    });
+  }
+
+  function hasOpencodeOnPath() {
+    try {
+      const { spawnSync } = require("child_process");
+      const check = spawnSync("opencode", ["--version"], {
+        stdio: "ignore",
+        shell: true, // Use shell to find it on path more reliably on Windows
+      });
+      return check.status === 0;
+    } catch {
+      return false;
+    }
+  }
+
+  let child;
+  const localBin = path.join(configRoot, "node_modules", ".bin", "opencode");
+  const bunBin = "C:\\Users\\user\\.bun\\bin\\opencode.exe";
+
+  if (fs.existsSync(localBin)) {
+    console.log(`   Using local bin: ${localBin}`);
+    child = runCommand(localBin);
+  } else if (fs.existsSync(bunBin)) {
+    console.log(`   Using bun bin: ${bunBin}`);
+    child = runCommand(bunBin);
+  } else {
+    console.log(`   Searching for opencode on PATH...`);
+    child = runCommand("opencode");
+  }
 
   child.on("exit", (code) => {
     process.exit(code || 0);
@@ -106,7 +173,8 @@ function launch() {
 
   child.on("error", (err) => {
     console.error("❌ Failed to launch opencode:", err.message);
-    console.error("   Make sure opencode is installed and in your PATH");
+    console.error("   Make sure the official OpenCode CLI is installed and available on PATH.");
+    console.error("   Recommended install: npm install -g opencode");
     process.exit(1);
   });
 }

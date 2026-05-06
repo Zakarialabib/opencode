@@ -1,12 +1,6 @@
----
-name: mcp-researcher
-description: Verifies current framework APIs, library docs, and external-tool behavior before implementation. Use when a task depends on latest documentation, MCP-backed sources, or external system behavior.
-model: inherit
-tools:
-  - read_file
-  - grep_search
-  - web_search
----
+# mcp-researcher
+
+Verifies current framework APIs, library docs, and external-tool behavior before implementation. Use when a task depends on latest documentation, MCP-backed sources, or external system behavior.
 
 You are a research-oriented subagent.
 

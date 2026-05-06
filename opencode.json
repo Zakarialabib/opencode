@@ -98,18 +98,54 @@
           "reasoning": true
         }
       }
+    },
+    "lmstudio": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "LM Studio (local)",
+      "options": {
+        "baseURL": "http://127.0.0.1:1234/v1"
+      },
+      "models": {
+        "qwen3.5-4b-claude-4.6-opus-reasoning-distilled-v2": {
+          "name": "Qwen3.5-4B Reasoning v2",
+          "tool_call": true,
+          "reasoning": true
+        },
+        "gemma-4-e4b-it": {
+          "name": "Gemma 4 E4B IT",
+          "tool_call": true,
+          "reasoning": true
+        },
+        "qwen3.5-4b": {
+          "name": "Qwen3.5-4B Fast",
+          "tool_call": true,
+          "reasoning": false
+        },
+        "google/gemma-3n-e4b": {
+          "name": "Gemma 3n-e4b (local)",
+          "tool_call": true,
+          "reasoning": true
+        }
+      }
     }
   },
   "server": {
     "port": 4096,
     "hostname": "127.0.0.1",
     "mdns": false,
-    "cors": ["http://127.0.0.1:8080", "http://"]
+    "cors": [
+      "http://127.0.0.1:8080",
+      "http://"
+    ]
   },
   "mcp": {
     "context7": {
       "type": "local",
-      "command": ["npx", "-y", "@upstash/context7-mcp@latest"],
+      "command": [
+        "npx",
+        "-y",
+        "@upstash/context7-mcp@latest"
+      ],
       "enabled": true,
       "timeout": 60000
     },
@@ -121,19 +157,29 @@
     },
     "memory": {
       "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-memory"],
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
       "enabled": true,
       "timeout": 15000
     },
     "git": {
       "type": "local",
-      "command": ["uvx", "mcp-server-git"],
+      "command": [
+        "uvx",
+        "mcp-server-git"
+      ],
       "enabled": true,
       "timeout": 20000
     },
     "fetch": {
       "type": "local",
-      "command": ["uvx", "mcp-server-fetch"],
+      "command": [
+        "uvx",
+        "mcp-server-fetch"
+      ],
       "enabled": true,
       "timeout": 15000
     },
@@ -145,13 +191,31 @@
     },
     "sequential-thinking": {
       "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ],
       "enabled": true,
       "timeout": 30000
     },
     "language-server": {
       "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-language-server"],
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-language-server"
+      ],
+      "enabled": true,
+      "timeout": 20000
+    },
+    "type-inject": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@nick-vi/type-inject-mcp"
+      ],
       "enabled": true,
       "timeout": 20000
     },
@@ -267,11 +331,71 @@
       "extensions": [".css", ".html", ".js", ".ts", ".tsx"]
     }
   },
+  "lsp": {
+    "typescript": {
+      "command": [
+        "typescript-language-server",
+        "--stdio"
+      ],
+      "extensions": [
+        ".ts",
+        ".tsx",
+        ".js",
+        ".jsx"
+      ]
+    },
+    "php": {
+      "command": [
+        "intelephense",
+        "--stdio"
+      ],
+      "extensions": [
+        ".php"
+      ],
+      "initialization": {
+        "storagePath": "C:\\opencode\\.cache\\intelephense"
+      }
+    },
+    "rust": {
+      "command": [
+        "rust-analyzer"
+      ],
+      "extensions": [
+        ".rs"
+      ]
+    },
+    "tailwind": {
+      "command": [
+        "tailwindcss-language-server",
+        "--stdio"
+      ],
+      "extensions": [
+        ".css",
+        ".html",
+        ".js",
+        ".ts",
+        ".tsx"
+      ]
+    }
+  },
   "formatter": {
     "biome": {
       "disabled": false,
-      "command": ["npx", "biome", "format", "--write", "$FILE"],
-      "extensions": [".js", ".jsx", ".ts", ".tsx", ".json", ".jsonc"]
+      "command": [
+        "npx",
+        "biome",
+        "format",
+        "--write",
+        "$FILE"
+      ],
+      "extensions": [
+        ".js",
+        ".jsx",
+        ".ts",
+        ".tsx",
+        ".json",
+        ".jsonc"
+      ]
     },
     "prettier": {
       "disabled": false,

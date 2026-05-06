@@ -1,5 +1,5 @@
 import { Plugin, tool } from "@opencode-ai/plugin";
-import { readFileSync } from "fs";
+import { readFileSync, existsSync } from "fs";
 import { join } from "path";
 
 const SkillManagerPlugin: Plugin = async ({ client, project, directory }) => {

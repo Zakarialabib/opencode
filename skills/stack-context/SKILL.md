@@ -1,18 +1,6 @@
----
-name: stack-context
-displayName: Stack Context Engine
-description: >
-  Auto-detects Tauri/React/Laravel stack context and pulls relevant
-  documentation, coding standards, and tool recommendations using Context7.
-  Use proactively when starting work on any stack file or when
-  context switching between Rust/TypeScript/PHP.
-category: context-engineering
-tags: [context, documentation, standards, tauri, react, laravel, context7]
-agents: [build, plan, debug, code-reviewer, laravel-expert, tauri-expert, project-orchestrator]
-entryPoint: SKILL.md
----
-
 # Stack Context Engine
+
+Auto-detects Tauri/React/Laravel stack context and pulls relevant documentation, coding standards, and tool recommendations using Context7. Use proactively when starting work on any stack file or when context switching between Rust/TypeScript/PHP.
 
 ## Purpose
 
@@ -69,7 +57,7 @@ Use Context7 MCP tools to get latest documentation:
 **For Laravel:**
 
 ```
-1. context7_resolve-library-id → query: "Laravel 11 Eloquent"
+1. context7_resolve-library-id → query: "Laravel 13 Eloquent"
 2. context7_query-docs → libraryId: "/laravel/laravel", query: "[specific task]"
 ```
 

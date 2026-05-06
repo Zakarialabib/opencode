@@ -14,9 +14,10 @@
 
 ## Error Recovery
 
-- If edit fails (oldString not found), read file again to get fresh context.
-- If multiple matches found, provide more surrounding context to uniquely identify.
-- On tool errors, retry with adjusted parameters before escalating.
+- **oldString/newString**: Always use these keys for the `edit` tool. NEVER use `oldText` or `newText`.
+- **Context Mismatch**: If edit fails (`oldString` not found), read the file again to get fresh context.
+- **Multiple Matches**: If multiple matches are found, include more surrounding code in `oldString` (e.g., function signatures, unique comments) to make the match unique.
+- **Retries**: On tool errors, retry once with adjusted parameters before escalating.
 
 ## Swarm Behavior
 
