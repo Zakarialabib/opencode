@@ -52,6 +52,7 @@ The StageOrchestrator manages complex feature development through 8 systematic s
 ## When to Use StageOrchestrator
 
 **Delegate to StageOrchestrator when:**
+
 - Complex feature requires systematic decomposition
 - Multiple agents need coordination across phases
 - Parallel execution opportunities exist
@@ -59,6 +60,7 @@ The StageOrchestrator manages complex feature development through 8 systematic s
 - Learning capture is important
 
 **Do NOT use StageOrchestrator when:**
+
 - Simple feature with < 5 tasks
 - No parallel execution opportunities
 - Single agent can handle entire feature
@@ -75,6 +77,7 @@ The StageOrchestrator manages complex feature development through 8 systematic s
 **Prerequisites**: None (entry stage)
 
 **Activities**:
+
 - Analyze requirements and constraints
 - Identify components and responsibilities
 - Define component boundaries
@@ -82,12 +85,14 @@ The StageOrchestrator manages complex feature development through 8 systematic s
 - Document architecture decisions
 
 **Outputs**:
+
 - Architecture overview document
 - Component list with responsibilities
 - System boundary definitions
 - Integration point map
 
 **Validation Criteria**:
+
 - All major components identified
 - Component boundaries clearly defined
 - Integration points documented
@@ -104,18 +109,21 @@ The StageOrchestrator manages complex feature development through 8 systematic s
 **Prerequisites**: Stage 1 complete (architecture defined)
 
 **Activities**:
+
 - Identify user personas
 - Map user journeys end-to-end
 - Create user stories with acceptance criteria
 - Organize story map by journey
 
 **Outputs**:
+
 - User persona definitions
 - User journey maps
 - User story backlog
 - Story map visualization
 
 **Validation Criteria**:
+
 - All user journeys documented
 - Stories written with acceptance criteria
 - Stories organized by priority
@@ -132,18 +140,21 @@ The StageOrchestrator manages complex feature development through 8 systematic s
 **Prerequisites**: Stage 2 complete (stories defined)
 
 **Activities**:
+
 - Assess value and business priorities
 - Evaluate technical risks
 - Map dependencies and critical path
 - Create phased execution plan
 
 **Outputs**:
+
 - Prioritized story backlog
 - Risk assessment matrix
 - Dependency graph
 - Phased execution plan
 
 **Validation Criteria**:
+
 - All stories prioritized
 - Dependencies mapped
 - Execution phases defined
@@ -160,6 +171,7 @@ The StageOrchestrator manages complex feature development through 8 systematic s
 **Prerequisites**: Stage 3 complete (work prioritized)
 
 **Activities**:
+
 - Delegate to TaskManager for task creation
 - Break stories into atomic subtasks (1-2 hours each)
 - Define acceptance criteria and deliverables
@@ -167,12 +179,14 @@ The StageOrchestrator manages complex feature development through 8 systematic s
 - Identify parallel execution batches
 
 **Outputs**:
+
 - `.tmp/tasks/{feature}/task.json`
 - `.tmp/tasks/{feature}/subtask_NN.json` files
 - Task dependency graph
 - Parallel batch identification
 
 **Validation Criteria**:
+
 - All tasks defined with clear objectives
 - Dependencies mapped correctly
 - Parallel batches identified
@@ -189,6 +203,7 @@ The StageOrchestrator manages complex feature development through 8 systematic s
 **Prerequisites**: Stage 4 complete (tasks defined)
 
 **Activities**:
+
 - Identify integration points from architecture
 - Define TypeScript interfaces
 - Document API contracts
@@ -196,12 +211,14 @@ The StageOrchestrator manages complex feature development through 8 systematic s
 - Validate contracts against architecture
 
 **Outputs**:
+
 - TypeScript interface files
 - API contract specifications
 - Data schema definitions
 - Integration documentation
 
 **Validation Criteria**:
+
 - All integration points have contracts
 - Contracts validated against architecture
 - Type definitions complete
@@ -218,6 +235,7 @@ The StageOrchestrator manages complex feature development through 8 systematic s
 **Prerequisites**: Stage 5 complete (contracts defined)
 
 **Activities**:
+
 - Delegate to BatchExecutor for parallel coordination
 - Execute batches of independent tasks
 - Monitor batch completion
@@ -225,12 +243,14 @@ The StageOrchestrator manages complex feature development through 8 systematic s
 - Handle failures and retries
 
 **Outputs**:
+
 - Implemented deliverables for all tasks
 - Updated task status (completed)
 - Self-review reports
 - Batch completion summaries
 
 **Validation Criteria**:
+
 - All tasks completed successfully
 - Deliverables verified
 - Acceptance criteria met
@@ -247,6 +267,7 @@ The StageOrchestrator manages complex feature development through 8 systematic s
 **Prerequisites**: Stage 6 complete (all tasks implemented)
 
 **Activities**:
+
 - Wire components together
 - Implement integration points
 - Run integration tests
@@ -254,12 +275,14 @@ The StageOrchestrator manages complex feature development through 8 systematic s
 - Fix integration issues
 
 **Outputs**:
+
 - Integrated system
 - Integration test results
 - Validation report
 - Issue resolution log
 
 **Validation Criteria**:
+
 - All components integrated
 - Integration tests passing
 - Acceptance criteria met
@@ -276,6 +299,7 @@ The StageOrchestrator manages complex feature development through 8 systematic s
 **Prerequisites**: Stage 7 complete (integration validated)
 
 **Activities**:
+
 - Prepare release (final validation, docs)
 - Execute deployment
 - Monitor production health
@@ -283,12 +307,14 @@ The StageOrchestrator manages complex feature development through 8 systematic s
 - Update patterns and standards
 
 **Outputs**:
+
 - Deployed feature
 - Release notes
 - Lessons learned document
 - Updated standards/patterns
 
 **Validation Criteria**:
+
 - Feature deployed successfully
 - Production validated
 - Insights documented
@@ -305,6 +331,7 @@ The StageOrchestrator manages complex feature development through 8 systematic s
 **Input**: Feature request with requirements
 
 **Process**:
+
 1. Create session directory: `.tmp/sessions/{timestamp}-{feature}/`
 2. Initialize stage tracking:
    ```bash
@@ -322,9 +349,11 @@ The StageOrchestrator manages complex feature development through 8 systematic s
 **For each stage (1-8)**:
 
 1. **Validate Prerequisites**
+
    ```bash
    npx ts-node .opencode/skill/task-management/scripts/stage-cli.ts validate {feature} {stage}
    ```
+
    - Check previous stage completed
    - Verify required inputs exist
    - Validate gating criteria met
@@ -336,9 +365,11 @@ The StageOrchestrator manages complex feature development through 8 systematic s
    - Handle errors
 
 3. **Validate Stage Completion**
+
    ```bash
    npx ts-node .opencode/skill/task-management/scripts/stage-cli.ts complete {feature} {stage}
    ```
+
    - Verify all outputs created
    - Check validation criteria met
    - Confirm ready for next stage
@@ -370,9 +401,11 @@ The StageOrchestrator manages complex feature development through 8 systematic s
    - Check if rollback needed
 
 3. **Execute Rollback (if needed)**
+
    ```bash
    npx ts-node .opencode/skill/task-management/scripts/stage-cli.ts rollback {feature} {stage}
    ```
+
    - Revert stage changes
    - Restore previous state
    - Clean up partial outputs
@@ -393,6 +426,7 @@ The StageOrchestrator manages complex feature development through 8 systematic s
 **Throughout execution**:
 
 1. **Check Stage Status**
+
    ```bash
    npx ts-node .opencode/skill/task-management/scripts/stage-cli.ts status {feature}
    ```
@@ -417,6 +451,7 @@ The StageOrchestrator manages complex feature development through 8 systematic s
 **Enforcement**: Cannot skip stages
 
 **Validation**:
+
 - Stage N requires Stage N-1 complete
 - No parallel stage execution
 - Must follow defined sequence
@@ -430,6 +465,7 @@ The StageOrchestrator manages complex feature development through 8 systematic s
 **Enforcement**: Previous stage must be complete
 
 **Validation**:
+
 - Check stage status = "completed"
 - Verify all outputs exist
 - Confirm validation criteria met
@@ -443,6 +479,7 @@ The StageOrchestrator manages complex feature development through 8 systematic s
 **Enforcement**: Stage outputs must meet criteria
 
 **Validation**:
+
 - All required outputs created
 - Outputs pass validation checks
 - Quality standards met
@@ -456,6 +493,7 @@ The StageOrchestrator manages complex feature development through 8 systematic s
 **Enforcement**: Contracts must exist before implementation
 
 **Validation**:
+
 - Stage 5 (Contract Definition) complete before Stage 6 (Execution)
 - All integration points have contracts
 - Contracts validated against architecture
@@ -469,6 +507,7 @@ The StageOrchestrator manages complex feature development through 8 systematic s
 **Enforcement**: Failed stages must be recoverable
 
 **Validation**:
+
 - Stage changes tracked
 - Rollback procedure defined
 - Previous state restorable
@@ -484,6 +523,7 @@ The StageOrchestrator manages complex feature development through 8 systematic s
 **Scenario**: Stage validation criteria not met
 
 **Response**:
+
 1. Log validation failure details
 2. Mark stage status as "failed"
 3. Provide specific failure reasons
@@ -491,6 +531,7 @@ The StageOrchestrator manages complex feature development through 8 systematic s
 5. Do NOT proceed to next stage
 
 **Example**:
+
 ```
 Stage 4 (Task Breakdown) FAILED
 
@@ -509,6 +550,7 @@ Recommendation: Fix dependency cycle and add missing criteria before proceeding.
 **Scenario**: Delegated agent fails to complete
 
 **Response**:
+
 1. Capture agent error details
 2. Assess if retry possible
 3. Retry with fixes (up to 3 attempts)
@@ -516,6 +558,7 @@ Recommendation: Fix dependency cycle and add missing criteria before proceeding.
 5. Provide recovery recommendations
 
 **Example**:
+
 ```
 BatchExecutor delegation FAILED
 
@@ -531,15 +574,18 @@ Retry 1/3: Re-executing task 05 with test requirement emphasized
 **Scenario**: Stage needs to be rolled back
 
 **Process**:
+
 1. **Identify Rollback Scope**
    - Which stage to rollback
    - What changes to revert
    - What state to restore
 
 2. **Execute Rollback**
+
    ```bash
    npx ts-node .opencode/skill/task-management/scripts/stage-cli.ts rollback {feature} {stage}
    ```
+
    - Delete stage outputs
    - Restore previous state
    - Update stage status to "pending"
@@ -561,15 +607,18 @@ Retry 1/3: Re-executing task 05 with test requirement emphasized
 **Scenario**: Unrecoverable failure, must abort
 
 **Process**:
+
 1. **Assess Abort Necessity**
    - Multiple stage failures
    - Critical blocker identified
    - Requirements changed significantly
 
 2. **Execute Abort**
+
    ```bash
    npx ts-node .opencode/skill/task-management/scripts/stage-cli.ts abort {feature}
    ```
+
    - Mark workflow as "aborted"
    - Document abort reason
    - Preserve work for analysis
@@ -586,21 +635,22 @@ Retry 1/3: Re-executing task 05 with test requirement emphasized
 ### TaskManager Integration
 
 **Stage 4 (Task Breakdown)**:
+
 ```javascript
 // Delegate to TaskManager
 task(
   subagent_type="TaskManager",
   description="Break down {feature} into atomic tasks",
   prompt="Create task breakdown for {feature}.
-         
+
          Context: {session-context-path}
-         
+
          Requirements:
          - Atomic tasks (1-2 hours each)
          - Clear acceptance criteria
          - Dependency mapping
          - Parallel batch identification
-         
+
          Output: .tmp/tasks/{feature}/ with task.json and subtask_NN.json files"
 )
 ```
@@ -610,16 +660,17 @@ task(
 ### BatchExecutor Integration
 
 **Stage 6 (Parallel Execution)**:
+
 ```javascript
 // For each parallel batch
 task(
   subagent_type="BatchExecutor",
   description="Execute Batch {N} for {feature}",
   prompt="Execute parallel batch {N} for {feature}.
-         
+
          Subtasks: {task-sequences}
          Session: {session-context-path}
-         
+
          Execute all tasks simultaneously.
          Wait for ALL to complete.
          Report batch completion status."
@@ -642,21 +693,25 @@ Completed Stages: 1, 2, 3
 Remaining Stages: 5, 6, 7, 8
 
 ### Stage 1: Architecture Decomposition ✅
+
 Status: completed
 Completed: 2026-02-14T10:00:00Z
 Outputs: architecture.md, components.json
 
 ### Stage 2: Story Mapping ✅
+
 Status: completed
 Completed: 2026-02-14T11:00:00Z
 Outputs: stories.json, journey-map.md
 
 ### Stage 3: Prioritization ✅
+
 Status: completed
 Completed: 2026-02-14T12:00:00Z
 Outputs: prioritized-backlog.json, dependency-graph.md
 
 ### Stage 4: Enhanced Task Breakdown 🔄
+
 Status: in_progress
 Started: 2026-02-14T13:00:00Z
 Progress: TaskManager creating task JSON files
@@ -666,15 +721,15 @@ Progress: TaskManager creating task JSON files
 
 ## CLI Commands Reference
 
-| Command | Purpose |
-|---------|---------|
-| `init {feature}` | Initialize stage tracking for feature |
-| `status {feature}` | Show current stage and progress |
+| Command                      | Purpose                                    |
+| ---------------------------- | ------------------------------------------ |
+| `init {feature}`             | Initialize stage tracking for feature      |
+| `status {feature}`           | Show current stage and progress            |
 | `validate {feature} {stage}` | Validate stage prerequisites and readiness |
-| `complete {feature} {stage}` | Mark stage complete and validate outputs |
-| `rollback {feature} {stage}` | Rollback stage to previous state |
-| `abort {feature}` | Abort workflow and archive work |
-| `resume {feature} {stage}` | Resume workflow from specific stage |
+| `complete {feature} {stage}` | Mark stage complete and validate outputs   |
+| `rollback {feature} {stage}` | Rollback stage to previous state           |
+| `abort {feature}`            | Abort workflow and archive work            |
+| `resume {feature} {stage}`   | Resume workflow from specific stage        |
 
 ---
 
@@ -683,6 +738,7 @@ Progress: TaskManager creating task JSON files
 ### Feature: User Authentication System
 
 **Stage 1: Architecture Decomposition**
+
 ```
 ✅ Components identified: UserService, AuthService, TokenService, Middleware
 ✅ Boundaries defined: Clear separation of concerns
@@ -693,6 +749,7 @@ Transition: Proceed to Story Mapping
 ```
 
 **Stage 2: Story Mapping**
+
 ```
 ✅ Personas: End User, Admin
 ✅ Journeys: Registration, Login, Password Reset, Role Management
@@ -703,6 +760,7 @@ Transition: Proceed to Prioritization
 ```
 
 **Stage 3: Prioritization**
+
 ```
 ✅ Phase 1 (Must-have): Registration, Login
 ✅ Phase 2 (Should-have): Refresh tokens, Password reset
@@ -713,6 +771,7 @@ Transition: Proceed to Task Breakdown
 ```
 
 **Stage 4: Enhanced Task Breakdown**
+
 ```
 ✅ TaskManager created 9 subtasks
 ✅ Dependencies mapped: 01→02→03, 04||05, 06(depends 04,05), 07||08, 09(depends all)
@@ -723,6 +782,7 @@ Transition: Proceed to Contract Definition
 ```
 
 **Stage 5: Contract Definition**
+
 ```
 ✅ Interfaces defined: AuthService, UserService, TokenService
 ✅ API contracts: POST /auth/register, POST /auth/login, POST /auth/refresh
@@ -733,6 +793,7 @@ Transition: Proceed to Parallel Execution
 ```
 
 **Stage 6: Parallel Execution**
+
 ```
 Batch 1: [01, 02, 03] → BatchExecutor → ✅ All complete
 Batch 2: [04, 05] → BatchExecutor → ✅ All complete
@@ -748,6 +809,7 @@ Transition: Proceed to Integration & Validation
 ```
 
 **Stage 7: Integration & Validation**
+
 ```
 ✅ Components wired together
 ✅ Integration tests: 15/15 passing
@@ -758,6 +820,7 @@ Transition: Proceed to Release & Learning
 ```
 
 **Stage 8: Release & Learning**
+
 ```
 ✅ Deployed to production
 ✅ Production health: All systems operational

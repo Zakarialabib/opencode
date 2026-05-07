@@ -1,7 +1,23 @@
+import { parseJsonc } from "./jsonc-utils";
 import { Plugin, tool } from "@opencode-ai/plugin";
+import { readFileSync } from "fs";
+import { join } from "path";
 
-// Model capability registry
-const MODEL_CAPABILITIES = {
+// Type definitions
+interface ModelCapabilities {
+  tool_call: boolean;
+  reasoning: boolean;
+  supportsInstructions: boolean;
+}
+
+interface ModelRegistry {
+  [provider: string]: {
+    [model: string]: ModelCapabilities;
+  };
+}
+
+// Default model capability registry
+const DEFAULT_MODEL_CAPABILITIES: ModelRegistry = {
   opencode: {
     "hy3-preview-free": { tool_call: true, reasoning: false, supportsInstructions: true },
   },
@@ -30,53 +46,54 @@ const MODEL_CAPABILITIES = {
   },
 };
 
-// Get model capabilities
-function getModelCapabilities(provider: string, model: string) {
-  return (
-    MODEL_CAPABILITIES[provider]?.[model] || {
-      tool_call: false,
-      reasoning: false,
-      supportsInstructions: false,
+const ModelRouterPlugin: Plugin = async ({ directory }) => {
+  let MODEL_CAPABILITIES: ModelRegistry = DEFAULT_MODEL_CAPABILITIES;
+
+  try {
+    const configPath = join(directory, "opencode.json");
+    const config = parseJsonc(readFileSync(configPath, "utf8"));
+    if (config.models && typeof config.models === "object") {
+      MODEL_CAPABILITIES = config.models as ModelRegistry;
     }
-  );
-}
-
-// Check if model supports tools
-function modelSupportsTools(provider: string, model: string): boolean {
-  const caps = getModelCapabilities(provider, model);
-  return caps.tool_call === true;
-}
-
-// Route to best available model based on requirements
-function routeModel(requirements: { needsTools?: boolean; needsReasoning?: boolean }) {
-  const { needsTools = false, needsReasoning = false } = requirements;
-
-  // Priority order: opencode-go, opencode, lmstudio, cerebras
-  const providers = ["opencode-go", "opencode", "lmstudio", "cerebras"];
-
-  for (const provider of providers) {
-    const models = MODEL_CAPABILITIES[provider];
-    if (!models) continue;
-
-    for (const [modelName, caps] of Object.entries(models)) {
-      if (needsTools && !caps.tool_call) continue;
-      if (needsReasoning && !caps.reasoning) continue;
-
-      return { provider, model: modelName, capabilities: caps };
-    }
+  } catch {
+    console.log("Using default model capabilities registry");
   }
 
-  // Fallback to default
-  return {
-    provider: "opencode-go",
-    model: "kimi-k2.6",
-    capabilities: MODEL_CAPABILITIES["opencode-go"]["kimi-k2.6"],
-  };
-}
+  function getModelCapabilities(provider: string, model: string): ModelCapabilities {
+    return (
+      MODEL_CAPABILITIES[provider]?.[model] || {
+        tool_call: false,
+        reasoning: false,
+        supportsInstructions: false,
+      }
+    );
+  }
 
-const ModelRouterPlugin: Plugin = async ({ client, project, directory }) => {
+  function routeModel(requirements: { needsTools?: boolean; needsReasoning?: boolean }) {
+    const { needsTools = false, needsReasoning = false } = requirements;
+
+    const providers = ["opencode-go", "opencode", "lmstudio", "cerebras"];
+
+    for (const provider of providers) {
+      const models = MODEL_CAPABILITIES[provider];
+      if (!models) continue;
+
+      for (const [modelName, caps] of Object.entries(models)) {
+        if (needsTools && !caps.tool_call) continue;
+        if (needsReasoning && !caps.reasoning) continue;
+
+        return { provider, model: modelName, capabilities: caps };
+      }
+    }
+
+    return {
+      provider: "opencode-go",
+      model: "kimi-k2.6",
+      capabilities: DEFAULT_MODEL_CAPABILITIES["opencode-go"]["kimi-k2.6"],
+    };
+  }
+
   return {
-    // Tool: Check model capabilities
     tool: {
       check_model: tool({
         description: "Check capabilities of a specific model",
@@ -125,37 +142,25 @@ const ModelRouterPlugin: Plugin = async ({ client, project, directory }) => {
       }),
     },
 
-    // Hook: Intercept model calls to handle instructions properly
-    "model.call": async ({ provider, model, params, next }) => {
+    "model.call": async ({ provider, model, params, next }: any) => {
       const caps = getModelCapabilities(provider, model);
 
-      // If model doesn't support instructions parameter, convert to system prompt
       if (!caps.supportsInstructions && params.instructions) {
         const instructions = Array.isArray(params.instructions)
           ? params.instructions.join("\n")
           : params.instructions;
 
-        // Prepend instructions to system prompt or messages
         if (params.system) {
           params.system = `${instructions}\n\n${params.system}`;
         } else if (params.messages && params.messages.length > 0) {
-          // Add as system message at the beginning
           params.messages.unshift({ role: "system", content: instructions });
         }
 
-        // Remove instructions param to avoid API error
         delete params.instructions;
       }
 
-      // Check tool support
       if (!caps.tool_call && params.tools && params.tools.length > 0) {
-        client.app.log({
-          body: {
-            service: "model-router",
-            level: "warn",
-            message: `Model ${provider}/${model} doesn't support tools, but tools were requested. Removing tools.`,
-          },
-        });
+        console.log(`Model ${provider}/${model} doesn't support tools, removing tools.`);
         delete params.tools;
       }
 

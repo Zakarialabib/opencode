@@ -1,9 +1,21 @@
+import { parseJsonc } from "./jsonc-utils";
 import { Plugin, tool } from "@opencode-ai/plugin";
-import { readFileSync, existsSync } from "fs";
+import { readFileSync } from "fs";
 import { join } from "path";
 
-const SkillManagerPlugin: Plugin = async ({ client, project, directory }) => {
-  // Read skills index - try opencode/skills first (deployed layout), then skills/ (legacy)
+interface SkillEntry {
+  name: string;
+  displayName?: string;
+  description: string;
+  version?: string;
+  category: string;
+  tags?: string[];
+  agents?: string[];
+  triggers?: string[];
+  entryPoint: string;
+}
+
+const SkillManagerPlugin: Plugin = async ({ directory }) => {
   const candidates = [
     join(directory, "opencode", "skills", "index.json"),
     join(directory, "skills", "index.json"),
@@ -18,19 +30,11 @@ const SkillManagerPlugin: Plugin = async ({ client, project, directory }) => {
       continue;
     }
   }
-  let skills: Array<{
-    name: string;
-    displayName?: string;
-    description: string;
-    category: string;
-    tags?: string[];
-    agents?: string[];
-    entryPoint: string;
-  }> = [];
+  let skills: SkillEntry[] = [];
 
   if (skillsIndexPath) {
     try {
-      const skillsIndex = JSON.parse(readFileSync(skillsIndexPath, "utf8"));
+      const skillsIndex = parseJsonc(readFileSync(skillsIndexPath, "utf8"));
       skills = skillsIndex.skills || [];
     } catch (e) {
       console.error("Failed to read skills index:", e);
@@ -52,7 +56,7 @@ const SkillManagerPlugin: Plugin = async ({ client, project, directory }) => {
         async execute({ category }) {
           let filtered = skills;
           if (category) {
-            filtered = skills.filter((s: any) => s.category === category);
+            filtered = skills.filter((s) => s.category === category);
           }
 
           if (filtered.length === 0) return "No skills found.";
@@ -75,9 +79,7 @@ const SkillManagerPlugin: Plugin = async ({ client, project, directory }) => {
           skillName: tool.schema.string().describe("Name or display name of the skill to look up"),
         },
         async execute({ skillName }) {
-          const skill = skills.find(
-            (s: any) => s.name === skillName || s.displayName === skillName
-          );
+          const skill = skills.find((s) => s.name === skillName || s.displayName === skillName);
           if (!skill) return `❌ Skill "${skillName}" not found.`;
 
           let result = `## Skill: ${skill.displayName || skill.name}\n\n`;
@@ -107,11 +109,11 @@ const SkillManagerPlugin: Plugin = async ({ client, project, directory }) => {
         async execute({ query }) {
           const queryLower = query.toLowerCase();
           const matches = skills.filter(
-            (s: any) =>
+            (s) =>
               s.name.toLowerCase().includes(queryLower) ||
               (s.displayName && s.displayName.toLowerCase().includes(queryLower)) ||
               s.description.toLowerCase().includes(queryLower) ||
-              (s.tags && s.tags.some((tag: string) => tag.toLowerCase().includes(queryLower)))
+              (s.tags && s.tags.some((tag) => tag.toLowerCase().includes(queryLower)))
           );
 
           if (matches.length === 0) return `No skills found matching "${query}".`;

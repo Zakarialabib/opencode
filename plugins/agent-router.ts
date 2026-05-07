@@ -1,7 +1,18 @@
+import { parseJsonc } from "./jsonc-utils";
 import { Plugin, tool } from "@opencode-ai/plugin";
+import { readFileSync } from "fs";
+import { join } from "path";
 
-// Agent routing rules: maps keywords/patterns to agents
-const AGENT_RULES = [
+// Type definitions
+interface AgentRule {
+  agent: string;
+  keywords: string[];
+  skills: string[];
+  description: string;
+}
+
+// Default agent routing rules
+const DEFAULT_AGENT_RULES: AgentRule[] = [
   {
     agent: "backend-laravel",
     keywords: ["laravel", "php", "livewire", "eloquent", "artisan", "blade", "pest", "phpunit"],
@@ -106,9 +117,21 @@ const AGENT_RULES = [
   },
   {
     agent: "core-builder",
-    keywords: ["implement", "code", "edit", "modify", "build", "create file", "change", "fix"],
-    skills: ["self-improver", "stack-context"],
-    description: "High-speed implementation and direct file modification",
+    keywords: [
+      "implement",
+      "code",
+      "edit",
+      "modify",
+      "build",
+      "create file",
+      "change",
+      "fix",
+      "agent",
+      "pattern",
+    ],
+    skills: ["self-improver", "stack-context", "coding-agent"],
+    description:
+      "High-speed implementation, direct file modification, and agent development patterns",
   },
   {
     agent: "core-planner",
@@ -117,10 +140,49 @@ const AGENT_RULES = [
     description: "Read-only strategic planning and architectural discovery",
   },
   {
+    agent: "marketing-mode",
+    keywords: [
+      "marketing",
+      "content",
+      "strategy",
+      "campaign",
+      "seo",
+      "social",
+      "brand",
+      "market",
+      "research",
+    ],
+    skills: ["content-strategy", "market-research-reports"],
+    description: "Marketing content strategy, campaigns, and market research",
+  },
+  {
     agent: "docs-writer",
-    keywords: ["docs", "documentation", "guide", "write", "content", "readme"],
-    skills: ["deep-research"],
-    description: "Technical documentation and content creation",
+    keywords: [
+      "docs",
+      "documentation",
+      "guide",
+      "write",
+      "content",
+      "readme",
+      "report",
+      "excel",
+      "word",
+      "pdf",
+      "powerpoint",
+      "presentation",
+      "spreadsheet",
+    ],
+    skills: [
+      "deep-research",
+      "xlsx",
+      "docx",
+      "pdf",
+      "ppt",
+      "content-strategy",
+      "market-research-reports",
+    ],
+    description:
+      "Technical documentation, content creation, and document generation (Excel, Word, PDF, PowerPoint)",
   },
   {
     agent: "docs-governor",
@@ -154,56 +216,69 @@ const AGENT_RULES = [
   },
 ];
 
-// Helper function to route a task
-function routeTask(task: string) {
-  const taskLower = task.toLowerCase();
-  const matches: Array<{
-    agent: string;
-    score: number;
-    description: string;
-    matchedKeywords: string[];
-    matchedSkills: string[];
-  }> = [];
+const AgentRouterPlugin: Plugin = async ({ client, project, directory }) => {
+  // Load agent routing rules from config, fallback to defaults
+  let AGENT_RULES: AgentRule[] = DEFAULT_AGENT_RULES;
 
-  // Match agents based on keywords and skills
-  for (const rule of AGENT_RULES) {
-    let score = 0;
-    const matchedKeywords: string[] = [];
-    const matchedSkills: string[] = [];
-
-    // Check keywords
-    for (const keyword of rule.keywords) {
-      if (taskLower.includes(keyword.toLowerCase())) {
-        score += 2;
-        matchedKeywords.push(keyword);
-      }
+  try {
+    const configPath = join(directory, "opencode.json");
+    const config = parseJsonc(readFileSync(configPath, "utf8"));
+    if (config.agents && Array.isArray(config.agents)) {
+      AGENT_RULES = config.agents as AgentRule[];
     }
-
-    // Check skills
-    for (const skill of rule.skills) {
-      if (taskLower.includes(skill.toLowerCase())) {
-        score += 3;
-        matchedSkills.push(skill);
-      }
-    }
-
-    if (score > 0) {
-      matches.push({
-        agent: rule.agent,
-        score,
-        description: rule.description,
-        matchedKeywords,
-        matchedSkills,
-      });
-    }
+  } catch (e) {
+    console.log("Using default agent routing rules");
   }
 
-  // Sort by score descending
-  matches.sort((a, b) => b.score - a.score);
-  return matches;
-}
+  // Helper function to route a task
+  function routeTask(task: string) {
+    const taskLower = task.toLowerCase();
+    const matches: Array<{
+      agent: string;
+      score: number;
+      description: string;
+      matchedKeywords: string[];
+      matchedSkills: string[];
+    }> = [];
 
-const AgentRouterPlugin: Plugin = async ({ client, project, directory }) => {
+    // Match agents based on keywords and skills
+    for (const rule of AGENT_RULES) {
+      let score = 0;
+      const matchedKeywords: string[] = [];
+      const matchedSkills: string[] = [];
+
+      // Check keywords
+      for (const keyword of rule.keywords) {
+        if (taskLower.includes(keyword.toLowerCase())) {
+          score += 2;
+          matchedKeywords.push(keyword);
+        }
+      }
+
+      // Check skills
+      for (const skill of rule.skills) {
+        if (taskLower.includes(skill.toLowerCase())) {
+          score += 3;
+          matchedSkills.push(skill);
+        }
+      }
+
+      if (score > 0) {
+        matches.push({
+          agent: rule.agent,
+          score,
+          description: rule.description,
+          matchedKeywords,
+          matchedSkills,
+        });
+      }
+    }
+
+    // Sort by score descending
+    matches.sort((a, b) => b.score - a.score);
+    return matches;
+  }
+
   return {
     // Custom tools
     tool: {
@@ -272,7 +347,16 @@ const AgentRouterPlugin: Plugin = async ({ client, project, directory }) => {
     },
 
     // Hook: Analyze incoming messages and suggest agent switching
-    "chat.message": async ({ sessionID, agent, messageID, message }) => {
+    "chat.message": async ({
+      agent,
+      message,
+    }: {
+      agent?: string;
+      message?: string;
+      sessionID?: string;
+      messageID?: string;
+      variant?: string;
+    }) => {
       // Skip if message is empty or starts with @ (agent mention)
       if (!message || message.startsWith("@") || message.startsWith("/")) return;
 
@@ -281,14 +365,7 @@ const AgentRouterPlugin: Plugin = async ({ client, project, directory }) => {
 
       const matches = routeTask(message);
       if (matches.length > 0 && matches[0].agent !== agent) {
-        await client.app.log({
-          body: {
-            service: "agent-router",
-            level: "info",
-            message: `Suggested agent switch: ${agent} → ${matches[0].agent}`,
-            extra: { task: message.slice(0, 50), score: matches[0].score },
-          },
-        });
+        console.log(`Suggested agent switch: ${agent} → ${matches[0].agent}`);
       }
     },
   };

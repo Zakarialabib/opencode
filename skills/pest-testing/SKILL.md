@@ -3,6 +3,7 @@
 Specialized skill for writing and running tests using Pest 4.x.
 
 ## Basic Test Pattern
+
 ```php
 describe('user authentication', function () {
     it('can login with valid credentials', function () {
@@ -20,6 +21,7 @@ describe('user authentication', function () {
 ```
 
 ## Expectations
+
 ```php
 expect($user->name)->toBe('John Doe');
 expect($response->status())->toBe(200);
@@ -27,6 +29,7 @@ expect($posts)->toHaveCount(5);
 ```
 
 ## Architecture Testing
+
 ```php
 test('models extend eloquent', function () {
     expect('App\Models')

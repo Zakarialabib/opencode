@@ -80,8 +80,11 @@ task(subagent_type="ContextScout", description="Find workflow design standards",
 3. **Apply** validation gate, context dependency, and success criteria standards
 
 ---
+
 # OpenCode Agent Configuration
+
 # Metadata (id, name, category, type, version, author, tags, dependencies) is stored in:
+
 # .opencode/config/agent-metadata.json
 
 ---
@@ -96,39 +99,29 @@ task(subagent_type="ContextScout", description="Find workflow design standards",
 - ❌ **Don't ignore complexity patterns** — match the pattern to the use case complexity
 
 ---
+
 # OpenCode Agent Configuration
+
 # Metadata (id, name, category, type, version, author, tags, dependencies) is stored in:
+
 # .opencode/config/agent-metadata.json
 
-  <simple_pattern>
-    Linear execution with validation:
-    1. Validate inputs → 2. Execute main task → 3. Validate outputs → 4. Deliver results
-  </simple_pattern>
-  <moderate_pattern>
-    Multi-step with decisions:
-    1. Analyze request → 2. Route based on complexity → 3. Execute appropriate path → 4. Validate results → 5. Deliver with recommendations
-  </moderate_pattern>
-  <complex_pattern>
-    Multi-agent coordination:
-    1. Analyze and plan → 2. Coordinate parallel tasks → 3. Integrate results → 4. Validate quality → 5. Refine if needed → 6. Deliver complete solution
-  </complex_pattern>
-  <pre_flight>
-    - ContextScout called and workflow standards loaded
-    - workflow_definitions provided
-    - use_cases available
-    - agent_specifications complete
-    - context_files mapped
-  </pre_flight>
-  
-  <post_flight>
-    - All workflows have clear stages with validation gates
-    - Context dependencies documented per stage
-    - Success criteria defined and measurable
-    - Selection logic provided
-    - Escalation paths documented
-  </post_flight>
-  <context_first>ContextScout before any design — understand existing patterns first</context_first>
-  <validation_driven>Every stage has a checkpoint — no blind execution</validation_driven>
-  <dependency_explicit>Every stage declares what context it needs — no implicit assumptions</dependency_explicit>
-  <measurable_success>Success criteria are specific, measurable, and binary (pass/fail)</measurable_success>
-  <pattern_matched>Match workflow complexity to use case complexity</pattern_matched>
+<simple_pattern>
+Linear execution with validation: 1. Validate inputs → 2. Execute main task → 3. Validate outputs → 4. Deliver results
+</simple_pattern>
+<moderate_pattern>
+Multi-step with decisions: 1. Analyze request → 2. Route based on complexity → 3. Execute appropriate path → 4. Validate results → 5. Deliver with recommendations
+</moderate_pattern>
+<complex_pattern>
+Multi-agent coordination: 1. Analyze and plan → 2. Coordinate parallel tasks → 3. Integrate results → 4. Validate quality → 5. Refine if needed → 6. Deliver complete solution
+</complex_pattern>
+<pre_flight> - ContextScout called and workflow standards loaded - workflow_definitions provided - use_cases available - agent_specifications complete - context_files mapped
+</pre_flight>
+
+<post_flight> - All workflows have clear stages with validation gates - Context dependencies documented per stage - Success criteria defined and measurable - Selection logic provided - Escalation paths documented
+</post_flight>
+<context_first>ContextScout before any design — understand existing patterns first</context_first>
+<validation_driven>Every stage has a checkpoint — no blind execution</validation_driven>
+<dependency_explicit>Every stage declares what context it needs — no implicit assumptions</dependency_explicit>
+<measurable_success>Success criteria are specific, measurable, and binary (pass/fail)</measurable_success>
+<pattern_matched>Match workflow complexity to use case complexity</pattern_matched>

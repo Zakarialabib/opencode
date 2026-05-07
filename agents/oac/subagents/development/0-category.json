@@ -13,20 +13,13 @@
         "subagents/code/reviewer"
       ],
       "commonTools": [],
-      "commonContext": [
-        "core/standards/code",
-        "ui/web/react-patterns"
-      ]
+      "commonContext": ["core/standards/code", "ui/web/react-patterns"]
     },
     "devops-specialist": {
       "description": "Expert in CI/CD, infrastructure as code, and deployment automation",
-      "commonSubagents": [
-        "subagents/code/build-agent"
-      ],
+      "commonSubagents": ["subagents/code/build-agent"],
       "commonTools": [],
-      "commonContext": [
-        "core/standards/code"
-      ]
+      "commonContext": ["core/standards/code"]
     }
   }
 }

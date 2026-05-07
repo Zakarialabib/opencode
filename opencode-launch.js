@@ -59,6 +59,10 @@ function launch() {
 
   console.log(`✅ Found config root: ${configRoot}`);
 
+  // Define config paths
+  const configPath = path.join(configRoot, "opencode.json");
+  const centralScriptsDir = path.join(configRoot, "scripts");
+
   // Read config to verify
   try {
     const configPath = path.join(configRoot, "opencode.json");
@@ -78,11 +82,7 @@ function launch() {
 
   // Pass projectRoot as the first positional argument if no other commands are specified,
   // or just append it to ensure the CLI knows where to start.
-  // Actually, we can just change cwd.
-  // Pass projectRoot as the first positional argument if no other commands are specified,
-  // or just append it to ensure the CLI knows where to start.
   const args = [...process.argv.slice(2)];
-<<<<<<< HEAD
 
   const globalBin = path.join(
     process.env.APPDATA || "C:/laragon/bin/nodejs/node-v22",
@@ -94,10 +94,6 @@ function launch() {
   );
   const laragonBin = "C:/laragon/bin/nodejs/node-v22/node_modules/opencode-ai/bin/opencode";
   const targetBin = fs.existsSync(laragonBin) ? laragonBin : globalBin;
-=======
-  const configPath = path.join(configRoot, "opencode.json");
-  const centralScriptsDir = path.join(configRoot, "scripts");
->>>>>>> 4e2483480b34d40eff453ea77b91781da0415ee6
 
   // Ensure config exists in CWD for the actual CLI to find it if it doesn't respect environment variables
   const localConfigPath = path.join(cwd, "opencode.json");
@@ -126,8 +122,13 @@ function launch() {
     if (process.platform === "win32") {
       if (command === "npm") {
         finalCommand = "npm.cmd";
-      } else if (command === "opencode" && !command.endsWith(".exe") && !command.endsWith(".cmd") && !command.endsWith(".bat")) {
-         finalCommand = "opencode.cmd";
+      } else if (
+        command === "opencode" &&
+        !command.endsWith(".exe") &&
+        !command.endsWith(".cmd") &&
+        !command.endsWith(".bat")
+      ) {
+        finalCommand = "opencode.cmd";
       }
     }
 

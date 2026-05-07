@@ -10,15 +10,8 @@
         "subagents/core/documentation",
         "subagents/code/*"
       ],
-      "commonTools": [
-        "gemini",
-        "env"
-      ],
-      "commonContext": [
-        "core/essential-patterns",
-        "core/workflows/*",
-        "core/standards/*"
-      ]
+      "commonTools": ["gemini", "env"],
+      "commonContext": ["core/essential-patterns", "core/workflows/*", "core/standards/*"]
     },
     "opencoder": {
       "description": "Development specialist",
@@ -28,14 +21,8 @@
         "subagents/code/reviewer",
         "subagents/code/build-agent"
       ],
-      "commonTools": [
-        "env"
-      ],
-      "commonContext": [
-        "core/standards/code",
-        "core/standards/patterns",
-        "core/standards/tests"
-      ]
+      "commonTools": ["env"],
+      "commonContext": ["core/standards/code", "core/standards/patterns", "core/standards/tests"]
     }
   }
 }

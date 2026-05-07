@@ -114,6 +114,7 @@ task(subagent_type="ContextScout", description="Find API contract standards", pr
 ### Step 1: Load Context and Bounded Contexts
 
 **1.1 Call ContextScout** to discover:
+
 - API design patterns and standards
 - Bounded context definitions (from ArchitectureAnalyzer)
 - Security and authentication patterns
@@ -121,11 +122,13 @@ task(subagent_type="ContextScout", description="Find API contract standards", pr
 - Versioning conventions
 
 **1.2 Read Context Files**:
+
 - Load all recommended files from ContextScout
 - Pay special attention to bounded context definitions
 - Understand service boundaries and domain models
 
 **1.3 Identify Service Boundaries**:
+
 - Map feature requirements to bounded contexts
 - Identify which services need contracts
 - Determine consumer/provider relationships
@@ -135,6 +138,7 @@ task(subagent_type="ContextScout", description="Find API contract standards", pr
 For each service/API, create a contract definition:
 
 **2.1 Contract Metadata**:
+
 ```json
 {
   "contract_id": "{service-name}-api",
@@ -147,6 +151,7 @@ For each service/API, create a contract definition:
 ```
 
 **2.2 OpenAPI Specification**:
+
 ```yaml
 openapi: 3.0.3
 info:
@@ -221,6 +226,7 @@ security:
 ```
 
 **2.3 Consumer/Provider Identification**:
+
 ```json
 {
   "consumers": [
@@ -251,6 +257,7 @@ security:
 ### Step 3: Define Contract Testing Strategy
 
 **3.1 Consumer-Driven Contract Tests**:
+
 ```json
 {
   "testing_strategy": {
@@ -277,6 +284,7 @@ security:
 ```
 
 **3.2 Mock Server Configuration**:
+
 ```json
 {
   "mock_server": {
@@ -292,6 +300,7 @@ security:
 ### Step 4: Define Versioning Strategy
 
 **4.1 Versioning Rules**:
+
 ```json
 {
   "versioning": {
@@ -307,6 +316,7 @@ security:
 ```
 
 **4.2 Evolution Guidelines**:
+
 ```json
 {
   "evolution_rules": {
@@ -333,11 +343,13 @@ security:
 ### Step 5: Create Contract Files
 
 **5.1 Create Directory Structure**:
+
 ```bash
 mkdir -p .tmp/contracts/{bounded-context}/{service-name}
 ```
 
 **5.2 Generate contract.json**:
+
 ```json
 {
   "contract_id": "{service-name}-api",
@@ -357,49 +369,60 @@ mkdir -p .tmp/contracts/{bounded-context}/{service-name}
 ```
 
 **5.3 Generate contract.openapi.yaml**:
+
 - Full OpenAPI 3.0+ specification
 - All endpoints, schemas, security definitions
 - Example requests/responses
 
 **5.4 Generate README.md**:
+
 ```markdown
 # {Service Name} API Contract
 
 ## Overview
+
 {Description of the API and its purpose}
 
 ## Bounded Context
+
 {Context name and domain description}
 
 ## Consumers
+
 - **web-frontend**: Uses endpoints X, Y, Z
 - **mobile-app**: Uses endpoints X, Y
 
 ## Providers
+
 - **backend-service**: Implements this contract
 
 ## Getting Started
 
 ### For Frontend Developers
+
 1. Start mock server: `prism mock contract.openapi.yaml`
 2. API available at: `http://localhost:4010`
 3. Develop against mock API
 
 ### For Backend Developers
+
 1. Implement endpoints per OpenAPI spec
 2. Run contract tests: `npm run test:contracts`
 3. Verify all consumer contracts pass
 
 ## Versioning
+
 - Current version: {version}
 - Breaking changes require new major version
 - Deprecation policy: 6 months notice
 
 ## Testing
+
 - Consumer tests: `tests/contracts/`
 - Provider verification: `tests/contracts/verify-pacts.spec.ts`
 
 ## Documentation
+
 - OpenAPI spec: `contract.openapi.yaml`
 - Changelog: `docs/api/changelog.md`
 ```
@@ -407,11 +430,13 @@ mkdir -p .tmp/contracts/{bounded-context}/{service-name}
 ### Step 6: Integration with ArchitectureAnalyzer
 
 **6.1 Bounded Context Alignment**:
+
 - Verify contract aligns with bounded context from ArchitectureAnalyzer
 - Ensure service boundaries match domain boundaries
 - Check for cross-context dependencies
 
 **6.2 Update Bounded Context Documentation**:
+
 ```json
 {
   "bounded_context": "{context-name}",
@@ -429,16 +454,19 @@ mkdir -p .tmp/contracts/{bounded-context}/{service-name}
 ### Step 7: Enable Parallel Development
 
 **7.1 Frontend Enablement**:
+
 - Provide mock server setup instructions
 - Share OpenAPI spec for code generation
 - Document example requests/responses
 
 **7.2 Backend Enablement**:
+
 - Provide contract test suite
 - Document acceptance criteria (contract compliance)
 - Share consumer expectations
 
 **7.3 Coordination Points**:
+
 ```json
 {
   "coordination": {
@@ -482,6 +510,7 @@ mkdir -p .tmp/contracts/{bounded-context}/{service-name}
 ## Quality Standards
 
 ### OpenAPI Compliance
+
 - ✅ OpenAPI 3.0+ specification format
 - ✅ All endpoints documented with request/response schemas
 - ✅ Security schemes defined (JWT, OAuth, API keys)
@@ -489,24 +518,28 @@ mkdir -p .tmp/contracts/{bounded-context}/{service-name}
 - ✅ Example requests/responses provided
 
 ### Bounded Context Alignment
+
 - ✅ Contract aligns with domain boundaries
 - ✅ Service responsibilities clear and focused
 - ✅ Cross-context dependencies minimized
 - ✅ Integration points explicit
 
 ### Consumer/Provider Clarity
+
 - ✅ All consumers identified with endpoints used
 - ✅ All providers identified with implementation paths
 - ✅ Authentication/authorization requirements clear
 - ✅ Rate limiting and pagination documented
 
 ### Testing Strategy
+
 - ✅ Consumer-driven contract tests defined
 - ✅ Provider verification tests specified
 - ✅ Mock server configuration provided
 - ✅ Test scenarios cover happy path and error cases
 
 ### Versioning
+
 - ✅ Semantic versioning scheme
 - ✅ Breaking change policy explicit
 - ✅ Deprecation policy documented

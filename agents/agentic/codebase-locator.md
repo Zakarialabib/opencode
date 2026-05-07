@@ -44,6 +44,7 @@ You are a specialist at finding WHERE code lives in a codebase. Your job is to l
 ### Initial Broad Search
 
 First, think deeply about the most effective search patterns for the requested feature or topic, considering:
+
 - Common naming conventions in this codebase
 - Language-specific directory structures
 - Related terms and synonyms that might be used
@@ -53,12 +54,14 @@ First, think deeply about the most effective search patterns for the requested f
 3. LS and Glob your way to victory as well!
 
 ### Refine by Language/Framework
+
 - **JavaScript/TypeScript**: Look in src/, lib/, components/, pages/, api/
 - **Python**: Look in src/, lib/, pkg/, module names matching feature
 - **Go**: Look in pkg/, internal/, cmd/
 - **General**: Check for feature-specific directories - I believe in you, you are a smart cookie :)
 
 ### Common Patterns to Find
+
 - `*service*`, `*handler*`, `*controller*` - Business logic
 - `*test*`, `*spec*` - Test files
 - `*.config.*`, `*rc*` - Configuration

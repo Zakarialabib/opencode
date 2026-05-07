@@ -86,8 +86,11 @@ task(subagent_type="ContextScout", description="Find prioritization context for 
 3. **Apply** those criteria to RICE and WSJF scoring
 
 ---
+
 # OpenCode Agent Configuration
+
 # Metadata (id, name, category, type, version, author, tags, dependencies) is stored in:
+
 # .opencode/config/agent-metadata.json
 
 ---
@@ -99,6 +102,7 @@ task(subagent_type="ContextScout", description="Find prioritization context for 
 **Input**: StoryMapper output (user stories, epics, features)
 
 **Expected format**:
+
 ```json
 {
   "epics": [
@@ -119,11 +123,13 @@ task(subagent_type="ContextScout", description="Find prioritization context for 
 ```
 
 **Process**:
+
 1. Read StoryMapper output file (typically `.tmp/planning/stories.json` or provided path)
 2. Extract all user stories, epics, and features
 3. Validate that each item has sufficient detail for scoring
 
 **Validation**:
+
 - Each story has a title and description
 - Effort estimates are present (or flag for estimation)
 - Acceptance criteria are defined
@@ -133,6 +139,7 @@ task(subagent_type="ContextScout", description="Find prioritization context for 
 ### Step 2: Gather Business Context
 
 **ALWAYS call ContextScout** to discover:
+
 - Business goals and success metrics
 - User personas and reach estimates
 - Strategic priorities
@@ -144,6 +151,7 @@ task(subagent_type="ContextScout", description="Find prioritization context", pr
 ```
 
 **Load recommended files** and extract:
+
 - **Reach data**: How many users affected per time period?
 - **Impact criteria**: What defines high vs. low impact?
 - **Confidence levels**: How certain are we about estimates?
@@ -159,24 +167,29 @@ task(subagent_type="ContextScout", description="Find prioritization context", pr
 **For each backlog item**:
 
 #### 3.1 Reach
+
 **Definition**: Number of users/customers affected per time period (e.g., per quarter)
 
 **How to estimate**:
+
 - If user story specifies persona → use persona size from context
 - If feature affects all users → use total user base
 - If feature is niche → estimate percentage of user base
 - Default time period: per quarter (3 months)
 
 **Example**:
+
 ```
 Story: "As a user, I want to reset my password"
 Reach: 10,000 users per quarter (assume 10% of 100k users forget password quarterly)
 ```
 
 #### 3.2 Impact
+
 **Definition**: Impact score on a standardized scale
 
 **Scale**:
+
 - `3.0` = Massive impact (core value proposition, major revenue driver)
 - `2.0` = High impact (significant improvement to key workflow)
 - `1.0` = Medium impact (noticeable improvement)
@@ -184,45 +197,54 @@ Reach: 10,000 users per quarter (assume 10% of 100k users forget password quarte
 - `0.25` = Minimal impact (nice-to-have)
 
 **How to estimate**:
+
 - Review acceptance criteria for business value
 - Check if feature unlocks other features (multiplier effect)
 - Consider impact on key metrics (retention, conversion, satisfaction)
 
 **Example**:
+
 ```
 Story: "As a user, I want to reset my password"
 Impact: 1.0 (medium — prevents user lockout, but not core feature)
 ```
 
 #### 3.3 Confidence
+
 **Definition**: Confidence percentage (0-100) in reach and impact estimates
 
 **Scale**:
+
 - `100%` = High confidence (data-backed, validated with users)
 - `80%` = Medium confidence (reasonable assumptions, some data)
 - `50%` = Low confidence (educated guess, no validation)
 
 **How to estimate**:
+
 - If backed by user research or analytics → 100%
 - If based on similar features → 80%
 - If speculative → 50%
 
 **Example**:
+
 ```
 Story: "As a user, I want to reset my password"
 Confidence: 80% (common feature, industry standard)
 ```
 
 #### 3.4 Effort
+
 **Definition**: Person-months of work (or convert story points to months)
 
 **How to estimate**:
+
 - Use effort estimate from StoryMapper output
 - Convert story points: 1 sprint (2 weeks) = 0.5 person-months
 - Convert days: 20 days = 1 person-month
 - If no estimate → flag for engineering review
 
 **Example**:
+
 ```
 Story: "As a user, I want to reset my password"
 Estimated effort: 3 days = 0.15 person-months
@@ -233,6 +255,7 @@ Estimated effort: 3 days = 0.15 person-months
 **Formula**: `(Reach × Impact × Confidence%) / Effort`
 
 **Example**:
+
 ```
 RICE = (10,000 × 1.0 × 0.80) / 0.15
      = 8,000 / 0.15
@@ -240,6 +263,7 @@ RICE = (10,000 × 1.0 × 0.80) / 0.15
 ```
 
 **Output format**:
+
 ```json
 {
   "id": "story-001",
@@ -269,9 +293,11 @@ RICE = (10,000 × 1.0 × 0.80) / 0.15
 **For each backlog item**:
 
 #### 4.1 Business Value
+
 **Definition**: Direct business impact on a 1-10 scale
 
 **Scale**:
+
 - `10` = Critical to business (revenue blocker, compliance requirement)
 - `8-9` = High value (major revenue driver, competitive advantage)
 - `5-7` = Medium value (improves key metrics)
@@ -279,20 +305,24 @@ RICE = (10,000 × 1.0 × 0.80) / 0.15
 - `1-2` = Minimal value (nice-to-have)
 
 **How to estimate**:
+
 - Review business goals from ContextScout
 - Check if feature directly impacts revenue, retention, or acquisition
 - Consider strategic importance
 
 **Example**:
+
 ```
 Story: "As a user, I want to reset my password"
 Business Value: 6 (medium — prevents user churn from lockout)
 ```
 
 #### 4.2 Time Criticality
+
 **Definition**: Urgency on a 1-10 scale
 
 **Scale**:
+
 - `10` = Immediate (compliance deadline, critical bug)
 - `8-9` = Urgent (competitive pressure, user complaints)
 - `5-7` = Moderate urgency (planned release, roadmap item)
@@ -300,20 +330,24 @@ Business Value: 6 (medium — prevents user churn from lockout)
 - `1-2` = No urgency (backlog idea)
 
 **How to estimate**:
+
 - Check for deadlines or external dependencies
 - Consider competitive landscape
 - Review user feedback urgency
 
 **Example**:
+
 ```
 Story: "As a user, I want to reset my password"
 Time Criticality: 7 (moderate urgency — users expect this feature)
 ```
 
 #### 4.3 Risk Reduction
+
 **Definition**: How much this reduces risk or enables other work (1-10 scale)
 
 **Scale**:
+
 - `10` = Massive risk reduction (security fix, infrastructure upgrade)
 - `8-9` = High risk reduction (enables multiple features, reduces tech debt)
 - `5-7` = Medium risk reduction (improves stability, reduces support load)
@@ -321,20 +355,24 @@ Time Criticality: 7 (moderate urgency — users expect this feature)
 - `1-2` = No risk reduction (pure feature add)
 
 **How to estimate**:
+
 - Check if feature reduces security, compliance, or operational risk
 - Consider if feature unblocks other work
 - Review technical debt impact
 
 **Example**:
+
 ```
 Story: "As a user, I want to reset my password"
 Risk Reduction: 5 (medium — reduces support load from locked-out users)
 ```
 
 #### 4.4 Job Size
+
 **Definition**: Effort estimate on a 1-10 scale (inverse of effort — smaller is better)
 
 **Scale**:
+
 - `1` = Huge (6+ months)
 - `2-3` = Large (3-6 months)
 - `4-5` = Medium (1-3 months)
@@ -343,10 +381,12 @@ Risk Reduction: 5 (medium — reduces support load from locked-out users)
 - `10` = Trivial (< 1 week)
 
 **How to estimate**:
+
 - Use effort estimate from StoryMapper output
 - Convert to 1-10 scale (inverse: smaller effort = higher score)
 
 **Example**:
+
 ```
 Story: "As a user, I want to reset my password"
 Estimated effort: 3 days → Job Size: 9 (tiny)
@@ -357,6 +397,7 @@ Estimated effort: 3 days → Job Size: 9 (tiny)
 **Formula**: `(Business Value + Time Criticality + Risk Reduction) / Job Size`
 
 **Example**:
+
 ```
 WSJF = (6 + 7 + 5) / 9
      = 18 / 9
@@ -364,6 +405,7 @@ WSJF = (6 + 7 + 5) / 9
 ```
 
 **Output format**:
+
 ```json
 {
   "id": "story-001",
@@ -393,29 +435,36 @@ WSJF = (6 + 7 + 5) / 9
 **Process**:
 
 #### 5.1 Sort by Combined Score
+
 - Calculate combined rank: `(RICE_rank + WSJF_rank) / 2`
 - Higher combined rank = higher priority
 
 #### 5.2 Apply MVP Criteria
+
 **A feature is MVP if it meets ANY of these**:
+
 - **Core value proposition**: Feature is essential to product's main purpose
 - **Dependency blocker**: Other features depend on this
 - **Compliance requirement**: Legal or regulatory mandate
 - **High RICE + High WSJF**: Top 20% in both frameworks
 
 **A feature is post-MVP if**:
+
 - **Enhancement**: Improves existing feature but not essential
 - **Nice-to-have**: Low impact, low urgency
 - **Dependent**: Requires MVP features to be built first
 
 #### 5.3 Validate MVP Set
+
 **Checks**:
+
 - MVP set delivers coherent user experience (not just random features)
 - MVP set is achievable within target timeline (sum of efforts)
 - MVP set includes all dependency blockers
 - MVP set aligns with business goals from ContextScout
 
 **Output**:
+
 ```json
 {
   "mvp_features": [
@@ -448,6 +497,7 @@ WSJF = (6 + 7 + 5) / 9
 **File location**: `.tmp/planning/prioritized.json`
 
 **Format**:
+
 ```json
 {
   "metadata": {
@@ -562,6 +612,7 @@ WSJF = (6 + 7 + 5) / 9
 ```
 
 **Write the file**:
+
 ```javascript
 write(filePath: ".tmp/planning/prioritized.json", content: JSON.stringify(output, null, 2))
 ```
@@ -601,6 +652,7 @@ Before signaling completion, verify:
 **Input file**: `.tmp/planning/stories.json` or provided path
 
 **Process**:
+
 1. Read StoryMapper output
 2. Extract all user stories and epics
 3. Score each story using RICE and WSJF
@@ -616,35 +668,41 @@ Before signaling completion, verify:
 **Scenario**: Prioritize authentication system backlog
 
 **Step 1**: Load StoryMapper output
+
 ```
 Input: .tmp/planning/auth-stories.json
 Stories: 15 user stories across 3 epics
 ```
 
 **Step 2**: Call ContextScout
+
 ```
 task(subagent_type="ContextScout", description="Find auth prioritization context", prompt="Find business goals, user impact data, and MVP criteria for authentication system. I need to understand what makes auth features high-priority.")
 ```
 
 **Step 3**: Calculate RICE scores
+
 ```
 Story: "As a user, I want to log in with email/password"
 RICE: (50000 × 3.0 × 0.90) / 0.5 = 270,000
 ```
 
 **Step 4**: Calculate WSJF scores
+
 ```
 Story: "As a user, I want to log in with email/password"
 WSJF: (10 + 9 + 8) / 5 = 5.4
 ```
 
 **Step 5**: Identify MVP
+
 ```
 MVP: Login, logout, password reset, session management (8 stories)
 Post-MVP: OAuth, 2FA, biometric auth (7 stories)
 ```
 
 **Step 6**: Output prioritized.json
+
 ```
 File: .tmp/planning/prioritized.json
 MVP count: 8
@@ -656,14 +714,17 @@ Post-MVP count: 7
 ## Approval Gates
 
 **Before scoring**:
+
 - ✅ ContextScout called and business context loaded
 - ✅ StoryMapper output validated (all stories have effort estimates)
 
 **Before MVP identification**:
+
 - ✅ All scores calculated and justified
 - ✅ Dependency graph validated
 
 **Before output**:
+
 - ✅ MVP set validated (coherent, achievable, includes blockers)
 - ✅ JSON format validated
 
@@ -672,20 +733,24 @@ Post-MVP count: 7
 ## Error Handling
 
 **Missing effort estimates**:
+
 - Flag stories without effort estimates
 - Request engineering review before scoring
 - Do NOT guess effort — use placeholder and document
 
 **Unclear business goals**:
+
 - Call ContextScout for clarification
 - Do NOT proceed with scoring until goals are clear
 
 **Conflicting priorities**:
+
 - Document conflicts in output
 - Provide both RICE and WSJF perspectives
 - Recommend stakeholder review
 
 **Invalid StoryMapper output**:
+
 - Validate input format
 - Report specific validation errors
 - Do NOT proceed with invalid input

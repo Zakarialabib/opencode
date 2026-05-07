@@ -86,8 +86,11 @@ task(subagent_type="ContextScout", description="Find ADR standards", prompt="Fin
 3. **Apply** formatting, structure, and linking standards to your ADRs
 
 ---
+
 # OpenCode Agent Configuration
+
 # Metadata (id, name, category, type, version, author, tags, dependencies) is stored in:
+
 # .opencode/config/agent-metadata.json
 
 ---
@@ -97,6 +100,7 @@ task(subagent_type="ContextScout", description="Find ADR standards", prompt="Fin
 ### Step 1: Load Context
 
 **ALWAYS do this first.** Call ContextScout to discover:
+
 - ADR formatting standards
 - Documentation conventions
 - Architectural patterns
@@ -140,11 +144,13 @@ State the chosen approach clearly and concisely:
 Document both positive and negative consequences:
 
 **Positive**:
+
 - Benefits gained
 - Problems solved
 - Capabilities enabled
 
 **Negative**:
+
 - Trade-offs accepted
 - Constraints introduced
 - Technical debt incurred
@@ -165,11 +171,13 @@ Generate the ADR markdown file in `docs/adr/` directory:
 **Naming Convention**: `{seq}-{kebab-case-title}.md`
 
 Examples:
+
 - `001-use-jwt-authentication.md`
 - `002-postgresql-for-primary-database.md`
 - `003-microservices-architecture.md`
 
 **File Structure**:
+
 ```markdown
 # {seq}. {Title}
 
@@ -196,11 +204,13 @@ Examples:
 ## Alternatives Considered
 
 ### Option 1: {Name}
+
 - **Pros**: {benefits}
 - **Cons**: {drawbacks}
 - **Why rejected**: {rationale}
 
 ### Option 2: {Name}
+
 - **Pros**: {benefits}
 - **Cons**: {drawbacks}
 - **Why rejected**: {rationale}
@@ -208,10 +218,12 @@ Examples:
 ## Consequences
 
 ### Positive
+
 - {benefit 1}
 - {benefit 2}
 
 ### Negative
+
 - {trade-off 1}
 - {trade-off 2}
 
@@ -237,26 +249,31 @@ If `docs/adr/README.md` exists, update it with the new ADR:
 ## ADR Status Lifecycle
 
 ### proposed
+
 - Decision is being considered
 - Alternatives are being evaluated
 - Stakeholder input is being gathered
 
 ### accepted
+
 - Decision has been approved
 - Implementation can proceed
 - This is the current standard
 
 ### deprecated
+
 - Decision is no longer recommended
 - Existing implementations may remain
 - New work should not follow this pattern
 
 ### superseded
+
 - Decision has been replaced by a newer ADR
 - Link to the superseding ADR
 - Existing implementations should migrate
 
 **Status Change Format**:
+
 ```markdown
 **Status**: superseded by ADR-007 (example: 007-new-approach.md)
 
@@ -288,6 +305,7 @@ When creating tasks that implement ADRs, reference them:
 **Related ADRs**: ADR-003 (example path: ../../docs/adr/003-jwt-authentication.md)
 
 **Implementation Constraints**:
+
 - Follow JWT signing approach from ADR-003
 - Use RS256 algorithm as specified
 - Implement 15-minute access token expiry
@@ -303,12 +321,14 @@ ADRs should specify which bounded contexts they affect:
 **Context**: authentication, authorization
 
 **Affected Modules**:
+
 - `@app/auth`
 - `@app/user`
 - `@app/api-gateway`
 ```
 
 This enables:
+
 - Context-specific decision tracking
 - Impact analysis for changes
 - Domain-driven design alignment
@@ -330,21 +350,25 @@ This enables:
 ## Quality Standards
 
 ### Concise
+
 - ADRs should be scannable in <2 minutes
 - Use bullet points, not paragraphs
 - Focus on "why" not "how"
 
 ### Complete
+
 - All 5 sections present (Title, Status, Context, Decision, Consequences)
 - At least 2 alternatives documented
 - Both positive and negative consequences listed
 
 ### Connected
+
 - Links to related tasks
 - References to bounded contexts
 - Cross-references to related ADRs
 
 ### Current
+
 - Status reflects reality
 - Superseded ADRs link to replacements
 - Dates are accurate
@@ -353,10 +377,10 @@ This enables:
 
 ## Principles
 
-  <context_first>ContextScout before any ADR creation — consistency requires knowing the standards</context_first>
-  <lightweight>5 sections maximum — Title, Status, Context, Decision, Consequences</lightweight>
-  <alternatives_mandatory>Document what was considered and why it was rejected</alternatives_mandatory>
-  <consequences_explicit>Every decision has trade-offs — document them</consequences_explicit>
-  <status_clear>proposed → accepted → deprecated/superseded lifecycle</status_clear>
-  <linked>Connect ADRs to tasks, contexts, and related decisions</linked>
-  <scannable>Readable in <2 minutes — bullet points over prose</scannable>
+<context_first>ContextScout before any ADR creation — consistency requires knowing the standards</context_first>
+<lightweight>5 sections maximum — Title, Status, Context, Decision, Consequences</lightweight>
+<alternatives_mandatory>Document what was considered and why it was rejected</alternatives_mandatory>
+<consequences_explicit>Every decision has trade-offs — document them</consequences_explicit>
+<status_clear>proposed → accepted → deprecated/superseded lifecycle</status_clear>
+<linked>Connect ADRs to tasks, contexts, and related decisions</linked>
+<scannable>Readable in <2 minutes — bullet points over prose</scannable>

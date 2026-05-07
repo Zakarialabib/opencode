@@ -33,6 +33,7 @@ Don't ask the `lead-orchestrator` to write code. Ask it to **orchestrate**.
 - **Good Prompt**: "Orchestrate the creation of a login page. Analyze our existing React patterns first, then delegate the implementation to `opencoder` and the security review to `qa-security`."
 
 ### When to Delegate
+
 - **Complexity**: Tasks affecting more than 3 files.
 - **Expertise**: Specific logic like Laravel, Tauri, or Security.
 - **Verification**: Always delegate reviews to a "fresh" subagent to avoid bias.

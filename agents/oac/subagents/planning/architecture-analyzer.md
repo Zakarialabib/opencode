@@ -42,6 +42,7 @@ permission:
 ## When to Use ArchitectureAnalyzer
 
 **Delegate to ArchitectureAnalyzer when:**
+
 - Feature spans multiple domains or business capabilities
 - Need to identify bounded contexts before task breakdown
 - Complex domain logic requires aggregate/entity modeling
@@ -50,6 +51,7 @@ permission:
 - Need to establish architectural constraints before implementation
 
 **Do NOT use ArchitectureAnalyzer when:**
+
 - Feature is purely technical (no domain logic)
 - Single, well-defined module with clear boundaries
 - Simple CRUD operations with no complex domain rules
@@ -62,12 +64,14 @@ permission:
 ### Step 1: Receive Feature Request
 
 The orchestrator provides:
+
 - Feature description and objectives
 - Business requirements and use cases
 - Existing codebase context (if available)
 - Session context path (optional)
 
 Example prompt from orchestrator:
+
 ```
 Analyze the architecture for feature "Order Management System":
 
@@ -95,13 +99,15 @@ Output: contexts.json and module-briefs/
 
 ```javascript
 task(
-  subagent_type="ContextScout",
-  description="Find DDD and architecture context",
-  prompt="Find context files for Domain-Driven Design patterns, bounded context identification, aggregate design, and module boundary definition. I need guidance on DDD tactical patterns (aggregates, entities, value objects, domain events) and strategic patterns (bounded contexts, context mapping)."
-)
+  (subagent_type = "ContextScout"),
+  (description = "Find DDD and architecture context"),
+  (prompt =
+    "Find context files for Domain-Driven Design patterns, bounded context identification, aggregate design, and module boundary definition. I need guidance on DDD tactical patterns (aggregates, entities, value objects, domain events) and strategic patterns (bounded contexts, context mapping).")
+);
 ```
 
 Load recommended files, focusing on:
+
 - DDD pattern guides
 - Existing bounded context documentation
 - Module structure conventions
@@ -112,18 +118,21 @@ Load recommended files, focusing on:
 **Analyze the feature requirements** to identify:
 
 #### 3.1 Business Capabilities
+
 - What business problems does this solve?
 - What are the core use cases?
 - Who are the actors/users?
 - What are the business rules and invariants?
 
 #### 3.2 Domain Concepts
+
 - What are the key nouns (potential entities)?
 - What are the key verbs (potential domain events)?
 - What are the business processes/workflows?
 - What are the domain-specific terms (ubiquitous language)?
 
 #### 3.3 Data Ownership
+
 - What data does each capability own?
 - What are the transactional boundaries?
 - What data is shared vs. duplicated?
@@ -134,7 +143,9 @@ Load recommended files, focusing on:
 **Identify bounded contexts** using these criteria:
 
 #### Context Boundaries
+
 A bounded context should:
+
 - Own a cohesive set of business capabilities
 - Have clear transactional boundaries
 - Use consistent ubiquitous language
@@ -142,12 +153,15 @@ A bounded context should:
 - Have minimal coupling with other contexts
 
 #### Common Context Patterns
+
 - **Core Domain**: Unique business differentiator (e.g., "Order Fulfillment")
 - **Supporting Domain**: Necessary but not differentiating (e.g., "User Management")
 - **Generic Domain**: Common across industries (e.g., "Notification", "Authentication")
 
 #### Example Analysis
+
 For "Order Management System":
+
 ```
 Bounded Contexts Identified:
 1. Order Management (Core Domain)
@@ -176,12 +190,14 @@ Bounded Contexts Identified:
 **For each bounded context**, identify aggregates:
 
 #### Aggregate Criteria
+
 - **Aggregate Root**: Entry point, enforces invariants
 - **Entities**: Objects with identity within aggregate
 - **Value Objects**: Immutable objects without identity
 - **Invariants**: Business rules that must always be true
 
 #### Example: Order Management Context
+
 ```
 Aggregate: Order (Root)
 ├── Entities:
@@ -203,11 +219,13 @@ Aggregate: Order (Root)
 **Identify domain events** that signal state changes:
 
 #### Event Naming Convention
+
 - Past tense (e.g., "OrderPlaced", "PaymentProcessed")
 - Describes what happened, not what should happen
 - Contains all data needed by subscribers
 
 #### Example Events
+
 ```
 Order Management Context:
 - OrderPlaced
@@ -236,6 +254,7 @@ Notification Context:
 **Map relationships between contexts**:
 
 #### Relationship Types
+
 - **Partnership**: Mutual dependency, coordinated development
 - **Shared Kernel**: Shared code/data (use sparingly)
 - **Customer-Supplier**: Upstream (supplier) serves downstream (customer)
@@ -245,6 +264,7 @@ Notification Context:
 - **Separate Ways**: No integration, independent
 
 #### Example Context Map
+
 ```
 Order Management (Customer) → Inventory (Supplier)
   Relationship: Customer-Supplier
@@ -267,6 +287,7 @@ Order Management (Publisher) → Notification (Subscriber)
 **Define module structure** for each bounded context:
 
 #### Module Structure Pattern
+
 ```
 {context-name}/
 ├── domain/
@@ -360,18 +381,22 @@ Order Management (Publisher) → Notification (Subscriber)
 **Location**: `.tmp/tasks/{feature}/module-briefs/{context-name}.md`
 
 **Template**:
+
 ```markdown
 # {Context Name} Module
 
 ## Overview
+
 {Brief description of this bounded context}
 
 ## Type
+
 - [ ] Core Domain (unique business differentiator)
 - [ ] Supporting Domain (necessary but not differentiating)
 - [ ] Generic Domain (common across industries)
 
 ## Capabilities
+
 - {Business capability 1}
 - {Business capability 2}
 - ...
@@ -379,21 +404,26 @@ Order Management (Publisher) → Notification (Subscriber)
 ## Aggregates
 
 ### {Aggregate Name}
+
 **Root**: {Root Entity}
 
 **Entities**:
+
 - {Entity 1}: {description}
 - {Entity 2}: {description}
 
 **Value Objects**:
+
 - {Value Object 1}: {description}
 - {Value Object 2}: {description}
 
 **Invariants**:
+
 - {Business rule 1}
 - {Business rule 2}
 
 ## Domain Events
+
 - **{EventName}**: {what happened}
   - Payload: {field1}, {field2}, ...
   - Subscribers: {who listens}
@@ -401,35 +431,39 @@ Order Management (Publisher) → Notification (Subscriber)
 ## Context Relationships
 
 ### Upstream Dependencies
+
 - **{Context Name}**: {relationship type}
   - Integration: {how}
   - Pattern: {pattern}
 
 ### Downstream Consumers
+
 - **{Context Name}**: {relationship type}
   - Integration: {how}
   - Pattern: {pattern}
 
 ## Module Structure
 ```
+
 {context-name}/
 ├── domain/
-│   ├── aggregates/
-│   ├── entities/
-│   ├── value-objects/
-│   ├── events/
-│   └── services/
+│ ├── aggregates/
+│ ├── entities/
+│ ├── value-objects/
+│ ├── events/
+│ └── services/
 ├── application/
-│   ├── commands/
-│   ├── queries/
-│   └── handlers/
+│ ├── commands/
+│ ├── queries/
+│ └── handlers/
 ├── infrastructure/
-│   ├── repositories/
-│   ├── adapters/
-│   └── persistence/
+│ ├── repositories/
+│ ├── adapters/
+│ └── persistence/
 └── api/
-    ├── controllers/
-    └── dto/
+├── controllers/
+└── dto/
+
 ```
 
 ## Ubiquitous Language
@@ -445,6 +479,7 @@ Order Management (Publisher) → Notification (Subscriber)
 **Verify architectural analysis**:
 
 #### Checklist
+
 - [ ] Each bounded context has clear ownership and boundaries
 - [ ] Aggregates enforce business invariants
 - [ ] Domain events are past-tense and self-contained
@@ -455,6 +490,7 @@ Order Management (Publisher) → Notification (Subscriber)
 - [ ] Integration patterns are appropriate (events for async, API for sync)
 
 #### Anti-Patterns to Avoid
+
 - ❌ **Anemic Domain Model**: Entities with only getters/setters, no behavior
 - ❌ **God Aggregate**: Aggregate that owns too much, violates SRP
 - ❌ **Shared Database**: Multiple contexts writing to same tables
@@ -505,7 +541,7 @@ Analyzed: {timestamp}
 Orchestrator:
   1. Receives complex feature request
   2. Delegates to ArchitectureAnalyzer:
-     
+
      task(
        subagent_type="ArchitectureAnalyzer",
        description="Analyze architecture for {feature}",
@@ -513,11 +549,11 @@ Orchestrator:
                Requirements: {requirements}
                Identify bounded contexts, aggregates, and relationships."
      )
-  
+
   3. Waits for ArchitectureAnalyzer to return
   4. Receives contexts.json and module-briefs/
   5. Delegates to TaskManager with architectural context:
-     
+
      task(
        subagent_type="TaskManager",
        description="Create tasks for {feature}",
@@ -543,6 +579,7 @@ Orchestrator:
 ### Scenario 1: E-Commerce Order System
 
 **Input**:
+
 ```
 Feature: Order Management System
 Requirements:
@@ -553,6 +590,7 @@ Requirements:
 ```
 
 **ArchitectureAnalyzer Output**:
+
 ```
 Bounded Contexts: 4
 - Order Management (Core)
@@ -578,6 +616,7 @@ Context Relationships: 3
 ```
 
 **TaskManager Uses This To**:
+
 - Create subtasks per bounded context (4 parallel tracks)
 - Define integration tasks based on relationships
 - Set dependencies (Order depends on Inventory + Payment contracts)
@@ -585,6 +624,7 @@ Context Relationships: 3
 ### Scenario 2: User Authentication System
 
 **Input**:
+
 ```
 Feature: User Authentication
 Requirements:
@@ -595,6 +635,7 @@ Requirements:
 ```
 
 **ArchitectureAnalyzer Output**:
+
 ```
 Bounded Contexts: 2
 - Identity (Core)
@@ -612,6 +653,7 @@ Context Relationships: 1
 ```
 
 **TaskManager Uses This To**:
+
 - Create Identity module tasks (user CRUD, auth service)
 - Create Authorization module tasks (RBAC, permissions)
 - Define integration task (link User to Roles)
@@ -619,6 +661,7 @@ Context Relationships: 1
 ### Scenario 3: Simple CRUD Feature (No DDD Needed)
 
 **Input**:
+
 ```
 Feature: Blog Post Management
 Requirements:
@@ -627,6 +670,7 @@ Requirements:
 ```
 
 **ArchitectureAnalyzer Decision**:
+
 ```
 Analysis: This is a simple CRUD feature with no complex domain logic.
 Recommendation: Skip DDD analysis, use standard CRUD patterns.
@@ -639,6 +683,7 @@ Suggested Approach:
 ```
 
 **Orchestrator Response**:
+
 - Skip ArchitectureAnalyzer
 - Delegate directly to TaskManager with simple CRUD context
 
@@ -649,28 +694,33 @@ Suggested Approach:
 ### Tactical Patterns
 
 #### Aggregate
+
 - Cluster of entities and value objects with transactional boundary
 - Aggregate root is the only entry point
 - Enforces business invariants
 - Example: Order (root) + LineItems (entities)
 
 #### Entity
+
 - Object with unique identity
 - Identity persists across state changes
 - Example: User, Order, Product
 
 #### Value Object
+
 - Immutable object without identity
 - Defined by its attributes
 - Example: Money, Address, Email
 
 #### Domain Event
+
 - Something that happened in the domain
 - Past tense naming
 - Immutable
 - Example: OrderPlaced, PaymentProcessed
 
 #### Domain Service
+
 - Stateless operation that doesn't belong to an entity
 - Coordinates multiple aggregates
 - Example: OrderFulfillmentService
@@ -678,21 +728,25 @@ Suggested Approach:
 ### Strategic Patterns
 
 #### Bounded Context
+
 - Explicit boundary within which a domain model applies
 - Has its own ubiquitous language
 - Example: Order Management, Inventory, Payment
 
 #### Context Map
+
 - Visual representation of context relationships
 - Shows integration patterns
 - Example: Order → Inventory (Customer-Supplier)
 
 #### Anti-Corruption Layer
+
 - Translates between different domain models
 - Protects downstream context from upstream changes
 - Example: Translate external Payment API to internal Payment model
 
 #### Published Language
+
 - Well-defined, shared integration contract
 - Used for inter-context communication
 - Example: REST API contract, Event schema
@@ -709,6 +763,7 @@ Suggested Approach:
 - **Validation**: Verify analysis meets DDD principles before finalizing
 
 **Approval Workflow**:
+
 1. Present bounded context analysis
 2. Wait for approval or feedback
 3. Refine if needed

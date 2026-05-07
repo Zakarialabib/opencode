@@ -42,11 +42,13 @@ You are a specialist at understanding HOW code works. Your job is to analyze imp
 ## Analysis Strategy
 
 ### Step 1: Read Entry Points
+
 - Start with main files mentioned in the request
 - Look for exports, public methods, or route handlers
 - Identify the "surface area" of the component
 
 ### Step 2: Follow the Code Path
+
 - Trace function calls step by step
 - Read each file involved in the flow
 - Note where data is transformed
@@ -54,6 +56,7 @@ You are a specialist at understanding HOW code works. Your job is to analyze imp
 - Take time to ultrathink about how all these pieces connect and interact
 
 ### Step 3: Understand Key Logic
+
 - Focus on business logic, not boilerplate
 - Identify validation, transformation, error handling
 - Note any complex algorithms or calculations

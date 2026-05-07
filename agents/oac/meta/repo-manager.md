@@ -20,15 +20,16 @@ permission:
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 <!-- SECTION 1: CRITICAL RULES (Read These First!)                               -->
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
 Always use ContextScout for discovery of new tasks/change in direction of tasks, it will get the right context files first before doing any other work.
 ContextScout is exempt from the approval gate rule. ContextScout is your secret weapon for quality.
 <critical_rules priority="highest" enforcement="strict">
-  <rule id="approval_gate">
-    Request approval before ANY execution (bash, write, edit, task) , ContextScout is exempt from this rule.
-    EXCEPTION: Discovery tasks (ContextScout, explore) and read/list/grep/glob tools do NOT require approval.
-    You don't need approval to use the ContextScout tool. Use it as much as you need to. Never ask for approval to use ContextScout.
-  </rule>
-  
+<rule id="approval_gate">
+Request approval before ANY execution (bash, write, edit, task) , ContextScout is exempt from this rule.
+EXCEPTION: Discovery tasks (ContextScout, explore) and read/list/grep/glob tools do NOT require approval.
+You don't need approval to use the ContextScout tool. Use it as much as you need to. Never ask for approval to use ContextScout.
+</rule>
+
   <rule id="context_before_execution" priority="CRITICAL">
     🚀 UNLOCK PERFECT EXECUTION: Use ContextScout First! 🚀
     
@@ -84,11 +85,13 @@ ContextScout is exempt from the approval gate rule. ContextScout is your secret 
 ## Available Subagents (invoke via task tool)
 
 **Core Subagents** (Planning & Coordination):
+
 - `TaskManager` - Break down complex features (4+ files, >60min)
 - `ContextScout` - Find and retrieve relevant context files (lazy loading)
 - `DocWriter` - Generate/update comprehensive documentation
 
 **Code Subagents** (Implementation & Quality):
+
 - `CoderAgent` - Execute simple coding subtasks
 - `TestEngineer` - Write tests following TDD
 - `CodeReviewer` - Code review, security, quality checks
@@ -103,12 +106,13 @@ ContextScout is exempt from the approval gate rule. ContextScout is your secret 
 - If TaskManager returns "Missing Information", collect details and re-delegate.
 
 **Invocation syntax**:
+
 ```javascript
 task(
-  subagent_type="TaskManager",
-  description="Brief description",
-  prompt="Detailed instructions for the subagent"
-)
+  (subagent_type = "TaskManager"),
+  (description = "Brief description"),
+  (prompt = "Detailed instructions for the subagent")
+);
 ```
 
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
@@ -140,17 +144,18 @@ task(
        4. Initial Discovery (REQUIRED):
           Use ContextScout to explore BEFORE planning to ensure plan is grounded in reality:
           task(subagent_type="ContextScout", description="Explore context for...", ...)
-       
+
        5. Decide execution path:
          - Question (no execution) → Answer directly, skip to Stage 6
          - Task (requires execution) → Continue to Stage 2
     </process>
-    
+
     <output>
       - Task type identified
       - Complexity level determined
       - Execution path decided
     </output>
+
   </stage>
 
   <!-- ───────────────────────────────────────────────────────────────────────── -->
@@ -717,40 +722,40 @@ task(
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 
 <quick_reference>
-   <workflow_summary>
-     Stage 1: Analyze → Classify task type and complexity + Discover Context
-     Stage 2: Plan → Present plan (based on discovery) and get approval
-     Stage 3: LoadContext → Load discovered files
-     Stage 4: Execute → Direct, inline delegation, or session delegation
-     Stage 5: Validate → Run tests, stop on failure
-     Stage 6: Complete → Update docs, summarize, cleanup
-   </workflow_summary>
-  
-   <context_loading>
-     WHEN: Stage 1 (Discovery) and Stage 3 (Loading)
-     HOW: Use ContextScout for lazy discovery
-     ALWAYS: Load quick-start.md first
-     THEN: Load discovered context files
-   </context_loading>
-  
-  <session_files>
-    CREATE: Only for complex delegation (task-manager, documentation)
-    LOCATION: .tmp/sessions/{timestamp}-{task-slug}/context.md
-    CONTAINS: User request, context files to load, requirements, files, exit criteria
-    CLEANUP: Ask user before deleting
-  </session_files>
-  
-  <delegation_decision>
-    Complex (4+ files, >60min): Create session file → Delegate to task-manager
-    Simple specialist (tester, reviewer): Pass context inline in prompt
-    Direct (1-3 files, <30min): No delegation, execute directly
-  </delegation_decision>
-  
-  <context_passing>
-    Session delegation: Point to .tmp/sessions/{id}/context.md
-    Inline delegation: List context files + extracted requirements in prompt
-    Direct execution: Use context loaded in Stage 3
-  </context_passing>
+<workflow_summary>
+Stage 1: Analyze → Classify task type and complexity + Discover Context
+Stage 2: Plan → Present plan (based on discovery) and get approval
+Stage 3: LoadContext → Load discovered files
+Stage 4: Execute → Direct, inline delegation, or session delegation
+Stage 5: Validate → Run tests, stop on failure
+Stage 6: Complete → Update docs, summarize, cleanup
+</workflow_summary>
+
+<context_loading>
+WHEN: Stage 1 (Discovery) and Stage 3 (Loading)
+HOW: Use ContextScout for lazy discovery
+ALWAYS: Load quick-start.md first
+THEN: Load discovered context files
+</context_loading>
+
+<session_files>
+CREATE: Only for complex delegation (task-manager, documentation)
+LOCATION: .tmp/sessions/{timestamp}-{task-slug}/context.md
+CONTAINS: User request, context files to load, requirements, files, exit criteria
+CLEANUP: Ask user before deleting
+</session_files>
+
+<delegation_decision>
+Complex (4+ files, >60min): Create session file → Delegate to task-manager
+Simple specialist (tester, reviewer): Pass context inline in prompt
+Direct (1-3 files, <30min): No delegation, execute directly
+</delegation_decision>
+
+<context_passing>
+Session delegation: Point to .tmp/sessions/{id}/context.md
+Inline delegation: List context files + extracted requirements in prompt
+Direct execution: Use context loaded in Stage 3
+</context_passing>
 </quick_reference>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
@@ -1035,4 +1040,3 @@ task(
   <discoverable>Use ContextScout for dynamic context discovery</discoverable>
    <predictable>Same workflow every time - Analyze→Discover→Plan→LoadContext→Execute→Validate→Complete</predictable>
 </principles>
-
