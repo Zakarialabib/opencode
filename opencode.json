@@ -45,27 +45,6 @@
         "zai-glm-4.7": {
           "name": "ZAI GLM 4.7",
           "tool_call": false,
-          "reasoning": true,
-          "supportsInstructions": false
-        }
-      }
-    },
-    "opencode-go": {
-      "name": "OpenCode Go (Premium)",
-      "models": {
-        "kimi-k2.6": {
-          "name": "Kimi k2.6",
-          "tool_call": true,
-          "reasoning": true
-        },
-        "glm-5.1": {
-          "name": "GLM 5.1",
-          "tool_call": true,
-          "reasoning": true
-        },
-        "qwen3.6-plus": {
-          "name": "Qwen 3.6 Plus",
-          "tool_call": true,
           "reasoning": true
         }
       }
@@ -98,6 +77,26 @@
           "reasoning": true
         }
       }
+    },
+    "opencode-go": {
+      "name": "OpenCode Go (Premium)",
+      "models": {
+        "kimi-k2.6": {
+          "name": "Kimi k2.6",
+          "tool_call": true,
+          "reasoning": true
+        },
+        "glm-5.1": {
+          "name": "GLM 5.1",
+          "tool_call": true,
+          "reasoning": true
+        },
+        "qwen3.6-plus": {
+          "name": "Qwen 3.6 Plus",
+          "tool_call": true,
+          "reasoning": true
+        }
+      }
     }
   },
   "server": {
@@ -115,7 +114,7 @@
     },
     "filesystem": {
       "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."],
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "C:\\opencode"],
       "enabled": true,
       "timeout": 30000
     },
@@ -139,7 +138,7 @@
     },
     "sqlite": {
       "type": "local",
-      "command": ["uvx", "mcp-server-sqlite", "--db-path", "database.sqlite"],
+      "command": ["uvx", "mcp-server-sqlite", "--db-path", "C:\\opencode\\database.sqlite"],
       "enabled": true,
       "timeout": 15000
     },
@@ -476,7 +475,7 @@
         "memory": true,
         "sequential-thinking": true
       },
-      "description": "Premium UI/UX implementation for Next.js + TypeScript + Tailwind + shadcn/ui."
+      "description": "Premium UI/UX implementation for Next.js 16 + TypeScript + Tailwind 4 + shadcn/ui."
     },
     "backend-api": {
       "instructions": [
@@ -497,7 +496,7 @@
     },
     "backend-laravel": {
       "instructions": [
-        "Laravel + Livewire + Alpine.js + Tailwind specialist.",
+        "Laravel 13 + Livewire 4 + Alpine.js 3 + Tailwind 4 specialist.",
         "Follow rules/laravel.md and rules/laravel-boost.md.",
         "NAMING: Controllers in singular StudlyCase (UserController), Blade files in snake_case (user-profile.blade.php).",
         "LIVEWIRE: Keep components focused; use `wire:model` for form binding, `wire:click` for actions.",
@@ -517,7 +516,7 @@
         "skill": true,
         "lsp": true
       },
-      "description": "Specialized Laravel and Livewire development."
+      "description": "Specialized Laravel 13 and Livewire 4 development."
     },
     "backend-tauri": {
       "instructions": [

@@ -1,13 +1,13 @@
 ---
 name: laravel-feature-scaffold
-description: Scaffold Laravel features with consistent structure across routes, controllers, form requests, actions/services, models, policies, API resources, migrations, and tests. Use when adding a new Laravel feature, CRUD flow, endpoint, admin module, or refactor target that should follow clean Laravel layering instead of ad hoc file creation.
+description: Scaffold Laravel 13 features with consistent structure across routes, controllers, form requests, actions/services, models, policies, API resources, migrations, and tests. Use when adding a new Laravel 13 feature, CRUD flow, endpoint, admin module, or refactor target that should follow clean Laravel 13 layering instead of ad hoc file creation.
 ---
 
-# Laravel Feature Scaffold
+# Laravel 13 Feature Scaffold
 
 ## Overview
 
-Use this skill to turn a feature request into a Laravel implementation plan or scaffold shape that stays aligned with common Laravel layering.
+Use this skill to turn a feature request into a Laravel 13 implementation plan or scaffold shape that stays aligned with common Laravel 13 layering.
 
 Prefer generating the smallest set of files that produces a clean flow from route to validation to domain logic to response and tests.
 

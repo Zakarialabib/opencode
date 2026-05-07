@@ -31,19 +31,33 @@ function findProjectRoot(startDir) {
   }
 }
 
+function parseProjectRootArg(argv) {
+  const direct = argv.find((arg) => arg.startsWith("--project-root="));
+  if (direct) {
+    return path.resolve(direct.split("=")[1]);
+  }
+  const index = argv.indexOf("--project-root");
+  if (index !== -1 && argv[index + 1]) {
+    return path.resolve(argv[index + 1]);
+  }
+  return null;
+}
+
 // Main launch logic
 function launch() {
   const cwd = process.cwd();
   const scriptDir = __dirname;
+  const explicitRoot = parseProjectRootArg(process.argv.slice(2));
 
   console.log(`🔍 Searching for opencode.json...`);
   console.log(`   CWD: ${cwd}`);
   console.log(`   Script dir: ${scriptDir}`);
+  if (explicitRoot) {
+    console.log(`   Explicit project root requested: ${explicitRoot}`);
+  }
 
-  console.log(`✅ Project root: ${cwd}`);
-
-  // Try CWD first, then script directory for config
-  let configRoot = findProjectRoot(cwd);
+  // Try explicit root first, then CWD, then script directory for config
+  let configRoot = explicitRoot && findProjectRoot(explicitRoot);
 
   if (!configRoot) {
     configRoot = findProjectRoot(scriptDir);

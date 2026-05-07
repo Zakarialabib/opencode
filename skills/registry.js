@@ -3,6 +3,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const yaml = require("yaml");
 
 class SkillRegistry {
   constructor(skillsDir) {
@@ -70,20 +71,18 @@ class SkillRegistry {
 
   extractMetadata(content) {
     const metadata = {};
-    const lines = content.split("\n");
-    let inMetadata = false;
+    const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+    if (!match) {
+      return metadata;
+    }
 
-    for (const line of lines) {
-      if (line.trim() === "---") {
-        inMetadata = !inMetadata;
-        continue;
+    try {
+      const parsed = yaml.parse(match[1]);
+      if (parsed && typeof parsed === "object") {
+        return parsed;
       }
-      if (inMetadata && line.includes(":")) {
-        const [key, value] = line.split(":").map((part) => part.trim());
-        if (key && value) {
-          metadata[key] = value;
-        }
-      }
+    } catch (error) {
+      console.warn("Failed to parse SKILL.md frontmatter:", error.message);
     }
 
     return metadata;

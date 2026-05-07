@@ -17,6 +17,9 @@ class WorkflowEngine {
           const workflowPath = path.join(this.workflowsDir, file);
           const workflowContent = await fs.readFile(workflowPath, "utf8");
           const workflow = yaml.parse(workflowContent);
+          if (!workflow || typeof workflow.name !== "string" || !Array.isArray(workflow.phases)) {
+            throw new Error(`Invalid workflow definition in ${workflowPath}`);
+          }
           this.workflows.set(workflow.name, {
             ...workflow,
             path: workflowPath,

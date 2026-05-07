@@ -68,4 +68,12 @@ class ConfigValidator {
   }
 }
 
+if (require.main === module) {
+  const [configPath = "opencode.json", schemaPath = "config-schema.json"] = process.argv.slice(2);
+  const validator = new ConfigValidator(schemaPath);
+  const result = validator.validateConfigFile(configPath);
+  console.log(JSON.stringify(result, null, 2));
+  process.exit(result.valid ? 0 : 1);
+}
+
 module.exports = ConfigValidator;

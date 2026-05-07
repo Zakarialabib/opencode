@@ -32,6 +32,8 @@
     "lint": "npm run lint:biome && npm run lint:prettier",
     "lint:biome": "npx @biomejs/biome format --write .",
     "lint:prettier": "npx prettier --write .",
+    "config:validate": "node config-validator.js opencode.json config-schema.json",
+    "health-check": "node tools/project-health-check.js",
     "test": "echo \"No tests specified\" && exit 0"
   }
 }
