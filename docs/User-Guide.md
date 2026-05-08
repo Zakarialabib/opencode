@@ -95,6 +95,85 @@ Use `recommend_model` to get model suggestions based on your requirements (tool 
 
 ---
 
+## ⚡ Performance Optimization
+
+OpenCode includes autonomous optimization capabilities via the `/autoresearch` command. This feature uses AI agents to iteratively optimize your code and measure improvements.
+
+### Using /autoresearch
+
+The `/autoresearch` command can optimize any HTML, JS, or CSS file with measurable performance metrics:
+
+```bash
+# Optimize a single file
+/autoresearch docs/portal.html
+
+# The system will:
+# 1. Read docs/program.md for optimization instructions
+# 2. Start Bun server (bun benchmark.js)
+# 3. Run experiment loops (modify → benchmark → measure)
+# 4. Keep improvements (git commit) or revert failures (git reset)
+```
+
+### Case Study: portal.html (37.5% Improvement)
+
+| Phase                      | Load Time | Improvement |
+| -------------------------- | --------- | ----------- |
+| **Baseline**               | 0.8ms     | -           |
+| **Exp 1: Fix invalid CSS** | 0.6ms     | 25%         |
+| **Exp 2: Minify CSS**      | 0.5ms     | 37.5%       |
+
+**Key Results**:
+
+- Target was 20% improvement - achieved 37.5%
+- 2 experiments completed in ~10 minutes
+- All functionality preserved (nav, markdown rendering, callouts)
+
+### Custom Benchmarks
+
+Create a `benchmark.js` file for custom metrics:
+
+```javascript
+// benchmark.js - Bun server benchmark
+const server = Bun.serve({
+  port: 3000,
+  fetch(request) {
+    return Bun.file("your-file.html");
+  },
+});
+
+// Measure load time over 50 samples
+const samples = 50;
+let totalTime = 0;
+for (let i = 0; i < samples; i++) {
+  const start = performance.now();
+  await fetch("http://localhost:3000/your-file.html");
+  totalTime += performance.now() - start;
+}
+
+console.log(
+  JSON.stringify({
+    load_time_ms: Number((totalTime / samples).toFixed(1)),
+    samples: samples,
+  })
+);
+server.stop();
+```
+
+Run with: `bun benchmark.js`
+
+### Best Practices
+
+1. **Define clear metrics** in `program.md` (load time, bundle size, etc.)
+2. **Use Bun server** for accurate local benchmarking
+3. **Set 20% improvement target** as a reasonable goal
+4. **Review experiments** via `git log` on `autoresearch/` branch
+5. **Keep program.md immutable** - only the target file should be modified
+
+> [!TIP]
+> See `docs/program.md` for a complete template and `skills/autoresearch/SKILL.md` for detailed documentation.
+
+---
+
 ## 💡 Quick Tips
 
 - **Agent Routing**: Use `route_agent "your task"` to get intelligent agent recommendations
