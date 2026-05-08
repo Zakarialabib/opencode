@@ -72,7 +72,7 @@ foreach ($item in $items) {
                     $content = $content -replace "rules/", "opencode/rules/"
                     $content = $content -replace "workflows/", "opencode/workflows/"
                     # Replace filesystem MCP path to use target's opencode/ subdir
-                    $content = $content -replace [regex]::Escape("C:\opencode\opencode"), "$TargetPath\opencode"
+                    $content = $content -replace [regex]::Escape($ProjectRoot), "$TargetPath"
                     Set-Content -Path $configPath -Value $content -NoNewline
                     Write-Host "  Updated paths in: $item" -ForegroundColor Cyan
                 }

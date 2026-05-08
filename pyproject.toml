@@ -1,0 +1,11 @@
+[project]
+name = "opencode"
+version = "2.0.0"
+description = "AI-powered development environment"
+requires-python = ">=3.10"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+]

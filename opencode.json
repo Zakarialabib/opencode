@@ -4,16 +4,16 @@
   "default_agent": "core-factory",
   "enabled_providers": ["opencode", "lmstudio", "opencode-go", "cerebras"],
   "plugin": [
-    "C:\\opencode\\plugins\\index.ts",
-    "C:\\opencode\\plugins\\agent-router.ts",
-    "C:\\opencode\\plugins\\model-router.ts",
-    "C:\\opencode\\plugins\\mcp-manager.ts",
-    "C:\\opencode\\plugins\\skill-manager.ts",
-    "C:\\opencode\\plugins\\context-manager.ts",
-    "C:\\opencode\\plugins\\extension-context-bridge.ts",
-    "C:\\opencode\\plugins\\ide-mcp-bridge.ts",
-    "C:\\opencode\\plugins\\language-context-bridge.ts",
-    "C:\\opencode\\plugins\\process-monitor.ts",
+    "./plugins/index.ts",
+    "./plugins/agent-router.ts",
+    "./plugins/model-router.ts",
+    "./plugins/mcp-manager.ts",
+    "./plugins/skill-manager.ts",
+    "./plugins/context-manager.ts",
+    "./plugins/extension-context-bridge.ts",
+    "./plugins/ide-mcp-bridge.ts",
+    "./plugins/language-context-bridge.ts",
+    "./plugins/process-monitor.ts",
     "@zenobius/opencode-skillful"
   ],
   "provider": {
@@ -114,7 +114,7 @@
     },
     "filesystem": {
       "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "C:\\opencode"],
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "${OPENCODE_HOME:-.}"],
       "enabled": true,
       "timeout": 30000
     },
@@ -138,7 +138,7 @@
     },
     "sqlite": {
       "type": "local",
-      "command": ["uvx", "mcp-server-sqlite", "--db-path", "C:\\opencode\\database.sqlite"],
+      "command": ["uvx", "mcp-server-sqlite", "--db-path", "${OPENCODE_HOME:-./database.sqlite}"],
       "enabled": true,
       "timeout": 15000
     },
@@ -254,7 +254,7 @@
       "command": ["intelephense", "--stdio"],
       "extensions": [".php"],
       "initialization": {
-        "storagePath": "C:\\opencode\\.cache\\intelephense"
+        "storagePath": "${OPENCODE_HOME:-.}/.cache/intelephense"
       }
     },
     "rust": {

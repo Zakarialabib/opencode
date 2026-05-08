@@ -1,4 +1,4 @@
-# 🧠 Prompting & Context Engineering#
+﻿# ðŸ§  Prompting & Context Engineering
 
 Master the art of high-performance agentic development by understanding how to provide context and structure your requests.
 
@@ -6,7 +6,7 @@ Master the art of high-performance agentic development by understanding how to p
 
 ---
 
-## 🏛️ Core Philosophy: MVI (Minimal Viable Information)#
+## ðŸ›ï¸ Core Philosophy: MVI (Minimal Viable Information)
 
 The most common cause of agent failure is **context bloat**. Loading too much irrelevant information confuses the agent and wastes tokens.
 
@@ -17,9 +17,9 @@ The most common cause of agent failure is **context bloat**. Loading too much ir
 
 ---
 
-## 🧭 Plan-First Workflow#
+## ðŸ§­ Plan-First Workflow
 
-All high-level tasks should follow the **Analyze → Plan → Approve → Execute** cycle.
+All high-level tasks should follow the **Analyze â†’ Plan â†’ Approve â†’ Execute** cycle.
 
 1. **Analyze**: Describe your goal clearly.
 2. **Discover**: The agent will search for relevant patterns and documentation.
@@ -28,14 +28,14 @@ All high-level tasks should follow the **Analyze → Plan → Approve → Execut
 
 ---
 
-## 👥 Effective SubAgent Delegation#
+## ðŸ‘¥ Effective SubAgent Delegation
 
 Don't ask the `lead-orchestrator` to write code. Ask it to **orchestrate**.
 
 - **Bad Prompt**: "Write a login page in React."
 - **Good Prompt**: "Orchestrate the creation of a login page. Analyze our existing React patterns first, then delegate the implementation to `core-factory` and the security review to `qa-security`."
 
-### When to Delegate#
+### When to Delegate
 
 - **Complexity**: Tasks affecting more than 3 files.
 - **Expertise**: Specific logic like Laravel, Tauri, or Security.
@@ -43,7 +43,7 @@ Don't ask the `lead-orchestrator` to write code. Ask it to **orchestrate**.
 
 ---
 
-## 🛠️ Tools for Context Engineering#
+## ðŸ› ï¸ Tools for Context Engineering
 
 - **LSP Integration**: Mention specific symbols or functions to trigger deep analysis. **Ambient LSP Feedback** now automatically surfaces syntax errors after edits.
 - **MCP Servers**: Use `context7` for documentation and `memory` for cross-session context.
@@ -52,29 +52,29 @@ Don't ask the `lead-orchestrator` to write code. Ask it to **orchestrate**.
 
 ---
 
-## 🔍 Ambient LSP Feedback#
+## ðŸ” Ambient LSP Feedback
 
 **New:** OpenCode now automatically detects syntax errors after file edits and injects them into the model's context.
 
-### How It Works#
+### How It Works
 
 ```
 1. You: "edit file X"
-   ↓
+   â†“
 2. tool.execute.after hook fires
-   ↓
+   â†“
 3. Run quick syntax check (php -l, tsc --noEmit, biome check, cargo check)
-   ↓
+   â†“
 4. Errors captured and stored per-session
-   ↓
+   â†“
 5. Next chat turn: errors injected into model instructions
-   ↓
-6. Model sees: "⚠️ X.ts: error TS2304: Cannot find name 'foo'"
-   ↓
+   â†“
+6. Model sees: "âš ï¸ X.ts: error TS2304: Cannot find name 'foo'"
+   â†“
 7. Model self-corrects in the same turn
 ```
 
-### Supported Checkers#
+### Supported Checkers
 
 | Extension  | Checker                | Speed  | Injection                       |
 | ---------- | ---------------------- | ------ | ------------------------------- |
@@ -87,7 +87,7 @@ Don't ask the `lead-orchestrator` to write code. Ask it to **orchestrate**.
 | `.svelte`  | `npx svelte-check`     | ~2-5s  | Next turn                       |
 | `.py`      | `python -m py_compile` | ~100ms | **Same turn**                   |
 
-### Tips#
+### Tips
 
 - **Fast checks** (`.php`, `.py`) inject in the **same turn** via `output.result`
 - **Slower checks** (`.ts`, `.rs`) queue async and inject in the **next turn** via `output.instructions`
@@ -96,7 +96,7 @@ Don't ask the `lead-orchestrator` to write code. Ask it to **orchestrate**.
 
 ---
 
-## 📝 Example: Full Context Engineering#
+## ðŸ“ Example: Full Context Engineering
 
 ```
 Context:
@@ -116,7 +116,7 @@ Plan:
 5. VERIFY: Ambient LSP will catch syntax errors automatically
 
 Approve: [User confirms plan]
-↓
+â†“
 EXECUTE: backend-laravel implements with live Ambient LSP feedback
 ```
 
@@ -126,4 +126,4 @@ EXECUTE: backend-laravel implements with live Ambient LSP feedback
 > Use the **Thinking Mode** (`hy3-review-free` model) for the planning phase to ensure the most robust architectural decisions.
 
 > [!NOTE]
-> Ambient LSP Feedback is now live — if you edit a file with a syntax error, the model will see and fix it automatically in the next turn (or same turn for PHP/Python).
+> Ambient LSP Feedback is now live â€” if you edit a file with a syntax error, the model will see and fix it automatically in the next turn (or same turn for PHP/Python).

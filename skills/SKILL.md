@@ -15,7 +15,7 @@ This skill converts the concept of "Continuity" from a static file into an activ
 1. **Episodic Compilation**: Use the `git` MCP to pull the diff of all uncommitted and recently committed changes. Summarize _why_ these changes were made.
 2. **Semantic Knowledge Extraction**: Extract any new protocols, libraries, or architectural decisions (e.g., "Switched to `produce` for state mutation").
 3. **Graph Injection**: Send the extracted entities and relations to the Knowledge Graph using `@itseasy21/mcp-knowledge-graph`.
-4. **State Serialization**: Execute the local `export-strata.js` tool to dump the current mental context, open files, and episodic summary into `C:\opencode\continuum\[date]-strata.json`.
+4. **State Serialization**: Execute the local `tools/export-strata.js` tool to dump the current mental context, open files, and episodic summary into `./continuum/[date]-strata.json`.
 
 ## Best Practices
 

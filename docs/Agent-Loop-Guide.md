@@ -1,4 +1,4 @@
-# 🔄 Agent Loop & Iterative Execution Guide#
+﻿# ðŸ”„ Agent Loop & Iterative Execution Guide
 
 OpenCode supports iterative execution patterns where agents run in loops, refine output, and continuously improve results using **workflow orchestration** with parallel execution, retry policies, and MCP integration.
 
@@ -6,7 +6,7 @@ OpenCode supports iterative execution patterns where agents run in loops, refine
 
 ---
 
-## 📋 Table of Contents#
+## ðŸ“‹ Table of Contents
 
 1. [Understanding Agent Loops](#understanding-agent-loops)
 2. [Basic Iterative Patterns](#basic-iterative-patterns)
@@ -18,7 +18,7 @@ OpenCode supports iterative execution patterns where agents run in loops, refine
 
 ---
 
-## 🔄 Understanding Agent Loops#
+## ðŸ”„ Understanding Agent Loops
 
 An **agent loop** is a pattern where an agent:
 
@@ -27,7 +27,7 @@ An **agent loop** is a pattern where an agent:
 3. Refines based on feedback
 4. Repeats until criteria are met
 
-### When to Use Loops#
+### When to Use Loops
 
 | Scenario               | Loop Type            | Example                             |
 | ---------------------- | -------------------- | ----------------------------------- |
@@ -36,7 +36,7 @@ An **agent loop** is a pattern where an agent:
 | Self-improvement       | Evolution loop       | "Analyze and improve config weekly" |
 | Data processing        | Batch loop           | "Process all files in directory"    |
 
-### Features#
+### Features
 
 - **Ambient LSP Feedback**: Errors injected automatically after edits
 - **Retry Policies**: Configure `max_attempts` and backoff strategy
@@ -46,9 +46,9 @@ An **agent loop** is a pattern where an agent:
 
 ---
 
-## 🔁 Basic Iterative Patterns#
+## ðŸ” Basic Iterative Patterns
 
-### Pattern 1: Simple Retry Loop#
+### Pattern 1: Simple Retry Loop
 
 **Use case:** Keep trying until success or max attempts.
 
@@ -72,7 +72,7 @@ Loop until: function passes all tests OR 3 attempts reached
 #   backoff: exponential
 ```
 
-### Pattern 2: Refinement Loop#
+### Pattern 2: Refinement Loop
 
 **Use case:** Gradually improve quality with MCP integration.
 
@@ -100,7 +100,7 @@ Checklist:
 # memory_create_entities for each iteration
 ```
 
-### Pattern 3: Feedback Loop#
+### Pattern 3: Feedback Loop
 
 **Use case:** Incorporate feedback from other agents with parallel execution.
 
@@ -125,11 +125,11 @@ Loop:
 
 ---
 
-## 🛠️ Using the Task Tool for Loops#
+## ðŸ› ï¸ Using the Task Tool for Loops
 
 The **Task tool** enables launching SubAgents with enhanced patterns.
 
-### Sequential Loop with Task Tool#
+### Sequential Loop with Task Tool
 
 ```
 Using lead-strategist:
@@ -157,7 +157,7 @@ Task: lead-architect, "Verify architecture alignment"
 # Track with task_id and performance metrics
 ```
 
-### Parallel Loop Pattern#
+### Parallel Loop Pattern
 
 ```
 Using lead-strategist:
@@ -181,11 +181,11 @@ Synthesize results:
 
 ---
 
-## ⚡ Workflow Engine#
+## âš¡ Workflow Engine
 
 The **Workflow Engine** (`workflow-manager` skill) provides YAML-based automation with advanced features.
 
-### Key Features#
+### Key Features
 
 | Feature                  | Description                              | Usage               |
 | ------------------------ | ---------------------------------------- | ------------------- |
@@ -198,7 +198,7 @@ The **Workflow Engine** (`workflow-manager` skill) provides YAML-based automatio
 | `performance`            | Track metrics (time, success, tokens)    | Global              |
 | `security`               | Automated vulnerability scans            | Per phase           |
 
-### Creating a Loop Workflow#
+### Creating a Loop Workflow
 
 Create `workflows/iterative-development.yaml`:
 
@@ -263,25 +263,25 @@ notifications:
 
 ---
 
-## 🔍 Ambient LSP Feedback in Loops#
+## ðŸ” Ambient LSP Feedback in Loops
 
 **New:** OpenCode now automatically detects syntax errors and injects them into the model's context.
 
-### How It Helps Loops#
+### How It Helps Loops
 
 ```
 1. core-factory: edit file X
-   ↓ (tool.execute.after fires)
+   â†“ (tool.execute.after fires)
 2. Run quick syntax check (php -l, tsc --noEmit, biome check, cargo check)
-   ↓ (error detected)
+   â†“ (error detected)
 3. Errors captured and stored per-session
-   ↓ (next turn)
+   â†“ (next turn)
 4. Errors injected into model instructions
-   ↓ (model sees)
+   â†“ (model sees)
 5. Model self-corrects in the same turn
 ```
 
-### Supported Checkers in Loops#
+### Supported Checkers in Loops
 
 | Extension  | Checker                | Speed  | Injection                       |
 | ---------- | ---------------------- | ------ | ------------------------------- |
@@ -291,7 +291,7 @@ notifications:
 | `.js/.jsx` | `npx biome check`      | ~1-3s  | Next turn (output.instructions) |
 | `.rs`      | `cargo check`          | ~5-15s | Next turn (output.instructions) |
 
-### Loop with Ambient Feedback#
+### Loop with Ambient Feedback
 
 ```
 Using core-factory:
@@ -315,11 +315,11 @@ Loop (max 5 attempts):
 
 ---
 
-## 🧬 Self-Improvement Loops#
+## ðŸ§¬ Self-Improvement Loops
 
 OpenCode has built-in self-improvement capabilities via the `docs-curator` agent and `self-reflection` skill.
 
-### Setting Up Automatic Self-Improvement#
+### Setting Up Automatic Self-Improvement
 
 **1. Configure the reflection schedule in `opencode.json`:**
 
@@ -364,17 +364,17 @@ Loop (max 5 iterations):
 
 ---
 
-## 📋 Best Practices#
+## ðŸ“‹ Best Practices
 
-### 1. Set Clear Termination Conditions#
+### 1. Set Clear Termination Conditions
 
-**❌ Poor Loop (infinite risk):**
+**âŒ Poor Loop (infinite risk):**
 
 ```
 Keep refactoring the code until it's perfect
 ```
 
-**✅ Good Loop (clear exit):**
+**âœ… Good Loop (clear exit):**
 
 ```
 Refactor the code with these exit conditions:
@@ -384,7 +384,7 @@ Refactor the code with these exit conditions:
 - Quality threshold met (use exit_criteria)
 ```
 
-### 2. Use the Memory MCP for State#
+### 2. Use the Memory MCP for State
 
 ```
 Loop iteration 1-N:
@@ -394,7 +394,7 @@ Loop iteration 1-N:
 4. If new results worse than previous: Revert
 ```
 
-### 3. Combine with Workflow Manager Skill#
+### 3. Combine with Workflow Manager Skill
 
 The `workflow-manager` skill (Qwen-inspired) provides:
 
@@ -404,7 +404,7 @@ The `workflow-manager` skill (Qwen-inspired) provides:
 - SYNTHESIZE: Combine results (uses memory MCP)
 - VERIFY: Check quality gates (uses sqlite MCP for metrics)
 
-### 4. Monitor Loop Performance#
+### 4. Monitor Loop Performance
 
 ```
 Before starting loop:
@@ -420,7 +420,7 @@ After loop:
 - Store improvement in knowledge graph (memory MCP)
 ```
 
-### 5. Avoid Infinite Loops#
+### 5. Avoid Infinite Loops
 
 Always include:
 

@@ -1,6 +1,58 @@
+# Dependencies
+node_modules/
+
+# AI & IDE configs
 .aider*
 .trae*
-node_modules
 .continue
 continuum
 trae.md
+
+# Database files — NEVER commit these
+*.sqlite
+*.sqlite3
+*.db
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE configs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Build artifacts
+*.tsbuildinfo
+dist/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Coverage
+coverage/
+.nyc_output/

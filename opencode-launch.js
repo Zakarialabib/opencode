@@ -7,6 +7,7 @@
 const { spawn } = require("child_process");
 const path = require("path");
 const fs = require("fs");
+const os = require("os");
 
 // Find project root by looking for opencode.json
 function findProjectRoot(startDir) {
@@ -169,14 +170,19 @@ function launch() {
 
   let child;
   const localBin = path.join(configRoot, "node_modules", ".bin", "opencode");
-  const bunBin = "C:\\Users\\user\\.bun\\bin\\opencode.exe";
+  const bunLocal = path.join(
+    os.homedir(),
+    ".bun",
+    "bin",
+    "opencode" + (process.platform === "win32" ? ".exe" : "")
+  );
 
   if (fs.existsSync(localBin)) {
     console.log(`   Using local bin: ${localBin}`);
     child = runCommand(localBin);
-  } else if (fs.existsSync(bunBin)) {
-    console.log(`   Using bun bin: ${bunBin}`);
-    child = runCommand(bunBin);
+  } else if (fs.existsSync(bunLocal)) {
+    console.log(`   Using bun bin: ${bunLocal}`);
+    child = runCommand(bunLocal);
   } else {
     console.log(`   Searching for opencode on PATH...`);
     child = runCommand("opencode");

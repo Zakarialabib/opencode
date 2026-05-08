@@ -1,2 +1,2 @@
 @echo off
-node "C:\opencode\opencode-launch.js" %*
+node "%~dp0opencode-launch.js" %*

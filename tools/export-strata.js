@@ -10,7 +10,7 @@ const { execSync } = require("child_process");
  * into a `.strata.json` file inside the `continuum/` directory.
  */
 
-const WORKSPACE_DIR = "C:\\opencode";
+const WORKSPACE_DIR = process.env.OPENCODE_HOME || process.cwd();
 const CONTINUUM_DIR = path.join(WORKSPACE_DIR, "continuum");
 
 if (!fs.existsSync(CONTINUUM_DIR)) {
@@ -41,7 +41,10 @@ const strata = {
   phase: process.env.STRATA_PHASE || "Unknown",
   thermalMap: recentFiles,
   activeSkills: activeSkills,
-  memoryPointers: ["C:\\opencode\\database.sqlite", "C:\\opencode\\.opencode\\memory.jsonl"],
+  memoryPointers: [
+    path.join(WORKSPACE_DIR, "database.sqlite"),
+    path.join(WORKSPACE_DIR, ".opencode", "memory.jsonl"),
+  ],
 };
 
 const filename = `strata-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;

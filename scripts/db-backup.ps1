@@ -2,8 +2,8 @@
 # Creates timestamped backups of SQLite database
 
 param(
-    [string]$SourceDB = "C:\opencode\database.sqlite",
-    [string]$BackupDir = "C:\opencode\backups",
+    [string]$SourceDB = (Join-Path $PSScriptRoot "..\database.sqlite"),
+    [string]$BackupDir = (Join-Path $PSScriptRoot "..\backups"),
     [int]$KeepCount = 10  # Number of backups to keep
 )
 
