@@ -28,8 +28,10 @@ class ConfigValidator {
       throw new Error("No schema loaded for validation");
     }
 
-    const validate = this.ajv.compile(this.schema);
-    const valid = validate(config);
+    if (!this.compiledValidate) {
+      this.compiledValidate = this.ajv.compile(this.schema);
+    }
+    const valid = this.compiledValidate(config);
 
     if (!valid) {
       return {
