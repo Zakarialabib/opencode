@@ -1,4 +1,4 @@
-{
+﻿{
   "version": "1.0.0",
   "lastUpdated": "2026-05-08T11:05:48.013Z",
   "skills": [
@@ -28,7 +28,7 @@
     {
       "name": "ai-news-collectors",
       "displayName": "AI News Collectors",
-      "description": "AI 新闻聚合与热度排序工具。当用户询问 AI 领域最新动态时触发，如：\"今天有什么 AI 新闻？\"\"总结一下这周的 AI 动态\"\"最近有什么火的 AI 产品？\"\"AI 圈最近在讨论什么？\"。覆盖：新产品发布、研究论文、行业动态、融资新闻、开源项目更新、社区病毒传播现象、AI 工具/Agent 热门项目。输出中文摘要列表，按热度排序，附带原文链接。",
+      "description": "AI æ–°é—»èšåˆä¸Žçƒ­åº¦æŽ’åºå·¥å…·ã€‚å½“ç”¨æˆ·è¯¢é—® AI é¢†åŸŸæœ€æ–°åŠ¨æ€æ—¶è§¦å‘ï¼Œå¦‚ï¼š\"ä»Šå¤©æœ‰ä»€ä¹ˆ AI æ–°é—»ï¼Ÿ\"\"æ€»ç»“ä¸€ä¸‹è¿™å‘¨çš„ AI åŠ¨æ€\"\"æœ€è¿‘æœ‰ä»€ä¹ˆç«çš„ AI äº§å“ï¼Ÿ\"\"AI åœˆæœ€è¿‘åœ¨è®¨è®ºä»€ä¹ˆï¼Ÿ\"ã€‚è¦†ç›–ï¼šæ–°äº§å“å‘å¸ƒã€ç ”ç©¶è®ºæ–‡ã€è¡Œä¸šåŠ¨æ€ã€èžèµ„æ–°é—»ã€å¼€æºé¡¹ç›®æ›´æ–°ã€ç¤¾åŒºç—…æ¯’ä¼ æ’­çŽ°è±¡ã€AI å·¥å…·/Agent çƒ­é—¨é¡¹ç›®ã€‚è¾“å‡ºä¸­æ–‡æ‘˜è¦åˆ—è¡¨ï¼ŒæŒ‰çƒ­åº¦æŽ’åºï¼Œé™„å¸¦åŽŸæ–‡é“¾æŽ¥ã€‚",
       "version": "1.0.0",
       "category": "research",
       "tags": [
@@ -62,7 +62,7 @@
     {
       "name": "aminer-daily-paper",
       "displayName": "Aminer Daily Paper",
-      "description": "Get personalized academic paper recommendations. Activate whenever the user asks for paper recommendations — explicit command (/aminer-dp) or natural language (e.g. 'recommend me papers on RAG', 'suggest recent papers on multimodal agents'). Workflow: extract topics / author / aminer_author_id from the input, invoke scripts/recommend.py, return results as Markdown.",
+      "description": "Get personalized academic paper recommendations. Activate whenever the user asks for paper recommendations â€” explicit command (/aminer-dp) or natural language (e.g. 'recommend me papers on RAG', 'suggest recent papers on multimodal agents'). Workflow: extract topics / author / aminer_author_id from the input, invoke scripts/recommend.py, return results as Markdown.",
       "version": "1.0.0",
       "category": "research",
       "tags": [
@@ -96,7 +96,7 @@
     {
       "name": "anti-pua",
       "displayName": "Anti-PUA Protection",
-      "description": "识别和分析PUA（Pickup Artist）及情感操纵行为的专业心理分析工具。具备人格分析、心理侧写、情感分析能力，能够识别情感操纵、煤气灯操纵、虐待等有毒关系模式，评估人格特质（如黑暗三人格、脆弱型自恋等），预测对方行为并给出具体的相处建议。当用户需要：分析对方言行动机、识别PUA/情感操纵行为、评估NPD（自恋型人格障碍）倾向、识别操纵行为、预测对方未来行为、寻求健康关系建议、分析黑暗三人格或光明三人格时使用此skill。",
+      "description": "è¯†åˆ«å’Œåˆ†æžPUAï¼ˆPickup Artistï¼‰åŠæƒ…æ„Ÿæ“çºµè¡Œä¸ºçš„ä¸“ä¸šå¿ƒç†åˆ†æžå·¥å…·ã€‚å…·å¤‡äººæ ¼åˆ†æžã€å¿ƒç†ä¾§å†™ã€æƒ…æ„Ÿåˆ†æžèƒ½åŠ›ï¼Œèƒ½å¤Ÿè¯†åˆ«æƒ…æ„Ÿæ“çºµã€ç…¤æ°”ç¯æ“çºµã€è™å¾…ç­‰æœ‰æ¯’å…³ç³»æ¨¡å¼ï¼Œè¯„ä¼°äººæ ¼ç‰¹è´¨ï¼ˆå¦‚é»‘æš—ä¸‰äººæ ¼ã€è„†å¼±åž‹è‡ªæ‹ç­‰ï¼‰ï¼Œé¢„æµ‹å¯¹æ–¹è¡Œä¸ºå¹¶ç»™å‡ºå…·ä½“çš„ç›¸å¤„å»ºè®®ã€‚å½“ç”¨æˆ·éœ€è¦ï¼šåˆ†æžå¯¹æ–¹è¨€è¡ŒåŠ¨æœºã€è¯†åˆ«PUA/æƒ…æ„Ÿæ“çºµè¡Œä¸ºã€è¯„ä¼°NPDï¼ˆè‡ªæ‹åž‹äººæ ¼éšœç¢ï¼‰å€¾å‘ã€è¯†åˆ«æ“çºµè¡Œä¸ºã€é¢„æµ‹å¯¹æ–¹æœªæ¥è¡Œä¸ºã€å¯»æ±‚å¥åº·å…³ç³»å»ºè®®ã€åˆ†æžé»‘æš—ä¸‰äººæ ¼æˆ–å…‰æ˜Žä¸‰äººæ ¼æ—¶ä½¿ç”¨æ­¤skillã€‚",
       "version": "1.0.0",
       "category": "security",
       "tags": [
@@ -129,7 +129,7 @@
     {
       "name": "auto-target-tracker",
       "displayName": "Auto Target Tracker",
-      "description": "自动目标进度追踪器。在对话中检测到目标相关图片（笔记、进度、截图、记录）时，自动调用 VLM 识别关键信息并记录到目标日记。适用于学习管理、健身追踪、工作进度、习惯养成、创作记录等所有目标管理场景。",
+      "description": "è‡ªåŠ¨ç›®æ ‡è¿›åº¦è¿½è¸ªå™¨ã€‚åœ¨å¯¹è¯ä¸­æ£€æµ‹åˆ°ç›®æ ‡ç›¸å…³å›¾ç‰‡ï¼ˆç¬”è®°ã€è¿›åº¦ã€æˆªå›¾ã€è®°å½•ï¼‰æ—¶ï¼Œè‡ªåŠ¨è°ƒç”¨ VLM è¯†åˆ«å…³é”®ä¿¡æ¯å¹¶è®°å½•åˆ°ç›®æ ‡æ—¥è®°ã€‚é€‚ç”¨äºŽå­¦ä¹ ç®¡ç†ã€å¥èº«è¿½è¸ªã€å·¥ä½œè¿›åº¦ã€ä¹ æƒ¯å…»æˆã€åˆ›ä½œè®°å½•ç­‰æ‰€æœ‰ç›®æ ‡ç®¡ç†åœºæ™¯ã€‚",
       "version": "1.0.0",
       "category": "automation",
       "tags": [
@@ -145,7 +145,7 @@
     {
       "name": "blog-writer",
       "displayName": "Blog Writer",
-      "description": "This skill should be used when writing blog posts, articles, or long-form content in the writer's distinctive writing style. It produces authentic, opinionated content that matches the writer's voice—direct, conversational, and grounded in personal experience. The skill handles the complete workflow from research review through Notion publication. Use this skill for drafting blog posts, thought leadership pieces, or any writing meant to reflect the writer's perspective on AI, productivity, sales, marketing, or technology topics.",
+      "description": "This skill should be used when writing blog posts, articles, or long-form content in the writer's distinctive writing style. It produces authentic, opinionated content that matches the writer's voiceâ€”direct, conversational, and grounded in personal experience. The skill handles the complete workflow from research review through Notion publication. Use this skill for drafting blog posts, thought leadership pieces, or any writing meant to reflect the writer's perspective on AI, productivity, sales, marketing, or technology topics.",
       "version": "1.0.0",
       "category": "content",
       "tags": [
@@ -203,7 +203,7 @@
         "When following agent patterns"
       ],
       "agents": [
-        "core-builder"
+        "core-factory"
       ],
       "entryPoint": "coding-agent/SKILL.md"
     },
@@ -220,8 +220,8 @@
         "validation"
       ],
       "agents": [
-        "lead-orchestrator",
-        "devops-ops"
+        "core-factory",
+        "devops-engineer"
       ],
       "entryPoint": "SKILL.md"
     },
@@ -244,15 +244,15 @@
         "When developing marketing content"
       ],
       "agents": [
-        "marketing-mode",
-        "docs-writer"
+        "docs-curator",
+        "docs-curator"
       ],
       "entryPoint": "content-strategy/SKILL.md"
     },
     {
       "name": "contentanalysis",
       "displayName": "Content Analysis",
-      "description": "Content extraction and analysis — wisdom extraction from videos, podcasts, articles, and YouTube. USE WHEN extract wisdom, content analysis, analyze content, insight report, analyze video, analyze podcast, extract insights, key takeaways, what did I miss, extract from YouTube.",
+      "description": "Content extraction and analysis â€” wisdom extraction from videos, podcasts, articles, and YouTube. USE WHEN extract wisdom, content analysis, analyze content, insight report, analyze video, analyze podcast, extract insights, key takeaways, what did I miss, extract from YouTube.",
       "version": "1.0.0",
       "category": "analysis",
       "tags": [
@@ -344,14 +344,14 @@
         "When creating documentation"
       ],
       "agents": [
-        "docs-writer"
+        "docs-curator"
       ],
       "entryPoint": "docx/SKILL.md"
     },
     {
       "name": "dream-interpreter",
       "displayName": "Dream Interpreter",
-      "description": "AI 解梦大师。用户描述梦境，智能追问关键细节后，从三个视角（周公解梦/心理分析/赛博神棍）生成解读，输出结构化 JSON 供前端渲染\"梦境解析卡\"。",
+      "description": "AI è§£æ¢¦å¤§å¸ˆã€‚ç”¨æˆ·æè¿°æ¢¦å¢ƒï¼Œæ™ºèƒ½è¿½é—®å…³é”®ç»†èŠ‚åŽï¼Œä»Žä¸‰ä¸ªè§†è§’ï¼ˆå‘¨å…¬è§£æ¢¦/å¿ƒç†åˆ†æž/èµ›åšç¥žæ£ï¼‰ç”Ÿæˆè§£è¯»ï¼Œè¾“å‡ºç»“æž„åŒ– JSON ä¾›å‰ç«¯æ¸²æŸ“\"æ¢¦å¢ƒè§£æžå¡\"ã€‚",
       "version": "1.0.0",
       "category": "analysis",
       "tags": [
@@ -409,7 +409,7 @@
     {
       "name": "get-fortune-analysis",
       "displayName": "Fortune Analysis",
-      "description": "生成视觉华丽、内容详实、具有仪式感的流年运势报告（流金星象风格）。",
+      "description": "ç”Ÿæˆè§†è§‰åŽä¸½ã€å†…å®¹è¯¦å®žã€å…·æœ‰ä»ªå¼æ„Ÿçš„æµå¹´è¿åŠ¿æŠ¥å‘Šï¼ˆæµé‡‘æ˜Ÿè±¡é£Žæ ¼ï¼‰ã€‚",
       "version": "1.0.0",
       "category": "analysis",
       "tags": [
@@ -523,7 +523,7 @@
     {
       "name": "interview-designer",
       "displayName": "Interview Designer",
-      "description": "Analyze resumes and design interview strategies using evidence-based methodology. Transforms interview prep from \"read resume → ask questions\" into \"define standard → forensic evidence → future simulation\". Combines Geoff Smart's Topgrading, Lou Adler's performance-based hiring, and Daniel Kahneman's bias control. Use when preparing for interviews, creating structured interview guides, or designing questions to validate candidate competencies.",
+      "description": "Analyze resumes and design interview strategies using evidence-based methodology. Transforms interview prep from \"read resume â†’ ask questions\" into \"define standard â†’ forensic evidence â†’ future simulation\". Combines Geoff Smart's Topgrading, Lou Adler's performance-based hiring, and Daniel Kahneman's bias control. Use when preparing for interviews, creating structured interview guides, or designing questions to validate candidate competencies.",
       "version": "1.0.0",
       "category": "content",
       "tags": [
@@ -594,13 +594,13 @@
         "When creating research reports"
       ],
       "agents": [
-        "docs-writer",
-        "marketing-mode"
+        "docs-curator",
+        "docs-curator"
       ],
       "entryPoint": "market-research-reports/SKILL.md"
     },
     {
-      "name": "marketing-mode",
+      "name": "docs-curator",
       "displayName": "Marketing Mode",
       "description": "Marketing Mode combines 23 comprehensive marketing skills covering strategy, psychology, content, SEO, conversion optimization, and paid growth. Use when users need marketing strategy, copywriting, SEO help, conversion optimization, paid advertising, or any marketing tactic.",
       "version": "1.0.0",
@@ -651,7 +651,7 @@
         "When generating reports as PDF"
       ],
       "agents": [
-        "docs-writer"
+        "docs-curator"
       ],
       "entryPoint": "pdf/SKILL.md"
     },
@@ -675,7 +675,7 @@
       ],
       "agents": [
         "backend-laravel",
-        "qa-tester"
+        "qa-guardian"
       ],
       "entryPoint": "pest-testing/SKILL.md"
     },
@@ -715,7 +715,7 @@
         "When presenting research or reports"
       ],
       "agents": [
-        "docs-writer"
+        "docs-curator"
       ],
       "entryPoint": "ppt/SKILL.md"
     },
@@ -867,7 +867,7 @@
     {
       "name": "skill-finder-cn",
       "displayName": "Skill Finder (CN)",
-      "description": "Skill 查找器 | Skill Finder. 帮助发现和安装 ClawHub Skills | Discover and install ClawHub Skills. 回答'有什么技能可以X'、'找一个技能' | Answers 'what skill can X', 'find a skill'. 触发词：找 skill、find skill、搜索 skill.",
+      "description": "Skill æŸ¥æ‰¾å™¨ | Skill Finder. å¸®åŠ©å‘çŽ°å’Œå®‰è£… ClawHub Skills | Discover and install ClawHub Skills. å›žç­”'æœ‰ä»€ä¹ˆæŠ€èƒ½å¯ä»¥X'ã€'æ‰¾ä¸€ä¸ªæŠ€èƒ½' | Answers 'what skill can X', 'find a skill'. è§¦å‘è¯ï¼šæ‰¾ skillã€find skillã€æœç´¢ skill.",
       "version": "1.0.0",
       "category": "meta",
       "tags": [
@@ -1200,10 +1200,11 @@
         "When generating reports with tables"
       ],
       "agents": [
-        "docs-writer"
+        "docs-curator"
       ],
       "entryPoint": "xlsx/SKILL.md"
     }
   ],
   "totalSkills": 63
 }
+

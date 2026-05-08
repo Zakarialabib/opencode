@@ -32,9 +32,11 @@ Ask lead-strategist: "Use workflow-manager skill to develop feature X"
 | ------------------------------------ | ---------------------------------- | ---------------------------------------------------------------------- |
 | `workflows/feature-development.yaml` | Full feature development lifecycle | Parallel execution, MCP integration, retry policies, notifications     |
 | `workflows/bug-fix.yaml`             | End-to-end bug resolution          | Root cause analysis, agent-browser integration, performance monitoring |
+| `workflows/code-review.yaml`         | Automated code review              | Quality checks, security scan, actionable recommendations              |
+| `workflows/documentation.yaml`       | Documentation generation & audit   | Gap discovery, auto-generation, quality audit, knowledge base updates  |
 
 > [!NOTE]
-> These workflows reference the full 19-agent setup. You may need to customize the agent assignments to match your `opencode.json` configuration.
+> These workflows reference the full 10-agent setup configured in `opencode.json`. Customize agent assignments as needed.
 
 ---
 

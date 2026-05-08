@@ -1,0 +1,139 @@
+name: Documentation Update
+description: Generate, audit, and improve project documentation across all components
+version: 2.0.0
+trigger: manual
+
+mcp_servers:
+  - context7
+  - memory
+  - sequential-thinking
+  - git
+  - filesystem
+
+env:
+  NODE_ENV: development
+
+phases:
+  - name: Discovery
+    description: Scan codebase for undocumented components and identify documentation gaps
+    agents: [docs-curator, lead-architect]
+    use_agent_router: true
+    tasks:
+      - scan_codebase_for_undocumented_components
+      - analyze_current_doc_coverage
+      - identify_outdated_documentation
+      - prioritize_documentation_gaps
+    artifacts: [doc-gaps.md, coverage-report.json]
+    mcp_tools:
+      memory: [search_nodes]
+      git: [log, diff]
+      sequential-thinking: [sequentialthinking]
+    exit_criteria:
+      - doc-gaps.md lists all undocumented components
+      - coverage-report.json shows current vs target coverage
+
+  - name: Generate
+    description: Generate documentation for identified gaps
+    agents: [docs-curator]
+    tasks:
+      - generate_api_documentation
+      - write_component_readmes
+      - create_usage_examples
+      - document_configuration_options
+      - add_jsdoc_comments_to_exports
+    artifacts: [docs/api/, docs/components/, docs/guides/]
+    dependencies: [Discovery]
+    mcp_tools:
+      context7: [fetch_library_docs]
+      filesystem: [read_file, write_file]
+    parallel_groups:
+      - [generate_api_documentation, write_component_readmes]
+      - [create_usage_examples, document_configuration_options]
+    exit_criteria:
+      - All prioritized gaps addressed
+      - docs/api/ has complete coverage
+
+  - name: Audit
+    description: Verify documentation quality, consistency, and accuracy
+    agents: [qa-guardian, docs-curator]
+    tasks:
+      - verify_documentation_accuracy
+      - check_consistency_across_docs
+      - validate_code_examples
+      - review_cross_references
+      - test_documentation_links
+    artifacts: [doc-audit-report.md, quality-score.json]
+    dependencies: [Generate]
+    mcp_tools:
+      context7: [fetch_library_docs]
+      memory: [search_nodes]
+    parallel_groups:
+      - [verify_documentation_accuracy, check_consistency_across_docs]
+      - [validate_code_examples, test_documentation_links]
+    exit_criteria:
+      - All code examples verified working
+      - Cross-references valid
+      - Quality score >80%
+
+  - name: Finalize
+    description: Commit documentation, update knowledge base, and notify stakeholders
+    agents: [docs-curator, lead-strategist]
+    tasks:
+      - commit_documentation_changes
+      - update_knowledge_base
+      - generate_changelog_entry
+      - notify_stakeholders
+    artifacts: [changelog.md, docs/README.md]
+    dependencies: [Audit]
+    mcp_tools:
+      memory: [create_entities, add_observations]
+      git: [add, commit]
+    exit_criteria:
+      - Documentation committed to repository
+      - Knowledge base updated
+      - Changelog entry created
+
+success_criteria:
+  - All identified documentation gaps addressed
+  - Documentation passes quality audit
+  - Code examples verified working
+  - Knowledge base updated with new documentation
+
+notifications:
+  on_complete:
+    - generate: doc-summary.md
+    - notify: [lead-strategist]
+  on_failure:
+    - alert: [lead-architect]
+    - create: doc-issue-report.md
+
+error_handling:
+  strategy: continue-on-non-critical
+  max_retries_per_task: 2
+  fallback_agent: docs-curator
+
+agent_routing:
+  enabled: true
+  scoring_weights:
+    keyword_match: 2
+    skill_match: 3
+    mcp_capability: 1
+  fallback_strategy: use_docs_curator
+
+mcp_integration:
+  context7:
+    purpose: Fetch current library documentation for accuracy
+    phases: [Generate, Audit]
+    cache_results: true
+  memory:
+    purpose: Track documentation state and history
+    phases: [Discovery, Finalize]
+    persist_workflow_state: true
+  sequential-thinking:
+    purpose: Analyze documentation structure and gaps
+    phases: [Discovery, Audit]
+    max_thinking_steps: 10
+  git:
+    purpose: Version control documentation
+    phases: [all]
+    auto_commit: false

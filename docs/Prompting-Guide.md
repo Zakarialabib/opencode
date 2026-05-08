@@ -1,6 +1,6 @@
 # 💬 Prompting Guide
 
-Master the art of prompting OpenCode's 12 agents, 63+ skills, and workflow orchestration for maximum productivity.
+Master the art of prompting OpenCode's 10 agents, 63+ skills, and workflow orchestration for maximum productivity.
 
 > See the official docs: [opencode.ai/docs/agents](https://opencode.ai/docs/agents/)
 
