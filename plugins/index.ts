@@ -1,15 +1,186 @@
 import { Plugin, tool } from "@opencode-ai/plugin";
-import { $ } from "bun";
+import { parseJsonc } from "./jsonc-utils";
+import { readFile, writeFile, copyFile, rename } from "fs/promises";
+import { execSync } from "child_process";
+import { createHash } from "crypto";
 
-// Helper to read config file (strip JSONC comments)
+// ─── Ambient LSP Feedback ───────────────────────────────────────
+// Architecture:
+//   edit/write → tool.execute.after → runQuickCheck → inject into tool output (same-turn)
+//   next turn  → chat.params       → flush remaining  → inject into instructions (next-turn)
+//   dedup      → hash (file+line+msg) with 30s expiry
+//   race-safe  → pendingChecks promise queue, awaited before flush
+
+interface DiagnosticEntry {
+  file: string;
+  errors: string;
+  severity: "error" | "warning";
+  hash: string;
+  timestamp: number;
+}
+
+// Per-session accumulation
+const diagnosticsBySession: Map<string, DiagnosticEntry[]> = new Map();
+// Race-safety: pending async checks per session
+const pendingChecks: Map<string, Promise<void>> = new Map();
+// Dedup window: 30 seconds
+const DEDUP_WINDOW_MS = 30_000;
+const SEEN_HASHES: Map<string, number> = new Map();
+
+function diagnosticHash(file: string, line: number, msg: string): string {
+  return createHash("sha1").update(`${file}:${line}:${msg}`).digest("hex").slice(0, 12);
+}
+
+function isDuplicate(hash: string): boolean {
+  const lastSeen = SEEN_HASHES.get(hash);
+  if (lastSeen && Date.now() - lastSeen < DEDUP_WINDOW_MS) return true;
+  SEEN_HASHES.set(hash, Date.now());
+  // Cleanup stale hashes periodically
+  if (SEEN_HASHES.size > 500) {
+    const cutoff = Date.now() - DEDUP_WINDOW_MS;
+    for (const [k, v] of SEEN_HASHES) if (v < cutoff) SEEN_HASHES.delete(k);
+  }
+  return false;
+}
+
+function addDiagnostic(sessionID: string, entry: DiagnosticEntry) {
+  if (isDuplicate(entry.hash)) return;
+  const list = diagnosticsBySession.get(sessionID) || [];
+  list.push(entry);
+  diagnosticsBySession.set(sessionID, list);
+}
+
+function flushDiagnostics(sessionID: string): DiagnosticEntry[] {
+  const list = diagnosticsBySession.get(sessionID) || [];
+  diagnosticsBySession.delete(sessionID);
+  return list;
+}
+
+// Extension → check command mapping
+const CHECKER_REGISTRY: Record<
+  string,
+  { cmd: string; timeout: number; filter: (out: string, file: string) => string | null }
+> = {
+  php: {
+    cmd: `php -l "{file}"`,
+    timeout: 5000,
+    filter: (out) =>
+      out.includes("Parse error") || out.includes("Fatal error") ? out.trim() : null,
+  },
+  ts: {
+    cmd: `npx tsc --noEmit --pretty false 2>&1`,
+    timeout: 15000,
+    filter: (out, file) => {
+      const lines = out.split("\n").filter((l) => l.includes(file));
+      return lines.length > 0 ? lines.slice(0, 10).join("\n") : null;
+    },
+  },
+  tsx: {
+    cmd: `npx tsc --noEmit --pretty false 2>&1`,
+    timeout: 15000,
+    filter: (out, file) => {
+      const lines = out.split("\n").filter((l) => l.includes(file));
+      return lines.length > 0 ? lines.slice(0, 10).join("\n") : null;
+    },
+  },
+  js: {
+    cmd: `npx biome check --max-diagnostics=10 "{file}" 2>&1`,
+    timeout: 10000,
+    filter: () => null, // handled by catch
+  },
+  jsx: {
+    cmd: `npx biome check --max-diagnostics=10 "{file}" 2>&1`,
+    timeout: 10000,
+    filter: () => null, // handled by catch
+  },
+  rs: {
+    cmd: `cargo check --message-format=short 2>&1`,
+    timeout: 30000,
+    filter: (out, file) => {
+      const lines = out
+        .split("\n")
+        .filter((l) => l.includes(file) && (l.includes("error") || l.includes("warning")));
+      return lines.length > 0 ? lines.slice(0, 10).join("\n") : null;
+    },
+  },
+  vue: {
+    cmd: `npx tsc --noEmit --pretty false 2>&1`,
+    timeout: 15000,
+    filter: (out, file) => {
+      const lines = out.split("\n").filter((l) => l.includes(file));
+      return lines.length > 0 ? lines.slice(0, 10).join("\n") : null;
+    },
+  },
+  svelte: {
+    cmd: `npx svelte-check --output machine 2>&1`,
+    timeout: 15000,
+    filter: (out, file) => {
+      const lines = out.split("\n").filter((l) => l.includes(file));
+      return lines.length > 0 ? lines.slice(0, 10).join("\n") : null;
+    },
+  },
+  py: {
+    cmd: `python -m py_compile "{file}" 2>&1`,
+    timeout: 5000,
+    filter: (out) => (out.length > 0 ? out.trim() : null),
+  },
+};
+
+function runQuickCheck(filePath: string): { errors: string; hashes: string[] } | null {
+  const ext = filePath.split(".").pop()?.toLowerCase() || "";
+  const checker = CHECKER_REGISTRY[ext];
+  if (!checker) return null;
+
+  try {
+    const command = checker.cmd.replace("{file}", filePath);
+    const out = execSync(command, {
+      timeout: checker.timeout,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+      cwd: process.cwd(),
+    });
+
+    const filtered = checker.filter(out, filePath);
+    if (!filtered) return null;
+
+    // Generate hashes per error line for dedup
+    const errorLines = filtered.split("\n").filter((l) => l.trim());
+    const hashes = errorLines.map((line, idx) => diagnosticHash(filePath, idx, line.slice(0, 60)));
+
+    return { errors: filtered, hashes };
+  } catch (e: any) {
+    // biome check returns non-zero on findings (not a crash)
+    if ((ext === "js" || ext === "jsx") && e.stdout) return { errors: e.stdout.trim(), hashes: [] };
+    // Other checkers: non-zero means crash or findings
+    const msg = e.stderr || e.stdout || e.message || "";
+    if (msg.length > 0 && msg.length < 500) return { errors: msg.trim(), hashes: [] };
+    return null;
+  }
+}
+
+function detectAndCheck(filePath: string): DiagnosticEntry | null {
+  const result = runQuickCheck(filePath);
+  if (!result) return null;
+
+  const ext = filePath.split(".").pop()?.toLowerCase();
+  const hash = result.hashes[0] || diagnosticHash(filePath, 0, result.errors.slice(0, 60));
+  return {
+    file: filePath,
+    errors: `[${ext}] ${result.errors}`,
+    severity: "error",
+    hash,
+    timestamp: Date.now(),
+  };
+}
+
+// ─── End Ambient LSP Feedback ───────────────────────────────────
+
+// Helper to read config file using our fixed parseJsonc
 async function readConfig(directory: string) {
   const configPath = `${directory}/opencode.json`;
   try {
-    const file = Bun.file(configPath);
-    let text = await file.text();
-    // Remove single-line comments (// ...)
-    text = text.replace(/^\s*\/\/.*$/gm, "");
-    return JSON.parse(text);
+    const text = await readFile(configPath, "utf8");
+    return parseJsonc(text);
   } catch (e) {
     console.error("Failed to read config:", e);
     return null;
@@ -122,8 +293,8 @@ const SelfImprovePlugin: Plugin = async ({ client, project, directory }) => {
   }
 
   return {
-    // Hook: Before each message, ensure LM Studio is healthy and model is loaded
-    "chat.message": async ({ sessionID, agent, model, messageID, variant }, output) => {
+    // Hook: Before each message — LM Studio health check only
+    "chat.message": async ({ sessionID, agent, model, messageID, variant }: any, output: any) => {
       await ensureUrls();
       // Health check
       const health = await healthCheckLmStudio(nativeUrl!);
@@ -159,24 +330,79 @@ const SelfImprovePlugin: Plugin = async ({ client, project, directory }) => {
       }
     },
 
-    // Hook: Modify parameters sent to LLM (LM Studio specific)
-    "chat.params": async ({ sessionID, agent, model, provider, message }, output) => {
-      // For now, we just ensure we don't break existing parameters
-      // In future, we could read preset settings and apply
-      // Keep existing temperature, topP, topK, options
+    // Hook: Modify chat parameters — inject ambient LSP diagnostics into instructions
+    "chat.params": async ({ sessionID, agent, model, provider, message }: any, output: any) => {
+      // ── Race-safe: await any pending async checks from prior tool executions ──
+      const pending = pendingChecks.get(sessionID || "default");
+      if (pending) {
+        try {
+          await pending;
+        } catch {}
+        pendingChecks.delete(sessionID || "default");
+      }
+
+      // ── Next-turn diagnostic injection into instructions ──
+      const diags = flushDiagnostics(sessionID || "default");
+      if (diags.length > 0) {
+        const diagText = diags.map((d) => `⚠️ ${d.file}: ${d.errors.slice(0, 250)}`).join("\n");
+
+        // Inject into instructions — model sees this as additional system context
+        const currentInstructions = Array.isArray(output.instructions) ? output.instructions : [];
+        output.instructions = [
+          `[Ambient LSP Diagnostics — fix these before continuing]\n${diagText}`,
+          ...currentInstructions,
+        ];
+
+        console.error(
+          `🔍 Ambient LSP: ${diags.length} diagnostic(s) injected into instructions for ${agent || "unknown"}`
+        );
+      }
+
+      // Keep existing parameter behavior
     },
 
-    // Hook: After each tool execution, evaluate performance
-    "tool.execute.after": async ({ tool }: any, { output, metadata }: any) => {
-      // Log tool usage patterns for optimization analysis
-      const outputStr = output ? String(output) : "";
-      const truncatedOutput = outputStr.length > 100 ? outputStr.slice(0, 100) : outputStr;
+    // Hook: After tool execution — same-turn diagnostic injection
+    "tool.execute.after": async (input: any, output: any) => {
+      const toolName = input.tool || "";
+      const sessionID = input.args?.sessionID || "default";
+
+      // Capture file modifications and run fast check for same-turn feedback
+      if ((toolName === "write" || toolName === "edit") && input.args?.filePath) {
+        const filePath = input.args.filePath;
+
+        // Run synchronously for same-turn injection (fast checks only, <5s)
+        const ext = filePath.split(".").pop()?.toLowerCase() || "";
+        const fastExts = ["php", "py"];
+        if (fastExts.includes(ext)) {
+          const entry = detectAndCheck(filePath);
+          if (entry && output && typeof output === "object") {
+            output.result = (output.result || "") + `\n\n⚠️ LSP: ${entry.errors.slice(0, 300)}`;
+          }
+        } else {
+          // Slower checks: fire-and-forget with race-safe queue
+          const check = (async () => {
+            const entry = detectAndCheck(filePath);
+            if (entry) {
+              addDiagnostic(sessionID, entry);
+              console.error(`⚠️  LSP: ${entry.file} — ${entry.errors.slice(0, 120)}`);
+            }
+          })();
+          pendingChecks.set(
+            sessionID,
+            check.then(() => {})
+          );
+        }
+      }
+
+      // Log tool usage
+      const outputStr = output?.result ? String(output.result) : "";
+      const truncated = outputStr.length > 100 ? outputStr.slice(0, 100) : outputStr;
       await client.app.log({
         body: {
           service: "self-improve",
           level: "info",
-          message: `Tool ${tool} executed`,
-          extra: { output: truncatedOutput, metadata },
+          message: `Tool ${toolName} executed`,
+          extra: { output: truncated },
         },
       });
     },
@@ -192,9 +418,10 @@ const SelfImprovePlugin: Plugin = async ({ client, project, directory }) => {
       const recommendations = await generateRecommendations(analysis);
 
       // Write to proposed config
-      await Bun.write(
+      await writeFile(
         `${directory}/opencode.json.proposed`,
-        JSON.stringify(recommendations, null, 2)
+        JSON.stringify(recommendations, null, 2),
+        "utf8"
       );
 
       console.log(`🔄 Self-improvement proposal generated: opencode.json.proposed`);
@@ -217,10 +444,11 @@ const SelfImprovePlugin: Plugin = async ({ client, project, directory }) => {
           const proposed = `${directory}/.opencode/opencode.json.proposed`;
 
           if (backup) {
-            await $`cp ${current} ${current}.backup.${Date.now()}`;
+            const backupPath = `${current}.backup.${Date.now()}`;
+            await copyFile(current, backupPath);
           }
 
-          await $`mv ${proposed} ${current}`;
+          await rename(proposed, current);
           return "Configuration upgraded. Restart OpenCode to apply changes.";
         },
       }),

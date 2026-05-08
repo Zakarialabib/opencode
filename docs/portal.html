@@ -225,12 +225,14 @@
       <div>
         <div class="logo"><span>🌌</span> OpenCode Docs</div>
         <ul class="nav-list">
-          <li class="nav-item active" onclick="loadPage('home')"><span>🏠</span> User Guide</li>
-          <li class="nav-item" onclick="loadPage('agents')"><span>👥</span> Engineering Team</li>
-          <li class="nav-item" onclick="loadPage('workflows')"><span>⚡</span> Workflows</li>
-          <li class="nav-item" onclick="loadPage('plugins')"><span>🔌</span> Plugins</li>
-          <li class="nav-item" onclick="loadPage('skills')"><span>🛠️</span> Skills Guide</li>
-          <li class="nav-item" onclick="loadPage('catalog')"><span>📚</span> GLM Catalog</li>
+          <li class="nav-item active" onclick="loadPage('User-Guide')"><span>🏠</span> User Guide</li>
+          <li class="nav-item" onclick="loadPage('Agents-Guide')"><span>👥</span> Engineering Team</li>
+          <li class="nav-item" onclick="loadPage('Workflows-Guide')"><span>⚡</span> Workflows</li>
+          <li class="nav-item" onclick="loadPage('Plugins-Guide')"><span>🔌</span> Plugins</li>
+          <li class="nav-item" onclick="loadPage('Skills-Guide')"><span>🛠️</span> Skills Guide</li>
+          <li class="nav-item" onclick="loadPage('Agent-Loop-Guide')"><span>🔄</span> Agent Loop</li>
+          <li class="nav-item" onclick="loadPage('Prompting-Guide')"><span>💬</span> Prompting</li>
+          <li class="nav-item" onclick="loadPage('Prompting-and-Context-Engineering')"><span>🧠</span> Context Engineering</li>
         </ul>
       </div>
     </div>
@@ -257,7 +259,7 @@
       | [**⚡ Workflows Guide**](Workflows-Guide.md) | Automate complex tasks with multi-agent workflows. |
       | [**🔌 Plugins Guide**](Plugins-Guide.md) | Extend OpenCode with community and built-in plugins. |
       | [**🛠️ Skills Guide**](Skills-Guide.md) | Deep dive into specialized capabilities and tools. |
-      | [**📚 GLM Skills Catalog**](GLM-Skills-Catalog.md) | A complete directory of 40+ specialized GLM skills. |
+      | [**📚 OpenCode Skills Catalog**](OpenCode-Skills-Catalog.md) | A complete directory of 40+ specialized OpenCode skills. |
 
       ---
 
@@ -266,9 +268,9 @@
       OpenCode is designed to be your autonomous coding partner. Unlike simple chat interfaces, OpenCode uses a **Swarm Architecture** where specialized agents collaborate to solve problems.
 
       ### Core Philosophy
-      1. **Plan Before Action**: Always use the `plan` agent or `project-planner` before major changes.
-      2. **Specialization Wins**: Use the right agent for the right task (e.g., `laravel-expert` for PHP, `ui` for CSS).
-      3. **Continuous Improvement**: The system learns from your codebase and its own mistakes via the `self-improver`.
+      1. **Plan Before Action**: Always use the 'plan' agent or 'project-planner' before major changes.
+      2. **Specialization Wins**: Use the right agent for the right task (e.g., 'laravel-expert' for PHP, 'ui' for CSS).
+      3. **Continuous Improvement**: The system learns from your codebase and its own mistakes via the 'self-improver'.
 
       ### The Magic Command
       The primary entry point for complex tasks is often a workflow:
@@ -534,16 +536,16 @@
       - **\`self-improver\`**: The engine that helps OpenCode evolve.
       - **\`security-review\`**: Specialized auditing for secrets and vulnerabilities.
 
-      ### 2. **GLM Skills (\`glm-skills/\`)**
+      ### 2. **OpenCode Skills (\`OpenCode-skills/\`)**
       A massive collection of **40+ community-driven skills**. These cover everything from web browsing to academic search.
-      - See the full list in the [**GLM Skills Catalog**](GLM-Skills-Catalog.md).
+      - See the full list in the [**OpenCode Skills Catalog**](OpenCode-Skills-Catalog.md).
 
       ---
 
       ## 🚀 Using Skills
 
       ### Automatic Loading
-      Most skills are loaded automatically when an agent needs them. For example, if you ask the \`ui\` agent to "Fix the layout," it will load the \`ui-ux-pro-max\` skill from the GLM library.
+      Most skills are loaded automatically when an agent needs them. For example, if you ask the \`ui\` agent to "Fix the layout," it will load the \`ui-ux-pro-max\` skill from the OpenCode library.
 
       ### Manual Activation
       You can explicitly tell an agent to use a skill:
@@ -556,7 +558,7 @@
 
       ## 🎨 Spotlight: The UI/UX Skill
 
-      The \`ui-ux-pro-max\` skill (found in \`glm-skills/ui-ux-pro-max\`) provides agents with:
+      The \`ui-ux-pro-max\` skill (found in \`OpenCode-skills/ui-ux-pro-max\`) provides agents with:
       - Premium color palettes (HSL-based).
       - Modern design patterns (Glassmorphism, Neumorphism).
       - Responsive grid systems.
@@ -569,10 +571,10 @@
 
       1. Create a folder in \`skills/\`.
       2. Add a \`SKILL.md\` file.
-      3. Define the \`---` metadata header at the top.
+      3. Define the \'---' metadata header at the top.
       4. Provide clear, concise instructions for the agent.
 
-      Example \`SKILL.md\` header:
+      Example \'SKILL.md\' header:
       \`\`\`markdown
       ---
       name: My Custom Skill
@@ -585,9 +587,9 @@
 
       > [!TIP]
       > Use the \`skill-creator\` skill to help you draft new skill definitions! It knows exactly how to format the \`SKILL.md\` for maximum agent compatibility.`,
-                  catalog: `# 📚 GLM Skills Catalog
+                  catalog: `# 📚 OpenCode Skills Catalog
 
-      The \`glm-skills\` directory contains a rich library of specialized capabilities. Agents can leverage these to perform complex tasks outside of standard coding.
+      The \`OpenCode-skills\` directory contains a rich library of specialized capabilities. Agents can leverage these to perform complex tasks outside of standard coding.
 
       ---
 
@@ -634,7 +636,7 @@
       ---
 
       ## 📂 Full List of Available Skills
-      You can find these in \`c:\\opencode\\glm-skills\\\`:
+      You can find these in \`c:\\opencode\\OpenCode-skills\\\`:
 
       - \`ASR\` (Speech Recognition)
       - \`TTS\` (Text-to-Speech)
@@ -652,9 +654,9 @@
 
       ---
 
-      ## 💡 How to use a GLM Skill
+      ## 💡 How to use a OpenCode Skill
       Each folder contains a \`SKILL.md\`. To learn how to use a specific skill (e.g., \`agent-browser\`), simply open its file:
-      \`c:\\opencode\\glm-skills\\agent-browser\\SKILL.md\`
+      \`c:\\opencode\\OpenCode-skills\\agent-browser\\SKILL.md\`
 
       Agents are trained to read these files whenever they need to use the tools provided by the skill.
 
@@ -675,8 +677,9 @@
               function loadPage(pageKey) {
                   // Update active state
                   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-                  const index = ['home', 'agents', 'workflows', 'plugins', 'skills', 'catalog'].indexOf(pageKey);
-                  document.querySelectorAll('.nav-item')[index].classList.add('active');
+                  const navItems = document.querySelectorAll('.nav-item');
+                  const index = Array.from(navItems).findIndex(el => el.onclick.toString().includes(pageKey));
+                  if (index !== -1) navItems[index].classList.add('active');
 
                   const contentDiv = document.getElementById('content');
 
@@ -685,23 +688,31 @@
                   contentDiv.offsetHeight; // trigger reflow
                   contentDiv.style.animation = null;
 
-                  // Render Markdown
-                  let md = pages[pageKey];
-
-                  // Basic fix for internal links in markdown
-                  md = md.replace(/\.md/g, '');
-
-                  let html = marked.parse(md);
-                  html = formatCallouts(html);
-
-                  contentDiv.innerHTML = `<div class="markdown-body">${html}</div>`;
-
-                  // Highlight code
-                  Prism.highlightAll();
+                  // Check if page is hardcoded
+                  if (pages[pageKey]) {
+                      let md = pages[pageKey];
+                      let html = marked.parse(md);
+                      html = formatCallouts(html);
+                      contentDiv.innerHTML = `<div class="markdown-body">${html}</div>`;
+                      Prism.highlightAll();
+                  } else {
+                      // Load MD file dynamically
+                      fetch(`${pageKey}.md`)
+                          .then(response => response.text())
+                          .then(md => {
+                              let html = marked.parse(md);
+                              html = formatCallouts(html);
+                              contentDiv.innerHTML = `<div class="markdown-body">${html}</div>`;
+                              Prism.highlightAll();
+                          })
+                          .catch(error => {
+                              contentDiv.innerHTML = `<div class="markdown-body"><h1>Error</h1><p>Failed to load ${pageKey}.md: ${error.message}</p></div>`;
+                          });
+                  }
               }
 
-              // Initialize with home
-              loadPage('home');
+              // Initialize with User-Guide
+              loadPage('User-Guide');
     </script>
   </body>
 </html>

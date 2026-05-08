@@ -1,51 +1,54 @@
-# 🔄 Agent Loop & Iterative Execution Guide
+# 🔄 Agent Loop & Iterative Execution Guide#
 
-OpenCode supports iterative execution patterns where agents can run in loops, refine their output, and continuously improve results using **workflow orchestration** with parallel execution, retry policies, and MCP integration.
+OpenCode supports iterative execution patterns where agents run in loops, refine output, and continuously improve results using **workflow orchestration** with parallel execution, retry policies, and MCP integration.
+
+> See the official docs: [opencode.ai/docs/plugins/#events](https://opencode.ai/docs/plugins/#events)
 
 ---
 
-## 📋 Table of Contents
+## 📋 Table of Contents#
 
 1. [Understanding Agent Loops](#understanding-agent-loops)
 2. [Basic Iterative Patterns](#basic-iterative-patterns)
 3. [Using the Task Tool for Loops](#using-the-task-tool-for-loops)
 4. [Workflow Engine](#workflow-engine)
-5. [Self-Improvement Loops](#self-improvement-loops)
-6. [Advanced Loop Patterns](#advanced-loop-patterns)
+5. [Ambient LSP Feedback in Loops](#ambient-lsp-feedback-in-loops)
+6. [Self-Improvement Loops](#self-improvement-loops)
 7. [Best Practices](#best-practices)
 
 ---
 
-## 🔄 Understanding Agent Loops
+## 🔄 Understanding Agent Loops#
 
 An **agent loop** is a pattern where an agent:
 
 1. Produces output
-2. Evaluates the result
+2. Evaluates the result (with Ambient LSP Feedback)
 3. Refines based on feedback
 4. Repeats until criteria are met
 
-### When to Use Loops
+### When to Use Loops#
 
 | Scenario               | Loop Type            | Example                             |
-| :--------------------- | :------------------- | :---------------------------------- |
+| ---------------------- | -------------------- | ----------------------------------- |
 | Code needs refinement  | Iterative refinement | "Refactor until test coverage >80%" |
 | Design needs iteration | Creative loop        | "Generate 3 UI variants, pick best" |
 | Self-improvement       | Evolution loop       | "Analyze and improve config weekly" |
 | Data processing        | Batch loop           | "Process all files in directory"    |
 
-### Features
+### Features#
 
-- **Retry Policies**: Configure `max_attempts` and backoff strategy (exponential/linear)
+- **Ambient LSP Feedback**: Errors injected automatically after edits
+- **Retry Policies**: Configure `max_attempts` and backoff strategy
 - **Parallel Groups**: Execute independent loop iterations concurrently
-- **MCP Integration**: Use `memory` MCP to persist loop state across sessions
-- **Performance Tracking**: Metrics stored in `sqlite` MCP (time_to_complete, success_rate)
+- **MCP Integration**: Use `memory` MCP to persist loop state
+- **Performance Tracking**: Metrics stored in `sqlite` MCP
 
 ---
 
-## 🔁 Basic Iterative Patterns
+## 🔁 Basic Iterative Patterns#
 
-### Pattern 1: Simple Retry Loop
+### Pattern 1: Simple Retry Loop#
 
 **Use case:** Keep trying until success or max attempts.
 
@@ -58,7 +61,7 @@ Loop until: function passes all tests OR 3 attempts reached
 1. Write implementation
 2. Run tests (npm test -- --grep "calculateTotal")
 3. If tests fail:
-   - Analyze errors (use sequential-thinking MCP)
+   - Analyze errors (Ambient LSP will show syntax errors automatically)
    - Refine implementation
    - Go to step 1
 4. If tests pass: Return success
@@ -69,7 +72,7 @@ Loop until: function passes all tests OR 3 attempts reached
 #   backoff: exponential
 ```
 
-### Pattern 2: Refinement Loop
+### Pattern 2: Refinement Loop#
 
 **Use case:** Gradually improve quality with MCP integration.
 
@@ -97,7 +100,7 @@ Checklist:
 # memory_create_entities for each iteration
 ```
 
-### Pattern 3: Feedback Loop
+### Pattern 3: Feedback Loop#
 
 **Use case:** Incorporate feedback from other agents with parallel execution.
 
@@ -122,11 +125,11 @@ Loop:
 
 ---
 
-## 🛠️ Using the Task Tool for Loops
+## 🛠️ Using the Task Tool for Loops#
 
 The **Task tool** enables launching SubAgents with enhanced patterns.
 
-### Sequential Loop with Task Tool
+### Sequential Loop with Task Tool#
 
 ```
 Using lead-strategist:
@@ -154,7 +157,7 @@ Task: lead-architect, "Verify architecture alignment"
 # Track with task_id and performance metrics
 ```
 
-### Parallel Loop Pattern
+### Parallel Loop Pattern#
 
 ```
 Using lead-strategist:
@@ -178,11 +181,11 @@ Synthesize results:
 
 ---
 
-## ⚡ Workflow Engine
+## ⚡ Workflow Engine#
 
 The **Workflow Engine** (`workflow-manager` skill) provides YAML-based automation with advanced features.
 
-### Key Features
+### Key Features#
 
 | Feature                  | Description                              | Usage               |
 | ------------------------ | ---------------------------------------- | ------------------- |
@@ -195,7 +198,7 @@ The **Workflow Engine** (`workflow-manager` skill) provides YAML-based automatio
 | `performance`            | Track metrics (time, success, tokens)    | Global              |
 | `security`               | Automated vulnerability scans            | Per phase           |
 
-### Creating a Loop Workflow
+### Creating a Loop Workflow#
 
 Create `workflows/iterative-development.yaml`:
 
@@ -258,42 +261,82 @@ notifications:
     message: "Phase {phase_name} completed successfully!"
 ```
 
-### Triggering Loop Workflows
+---
+
+## 🔍 Ambient LSP Feedback in Loops#
+
+**New:** OpenCode now automatically detects syntax errors and injects them into the model's context.
+
+### How It Helps Loops#
 
 ```
-# Method 1: Via lead-strategist (recommended)
-Using lead-strategist:
-Execute the "iterative-development" workflow for the task management feature.
-→ Loads workflow YAML with use_agent_router: true
-→ Enables parallel_groups for Review Loop phase
-→ Tracks performance metrics in sqlite MCP
+1. core-factory: edit file X
+   ↓ (tool.execute.after fires)
+2. Run quick syntax check (php -l, tsc --noEmit, biome check, cargo check)
+   ↓ (error detected)
+3. Errors captured and stored per-session
+   ↓ (next turn)
+4. Errors injected into model instructions
+   ↓ (model sees)
+5. Model self-corrects in the same turn
+```
 
-# Method 2: Direct workflow command
-/workflow iterative-development --feature "task management"
+### Supported Checkers in Loops#
+
+| Extension  | Checker                | Speed  | Injection                       |
+| ---------- | ---------------------- | ------ | ------------------------------- |
+| `.php`     | `php -l`               | ~50ms  | **Same turn** (output.result)   |
+| `.py`      | `python -m py_compile` | ~100ms | **Same turn** (output.result)   |
+| `.ts/.tsx` | `tsc --noEmit`         | ~2-5s  | Next turn (output.instructions) |
+| `.js/.jsx` | `npx biome check`      | ~1-3s  | Next turn (output.instructions) |
+| `.rs`      | `cargo check`          | ~5-15s | Next turn (output.instructions) |
+
+### Loop with Ambient Feedback#
+
+```
+Using core-factory:
+
+Task: Implement caching layer for products
+
+Loop (max 5 attempts):
+1. Write implementation (edit product.service.ts)
+2. Ambient LSP automatically checks and shows errors
+3. IF errors in output.result:
+   - Fix errors immediately (same turn)
+   - Go to step 1
+4. ELSE IF tests fail:
+   - Analyze and fix
+   - Go to step 1
+5. ELSE: Done
+
+# Fast PHP/Python checks happen in same turn!
+# Slower TS/Rust checks queue and inject in next turn.
 ```
 
 ---
 
-## 🧬 Self-Improvement Loops
+## 🧬 Self-Improvement Loops#
 
-OpenCode has built-in self-improvement capabilities via the `docs-curator` agent and `self-reflection` skill with enhancements.
+OpenCode has built-in self-improvement capabilities via the `docs-curator` agent and `self-reflection` skill.
 
-### Setting Up Automatic Self-Improvement
+### Setting Up Automatic Self-Improvement#
 
 **1. Configure the reflection schedule in `opencode.json`:**
 
 ```json
-"command": {
-  "reflect": {
-    "template": "echo 'Running self-reflection...'",
-    "description": "Analyze and improve opencode config",
-    "agent": "docs-curator",
-    "schedule": "weekly",
-    "loop": {
-      "max_iterations": 10,
-      "improvement_threshold": 0.05
-    },
-    "mcp_tools": ["memory", "sqlite", "sequential-thinking"]
+{
+  "command": {
+    "reflect": {
+      "template": "echo 'Running self-reflection...'",
+      "description": "Analyze and improve opencode config",
+      "agent": "docs-curator",
+      "schedule": "weekly",
+      "loop": {
+        "max_iterations": 10,
+        "improvement_threshold": 0.05
+      },
+      "mcp_tools": ["memory", "sqlite", "sequential-thinking"]
+    }
   }
 }
 ```
@@ -319,115 +362,11 @@ Loop (max 5 iterations):
 #   store_metrics_in: sqlite MCP
 ```
 
-### Evolution Loop Pattern
-
-```
-Using docs-curator with self-improver skill:
-
-Task: Evolve the agent configuration for better performance
-
-Evolution loop:
-Generation 1:
-- Analyze past 50 interactions (memory MCP)
-- Identify top 3 improvement areas
-- Generate config proposals
-- Apply changes
-- Store generation 1 results in sqlite MCP
-
-Generation 2-N (until convergence):
-- Measure improvement (tokens used, task success rate)
-- Use sqlite MCP to compare with previous generations
-- If improvement > 5%: Continue to next generation
-- If improvement < 5%: Stop, we've converged
-
-Final: Commit the best configuration (git MCP)
-```
-
 ---
 
-## 🚀 Advanced Loop Patterns
+## 📋 Best Practices#
 
-### Pattern 1: The "Doom Loop" (Controlled)
-
-**⚠️ Note:** The "doom_loop" permission is set to `"deny"` by default in `opencode.json`. Only enable for trusted workflows.
-
-```json
-// In opencode.json - only enable if you trust the workflow!
-"doom_loop": "ask"  // Will prompt before running
-```
-
-**Usage (with caution):**
-
-```
-Using lead-strategist:
-
-I want to run an iterative optimization loop for the build process.
-
-DOOM LOOP (will ask for confirmation):
-1. Run: npm run build
-2. Analyze: bundle size, build time (sqlite MCP for history)
-3. Optimize: Apply one optimization technique
-4. Re-run build
-5. IF build time reduced OR bundle smaller: Keep change, go to 3
-6. ELSE: Revert change, try different optimization
-7. Stop after: 10 iterations or no improvement for 3 attempts
-
-# Track with performance metrics
-# performance:
-#   track_metrics: [build_time, bundle_size]
-#   store_metrics_in: sqlite MCP
-```
-
-### Pattern 2: Multi-Agent Debate Loop
-
-```
-Using lead-strategist:
-
-Task: Decide on the best state management solution
-
-Debate loop (3 rounds):
-Round 1:
-- frontend-ui-ux: Proposes using zustand (context7 MCP for docs)
-- lead-architect: Proposes using Redux Toolkit (context7 MCP for docs)
-- backend-api: Proposes using React Query only
-- Store proposals in memory MCP
-
-Round 2: Each agent defends their choice
-- Compare: bundle size, learning curve, TypeScript support
-- Use sequential-thinking MCP for analysis
-
-Round 3: Vote and decide
-- Use memory MCP to persist the decision
-- Notify via Slack webhook (notifications feature)
-```
-
-### Pattern 3: Test-Driven Loop
-
-```
-Using qa-guardian:
-
-Implement feature using TDD loop:
-
-LOOP:
-1. Write one test (use sqlite MCP for test data)
-2. Run tests - should fail (Red)
-3. Implement minimal code to pass (core-factory)
-4. Run tests - should pass (Green)
-5. Refactor if needed (core-factory, use sequential-thinking MCP)
-6. If more tests needed: Go to 1
-7. Else: Done
-
-# Use retry_policy for flaky tests
-# retry_policy:
-#   max_attempts: 3
-#   backoff: linear
-```
-
----
-
-## 📋 Best Practices
-
-### 1. Set Clear Termination Conditions
+### 1. Set Clear Termination Conditions#
 
 **❌ Poor Loop (infinite risk):**
 
@@ -443,12 +382,9 @@ Refactor the code with these exit conditions:
 - No lint warnings
 - Maximum 5 iterations reached
 - Quality threshold met (use exit_criteria)
-
-# Use exit_criteria in workflow YAML
-# exit_criteria: "all_tests_pass AND max_iterations_reached"
 ```
 
-### 2. Use the Memory MCP for State
+### 2. Use the Memory MCP for State#
 
 ```
 Loop iteration 1-N:
@@ -458,7 +394,7 @@ Loop iteration 1-N:
 4. If new results worse than previous: Revert
 ```
 
-### 3. Combine with Workflow Manager Skill
+### 3. Combine with Workflow Manager Skill#
 
 The `workflow-manager` skill (Qwen-inspired) provides:
 
@@ -468,25 +404,9 @@ The `workflow-manager` skill (Qwen-inspired) provides:
 - SYNTHESIZE: Combine results (uses memory MCP)
 - VERIFY: Check quality gates (uses sqlite MCP for metrics)
 
-```
-Using lead-strategist with workflow-manager skill:
-
-Execute the workflow-manager skill for "optimize database queries":
-
-The skill will handle:
-- Creating the iteration plan (PLAN phase)
-- Delegating to backend-laravel agent (DELEGATE phase)
-- Synthesizing query performance results (SYNTHESIZE phase)
-- Verifying against performance benchmarks (VERIFY phase)
-- Looping if benchmarks not met (retry_policy)
-- Tracking metrics in sqlite MCP (performance feature)
-```
-
-### 4. Monitor Loop Performance
+### 4. Monitor Loop Performance#
 
 ```
-Using devops-engineer:
-
 Before starting loop:
 - Record baseline metrics (build time, test coverage, etc.)
 - Store in sqlite MCP
@@ -500,7 +420,7 @@ After loop:
 - Store improvement in knowledge graph (memory MCP)
 ```
 
-### 5. Avoid Infinite Loops
+### 5. Avoid Infinite Loops#
 
 Always include:
 
@@ -509,7 +429,6 @@ Always include:
 - Timeout mechanism (`timeout` in workflow YAML)
 
 ```yaml
-# In workflow YAML
 loop:
   max_iterations: 10
   timeout: 300000 # 5 minutes
@@ -518,110 +437,6 @@ loop:
     max_attempts: 3
     backoff: exponential
 ```
-
----
-
-## 🎯 Example: Complete Iterative Workflow
-
-```
-Using lead-strategist:
-
-I need to implement a real-time notification system with iterative refinement.
-
-WORKFLOW:
-
-Phase 1: ANALYZE
-- lead-architect: Analyze requirements and existing codebase (context7 MCP)
-- Output: Architecture document (stored in memory MCP)
-
-Phase 2: PLAN
-- lead-strategist: Create implementation plan with checkpoints (sequential-thinking MCP)
-- Checkpoint 1: Basic WebSocket connection
-- Checkpoint 2: Message sending/receiving
-- Checkpoint 3: Error handling & reconnection
-- Checkpoint 4: Frontend integration
-
-Phase 3: DELEGATE (iterative with features)
-For each checkpoint:
-  Loop (max 3 attempts, retry_policy: exponential):
-    1. backend-api: Implement checkpoint feature
-    2. qa-guardian: Write and run tests (parallel with step 3)
-    3. qa-guardian: Security scan (parallel with step 2)
-    4. IF tests fail OR security issues found:
-       - qa-guardian: Identify issues
-       - backend-api: Fix issues
-       - Continue loop
-    5. ELSE:
-       - Mark checkpoint complete
-       - Break loop
-  - Use parallel_groups: [qa-guardian_task1, qa-guardian_task2]
-
-Phase 4: SYNTHESIZE
-- lead-architect: Review all checkpoint implementations
-- Ensure they work together (use memory MCP to read all checkpoints)
-- Identify integration issues
-
-Phase 5: VERIFY
-- qa-guardian: Full system test (sqlite MCP for test data)
-- frontend-ui-ux: UI/UX review
-- Performance testing (tracked in sqlite MCP)
-
-IF verification fails:
-  - Return to Phase 3 for failing components
-ELSE:
-  - docs-curator: Update documentation (workflow-manager skill)
-  - Store final metrics in sqlite MCP (performance feature)
-  - DONE
-
-# Features Used:
-# - use_agent_router: true (phase 1, 2, 3)
-# - parallel_groups (phase 3)
-# - retry_policy (phase 3)
-# - mcp_tools: context7, memory, sequential-thinking, sqlite, git
-# - performance tracking (all phases)
-# - security scanning (phase 3, 5)
-```
-
----
-
-## 🔧 Configuring Loop Permissions
-
-In `opencode.json`, control loop execution:
-
-```json
-"permission": {
-  "doom_loop": "deny",  // Disable uncontrolled loops
-
-  "command": {
-    "*.loop": "ask",  // Prompt before any loop command
-    "*.iterate": "ask"
-  },
-
-  "task": {
-    "max_parallel": 5,  // Limit parallel agent executions
-    "timeout": 600000  // 10 min max per task
-  },
-
-  "workflow": {
-    "allow_parallel": true,  // Enable parallel_groups
-    "max_parallel_tasks": 3,
-    "performance_tracking": true  // Enable metrics
-  }
-}
-```
-
----
-
-## 💡 Quick Reference
-
-| Pattern         | Best For                  | Agent(s)                    | Tool/Feature                        |
-| :-------------- | :------------------------ | :-------------------------- | :---------------------------------- |
-| Retry Loop      | Error recovery            | core-factory                | bash (test), retry_policy           |
-| Refinement Loop | Quality improvement       | frontend-ui-ux, qa-guardian | Task, memory MCP, context7          |
-| TDD Loop        | Test-driven development   | qa-guardian, core-factory   | bash (test), sqlite MCP             |
-| Evolution Loop  | Self-improvement          | docs-curator                | self-reflection skill, memory MCP   |
-| Debate Loop     | Decision making           | lead-strategist + team      | Task (parallel), memory MCP         |
-| Batch Loop      | Processing multiple items | core-factory                | bash (find, xargs), parallel_groups |
 
 ---
 

@@ -1,7 +1,7 @@
 import { parseJsonc } from "./jsonc-utils";
 import { Plugin, tool } from "@opencode-ai/plugin";
-import { readFileSync } from "fs";
-import { join } from "path";
+import { readFileSync, accessSync } from "node:fs";
+import { join, dirname, parse } from "node:path";
 
 interface SkillEntry {
   name: string;
@@ -15,22 +15,43 @@ interface SkillEntry {
   entryPoint: string;
 }
 
+// Find project root by looking for opencode.json
+function findProjectRoot(startDir: string): string | null {
+  let current = startDir;
+  const root = parse(current).root;
+
+  while (current !== root) {
+    try {
+      accessSync(join(current, "opencode.json"));
+      return current;
+    } catch {
+      current = dirname(current);
+    }
+  }
+
+  // Check root
+  try {
+    accessSync(join(root, "opencode.json"));
+    return root;
+  } catch {
+    return null;
+  }
+}
+
 const SkillManagerPlugin: Plugin = async ({ directory }) => {
-  const candidates = [
-    join(directory, "opencode", "skills", "index.json"),
-    join(directory, "skills", "index.json"),
-  ];
+  const projectRoot = findProjectRoot(directory);
   let skillsIndexPath: string | null = null;
-  for (const candidate of candidates) {
+  let skills: SkillEntry[] = [];
+
+  if (projectRoot) {
+    const candidate = join(projectRoot, "skills", "index.json");
     try {
       readFileSync(candidate, "utf8");
       skillsIndexPath = candidate;
-      break;
     } catch {
-      continue;
+      // ignore
     }
   }
-  let skills: SkillEntry[] = [];
 
   if (skillsIndexPath) {
     try {
@@ -40,7 +61,7 @@ const SkillManagerPlugin: Plugin = async ({ directory }) => {
       console.error("Failed to read skills index:", e);
     }
   } else {
-    console.error("Failed to find skills index in:", candidates);
+    console.error("Failed to find skills index from directory:", directory);
   }
 
   return {

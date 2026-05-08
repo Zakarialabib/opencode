@@ -1,18 +1,47 @@
 import { parseJsonc } from "./jsonc-utils";
 import { Plugin, tool } from "@opencode-ai/plugin";
-import { readFileSync } from "fs";
-import { join } from "path";
+import { readFileSync, accessSync } from "node:fs";
+import { join, dirname, parse } from "node:path";
+
+// Find project root by looking for opencode.json
+function findConfigPath(startDir: string): string | null {
+  let current = startDir;
+  const root = parse(current).root;
+
+  while (current !== root) {
+    try {
+      const configPath = join(current, "opencode.json");
+      accessSync(configPath);
+      return configPath;
+    } catch {
+      current = dirname(current);
+    }
+  }
+
+  // Check root
+  try {
+    const configPath = join(root, "opencode.json");
+    accessSync(configPath);
+    return configPath;
+  } catch {
+    return null;
+  }
+}
 
 const MCPManagerPlugin: Plugin = async ({ client, project, directory }) => {
-  const configPath = join(directory, "opencode.json");
+  const configPath = findConfigPath(directory);
   let mcpConfig: Record<string, any> = {};
 
-  try {
-    const content = readFileSync(configPath, "utf8");
-    const config = parseJsonc(content);
-    mcpConfig = config.mcp || {};
-  } catch (e) {
-    console.error("Failed to read MCP config:", e);
+  if (configPath) {
+    try {
+      const content = readFileSync(configPath, "utf8");
+      const config = parseJsonc(content);
+      mcpConfig = config.mcp || {};
+    } catch (e) {
+      console.error("Failed to read MCP config:", e);
+    }
+  } else {
+    console.error("Failed to find opencode.json from directory:", directory);
   }
 
   return {

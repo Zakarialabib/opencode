@@ -1,259 +1,145 @@
 # 🔌 Plugins Guide
 
-Plugins extend OpenCode's functionality via TypeScript modules that export hooks and custom tools. Plugins are registered in `opencode.json` under the `"plugin"` array.
+Plugins extend OpenCode's functionality via TypeScript/JavaScript modules that export hooks and custom tools. They are registered in `opencode.json` under the `"plugin"` array and loaded at startup.
+
+> See the official docs: [opencode.ai/docs/plugins](https://opencode.ai/docs/plugins/)
 
 ---
 
-## 🚀 Active Plugins
-
-### 1. **agent-router.ts** - Intelligent Agent Routing
-
-**Location**: `plugins/agent-router.ts`
-
-#### Features
-
-- **Task Analysis**: Automatically analyzes incoming messages to determine the best agent
-- **Keyword Matching**: Scores agents based on keyword matches (2 points each)
-- **Skill Matching**: Scores agents based on skill matches (3 points each)
-- **Auto-suggestion**: Hooks into `chat.message` to suggest agent switching
-
-#### Tools Provided
-
-| Tool          | Description                                                       |
-| ------------- | ----------------------------------------------------------------- |
-| `route_agent` | Analyze a task and recommend the best agent with detailed scoring |
-| `auto_route`  | Automatically suggest agent switching based on message content    |
-
-#### Example Usage
-
-```bash
-Ask lead-strategist: "Which agent should handle Laravel authentication?"
-# Returns: 🎯 Recommended Agent: **backend-laravel**
-#           Role: Laravel, Livewire, PHP 8.3 development
-#           Matched Keywords: laravel, authentication
-#           Use: `/agent backend-laravel`
-```
-
----
-
-### 2. **model-router.ts** - Smart Model Selection
-
-**Location**: `plugins/model-router.ts`
-
-#### Features
-
-- **Capability Registry**: Tracks tool calling and reasoning support per model
-- **Smart Routing**: Recommends best model based on requirements (tools, reasoning)
-- **Instruction Handling**: Converts instructions to system prompt for incompatible models
-
-#### Tools Provided
-
-| Tool              | Description                                |
-| ----------------- | ------------------------------------------ |
-| `check_model`     | Check capabilities of a specific model     |
-| `recommend_model` | Recommend best model based on requirements |
-
-#### Hook
-
-- **`model.call`**: Intercepts model calls to handle instruction parameter differences
-
----
-
-### 3. **mcp-manager.ts** - MCP Server Management
-
-**Location**: `plugins/mcp-manager.ts`
-
-#### Features
-
-- **Server Listing**: Lists all configured MCP servers and their status
-- **Health Checks**: Checks if MCP servers are responding
-- **Toggle Control**: Enable/disable MCP servers (requires restart)
-
-#### Tools Provided
-
-| Tool         | Description                                      |
-| ------------ | ------------------------------------------------ |
-| `mcp_list`   | List all configured MCP servers and their status |
-| `mcp_check`  | Check health of a specific MCP server            |
-| `mcp_toggle` | Enable or disable an MCP server                  |
-
----
-
-### 4. **skill-manager.ts** - Skill Registry Access
-
-**Location**: `plugins/skill-manager.ts`
-
-#### Features
-
-- **Skill Listing**: Lists all registered skills with agent assignments
-- **Skill Details**: Get comprehensive information about a specific skill
-- **Skill Search**: Search skills by keyword, description, or tags
-
-#### Tools Provided
-
-| Tool           | Description                                     |
-| -------------- | ----------------------------------------------- |
-| `skill_list`   | List all registered skills (filter by category) |
-| `skill_info`   | Get detailed information about a specific skill |
-| `skill_search` | Search for skills by keyword or tag             |
-
----
-
-### 5. **context-manager.ts** - Context Configuration
-
-**Location**: `plugins/context-manager.ts`
-
-#### Features
-
-- **Context Viewing**: View current include/exclude patterns
-- **Dynamic Updates**: Add/remove patterns from context configuration
-- **Reset to Defaults**: Restore default context configuration
-
-#### Tools Provided
-
-| Tool                  | Description                            |
-| --------------------- | -------------------------------------- |
-| `context_view`        | View current context configuration     |
-| `context_add_include` | Add pattern to context include list    |
-| `context_add_exclude` | Add pattern to context exclude list    |
-| `context_reset`       | Reset context configuration to default |
-
----
-
-### 6. **extension-context-bridge.ts** - IDE Integration
-
-**Location**: `plugins/extension-context-bridge.ts`
-
-#### Purpose
-
-Bridges context between OpenCode and IDE extensions for seamless integration.
-
----
-
-### 7. **ide-mcp-bridge.ts** - IDE MCP Integration
-
-**Location**: `plugins/ide-mcp-bridge.ts`
-
-#### Purpose
-
-Exposes MCP tools to IDE extensions, allowing IDEs to leverage OpenCode's MCP servers.
-
----
-
-### 8. **language-context-bridge.ts** - LSP Integration
-
-**Location**: `plugins/language-context-bridge.ts`
-
-#### Purpose
-
-Bridges language server context to agents for enhanced code intelligence.
-
----
-
-### 9. **process-monitor.ts** - Process Management
-
-**Location**: `plugins/process-monitor.ts`
-
-#### Purpose
-
-Monitors and manages background processes spawned by agents.
-
----
-
-### 10. **index.ts** - Legacy LM Studio Plugin
-
-**Location**: `plugins/index.ts`
-
-#### Features
-
-- **LM Studio Health Monitoring**: Checks server health before each message
-- **Model Management**: Load/unload models, list available models
-- **Self-Improvement Engine**: Generates config improvement proposals
-
-#### Tools Provided
-
-| Tool                        | Description                               |
-| --------------------------- | ----------------------------------------- |
-| `lmstudio_health`           | Check LM Studio server health and version |
-| `lmstudio_models`           | List available models from LM Studio      |
-| `lmstudio_load_model`       | Load a specific model in LM Studio        |
-| `lmstudio_unload_model`     | Unload the current model                  |
-| `apply_config_improvements` | Apply proposed config improvements        |
-| `evaluate_agent`            | Evaluate agent performance metrics        |
-
-#### Hooks
-
-- **`chat.message`**: Pre-flight LM Studio health check
-- **`tool.execute.after`**: Log tool usage patterns
-- **`session.archived`**: Generate config improvement proposals
-
----
-
-## 📦 External Plugins (npm)
-
-| Plugin                        | Purpose                              |
+## 🚀 Active Plugins (11 total)
+
+### Core Plugins (7 — work in web + CLI)
+
+| #   | Plugin              | File                 | Purpose                                                                    |
+| --- | ------------------- | -------------------- | -------------------------------------------------------------------------- |
+| 1   | **Self-Improve**    | `index.ts`           | LM Studio health checks, model management, config improvement proposals    |
+| 2   | **Agent Router**    | `agent-router.ts`    | Intelligent task-to-agent routing with keyword/skill scoring               |
+| 3   | **Model Router**    | `model-router.ts`    | Smart model selection based on tool/reasoning capabilities                 |
+| 4   | **MCP Manager**     | `mcp-manager.ts`     | List, check, and toggle MCP servers                                        |
+| 5   | **Skill Manager**   | `skill-manager.ts`   | List, search, and inspect registered skills                                |
+| 6   | **Context Manager** | `context-manager.ts` | Dynamic context include/exclude configuration                              |
+| 7   | **JSONC Utils**     | `jsonc-utils.ts`     | Shared utility for parsing JSONC config (with `//`-safe comment stripping) |
+
+### IDE/Trae Bridge Plugins (4 — require IDE context)
+
+| #   | Plugin                       | File                          | Purpose                                                       |
+| --- | ---------------------------- | ----------------------------- | ------------------------------------------------------------- |
+| 8   | **Extension Context Bridge** | `extension-context-bridge.ts` | Bridges extension context from Trae IDE                       |
+| 9   | **IDE MCP Bridge**           | `ide-mcp-bridge.ts`           | Exposes MCP servers running in IDE to OpenCode                |
+| 10  | **Language Context Bridge**  | `language-context-bridge.ts`  | LSP integration (rust-analyzer, TypeScript, PHP Intelephense) |
+| 11  | **Process Monitor**          | `process-monitor.ts`          | Process tree monitoring and health checks                     |
+
+### External (npm)
+
+| Package                       | Purpose                              |
 | ----------------------------- | ------------------------------------ |
 | `@zenobius/opencode-skillful` | Skill management and discovery tools |
 
-### Installation
+---
 
-```bash
-npm install -g @zenobius/opencode-skillful
-```
+## 🛠️ Tools Provided by Each Core Plugin
+
+### Agent Router (`agent-router.ts`)
+
+| Tool          | Description                                        |
+| ------------- | -------------------------------------------------- |
+| `route_agent` | Analyze task and recommend best agent with scoring |
+| `auto_route`  | Automatically suggest agent switching              |
+
+### Model Router (`model-router.ts`)
+
+| Tool              | Description                                                             |
+| ----------------- | ----------------------------------------------------------------------- |
+| `check_model`     | Check capabilities of a specific model (tools, reasoning, instructions) |
+| `recommend_model` | Recommend best model based on requirements                              |
+
+### MCP Manager (`mcp-manager.ts`)
+
+| Tool         | Description                                        |
+| ------------ | -------------------------------------------------- |
+| `mcp_list`   | List all configured MCP servers and their status   |
+| `mcp_check`  | Check health of a specific MCP server              |
+| `mcp_toggle` | Enable or disable an MCP server (requires restart) |
+
+### Skill Manager (`skill-manager.ts`)
+
+| Tool           | Description                                       |
+| -------------- | ------------------------------------------------- |
+| `skill_list`   | List all registered skills (filter by category)   |
+| `skill_info`   | Get detailed information about a specific skill   |
+| `skill_search` | Search for skills by keyword, tag, or description |
+
+### Context Manager (`context-manager.ts`)
+
+| Tool                  | Description                                   |
+| --------------------- | --------------------------------------------- |
+| `context_view`        | View current context include/exclude patterns |
+| `context_add_include` | Add pattern to context include list           |
+| `context_add_exclude` | Add pattern to context exclude list           |
+| `context_reset`       | Reset context configuration to defaults       |
+
+### Self-Improve (`index.ts`)
+
+| Tool                        | Description                                     |
+| --------------------------- | ----------------------------------------------- |
+| `lmstudio_health`           | Check LM Studio server health and version       |
+| `lmstudio_models`           | List available models from LM Studio            |
+| `lmstudio_load_model`       | Load a specific model in LM Studio              |
+| `lmstudio_unload_model`     | Unload the current model                        |
+| `apply_config_improvements` | Apply proposed config improvements after review |
+| `evaluate_agent`            | Evaluate agent performance metrics              |
 
 ---
 
-## 🛠️ Plugin Configuration
+## 📦 Plugin Registration
 
-Registered in `opencode.json`:
+Plugins are registered in `opencode.json`:
 
 ```json
 {
   "plugin": [
-    "C:\\opencode\\plugins\\index.ts",
-    "C:\\opencode\\plugins\\agent-router.ts",
-    "C:\\opencode\\plugins\\model-router.ts",
-    "C:\\opencode\\plugins\\mcp-manager.ts",
-    "C:\\opencode\\plugins\\skill-manager.ts",
-    "C:\\opencode\\plugins\\context-manager.ts",
-    "C:\\opencode\\plugins\\extension-context-bridge.ts",
-    "C:\\opencode\\plugins\\ide-mcp-bridge.ts",
-    "C:\\opencode\\plugins\\language-context-bridge.ts",
-    "C:\\opencode\\plugins\\process-monitor.ts",
+    "plugins/index.ts",
+    "plugins/agent-router.ts",
+    "plugins/model-router.ts",
+    "plugins/mcp-manager.ts",
+    "plugins/skill-manager.ts",
+    "plugins/context-manager.ts",
+    "plugins/extension-context-bridge.ts",
+    "plugins/ide-mcp-bridge.ts",
+    "plugins/language-context-bridge.ts",
+    "plugins/process-monitor.ts",
     "@zenobius/opencode-skillful"
   ]
 }
 ```
 
+**Local plugins** (relative/absolute file paths) are loaded directly.  
+**npm plugins** (package names) are installed automatically using Bun at startup. Packages are cached in `~/.cache/opencode/node_modules/`.
+
 ---
 
-## 🚀 Creating Your Own Plugin
+## 🏗️ Creating Your Own Plugin
 
-OpenCode plugins are TypeScript modules that export a Plugin function:
+A plugin is a TypeScript/JavaScript module that exports a default function receiving a context object and returning a hooks object.
+
+### Basic Structure
 
 ```typescript
 import { Plugin, tool } from "@opencode-ai/plugin";
 
 const MyPlugin: Plugin = async ({ client, project, directory }) => {
   return {
-    // Hook: Before each message
-    "chat.message": async ({ sessionID, agent, messageID, message }) => {
-      // Your logic here
-      console.log(`Message from ${agent}: ${message.slice(0, 50)}...`);
-    },
-
-    // Hook: Before/after tool execution
+    // Hooks — intercept and modify behavior
     "tool.execute.before": async (input, output) => {
       if (input.tool === "bash") {
-        // Modify bash commands
-        output.args.command = escape(output.args.command);
+        // Modify bash commands before execution
       }
     },
 
-    // Custom tools
+    // Custom tools — callable by agents
     tool: {
       my_tool: tool({
-        description: "My custom tool",
+        description: "What this tool does",
         args: {
           param: tool.schema.string().describe("A parameter"),
         },
@@ -268,46 +154,93 @@ const MyPlugin: Plugin = async ({ client, project, directory }) => {
 export default MyPlugin;
 ```
 
+### Context Object
+
+The plugin function receives:
+
+- **`client`**: SDK client for logging and AI interaction
+- **`project`**: Current project information
+- **`directory`**: Working directory path
+
 ### Available Hooks
 
-| Hook                              | Description                                 |
-| --------------------------------- | ------------------------------------------- |
-| `chat.message`                    | Called before/after each chat message       |
-| `chat.params`                     | Modify parameters sent to LLM               |
-| `tool.execute.before/after`       | Intercept tool calls before/after execution |
-| `model.call`                      | Intercept model API calls                   |
-| `session.archived`                | Called when session ends                    |
-| `experimental.session.compacting` | Customize session compaction                |
+| Hook                              | Description                           |
+| --------------------------------- | ------------------------------------- |
+| `tool.execute.before`             | Intercept tool calls before execution |
+| `tool.execute.after`              | Intercept tool calls after execution  |
+| `chat.message`                    | Before/after each chat message        |
+| `chat.params`                     | Modify parameters sent to LLM         |
+| `model.call`                      | Intercept model API calls             |
+| `session.archived`                | Called when session ends              |
+| `experimental.session.compacting` | Customize session compaction context  |
+
+> See [opencode.ai/docs/plugins/#events](https://opencode.ai/docs/plugins/#events) for the complete list.
 
 ---
 
-## 📂 Plugin Structure
+## 🔧 Utility: jsonc-utils.ts
+
+The `jsonc-utils.ts` file provides a shared `parseJsonc()` function that all core plugins use to parse `opencode.json`. It correctly handles:
+
+- **URLs with `https://`** — `//` inside strings is NOT treated as a comment
+- **Single-line comments** (`// comment`) — stripped only when outside strings
+- **Multi-line comments** (`/* comment */`) — stripped only when outside strings
+- **Escaped characters** — `\"` and `\\` inside strings are preserved
+
+```typescript
+// Usage in any plugin:
+import { parseJsonc } from "./jsonc-utils";
+
+const config = parseJsonc(readFileSync("opencode.json", "utf8"));
+```
+
+---
+
+## 📂 Plugin File Structure
 
 ```
 plugins/
-├── agent-router.ts          # Intelligent agent routing
-├── model-router.ts          # Smart model selection
-├── mcp-manager.ts          # MCP server management
-├── skill-manager.ts         # Skill registry access
-├── context-manager.ts       # Context configuration
-├── extension-context-bridge.ts  # IDE integration
-├── ide-mcp-bridge.ts       # IDE MCP bridge
-├── language-context-bridge.ts   # LSP integration
-├── process-monitor.ts      # Process management
-├── index.ts                # Legacy LM Studio plugin
-└── README.md              # Plugin documentation
+├── jsonc-utils.ts              # Shared JSONC parser (used by all config-reading plugins)
+├── index.ts                    # Self-improve + LM Studio tools
+├── agent-router.ts             # Task-to-agent routing
+├── model-router.ts             # Model capability routing
+├── mcp-manager.ts              # MCP server management
+├── skill-manager.ts            # Skill registry access
+├── context-manager.ts          # Context configuration
+├── extension-context-bridge.ts # Trae IDE extension bridge
+├── ide-mcp-bridge.ts           # IDE MCP bridge
+├── language-context-bridge.ts  # LSP integration bridge
+├── process-monitor.ts          # Process monitoring
+└── tests/                      # Test suite
+    ├── parseJsonc.test.js      # JSONC parser unit tests
+    └── core-plugins-e2e.test.js # Core plugin integration tests
 ```
 
 ---
 
 ## 💡 Plugin Development Tips
 
-1. **Use TypeScript**: Plugins are written in TypeScript and loaded by OpenCode
-2. **Export Default**: Always export a default function that returns the plugin object
-3. **Hook into Events**: Use hooks to intercept and modify OpenCode behavior
-4. **Provide Tools**: Add custom tools that agents can call
-5. **Error Handling**: Wrap async operations in try-catch blocks
-6. **Logging**: Use `client.app.log()` for structured logging
+1. **Use TypeScript**: Import `Plugin` type from `@opencode-ai/plugin` for type safety
+2. **Export Default**: Always use `export default` for the plugin function
+3. **Use `parseJsonc`**: For reading config, import from `./jsonc-utils` to safely handle URLs in JSON
+4. **Use `client.app.log()`**: For structured logging instead of `console.log`
+5. **Error Handling**: Wrap async operations in try-catch to prevent plugin crashes
+6. **Node.js Compatible**: Use `fs/promises` instead of Bun-specific APIs for portability
+
+### Logging
+
+```typescript
+await client.app.log({
+  body: {
+    service: "my-plugin",
+    level: "info",
+    message: "Plugin initialized",
+    extra: { key: "value" },
+  },
+});
+```
+
+Levels: `debug`, `info`, `warn`, `error`.
 
 ---
 
@@ -316,47 +249,5 @@ plugins/
 
 ---
 
-## 🔗 Integration with Agent Routing & Workflows
-
-Plugins work together with the agent routing and workflow systems.
-
-### Agent Router + Skill Manager
-
-```
-User: "Generate a PDF report"
-→ agent-router: Detects "pdf" keyword, scores agents (3 points for skill match)
-→ Recommends: qa-guardian (for agent-browser skill)
-→ skill-manager: Confirms pdf skill is assigned to qa-guardian
-→ Result: Use `/agent qa-guardian` then ask to generate PDF
-```
-
-### Model Router + Context Manager
-
-```
-User: "Analyze this complex architecture"
-→ model-router: Recommends model with reasoning support (check_model tool)
-→ context-manager: Ensures architecture files are in context (context_view tool)
-→ Result: Uses appropriate model with full project context
-```
-
-### Plugin Hooks in Workflows
-
-Plugins can hook into workflow events:
-
-```typescript
-// agent-router.ts hook example
-"chat.message": async ({ sessionID, agent, messageID, message }) => {
-  // Analyze message for workflow triggers
-  if (message.includes("workflow") || message.includes("feature")) {
-    const routing = analyzeTask(message);
-    if (routing.recommendedAgent !== agent) {
-      return `💡 Consider switching to ${routing.recommendedAgent} for this workflow`;
-    }
-  }
-}
-```
-
----
-
 > [!TIP]
-> Use the `route_agent` tool to let the system recommend the best agent for your task. Combine with `skill_search` to discover relevant skills, and `mcp_list` to verify MCP server availability.
+> Use `mcp_list` to verify MCP server status, `route_agent` to find the best agent for your task, and `skill_search` to discover relevant skills. Combine with `skill_list` to see available capabilities.

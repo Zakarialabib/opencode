@@ -1,7 +1,32 @@
 import { parseJsonc } from "./jsonc-utils";
 import { Plugin, tool } from "@opencode-ai/plugin";
-import { readFileSync } from "fs";
-import { join } from "path";
+import { readFileSync, accessSync } from "node:fs";
+import { join, dirname, parse } from "node:path";
+
+// Find project root by looking for opencode.json
+function findConfigPath(startDir: string): string | null {
+  let current = startDir;
+  const root = parse(current).root;
+
+  while (current !== root) {
+    try {
+      const configPath = join(current, "opencode.json");
+      accessSync(configPath);
+      return configPath;
+    } catch {
+      current = dirname(current);
+    }
+  }
+
+  // Check root
+  try {
+    const configPath = join(root, "opencode.json");
+    accessSync(configPath);
+    return configPath;
+  } catch {
+    return null;
+  }
+}
 
 // Type definitions
 interface ModelCapabilities {
@@ -49,13 +74,17 @@ const DEFAULT_MODEL_CAPABILITIES: ModelRegistry = {
 const ModelRouterPlugin: Plugin = async ({ directory }) => {
   let MODEL_CAPABILITIES: ModelRegistry = DEFAULT_MODEL_CAPABILITIES;
 
-  try {
-    const configPath = join(directory, "opencode.json");
-    const config = parseJsonc(readFileSync(configPath, "utf8"));
-    if (config.models && typeof config.models === "object") {
-      MODEL_CAPABILITIES = config.models as ModelRegistry;
+  const configPath = findConfigPath(directory);
+  if (configPath) {
+    try {
+      const config = parseJsonc(readFileSync(configPath, "utf8"));
+      if (config.models && typeof config.models === "object") {
+        MODEL_CAPABILITIES = config.models as ModelRegistry;
+      }
+    } catch {
+      console.log("Using default model capabilities registry");
     }
-  } catch {
+  } else {
     console.log("Using default model capabilities registry");
   }
 

@@ -1,5 +1,4 @@
 import { Plugin, tool } from "@opencode-ai/plugin";
-import { $ } from "bun";
 import { readFile } from "fs/promises";
 import { join } from "path";
 

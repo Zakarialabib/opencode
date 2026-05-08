@@ -1,7 +1,32 @@
 import { parseJsonc } from "./jsonc-utils";
 import { Plugin, tool } from "@opencode-ai/plugin";
-import { readFileSync } from "fs";
-import { join } from "path";
+import { readFileSync, accessSync } from "node:fs";
+import { join, dirname, parse } from "node:path";
+
+// Find project root by looking for opencode.json
+function findConfigPath(startDir: string): string | null {
+  let current = startDir;
+  const root = parse(current).root;
+
+  while (current !== root) {
+    try {
+      const configPath = join(current, "opencode.json");
+      accessSync(configPath);
+      return configPath;
+    } catch {
+      current = dirname(current);
+    }
+  }
+
+  // Check root
+  try {
+    const configPath = join(root, "opencode.json");
+    accessSync(configPath);
+    return configPath;
+  } catch {
+    return null;
+  }
+}
 
 // Type definitions
 interface AgentRule {
@@ -220,13 +245,17 @@ const AgentRouterPlugin: Plugin = async ({ client, project, directory }) => {
   // Load agent routing rules from config, fallback to defaults
   let AGENT_RULES: AgentRule[] = DEFAULT_AGENT_RULES;
 
-  try {
-    const configPath = join(directory, "opencode.json");
-    const config = parseJsonc(readFileSync(configPath, "utf8"));
-    if (config.agents && Array.isArray(config.agents)) {
-      AGENT_RULES = config.agents as AgentRule[];
+  const configPath = findConfigPath(directory);
+  if (configPath) {
+    try {
+      const config = parseJsonc(readFileSync(configPath, "utf8"));
+      if (config.agents && Array.isArray(config.agents)) {
+        AGENT_RULES = config.agents as AgentRule[];
+      }
+    } catch (e) {
+      console.log("Using default agent routing rules");
     }
-  } catch (e) {
+  } else {
     console.log("Using default agent routing rules");
   }
 

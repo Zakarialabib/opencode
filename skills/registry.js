@@ -56,7 +56,7 @@ class SkillRegistry {
       name: skillName,
       path: skillDir,
       content: content,
-      metadata: this.extractMetadata(content),
+      metadata: this.extractMetadata(content, skillName),
     };
 
     // Load metadata from index if available
@@ -69,7 +69,7 @@ class SkillRegistry {
     return skill;
   }
 
-  extractMetadata(content) {
+  extractMetadata(content, skillName) {
     const metadata = {};
     const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
     if (!match) {
@@ -82,7 +82,7 @@ class SkillRegistry {
         return parsed;
       }
     } catch (error) {
-      console.warn("Failed to parse SKILL.md frontmatter:", error.message);
+      console.warn(`Failed to parse SKILL.md frontmatter for ${skillName}:`, error.message);
     }
 
     return metadata;

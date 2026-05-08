@@ -1,31 +1,34 @@
 # 🌌 OpenCode User Guide
 
-Welcome to the **OpenCode** ecosystem. This guide will help you navigate the agentic framework, leverage built-in skills, plugins, and automate your development workflow.
+Welcome to the **OpenCode** ecosystem. This guide helps you navigate the agentic framework, leverage built-in skills, plugins, and automate your development workflow.
 
 ---
 
 ## 🧭 Navigation
 
-| Section                                      | Description                                                               |
-| :------------------------------------------- | :------------------------------------------------------------------------ |
-| [**👥 Engineering Team**](Agents-Guide.md)   | Meet your 10 configured AI agents with intelligent routing.               |
-| [**⚡ Workflows Guide**](Workflows-Guide.md) | Automate complex tasks with multi-agent workflows.                        |
-| [**🔌 Plugins Guide**](Plugins-Guide.md)     | Extend OpenCode with 10+ plugins including agent-router and MCP managers. |
-| [**🛠️ Skills Guide**](Skills-Guide.md)       | Deep dive into 16 specialized capabilities with MCP integration.          |
+| Section                                                            | Description                                                             |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| [**👥 Agents Guide**](Agents-Guide.md)                             | Meet your 10 configured AI agents with intelligent routing              |
+| [**⚡ Workflows Guide**](Workflows-Guide.md)                       | Automate complex tasks with multi-agent workflows                       |
+| [**🔌 Plugins Guide**](Plugins-Guide.md)                           | Extend OpenCode with 11 plugins including agent-router and MCP managers |
+| [**🛠️ Skills Guide**](Skills-Guide.md)                             | Deep dive into specialized capabilities with MCP integration            |
+| [**💬 Prompting Guide**](Prompting-Guide.md)                       | Master the art of prompting agents for maximum productivity             |
+| [**🧠 Context Engineering**](Prompting-and-Context-Engineering.md) | MVI philosophy and plan-first workflows                                 |
+| [**🔄 Agent Loop Guide**](Agent-Loop-Guide.md)                     | Iterative execution and self-improvement patterns                       |
 
 ---
 
 ## 🚀 Getting Started
 
-OpenCode uses specialized agents configured in `opencode.json` to handle different aspects of software development, with intelligent routing and workflow orchestration.
+OpenCode uses specialized agents configured in `opencode.json` to handle different aspects of software development.
 
 ### Core Philosophy
 
-1. **Plan Before Action**: Use `lead-strategist` or `lead-architect` for analysis before major changes (uses sequential-thinking MCP).
-2. **Specialization Wins**: Use the right agent for the right task (e.g., `backend-laravel` for PHP, `frontend-ui-ux` for CSS).
-3. **Intelligent Routing**: The `agent-router` plugin automatically recommends the best agent.
-4. **Workflow Automation**: Use `workflow-manager` skill for complex multi-step tasks with parallel execution and MCP integration.
-5. **Continuous Improvement**: The `docs-curator` agent uses the `self-reflection` and `self-improver` skills to learn from your codebase.
+1. **Plan Before Action**: Use `lead-strategist` or `lead-architect` for analysis before major changes (uses Sequential Thinking MCP)
+2. **Specialization Wins**: Use the right agent for the right task (e.g., `backend-laravel` for PHP, `frontend-ui-ux` for CSS)
+3. **Intelligent Routing**: The `agent-router` plugin automatically recommends the best agent
+4. **Workflow Automation**: Use `workflow-manager` skill for complex multi-step tasks with MCP integration
+5. **Continuous Improvement**: The `docs-curator` agent uses `self-reflection` and `self-improver` skills
 
 ### Quick Start
 
@@ -35,37 +38,25 @@ OpenCode uses specialized agents configured in `opencode.json` to handle differe
 
 # Let the system recommend an agent (agent-router plugin)
 Ask: "Which agent should handle Laravel authentication?"
-→ Returns: 🎯 Recommended Agent: **backend-laravel** (score: 8 points)
+→ Returns: 🎯 Recommended Agent: **backend-laravel** (score: 8)
 
-# Run a command (delegates to configured agent)
+# Run commands (delegated to configured agents)
 /build          # Runs npm build via core-factory
 /test           # Runs test suite via qa-guardian
 /lint           # Runs linter checks via qa-guardian
 /reflect        # Triggers self-reflection via docs-curator
-
-# Use workflow manager for complex tasks
-Ask lead-strategist: "Add user authentication feature"
-→ Loads feature-development.yaml
-→ Phase 1: Strategy & Analysis (agent-router + context7 MCP)
-→ Phase 2: Design & Planning (parallel_groups: backend + frontend)
-→ Phase 3: Implementation (retry_policy: 3 attempts)
-→ Phase 4: QA & Security (security scanning enabled)
-→ Phase 5: Documentation & Evolution
-
-# Check workflow status
-Ask lead-strategist: "Show workflow performance metrics"
-→ Returns: time_to_complete, success_rate, token_usage from sqlite MCP
+/audit          # Full project audit: lint + tests via qa-guardian
+/clean          # Clean project caches via devops-engineer
+/db:init        # Initialize database via devops-engineer
+/db:backup      # Backup database via devops-engineer
+/process:check  # Check process health via devops-engineer
 ```
 
 ---
 
 ## 🛠️ Essential Tools
 
-OpenCode integrates several high-performance tools:
-
 ### MCP Servers (9 configured)
-
-Configured in `opencode.json` with timeouts to prevent hanging:
 
 | Server                | Purpose                                    | Timeout |
 | --------------------- | ------------------------------------------ | ------- |
@@ -75,91 +66,66 @@ Configured in `opencode.json` with timeouts to prevent hanging:
 | `git`                 | Git repository operations                  | 20s     |
 | `fetch`               | Web content fetching                       | 15s     |
 | `sqlite`              | SQLite database operations                 | 15s     |
-| `sequential-thinking` | Step-by-step reasoning (MCP)               | 30s     |
+| `sequential-thinking` | Step-by-step reasoning                     | 30s     |
 | `language-server`     | LSP integration                            | 20s     |
-| `type-inject`         | Type injection for PHP                     | 20s     |
+| `type-inject`         | TypeScript type injection                  | 20s     |
 
-All MCP servers are managed via the `mcp-manager` plugin (`mcp_list`, `mcp_check`, `mcp_toggle` tools).
+Use `mcp_list` to view all servers, `mcp_check` for health status, `mcp_toggle` to enable/disable.
 
 ### LSP Integration
 
-Real-time code analysis via rust-analyzer, TypeScript LSP, PHP Intelephense
+Real-time code analysis via rust-analyzer, TypeScript LSP, PHP Intelephense, Tailwind CSS.
 
 ### Auto-Formatters
 
-Built-in support for Biome (JS/TS), Prettier (CSS/HTML/MD), Pint (PHP), rustfmt (Rust), shfmt (Shell)
-
----
-
-## 💡 Quick Tips
-
-- **@[docs]**: Mention this to give agents access to the documentation directory.
-- **Self-Improvement**: Use `/reflect` or ask `docs-curator` to analyze and improve configuration.
-- **Context7**: Automatically fetches up-to-date documentation for Tauri, React, Laravel via `stack-context` skill.
-- **Task Tool**: The `lead-strategist` uses SubAgent delegation for complex multi-step tasks.
-- **Agent Routing**: Use `route_agent` tool to get intelligent agent recommendations based on task analysis.
-- **Model Selection**: Use `recommend_model` tool to find the best model for your specific requirements.
-- **Skill Search**: Use `skill_search` tool to discover relevant skills for your task.
-- **MCP Management**: Use `mcp_list` and `mcp_check` to monitor MCP server health and status.
+Built-in support for Biome (JS/TS), Prettier (CSS/HTML/MD), Pint (PHP), rustfmt (Rust), shfmt (Shell).
 
 ---
 
 ## 🎯 Model Configuration
 
-- **Default Model**: `opencode-go/kimi-k2.6` (fast implementation with tool support)
-- **Reasoning Model**: `opencode-go/kimi-k2.6` (used by `lead-strategist` for complex planning)
-- **Multiple Providers**: opencode, lmstudio, cerebras configured in `opencode.json`
-- **Smart Routing**: Use `model-router` plugin to automatically select best model based on task requirements (tools, reasoning)
+| Provider                  | Models                                          |
+| ------------------------- | ----------------------------------------------- |
+| **opencode-go** (default) | `kimi-k2.6`, `glm-5.1`, `qwen3.6-plus`          |
+| **cerebras**              | `qwen-3-235b-a22b-instruct-2507`, `zai-glm-4.7` |
+| **lmstudio** (local)      | `qwen3.5-4b`, `gemma-4-e4b-it`, `gemma-3n-e4b`  |
+| **opencode**              | `hy3-preview-free`                              |
+
+Use `recommend_model` to get model suggestions based on your requirements (tool calling, reasoning).
 
 ---
 
-## 🔗 Integrated Systems
+## 💡 Quick Tips
 
-OpenCode's power comes from the integration of multiple systems with workflow orchestration.
+- **Agent Routing**: Use `route_agent "your task"` to get intelligent agent recommendations
+- **Model Selection**: Use `recommend_model` to find the best model for your requirements
+- **Skill Search**: Use `skill_search query:"keyword"` to discover relevant skills
+- **MCP Management**: Use `mcp_list` and `mcp_check` to monitor MCP server health
+- **Context Configuration**: Use `context_view` to see current context patterns, `context_add_include` to add more
+- **Self-Improvement**: Use `/reflect` or ask `docs-curator` to analyze and improve configuration
+- **Web Version**: Access at `http://127.0.0.1:59596/` when running `opencode web`
 
-### Agent Routing + Workflow Management
+---
 
-```
-User: "Add authentication feature"
-→ agent-router: Analyzes task, recommends backend-laravel (score: 8)
-→ workflow-manager: Loads feature-development.yaml
-→ Phase 1: Strategy & Analysis (use_agent_router: true, context7 MCP)
-  → lead-strategist: Analyze patterns (sequential-thinking MCP)
-  → parallel_group: [research auth methods, check users table]
-→ Phase 2: Design & Planning (mcp_tools: sqlite, context7)
-  → backend-laravel: Design schema (parallel with frontend-ui-ux)
-→ Phase 3: Implementation (retry_policy: 3 attempts)
-  → backend-laravel: Create models, routes (parallel execution)
-→ Phase 4: QA & Security (security: scan for vulnerabilities)
-  → qa-guardian: Vulnerability scan (git MCP for commit history)
-→ Phase 5: Documentation & Evolution
-  → docs-curator: Update docs (memory MCP for state persistence)
-→ Result: Fully implemented, tested, and documented feature
-```
+## 🔗 Plugin Ecosystem (11 plugins)
 
-### Plugin Ecosystem (10 plugins)
+| Plugin                        | Purpose                                     |
+| ----------------------------- | ------------------------------------------- |
+| `agent-router.ts`             | Intelligent task-to-agent routing           |
+| `model-router.ts`             | Smart model selection based on capabilities |
+| `mcp-manager.ts`              | MCP server health and toggle management     |
+| `skill-manager.ts`            | Skill registry access and search            |
+| `context-manager.ts`          | Dynamic context configuration               |
+| `index.ts`                    | LM Studio management + self-improvement     |
+| `jsonc-utils.ts`              | Shared JSONC parser (comment-safe)          |
+| `extension-context-bridge.ts` | Trae IDE extension bridge                   |
+| `ide-mcp-bridge.ts`           | IDE MCP bridge                              |
+| `language-context-bridge.ts`  | LSP integration bridge                      |
+| `process-monitor.ts`          | Process monitoring                          |
 
-- **agent-router.ts**: Intelligent task-to-agent routing
-- **model-router.ts**: Smart model selection based on capabilities (tools, reasoning)
-- **mcp-manager.ts**: MCP server health and toggle management
-- **skill-manager.ts**: Skill registry access and search
-- **context-manager.ts**: Dynamic context configuration
-- Plus 5 more plugins for IDE integration, LSP bridging, and process monitoring
-
-### Workflow Features at a Glance
-
-| Feature                  | Description                              | Enabled by             |
-| ------------------------ | ---------------------------------------- | ---------------------- |
-| `use_agent_router: true` | Auto-route tasks to best agent per phase | agent-router plugin    |
-| `parallel_groups`        | Execute independent tasks concurrently   | Task tool (built-in)   |
-| `retry_policy`           | Configure max_attempts and backoff       | Task tool (built-in)   |
-| `mcp_tools`              | Declarative MCP tool usage per phase     | mcp-manager plugin     |
-| `performance`            | Track metrics (time, success, tokens)    | sqlite MCP             |
-| `security`               | Automated vulnerability scanning         | git MCP + qa-guardian  |
-| `notifications`          | Webhook/Slack on phase completion        | External webhook/Slack |
-| `exit_criteria`          | Define phase completion conditions       | Task tool (built-in)   |
+> See [**Plugins Guide**](Plugins-Guide.md) for complete details.
 
 ---
 
 > [!TIP]
-> Need help with a specific stack? Check out the [**Skills Guide**](Skills-Guide.md) to see how OpenCode auto-detects your project type via the `stack-context` skill. Use `route_agent` to let the system recommend the best agent for your task.
+> Need help with a specific stack? Check the [**Skills Guide**](Skills-Guide.md) to see how OpenCode auto-detects your project type. Use `route_agent` to let the system recommend the best agent for your task.

@@ -1,10 +1,39 @@
 import { parseJsonc, stringifyJson } from "./jsonc-utils";
 import { Plugin, tool } from "@opencode-ai/plugin";
-import { readFileSync, writeFileSync } from "fs";
-import { join } from "path";
+import { readFileSync, writeFileSync, accessSync } from "node:fs";
+import { join, dirname, parse } from "node:path";
+
+// Find project root by looking for opencode.json
+function findConfigPath(startDir: string): string | null {
+  let current = startDir;
+  const root = parse(current).root;
+
+  while (current !== root) {
+    try {
+      const configPath = join(current, "opencode.json");
+      accessSync(configPath);
+      return configPath;
+    } catch {
+      current = dirname(current);
+    }
+  }
+
+  // Check root
+  try {
+    const configPath = join(root, "opencode.json");
+    accessSync(configPath);
+    return configPath;
+  } catch {
+    return null;
+  }
+}
 
 const ContextManagerPlugin: Plugin = async ({ client, project, directory }) => {
-  const configPath = join(directory, "opencode.json");
+  const configPath = findConfigPath(directory);
+
+  if (!configPath) {
+    throw new Error(`Could not find opencode.json from directory: ${directory}`);
+  }
 
   const readConfig = (): Record<string, any> | null => {
     try {

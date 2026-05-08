@@ -71,13 +71,13 @@ Autonomously improve the project by:
    - Analyze: PSR-12 compliance, type hints, Laravel 13+ patterns
 ```
 
-### Phase 4: GLM Skill Audit
+### Phase 4: OpenCode Skill Audit
 
 ```
-1. Scan glm-skills/ directory
-2. Read glm-skills/glm-skills.json registry
+1. Scan skills/ directory
+2. Read skills/index.json registry
 3. Verify that all scripts use 'opencode' CLI instead of 'clawdhub'
-4. Suggest adaptations for new GLM skills added by user
+4. Suggest adaptations for new OpenCode skills added by user
 ```
 
 ### Phase 5: Auto-Format by Language

@@ -1,130 +1,179 @@
 # 🛠️ Skills Guide
 
-Skills are specialized capabilities registered in `skills/index.json`, with `SKILL.md` as the entry point. Agents load skills automatically based on task context. Skills can leverage MCP servers for enhanced capabilities.
+Skills are reusable instructions that agents load on-demand via the native `skill` tool. They provide specialized workflows, best practices, and tool integrations.
+
+> See the official docs: [opencode.ai/docs/skills](https://opencode.ai/docs/skills/)
 
 ---
 
 ## 🧐 What is a Skill?
 
-A skill is a directory containing a `SKILL.md` file and optional assets, registered in `skills/index.json`. It provides:
+A skill is a folder containing a `SKILL.md` file with YAML frontmatter. Agents discover skills automatically and load them when relevant to the task.
 
-- **Instructions**: How to use specific tools (e.g., `agent-browser`).
-- **Best Practices**: Coding standards for a stack (e.g., Laravel).
-- **Workflows**: Step-by-step guides for common tasks.
-- **MCP Integration**: Skills can reference MCP tools (context7, sqlite, sequential-thinking) for enhanced functionality.
+Each skill provides:
+
+- **Instructions**: How to use specific tools and APIs
+- **Best Practices**: Coding standards for a specific stack
+- **Workflows**: Step-by-step guides for common tasks
+- **MCP Integration**: References to MCP tools for enhanced capabilities
 
 ---
 
-## 📂 Skill Categories
+## 📂 Skill Locations
 
-### 1. **Registered Core Skills (`skills/`, registered in `skills/index.json`)**
+OpenCode searches these locations for skills (`<name>/SKILL.md`):
 
-These are managed skills with defined agent assignments and triggers. Many integrate with MCP servers:
+| Location                                    | Scope                           |
+| ------------------------------------------- | ------------------------------- |
+| `skills/<name>/SKILL.md`                    | Project (current configuration) |
+| `.opencode/skills/<name>/SKILL.md`          | Project (OpenCode native)       |
+| `~/.config/opencode/skills/<name>/SKILL.md` | Global (OpenCode native)        |
+| `.claude/skills/<name>/SKILL.md`            | Project (Claude-compatible)     |
+| `~/.claude/skills/<name>/SKILL.md`          | Global (Claude-compatible)      |
 
-| Skill                          | Category            | Agents                                                                                                | MCP Integration                      |
-| ------------------------------ | ------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| **`stack-context`**            | context-engineering | core-factory, core-planner, qa-debugger, qa-reviewer, backend-laravel, backend-tauri, lead-strategist | Uses `context7` for docs             |
-| **`self-reflection`**          | meta                | lead-strategist, lead-architect                                                                       | -                                    |
-| **`self-improver`**            | meta                | core-factory, core-planner, lead-strategist                                                           | Uses `memory` for persistence        |
-| **`security-review`**          | security            | qa-guardian, docs-curator                                                                             | -                                    |
-| **`laravel-feature-scaffold`** | laravel             | backend-laravel, core-factory                                                                         | -                                    |
-| **`project-orchestration`**    | orchestration       | lead-strategist                                                                                       | -                                    |
-| **`ui-ux-pro-max`**            | design              | frontend-ui-ux                                                                                        | -                                    |
-| **`agent-browser`**            | testing             | qa-guardian                                                                                           | Uses `fetch` for web content         |
-| **`testing-strategy`**         | testing             | qa-guardian                                                                                           | Uses `sqlite` for test data          |
-| **`database-design`**          | architecture        | lead-architect, core-factory                                                                          | Uses `sqlite` for schema             |
-| **`deep-research`**            | research            | docs-curator                                                                                          | Uses `context7`, `fetch`             |
-| **`docs-governance-audit`**    | documentation       | docs-curator, docs-writer                                                                             | -                                    |
-| **`git-release`**              | devops              | devops-engineer, core-factory                                                                         | -                                    |
-| **`react-reuse-audit`**        | frontend            | qa-guardian                                                                                           | -                                    |
-| **`workflow-manager`**         | orchestration       | lead-strategist, core-planner                                                                         | Uses `sequential-thinking`, `memory` |
-| **`fullstack-dev`**            | web-development     | backend-api, frontend-ui-ux                                                                           | -                                    |
+---
 
-See `skills/index.json` for the full list of 16 registered skills.
+## 📋 Skill Format (SKILL.md)
 
-### 2. **Community Skills (`skills/`)**
+Each `SKILL.md` must start with YAML frontmatter:
 
-A collection of community-driven skills (e.g., `qingyan-research`, `xlsx`, `ppt`, `skill-creator`, `charts`, `blog-writer`, etc.).
+```markdown
+---
+name: git-release
+description: Create consistent releases and changelogs
+license: MIT
+compatibility: opencode
+metadata:
+  audience: maintainers
+  workflow: github
+---
 
-### MCP Integration Patterns
+## What I do
+
+- Draft release notes from merged PRs
+- Propose a version bump
+- Provide a copy-pasteable `gh release create` command
+
+## When to use me
+
+Use this skill when preparing a tagged release.
+Ask clarifying questions if the versioning is unclear.
+```
+
+### Required Fields
+
+| Field         | Requirements                                                                                         |
+| ------------- | ---------------------------------------------------------------------------------------------------- |
+| `name`        | 1–64 chars, lowercase alphanumeric with hyphens (`^[a-z0-9]+(-[a-z0-9]+)*$`), must match folder name |
+| `description` | 1–1024 chars, specific enough for agents to choose correctly                                         |
+
+### Optional Fields
+
+| Field           | Purpose                                     |
+| --------------- | ------------------------------------------- |
+| `license`       | SPDX identifier (e.g., `MIT`, `Apache-2.0`) |
+| `compatibility` | Platform compatibility (e.g., `opencode`)   |
+| `metadata`      | String-to-string map for tags/audience info |
+
+---
+
+## 🎯 Available Skills
+
+### Core Registered Skills
+
+These skills are managed via `skills/index.json` with agent assignments:
+
+| Skill                          | Category            | Agents                                                        |
+| ------------------------------ | ------------------- | ------------------------------------------------------------- |
+| **`stack-context`**            | context-engineering | core-factory, backend-laravel, backend-tauri, lead-strategist |
+| **`self-reflection`**          | meta                | lead-strategist, lead-architect                               |
+| **`self-improver`**            | meta                | core-factory, lead-strategist                                 |
+| **`security-review`**          | security            | qa-guardian, docs-curator                                     |
+| **`laravel-feature-scaffold`** | laravel             | backend-laravel, core-factory                                 |
+| **`project-orchestration`**    | orchestration       | lead-strategist                                               |
+| **`ui-ux-pro-max`**            | design              | frontend-ui-ux                                                |
+| **`agent-browser`**            | testing             | qa-guardian                                                   |
+| **`testing-strategy`**         | testing             | qa-guardian                                                   |
+| **`database-design`**          | architecture        | lead-architect, core-factory                                  |
+| **`deep-research`**            | research            | docs-curator                                                  |
+| **`docs-governance-audit`**    | documentation       | docs-curator                                                  |
+| **`git-release`**              | devops              | devops-engineer, core-factory                                 |
+| **`react-reuse-audit`**        | frontend            | qa-guardian                                                   |
+| **`workflow-manager`**         | orchestration       | lead-strategist                                               |
+| **`fullstack-dev`**            | web-development     | backend-api, frontend-ui-ux                                   |
+
+### Community Skills
+
+Additional community skills available: `qingyan-research`, `xlsx`, `ppt`, `skill-creator`, `charts`, `blog-writer`, `pdf`, `docx`, `finance`, `stock-analysis`, `market-research-reports`, and more.
+
+### MCP Integration
 
 Skills can leverage MCP servers for enhanced capabilities:
 
-| MCP Server            | Used By Skills                    | Purpose                              |
-| --------------------- | --------------------------------- | ------------------------------------ |
-| `context7`            | stack-context, deep-research      | Fetch up-to-date documentation       |
-| `sqlite`              | testing-strategy, database-design | Database operations, test data       |
-| `sequential-thinking` | workflow-manager                  | Step-by-step reasoning for workflows |
-| `memory`              | self-improver, workflow-manager   | Persistent state across sessions     |
-| `fetch`               | agent-browser, deep-research      | Web content fetching                 |
+| MCP Server            | Used By Skills                    | Purpose                          |
+| --------------------- | --------------------------------- | -------------------------------- |
+| `context7`            | stack-context, deep-research      | Up-to-date documentation         |
+| `sqlite`              | testing-strategy, database-design | Database operations, test data   |
+| `sequential-thinking` | workflow-manager                  | Step-by-step reasoning           |
+| `memory`              | self-improver, workflow-manager   | Persistent state across sessions |
+| `fetch`               | agent-browser, deep-research      | Web content fetching             |
 
 ---
 
 ## 🚀 Using Skills
 
-### Automatic Loading
+### Automatic Discovery
 
-Skills are loaded automatically when an agent needs them. The **agent-router plugin** helps ensure the right agent (with the right skills) is selected:
-
-```bash
-# Let the system recommend the best agent for your task
-Ask lead-strategist: "Which agent should handle Laravel authentication?"
-→ Returns: 🎯 Recommended Agent: **backend-laravel**
-→ Skills loaded: laravel-feature-scaffold, security-review
-```
-
-### Explicit Invocation
-
-Delegate to the agent assigned to the skill. For example:
+Agents discover available skills via the `skill` tool descriptor and load them when relevant. Use the `skill-manager` plugin tools to explore:
 
 ```bash
-# Trigger agent-browser skill via qa-guardian agent
-Ask qa-guardian to "Open https://example.com and check layout"
+# List all registered skills
+skill_list
 
-# Use skill_search tool to find relevant skills
-Ask any agent: "Search for skills related to PDF"
-→ Returns: pdf skill (assigned to qa-guardian)
+# Search for skills by keyword
+skill_search query:"pdf"
+
+# Get detailed info about a skill
+skill_info skillName:"git-release"
 ```
 
-### Using Skills with MCP Integration
+### Explicit Loading
 
-When a skill uses MCP servers, ensure they are enabled:
+Agents load skills by calling the native `skill` tool:
 
-```bash
-# Check MCP server status
-Use mcp_list tool → Verify context7, sqlite, etc. are enabled
-
-# Example: stack-context skill with context7 MCP
-Ask backend-tauri: "Analyze this Tauri project"
-→ stack-context skill loads
-→ Uses context7 MCP to fetch Tauri documentation
-→ Returns: Project analysis with up-to-date docs
+```
+skill({ name: "git-release" })
 ```
 
----
+### Skill Permissions
 
-## 🎨 Spotlight: The UI/UX Skill
+Control which skills agents can access via pattern matching in `opencode.json`:
 
-The `ui-ux-pro-max` skill (`skills/ui-ux-pro-max/SKILL.md`) provides agents with:
+```json
+{
+  "permission": {
+    "skill": {
+      "*": "allow",
+      "internal-*": "deny",
+      "experimental-*": "ask"
+    }
+  }
+}
+```
 
-- Premium color palettes (HSL-based).
-- Modern design patterns (Glassmorphism, Neumorphism).
-- Responsive grid systems.
-
-When you use the `frontend-ui-ux` agent, it leverages this skill to ensure your web apps meet premium design standards.
+| Permission | Behavior                   |
+| ---------- | -------------------------- |
+| `allow`    | Skill loads immediately    |
+| `deny`     | Skill hidden from agents   |
+| `ask`      | User prompted for approval |
 
 ---
 
 ## ✍️ Creating a Skill
 
-1. Create a folder in `skills/`.
-2. Add a `SKILL.md` entry point with instructions.
-3. Register the skill in `skills/index.json` with:
-   - Agent assignments
-   - Trigger conditions
-   - Category and tags
-
-Example `skills/index.json` entry:
+1. Create a folder: `skills/my-skill/` (or `.opencode/skills/my-skill/`)
+2. Add a `SKILL.md` with YAML frontmatter
+3. Register in `skills/index.json` if using the project registry:
 
 ```json
 {
@@ -139,32 +188,28 @@ Example `skills/index.json` entry:
 
 ---
 
-## 🔗 Integration with Agent Router & Workflows
-
-Skills work together with the agent routing and workflow systems:
+## 🔗 Integration with Plugins
 
 ### Agent Router + Skill Manager
 
 ```
 User: "Generate a PDF report"
-→ agent-router: Detects "pdf" keyword, recommends qa-guardian
-→ skill-manager: Confirms pdf skill is assigned to qa-guardian
-→ qa-guardian: Loads pdf skill automatically
+→ agent-router: Detects "pdf" keyword, recommends docs-curator
+→ skill-manager: Confirms pdf skill is available
+→ docs-curator: Loads pdf skill automatically
 → Result: PDF generated using skill instructions
 ```
 
-### Workflow Manager + Skills + MCP
+### MCP Manager + Skills
 
 ```
-User: "Add authentication feature"
-→ workflow-manager: Creates phases using sequential-thinking MCP
-→ Phase 1: lead-strategist uses stack-context skill + context7 MCP
-→ Phase 2: backend-laravel uses laravel-feature-scaffold skill
-→ Phase 3: qa-guardian uses testing-strategy skill + sqlite MCP
-→ Result: Fully implemented feature with tests
+Before using context7-dependent skills:
+→ mcp-manager: mcp_list → Verify context7 is enabled
+→ mcp-manager: mcp_check serverName:"context7" → Check health
+→ stack-context skill: Uses context7 to fetch up-to-date docs
 ```
 
 ---
 
 > [!TIP]
-> Use the `skill-creator` skill (`skills/skill-creator/SKILL.md`) to help draft new skill definitions! Use `skill_search` tool to discover existing skills, and combine with `route_agent` to find the best agent for your task.
+> Use `skill_search` to discover available skills, `skill_info` for details, and `route_agent` to find the best agent for your skill-specific task.
