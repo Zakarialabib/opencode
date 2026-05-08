@@ -1,0 +1,142 @@
+name: Code Review
+description: Automated code review workflow with security scanning, quality checks, and best practice validation
+version: 2.0.0
+trigger: manual
+
+mcp_servers:
+  - context7
+  - memory
+  - sequential-thinking
+  - git
+  - filesystem
+  - sqlite
+
+env:
+  NODE_ENV: development
+
+phases:
+  - name: Analysis
+    description: Analyze changed files, understand context, and prepare review scope
+    agents: [qa-guardian, lead-architect]
+    use_agent_router: true
+    tasks:
+      - analyze_git_diff_and_scope
+      - identify_affected_components
+      - check_for_breaking_changes
+      - flag_potential_regression_areas
+    artifacts: [review-scope.md, diff-analysis.json]
+    mcp_tools:
+      git: [diff, log, blame]
+      sequential-thinking: [sequentialthinking]
+      memory: [search_nodes]
+    exit_criteria:
+      - review-scope.md identifies all changed files
+      - diff-analysis.json lists affected components
+
+  - name: Quality Review
+    description: Verify code quality, style compliance, and adherence to project patterns
+    agents: [qa-guardian]
+    tasks:
+      - check_coding_standards_and_style
+      - validate_type_safety
+      - verify_error_handling_patterns
+      - review_naming_conventions
+      - check_documentation_coverage
+    artifacts: [quality-report.json, style-issues.md]
+    dependencies: [Analysis]
+    mcp_tools:
+      sqlite: [read_query]
+      git: [diff, show]
+    parallel_groups:
+      - [check_coding_standards_and_style, validate_type_safety]
+      - [verify_error_handling_patterns, review_naming_conventions]
+    exit_criteria:
+      - quality-report.json documents all quality findings
+      - style-issues.md has actionable fix suggestions
+
+  - name: Security Scan
+    description: Security audit of changes for vulnerabilities, secrets, and unsafe patterns
+    agents: [qa-guardian]
+    tasks:
+      - scan_for_secrets_and_credentials
+      - audit_dependency_vulnerabilities
+      - check_injection_vulnerabilities
+      - verify_authentication_and_authorization
+      - review_input_validation
+    artifacts: [security-audit.json, vulnerability-report.md]
+    dependencies: [Analysis]
+    mcp_tools:
+      context7: [fetch_library_docs]
+      sqlite: [read_query]
+    parallel_groups:
+      - [scan_for_secrets_and_credentials, audit_dependency_vulnerabilities]
+      - [check_injection_vulnerabilities, verify_authentication_and_authorization]
+    exit_criteria:
+      - No high/critical security issues found
+      - vulnerability-report.md documents all findings
+
+  - name: Review Summary
+    description: Generate comprehensive review report with actionable recommendations
+    agents: [docs-curator, lead-strategist]
+    tasks:
+      - consolidate_all_findings
+      - generate_actionable_review_report
+      - recommend_improvements
+      - update_knowledge_base
+    artifacts: [code-review-report.md, recommendations.md]
+    dependencies: [Quality Review, Security Scan]
+    mcp_tools:
+      memory: [create_entities, add_observations]
+      git: [add, commit]
+    exit_criteria:
+      - code-review-report.md has clear pass/fail per category
+      - recommendations.md prioritized by impact
+
+success_criteria:
+  - All files reviewed for quality and security
+  - No secrets leaked
+  - Review report generated with actionable items
+  - Knowledge base updated with review findings
+
+notifications:
+  on_complete:
+    - generate: code-review-report.md
+    - notify: [lead-strategist]
+  on_failure:
+    - alert: [lead-architect]
+    - escalate_to: lead-strategist
+
+error_handling:
+  strategy: continue-on-non-critical
+  max_retries_per_task: 2
+  fallback_agent: lead-strategist
+  rollback_on_critical: true
+
+agent_routing:
+  enabled: true
+  scoring_weights:
+    keyword_match: 2
+    skill_match: 3
+    mcp_capability: 1
+  fallback_strategy: use_qa_guardian
+
+mcp_integration:
+  context7:
+    purpose: Documentation for security patterns and best practices
+    phases: [Security Scan]
+    cache_results: true
+  memory:
+    purpose: Track review history and patterns
+    phases: [Analysis, Review Summary]
+    persist_workflow_state: true
+  sequential-thinking:
+    purpose: Deep analysis of code patterns and potential issues
+    phases: [Analysis, Quality Review]
+    max_thinking_steps: 10
+  git:
+    purpose: Version control for diff and blame analysis
+    phases: [all]
+    track_blame: true
+  sqlite:
+    purpose: Store review metrics and history
+    phases: [Quality Review, Security Scan]

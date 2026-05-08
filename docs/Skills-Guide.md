@@ -83,28 +83,44 @@ Ask clarifying questions if the versioning is unclear.
 
 These skills are managed via `skills/index.json` with agent assignments:
 
-| Skill                          | Category            | Agents                                                        |
-| ------------------------------ | ------------------- | ------------------------------------------------------------- |
-| **`stack-context`**            | context-engineering | core-factory, backend-laravel, backend-tauri, lead-strategist |
-| **`self-reflection`**          | meta                | lead-strategist, lead-architect                               |
-| **`self-improver`**            | meta                | core-factory, lead-strategist                                 |
-| **`security-review`**          | security            | qa-guardian, docs-curator                                     |
-| **`laravel-feature-scaffold`** | laravel             | backend-laravel, core-factory                                 |
-| **`project-orchestration`**    | orchestration       | lead-strategist                                               |
-| **`ui-ux-pro-max`**            | design              | frontend-ui-ux                                                |
-| **`agent-browser`**            | testing             | qa-guardian                                                   |
-| **`testing-strategy`**         | testing             | qa-guardian                                                   |
-| **`database-design`**          | architecture        | lead-architect, core-factory                                  |
-| **`deep-research`**            | research            | docs-curator                                                  |
-| **`docs-governance-audit`**    | documentation       | docs-curator                                                  |
-| **`git-release`**              | devops              | devops-engineer, core-factory                                 |
-| **`react-reuse-audit`**        | frontend            | qa-guardian                                                   |
-| **`workflow-manager`**         | orchestration       | lead-strategist                                               |
-| **`fullstack-dev`**            | web-development     | backend-api, frontend-ui-ux                                   |
+| Skill                          | Category            | Agents                          |
+| ------------------------------ | ------------------- | ------------------------------- |
+| **`stack-context`**            | context-engineering | core-factory, lead-strategist   |
+| **`self-reflection`**          | meta                | lead-strategist, lead-architect |
+| **`self-improver`**            | meta                | core-factory, lead-strategist   |
+| **`security-review`**          | security            | qa-guardian, docs-curator       |
+| **`laravel-feature-scaffold`** | laravel             | backend-laravel, core-factory   |
+| **`project-orchestration`**    | orchestration       | lead-strategist                 |
+| **`ui-ux-pro-max`**            | design              | frontend-ui-ux                  |
+| **`agent-browser`**            | testing             | qa-guardian                     |
+| **`testing-strategy`**         | testing             | qa-guardian                     |
+| **`database-design`**          | architecture        | lead-architect, core-factory    |
+| **`deep-research`**            | research            | docs-curator                    |
+| **`docs-governance-audit`**    | documentation       | docs-curator                    |
+| **`git-release`**              | devops              | devops-engineer, core-factory   |
+| **`react-reuse-audit`**        | frontend            | qa-guardian                     |
+| **`workflow-manager`**         | orchestration       | lead-strategist                 |
+| **`fullstack-dev`**            | web-development     | backend-api, frontend-ui-ux     |
+| **`coding-agent`**             | development         | core-factory                    |
+| **`config-doctor`**            | meta                | core-factory, devops-engineer   |
+| **`skill-creator`**            | meta                | lead-architect                  |
+| **`skill-vetter`**             | security            | qa-guardian                     |
+| **`content-strategy`**         | marketing           | docs-curator                    |
+| **`blog-writer`**              | content             | docs-curator                    |
+| **`seo-content-writer`**       | content             | docs-curator                    |
+| **`charts`**                   | data-visualization  | frontend-ui-ux                  |
+| **`finance`**                  | finance             | core-factory                    |
+| **`stock-analysis-skill`**     | finance             | core-factory                    |
+| **`image-generation`**         | assets              | frontend-ui-ux                  |
+| **`image-understand`**         | assets              | frontend-ui-ux                  |
+| **`pdf`**                      | documents           | docs-curator                    |
+| **`docx`**                     | documents           | docs-curator                    |
+| **`ppt`**                      | documents           | docs-curator                    |
+| **`xlsx`**                     | documents           | docs-curator                    |
 
-### Community Skills
+### All Skills (63 total)
 
-Additional community skills available: `qingyan-research`, `xlsx`, `ppt`, `skill-creator`, `charts`, `blog-writer`, `pdf`, `docx`, `finance`, `stock-analysis`, `market-research-reports`, and more.
+The full skill registry is in `skills/index.json`. Browse available skills with `skill_list` or search with `skill_search query:"keyword"`.
 
 ### MCP Integration
 

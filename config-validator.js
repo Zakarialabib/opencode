@@ -4,8 +4,9 @@ const path = require("path");
 
 class ConfigValidator {
   constructor(schemaPath) {
-    this.ajv = new Ajv({ allErrors: true, verbose: true });
+    this.ajv = new Ajv({ allErrors: true });
     this.schema = null;
+    this.compiledValidate = null;
     if (schemaPath) {
       this.loadSchema(schemaPath);
     }
@@ -27,8 +28,10 @@ class ConfigValidator {
       throw new Error("No schema loaded for validation");
     }
 
-    const validate = this.ajv.compile(this.schema);
-    const valid = validate(config);
+    if (!this.compiledValidate) {
+      this.compiledValidate = this.ajv.compile(this.schema);
+    }
+    const valid = this.compiledValidate(config);
 
     if (!valid) {
       return {
