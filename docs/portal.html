@@ -10,10 +10,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css"
     />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Inter:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
+
     <style>
       :root {
         --primary: #6366f1;
@@ -25,13 +22,11 @@
         --text-dim: #94a3b8;
         --glass-border: rgba(255, 255, 255, 0.1);
       }
-
       * {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
       }
-
       body {
         font-family: "Inter", sans-serif;
         background-color: var(--bg);
@@ -40,7 +35,6 @@
         display: flex;
         overflow: hidden;
       }
-
       h1,
       h2,
       h3,
@@ -48,8 +42,6 @@
         font-family: "Outfit", sans-serif;
         margin-bottom: 1rem;
       }
-
-      /* Sidebar */
       .sidebar {
         width: 300px;
         background: var(--sidebar-bg);
@@ -61,7 +53,6 @@
         gap: 2rem;
         z-index: 10;
       }
-
       .logo {
         font-size: 1.5rem;
         font-weight: 600;
@@ -73,14 +64,12 @@
         align-items: center;
         gap: 0.5rem;
       }
-
       .nav-list {
         list-style: none;
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
       }
-
       .nav-item {
         padding: 0.75rem 1rem;
         border-radius: 12px;
@@ -92,26 +81,21 @@
         align-items: center;
         gap: 0.75rem;
       }
-
       .nav-item:hover {
         background: rgba(255, 255, 255, 0.05);
         color: var(--text);
       }
-
       .nav-item.active {
         background: rgba(99, 102, 241, 0.15);
         color: var(--primary);
         border-left: 3px solid var(--primary);
       }
-
-      /* Main Content */
       .main-content {
         flex: 1;
         padding: 3rem;
         overflow-y: auto;
         position: relative;
       }
-
       .content-card {
         max-width: 900px;
         margin: 0 auto;
@@ -123,7 +107,6 @@
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         animation: fadeIn 0.4s ease-out;
       }
-
       @keyframes fadeIn {
         from {
           opacity: 0;
@@ -134,12 +117,9 @@
           transform: translateY(0);
         }
       }
-
-      /* Markdown Styling */
       .markdown-body {
         line-height: 1.6;
       }
-
       .markdown-body h1 {
         font-size: 2.5rem;
         margin-top: 0;
@@ -180,7 +160,6 @@
       .markdown-body th {
         background: rgba(255, 255, 255, 0.05);
       }
-
       .callout {
         padding: 1rem;
         border-radius: 12px;
@@ -203,8 +182,6 @@
         background: rgba(239, 68, 68, 0.1);
         border-color: #ef4444;
       }
-
-      /* Custom Scrollbar */
       ::-webkit-scrollbar {
         width: 8px;
       }
