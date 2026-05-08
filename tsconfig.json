@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
+    "target": "ES2023",
     "module": "ESNext",
     "moduleResolution": "bundler",
     "esModuleInterop": true,
@@ -13,6 +13,6 @@
     "resolveJsonModule": true,
     "types": ["bun", "node"]
   },
-  "include": ["plugins/**/*.ts", "tools/**/*.ts"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["opencode-launch.js", "plugins/**/*.ts", "tools/**/*.ts", "scripts/**/*.ts"],
+  "exclude": ["node_modules", "dist", "coverage", ".nyc_output", "**/__tests__/**", "**/*.test.ts"]
 }

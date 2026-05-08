@@ -131,7 +131,7 @@ function launch() {
 
   function runCommand(command, commandArgs = []) {
     let finalCommand = command;
-    let finalArgs = [...commandArgs, ...args];
+    const finalArgs = [...commandArgs, ...args];
 
     // On Windows, if we are not using shell: true, we must point to the .cmd or .exe
     if (process.platform === "win32") {

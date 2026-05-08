@@ -7,7 +7,7 @@ export const db_query = tool({
   },
   async execute({ query }, context) {
     // Bun's shell API ($) can be used to run external scripts [49, 51]
-    const result = await context.$`sqlite3 metadata.db ${query}`;
-    return result.stdout;
+    const result = await Bun.$`sqlite3 metadata.db ${query}`;
+    return result.stdout.toString();
   },
 });

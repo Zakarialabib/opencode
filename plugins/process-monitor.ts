@@ -1,4 +1,4 @@
-import { Plugin, tool } from "@opencode-ai/plugin";
+import { type Plugin, tool } from "@opencode-ai/plugin";
 import { readFile } from "fs/promises";
 import { join } from "path";
 
@@ -141,7 +141,7 @@ const ProcessMonitorPlugin: Plugin = async ({ client, project, directory }) => {
             return "No processes found. Is Trae running? Is trae.md up to date?";
           }
 
-          let sorted = [...allProcs];
+          const sorted = [...allProcs];
           switch (sortBy) {
             case "memory":
               sorted.sort((a, b) => (b.real_memory || 0) - (a.real_memory || 0));
@@ -317,7 +317,7 @@ const ProcessMonitorPlugin: Plugin = async ({ client, project, directory }) => {
           const processes = await parseTraeProcessTree();
           const allProcs = getAllProcesses(processes);
 
-          let sorted = [...allProcs];
+          const sorted = [...allProcs];
           if (metric === "memory") {
             sorted.sort((a, b) => (b.real_memory || 0) - (a.real_memory || 0));
           } else {

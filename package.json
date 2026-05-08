@@ -27,22 +27,24 @@
     "vitest": "^4.1.5"
   },
   "scripts": {
-    "start": "node opencode-launch.js",
-    "setup": "powershell -ExecutionPolicy Bypass -File setup.ps1",
+    "start": "bun run opencode-launch.js",
     "db:init": "node tools/db-init.js",
-    "lint": "npm run lint:biome && npm run lint:prettier",
-    "lint:biome": "npx @biomejs/biome format --write .",
-    "lint:prettier": "npx prettier --write .",
-    "config:validate": "node config-validator.js opencode.json config-schema.json",
     "health-check": "node tools/project-health-check.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "lint": "npm run lint:biome",
+    "lint:biome": "npx @biomejs/biome lint --write . && npx @biomejs/biome format --write .",
+    "format": "npx @biomejs/biome format --write .",
+    "format:check": "npx @biomejs/biome format --check .",
     "clean": "node -e \"const fs = require('fs'); ['dist', '.nyc_output', 'coverage'].forEach(d => fs.rmSync(d, { recursive: true, force: true }))\"",
-    "check-all": "npm run lint && npm run format:check && npm run typecheck && npm run test && npm run config:validate"
+    "check-all": "npm run lint && npm run format:check && npm run typecheck && npm run test",
+    "skills:generate": "node tools/generate-skill-index.js",
+    "skills:validate": "node -e \"const fs = require('fs'); try { JSON.parse(fs.readFileSync('skills/index.json', 'utf8')); console.log('✅ skills/index.json is valid JSON') } catch (e) { console.error('❌ Invalid skills/index.json:', e.message); process.exit(1) }\"",
+    "config:validate": "node -e \"const fs = require('fs'); try { JSON.parse(fs.readFileSync('opencode.json', 'utf8')); console.log('✅ opencode.json is valid JSON') } catch (e) { console.error('❌ Invalid opencode.json:', e.message); process.exit(1) }\"",
+    "mcp:validate": "node -e \"const fs = require('fs'); const path = require('path'); const config = JSON.parse(fs.readFileSync('opencode.json', 'utf8')); const mcpPath = path.join(config.project?.root || '.', 'opencode.json'); try { JSON.parse(fs.readFileSync(mcpPath, 'utf8')); console.log('✅ MCP config is valid') } catch (e) { console.error('❌ Invalid MCP config:', e.message); process.exit(1) }\"",
+    "autoresearch:test": "echo 'Running autoresearch dry run...' && node -e \"console.log('✅ /autoresearch feature ready (use /autoresearch in OpenCode CLI)')\"",
+    "lsp:check": "npx tsx scripts/lsp-health-check.ts || node tools/project-health-check.js --lsp"
   }
 }

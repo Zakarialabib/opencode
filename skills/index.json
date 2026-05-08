@@ -1,6 +1,6 @@
-﻿{
+{
   "version": "1.0.0",
-  "lastUpdated": "2026-05-08T11:05:48.013Z",
+  "lastUpdated": "2026-05-08T19:46:31.012Z",
   "skills": [
     {
       "name": "agent-browser",
@@ -8,13 +8,21 @@
       "description": "High-fidelity UI automation and debugging via Playwright for browser-based testing.",
       "version": "1.0.0",
       "category": "testing",
-      "tags": ["browser", "automation", "testing", "playwright", "debugging"],
+      "tags": [
+        "browser",
+        "automation",
+        "testing",
+        "playwright",
+        "debugging"
+      ],
       "triggers": [
         "When debugging UI-level bugs",
         "When automating web interactions",
         "When testing web UIs"
       ],
-      "agents": ["qa-guardian"],
+      "agents": [
+        "qa-guardian"
+      ],
       "entryPoint": "skills/agent-browser/SKILL.md"
     },
     {
@@ -23,8 +31,15 @@
       "description": "AI æ–°é—»èšåˆä¸Žçƒ­åº¦æŽ’åºå·¥å…·ã€‚å½“ç”¨æˆ·è¯¢é—® AI é¢†åŸŸæœ€æ–°åŠ¨æ€æ—¶è§¦å‘ï¼Œå¦‚ï¼š\"ä»Šå¤©æœ‰ä»€ä¹ˆ AI æ–°é—»ï¼Ÿ\"\"æ€»ç»“ä¸€ä¸‹è¿™å‘¨çš„ AI åŠ¨æ€\"\"æœ€è¿‘æœ‰ä»€ä¹ˆç«çš„ AI äº§å“ï¼Ÿ\"\"AI åœˆæœ€è¿‘åœ¨è®¨è®ºä»€ä¹ˆï¼Ÿ\"ã€‚è¦†ç›–ï¼šæ–°äº§å“å‘å¸ƒã€ç ”ç©¶è®ºæ–‡ã€è¡Œä¸šåŠ¨æ€ã€èžèµ„æ–°é—»ã€å¼€æºé¡¹ç›®æ›´æ–°ã€ç¤¾åŒºç—…æ¯’ä¼ æ’­çŽ°è±¡ã€AI å·¥å…·/Agent çƒ­é—¨é¡¹ç›®ã€‚è¾“å‡ºä¸­æ–‡æ‘˜è¦åˆ—è¡¨ï¼ŒæŒ‰çƒ­åº¦æŽ’åºï¼Œé™„å¸¦åŽŸæ–‡é“¾æŽ¥ã€‚",
       "version": "1.0.0",
       "category": "research",
-      "tags": ["ai", "news", "aggregation", "trends"],
-      "agents": ["docs-curator"],
+      "tags": [
+        "ai",
+        "news",
+        "aggregation",
+        "trends"
+      ],
+      "agents": [
+        "docs-curator"
+      ],
       "entryPoint": "SKILL.md"
     },
     {
@@ -33,8 +48,15 @@
       "description": ">",
       "version": "1.0.0",
       "category": "research",
-      "tags": ["academic", "search", "research", "papers"],
-      "agents": ["docs-curator"],
+      "tags": [
+        "academic",
+        "search",
+        "research",
+        "papers"
+      ],
+      "agents": [
+        "docs-curator"
+      ],
       "entryPoint": "SKILL.md"
     },
     {
@@ -43,8 +65,15 @@
       "description": "Get personalized academic paper recommendations. Activate whenever the user asks for paper recommendations â€” explicit command (/aminer-dp) or natural language (e.g. 'recommend me papers on RAG', 'suggest recent papers on multimodal agents'). Workflow: extract topics / author / aminer_author_id from the input, invoke scripts/recommend.py, return results as Markdown.",
       "version": "1.0.0",
       "category": "research",
-      "tags": ["academic", "papers", "daily", "research"],
-      "agents": ["docs-curator"],
+      "tags": [
+        "academic",
+        "papers",
+        "daily",
+        "research"
+      ],
+      "agents": [
+        "docs-curator"
+      ],
       "entryPoint": "SKILL.md"
     },
     {
@@ -53,8 +82,15 @@
       "description": ">",
       "version": "1.0.0",
       "category": "research",
-      "tags": ["academic", "open-access", "papers", "research"],
-      "agents": ["docs-curator"],
+      "tags": [
+        "academic",
+        "open-access",
+        "papers",
+        "research"
+      ],
+      "agents": [
+        "docs-curator"
+      ],
       "entryPoint": "SKILL.md"
     },
     {
@@ -63,8 +99,14 @@
       "description": "è¯†åˆ«å’Œåˆ†æžPUAï¼ˆPickup Artistï¼‰åŠæƒ…æ„Ÿæ“çºµè¡Œä¸ºçš„ä¸“ä¸šå¿ƒç†åˆ†æžå·¥å…·ã€‚å…·å¤‡äººæ ¼åˆ†æžã€å¿ƒç†ä¾§å†™ã€æƒ…æ„Ÿåˆ†æžèƒ½åŠ›ï¼Œèƒ½å¤Ÿè¯†åˆ«æƒ…æ„Ÿæ“çºµã€ç…¤æ°”ç¯æ“çºµã€è™å¾…ç­‰æœ‰æ¯’å…³ç³»æ¨¡å¼ï¼Œè¯„ä¼°äººæ ¼ç‰¹è´¨ï¼ˆå¦‚é»‘æš—ä¸‰äººæ ¼ã€è„†å¼±åž‹è‡ªæ‹ç­‰ï¼‰ï¼Œé¢„æµ‹å¯¹æ–¹è¡Œä¸ºå¹¶ç»™å‡ºå…·ä½“çš„ç›¸å¤„å»ºè®®ã€‚å½“ç”¨æˆ·éœ€è¦ï¼šåˆ†æžå¯¹æ–¹è¨€è¡ŒåŠ¨æœºã€è¯†åˆ«PUA/æƒ…æ„Ÿæ“çºµè¡Œä¸ºã€è¯„ä¼°NPDï¼ˆè‡ªæ‹åž‹äººæ ¼éšœç¢ï¼‰å€¾å‘ã€è¯†åˆ«æ“çºµè¡Œä¸ºã€é¢„æµ‹å¯¹æ–¹æœªæ¥è¡Œä¸ºã€å¯»æ±‚å¥åº·å…³ç³»å»ºè®®ã€åˆ†æžé»‘æš—ä¸‰äººæ ¼æˆ–å…‰æ˜Žä¸‰äººæ ¼æ—¶ä½¿ç”¨æ­¤skillã€‚",
       "version": "1.0.0",
       "category": "security",
-      "tags": ["security", "social-engineering", "protection"],
-      "agents": ["qa-guardian"],
+      "tags": [
+        "security",
+        "social-engineering",
+        "protection"
+      ],
+      "agents": [
+        "qa-guardian"
+      ],
       "entryPoint": "SKILL.md"
     },
     {
@@ -73,8 +115,15 @@
       "description": "Implement speech-to-text (ASR/automatic speech recognition) capabilities using the z-ai-web-dev-sdk. Use this skill when the user needs to transcribe audio files, convert speech to text, build voice input features, or process audio recordings. Supports base64 encoded audio files and returns accurate text transcriptions.",
       "version": "1.0.0",
       "category": "audio",
-      "tags": ["speech", "recognition", "asr", "audio"],
-      "agents": ["core-factory"],
+      "tags": [
+        "speech",
+        "recognition",
+        "asr",
+        "audio"
+      ],
+      "agents": [
+        "core-factory"
+      ],
       "entryPoint": "SKILL.md"
     },
     {
@@ -83,648 +132,15 @@
       "description": "è‡ªåŠ¨ç›®æ ‡è¿›åº¦è¿½è¸ªå™¨ã€‚åœ¨å¯¹è¯ä¸­æ£€æµ‹åˆ°ç›®æ ‡ç›¸å…³å›¾ç‰‡ï¼ˆç¬”è®°ã€è¿›åº¦ã€æˆªå›¾ã€è®°å½•ï¼‰æ—¶ï¼Œè‡ªåŠ¨è°ƒç”¨ VLM è¯†åˆ«å…³é”®ä¿¡æ¯å¹¶è®°å½•åˆ°ç›®æ ‡æ—¥è®°ã€‚é€‚ç”¨äºŽå­¦ä¹ ç®¡ç†ã€å¥èº«è¿½è¸ªã€å·¥ä½œè¿›åº¦ã€ä¹ æƒ¯å…»æˆã€åˆ›ä½œè®°å½•ç­‰æ‰€æœ‰ç›®æ ‡ç®¡ç†åœºæ™¯ã€‚",
       "version": "1.0.0",
       "category": "automation",
-      "tags": ["tracking", "monitoring", "automation"],
-      "agents": ["devops-engineer"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "blog-writer",
-      "displayName": "Blog Writer",
-      "description": "This skill should be used when writing blog posts, articles, or long-form content in the writer's distinctive writing style. It produces authentic, opinionated content that matches the writer's voiceâ€”direct, conversational, and grounded in personal experience. The skill handles the complete workflow from research review through Notion publication. Use this skill for drafting blog posts, thought leadership pieces, or any writing meant to reflect the writer's perspective on AI, productivity, sales, marketing, or technology topics.",
-      "version": "1.0.0",
-      "category": "content",
-      "tags": ["blog", "writing", "content", "articles"],
-      "agents": ["docs-curator"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "charts",
-      "displayName": "Charts & Data Visualization",
-      "description": "Professional chart and diagram creation including bar, line, pie, flowcharts, and dashboards.",
-      "version": "1.0.0",
-      "category": "data-visualization",
-      "tags": ["charts", "diagrams", "dashboard", "data-viz", "echarts", "d3", "mermaid"],
-      "triggers": [
-        "When user asks for charts, graphs, or diagrams",
-        "When building dashboards",
-        "When visualizing data or metrics"
+      "tags": [
+        "tracking",
+        "monitoring",
+        "automation"
       ],
-      "agents": ["frontend-ui-ux"],
-      "entryPoint": "skills/charts/SKILL.md"
-    },
-    {
-      "name": "coding-agent",
-      "displayName": "Coding Agent Patterns",
-      "description": "Agent development patterns, best practices, and implementation guidelines for building AI agents.",
-      "version": "1.0.0",
-      "category": "development",
-      "tags": ["agent", "patterns", "development", "ai", "best-practices"],
-      "triggers": [
-        "When developing new agents",
-        "When improving agent capabilities",
-        "When following agent patterns"
+      "agents": [
+        "devops-engineer"
       ],
-      "agents": ["core-factory"],
-      "entryPoint": "coding-agent/SKILL.md"
-    },
-    {
-      "name": "config-doctor",
-      "displayName": "Config Doctor",
-      "description": "Audits and repairs OpenCode configuration, agents, and skill definitions for schema compliance.",
-      "version": "1.0.0",
-      "category": "meta",
-      "tags": ["config", "audit", "repair", "validation"],
-      "agents": ["core-factory", "devops-engineer"],
       "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "content-strategy",
-      "displayName": "Content Strategy",
-      "description": "Content planning, strategy development, and editorial calendar management for marketing and documentation.",
-      "version": "1.0.0",
-      "category": "marketing",
-      "tags": ["content", "strategy", "planning", "marketing", "editorial"],
-      "triggers": [
-        "When planning content strategy",
-        "When creating editorial calendars",
-        "When developing marketing content"
-      ],
-      "agents": ["docs-curator", "docs-curator"],
-      "entryPoint": "content-strategy/SKILL.md"
-    },
-    {
-      "name": "contentanalysis",
-      "displayName": "Content Analysis",
-      "description": "Content extraction and analysis â€” wisdom extraction from videos, podcasts, articles, and YouTube. USE WHEN extract wisdom, content analysis, analyze content, insight report, analyze video, analyze podcast, extract insights, key takeaways, what did I miss, extract from YouTube.",
-      "version": "1.0.0",
-      "category": "analysis",
-      "tags": ["content", "analysis", "nlp", "text"],
-      "agents": ["core-factory"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "database-design",
-      "displayName": "Database & Architecture Design",
-      "description": "Database architecture, serverless patterns, and query performance optimizations.",
-      "version": "1.0.0",
-      "category": "architecture",
-      "tags": ["database", "sql", "migration", "architecture"],
-      "triggers": [
-        "When the user requests a new feature involving data persistence.",
-        "When creating or modifying Backend Migrations or Database Models.",
-        "When designing offline-first storage mechanisms for the Frontend."
-      ],
-      "agents": ["lead-architect", "core-factory"],
-      "assets": ["assets/schema-proposal.md"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "deep-research",
-      "displayName": "Deep Research",
-      "description": "Conduct comprehensive research on technical topics, gathering information from multiple sources.",
-      "version": "1.0.0",
-      "category": "research",
-      "tags": ["research", "analysis", "documentation"],
-      "agents": ["docs-curator"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "docs-governance-audit",
-      "displayName": "Documentation Governance Audit",
-      "description": "Audit and improve documentation quality, consistency, and completeness.",
-      "version": "1.0.0",
-      "category": "documentation",
-      "tags": ["documentation", "audit", "quality", "standards"],
-      "agents": ["docs-curator"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "docx",
-      "displayName": "DOCX Document",
-      "description": "Create and edit Word documents with formatting, styles, tables, and images.",
-      "version": "1.0.0",
-      "category": "documents",
-      "tags": ["word", "document", "docx", "reports", "formatting"],
-      "triggers": [
-        "When creating Word documents",
-        "When generating formal reports",
-        "When creating documentation"
-      ],
-      "agents": ["docs-curator"],
-      "entryPoint": "docx/SKILL.md"
-    },
-    {
-      "name": "dream-interpreter",
-      "displayName": "Dream Interpreter",
-      "description": "AI è§£æ¢¦å¤§å¸ˆã€‚ç”¨æˆ·æè¿°æ¢¦å¢ƒï¼Œæ™ºèƒ½è¿½é—®å…³é”®ç»†èŠ‚åŽï¼Œä»Žä¸‰ä¸ªè§†è§’ï¼ˆå‘¨å…¬è§£æ¢¦/å¿ƒç†åˆ†æž/èµ›åšç¥žæ£ï¼‰ç”Ÿæˆè§£è¯»ï¼Œè¾“å‡ºç»“æž„åŒ– JSON ä¾›å‰ç«¯æ¸²æŸ“\"æ¢¦å¢ƒè§£æžå¡\"ã€‚",
-      "version": "1.0.0",
-      "category": "analysis",
-      "tags": ["dream", "interpretation", "psychology", "analysis"],
-      "agents": ["docs-curator"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "finance",
-      "displayName": "Finance & Markets",
-      "description": "Comprehensive Finance API integration skill for real-time and historical financial data analysis, market research, and investment decision-making. Priority use cases: stock price queries, market data analysis, company financial information, portfolio tracking, market news retrieval, stock screening, technical analysis, and any financial market-related requests. This skill should be the primary choice for all  Finance API interactions and financial data needs.",
-      "version": "1.0.0",
-      "category": "finance",
-      "tags": ["finance", "stocks", "market", "analysis"],
-      "agents": ["core-factory"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "fullstack-dev",
-      "displayName": "Fullstack Developer",
-      "description": "Next.js, TypeScript, and Prisma expert patterns for fullstack web development.",
-      "version": "1.0.0",
-      "category": "web-development",
-      "tags": ["nextjs", "typescript", "prisma", "tailwind", "shadcn"],
-      "triggers": [
-        "When building web applications with Next.js",
-        "When creating UI components",
-        "When setting up database schemas"
-      ],
-      "agents": ["backend-api", "frontend-ui-ux"],
-      "entryPoint": "skills/fullstack-dev/SKILL.md"
-    },
-    {
-      "name": "get-fortune-analysis",
-      "displayName": "Fortune Analysis",
-      "description": "ç”Ÿæˆè§†è§‰åŽä¸½ã€å†…å®¹è¯¦å®žã€å…·æœ‰ä»ªå¼æ„Ÿçš„æµå¹´è¿åŠ¿æŠ¥å‘Šï¼ˆæµé‡‘æ˜Ÿè±¡é£Žæ ¼ï¼‰ã€‚",
-      "version": "1.0.0",
-      "category": "analysis",
-      "tags": ["fortune", "analysis", "divination"],
-      "agents": ["docs-curator"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "gift-evaluator",
-      "displayName": "Gift Evaluator",
-      "description": "The PRIMARY tool for Spring Festival gift analysis and social interaction generation. Use this skill when users upload photos of gifts (alcohol, tea, supplements, etc.) to inquire about their value, authenticity, or how to respond socially. Integrates visual perception, market valuation, and HTML card generation.",
-      "version": "1.0.0",
-      "category": "analysis",
-      "tags": ["gift", "recommendation", "evaluation"],
-      "agents": ["core-factory"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "git-release",
-      "displayName": "Git Release Management",
-      "description": "Manage git-based release processes including versioning and changelog generation.",
-      "version": "1.0.0",
-      "category": "devops",
-      "tags": ["git", "release", "versioning", "deployment"],
-      "agents": ["devops-engineer", "core-factory"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "image-edit",
-      "displayName": "Image Editing",
-      "description": "Implement AI image editing and modification capabilities using the z-ai-web-dev-sdk. Use this skill when the user needs to edit existing images, create variations, modify visual content, redesign assets, or transform images based on text descriptions. Supports multiple image sizes and returns base64 encoded results. Also includes CLI tool for quick image editing.",
-      "version": "1.0.0",
-      "category": "assets",
-      "tags": ["image", "editing", "manipulation", "graphics"],
-      "agents": ["frontend-ui-ux"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "image-generation",
-      "displayName": "AI Image Generation",
-      "description": "Generate images, icons, and visual assets using AI for UI components and marketing.",
-      "version": "1.0.0",
-      "category": "assets",
-      "tags": ["image", "ai", "generation", "icons", "assets", "marketing"],
-      "triggers": [
-        "When user needs icons or illustrations",
-        "When generating UI assets",
-        "When creating hero images or marketing visuals"
-      ],
-      "agents": ["frontend-ui-ux"],
-      "entryPoint": "skills/image-generation/SKILL.md"
-    },
-    {
-      "name": "image-understand",
-      "displayName": "Image Analysis",
-      "description": "Analyze and understand images for design improvement and asset evaluation.",
-      "version": "1.0.0",
-      "category": "assets",
-      "tags": ["image", "analysis", "understanding", "design", "assets"],
-      "triggers": [
-        "When analyzing existing images or designs",
-        "When improving UI assets",
-        "When evaluating visual content"
-      ],
-      "agents": ["frontend-ui-ux"],
-      "entryPoint": "skills/image-understand/SKILL.md"
-    },
-    {
-      "name": "interview-designer",
-      "displayName": "Interview Designer",
-      "description": "Analyze resumes and design interview strategies using evidence-based methodology. Transforms interview prep from \"read resume â†’ ask questions\" into \"define standard â†’ forensic evidence â†’ future simulation\". Combines Geoff Smart's Topgrading, Lou Adler's performance-based hiring, and Daniel Kahneman's bias control. Use when preparing for interviews, creating structured interview guides, or designing questions to validate candidate competencies.",
-      "version": "1.0.0",
-      "category": "content",
-      "tags": ["interview", "questions", "hiring", "recruitment"],
-      "agents": ["core-factory"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "laravel-feature-scaffold",
-      "displayName": "Laravel Feature Scaffold",
-      "description": "Generate boilerplate code for Laravel features including models, controllers, tests.",
-      "version": "1.0.0",
-      "category": "laravel",
-      "tags": ["laravel", "php", "mvc", "scaffolding"],
-      "agents": ["backend-laravel", "core-factory"],
-      "assets": ["laravel-feature-scaffold.lsp.json"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "LLM",
-      "displayName": "Large Language Model",
-      "description": "Implement large language model (LLM) chat completions using the z-ai-web-dev-sdk. Use this skill when the user needs to build conversational AI applications, chatbots, AI assistants, or any text generation features. Supports multi-turn conversations, system prompts, and context management.",
-      "version": "1.0.0",
-      "category": "ai",
-      "tags": ["llm", "language-model", "ai", "prompting"],
-      "agents": ["lead-architect"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "market-research-reports",
-      "displayName": "Market Research Reports",
-      "description": "Generate comprehensive market research reports with data analysis, charts, and insights.",
-      "version": "1.0.0",
-      "category": "research",
-      "tags": ["market", "research", "reports", "analysis", "competitive"],
-      "triggers": [
-        "When conducting market research",
-        "When generating competitive analysis",
-        "When creating research reports"
-      ],
-      "agents": ["docs-curator", "docs-curator"],
-      "entryPoint": "market-research-reports/SKILL.md"
-    },
-    {
-      "name": "docs-curator",
-      "displayName": "Marketing Mode",
-      "description": "Marketing Mode combines 23 comprehensive marketing skills covering strategy, psychology, content, SEO, conversion optimization, and paid growth. Use when users need marketing strategy, copywriting, SEO help, conversion optimization, paid advertising, or any marketing tactic.",
-      "version": "1.0.0",
-      "category": "marketing",
-      "tags": ["marketing", "campaign", "promotion", "brand"],
-      "agents": ["docs-curator"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "multi-search-engine",
-      "displayName": "Multi-Search Engine",
-      "description": "Multi search engine integration with 8 domestic (CN) search engines. Supports advanced search operators, time filters, site search, and WeChat article search. No API keys required.",
-      "version": "1.0.0",
-      "category": "research",
-      "tags": ["search", "multi-engine", "research", "aggregation"],
-      "agents": ["docs-curator"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "pdf",
-      "displayName": "PDF Generation",
-      "description": "Generate PDF documents with text, images, tables, and professional formatting.",
-      "version": "1.0.0",
-      "category": "documents",
-      "tags": ["pdf", "document", "reports", "export"],
-      "triggers": [
-        "When exporting to PDF",
-        "When creating printable documents",
-        "When generating reports as PDF"
-      ],
-      "agents": ["docs-curator"],
-      "entryPoint": "pdf/SKILL.md"
-    },
-    {
-      "name": "pest-testing",
-      "displayName": "Pest Testing",
-      "description": "Specialized skill for writing and running tests using Pest 4.x.",
-      "version": "1.0.0",
-      "category": "testing",
-      "tags": ["pest", "testing", "php", "laravel", "qa"],
-      "triggers": [
-        "When writing tests",
-        "When validating business logic",
-        "When checking code quality"
-      ],
-      "agents": ["backend-laravel", "qa-guardian"],
-      "entryPoint": "pest-testing/SKILL.md"
-    },
-    {
-      "name": "podcast-generate",
-      "displayName": "Podcast Generator",
-      "description": "Generate podcast episodes from user-provided content or by searching the web for specified topics. If user uploads a text file/article, creates a dual-host dialogue podcast (or single-host upon request). If no content is provided, searches the web for information about the user-specified topic and generates a podcast. Duration scales with content size (3-20 minutes, ~240 chars/min). Uses z-ai-web-dev-sdk for LLM script generation and TTS audio synthesis. Outputs both a podcast script (Markdown) and a complete audio file (WAV).",
-      "version": "1.0.0",
-      "category": "media",
-      "tags": ["podcast", "audio", "generation", "media"],
-      "agents": ["core-factory"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "ppt",
-      "displayName": "PowerPoint Presentation",
-      "description": "Create PowerPoint presentations with slides, layouts, charts, and visual content.",
-      "version": "1.0.0",
-      "category": "documents",
-      "tags": ["powerpoint", "presentation", "ppt", "slides", "deck"],
-      "triggers": [
-        "When creating presentations",
-        "When building slide decks",
-        "When presenting research or reports"
-      ],
-      "agents": ["docs-curator"],
-      "entryPoint": "ppt/SKILL.md"
-    },
-    {
-      "name": "project-orchestration",
-      "displayName": "Project Orchestration",
-      "description": "Coordinate complex multi-agent workflows for large-scale project initiatives.",
-      "version": "1.0.0",
-      "category": "orchestration",
-      "tags": ["orchestration", "workflow", "planning", "coordination"],
-      "agents": ["lead-strategist"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "qingyan-research",
-      "displayName": "Qingyan Research",
-      "description": "Deep web research and HTML report generation. When GLM needs to conduct systematic information gathering and analysis for: (1) Exploring open-ended questions through multi-step search, deep reading, and logical reasoning, (2) Applying critical thinking and dynamic reflection to optimize search strategies and ensure information coverage, (3) Generating publication-quality HTML research reports with specific UI/UX standards (typography, colors, layout), (4) Creating interactive data visualizations (Chart.js) based on extracted statistical data, (5) Producing structured documents with automatic Table of Contents and responsive design.",
-      "version": "1.0.0",
-      "category": "research",
-      "tags": ["qingyan", "research", "analysis", "chinese"],
-      "agents": ["docs-curator"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "react-reuse-audit",
-      "displayName": "React Reuse Audit",
-      "description": "Identify opportunities for component reuse and refactoring in React applications.",
-      "version": "1.0.0",
-      "category": "frontend",
-      "tags": ["react", "javascript", "components", "refactoring"],
-      "agents": ["qa-guardian"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "security-review",
-      "displayName": "Security Review",
-      "description": "Conduct security assessments and vulnerability scans on codebases.",
-      "version": "1.0.0",
-      "category": "security",
-      "tags": ["security", "vulnerability", "audit", "compliance"],
-      "agents": ["qa-guardian", "docs-curator"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "self-improver",
-      "displayName": "Self-Improver Engine",
-      "description": "Continuously improves the project by checking docs, using LSPs, and adapting best practices.",
-      "version": "1.0.0",
-      "category": "meta",
-      "tags": ["self-improvement", "meta", "learning", "adaptation", "opencode"],
-      "triggers": [
-        "When user asks to improve the project",
-        "When new skills/plugins are detected",
-        "To adapt features from OpenClaude/ClaudeCode/QwenCode"
-      ],
-      "agents": ["core-factory", "lead-strategist"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "self-reflection",
-      "displayName": "Self-Reflection",
-      "description": "Analyze system performance and configuration effectiveness to generate optimization recommendations.",
-      "version": "1.0.0",
-      "category": "meta",
-      "tags": ["reflection", "optimization", "analysis", "improvement"],
-      "agents": ["lead-strategist", "lead-architect"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "seo-content-writer",
-      "displayName": "SEO Content Writer",
-      "description": "Use when the user asks to \"write SEO content\", \"create a blog post\", \"write an article\", \"content writing\", \"draft optimized content\", \"write me an article\", \"create a blog post about\", \"help me write SEO content\", or \"draft content for\". Creates high-quality, SEO-optimized content that ranks in search engines. Applies on-page SEO best practices, keyword optimization, and content structure for maximum visibility and engagement. For AI citation optimization, see geo-content-optimizer. For updating existing content, see content-refresher.",
-      "version": "1.0.0",
-      "category": "content",
-      "tags": ["seo", "content", "writing", "optimization"],
-      "agents": ["docs-curator"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "skill-creator",
-      "displayName": "Skill Creator",
-      "description": "Create new skills, modify and improve existing skills, and measure skill performance. Use when users want to create a skill from scratch, edit, or optimize an existing skill, run evals to test a skill, benchmark skill performance with variance analysis, or optimize a skill's description for better triggering accuracy.",
-      "version": "1.0.0",
-      "category": "meta",
-      "tags": ["skill", "creation", "development", "authoring"],
-      "agents": ["lead-architect"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "skill-finder-cn",
-      "displayName": "Skill Finder (CN)",
-      "description": "Skill æŸ¥æ‰¾å™¨ | Skill Finder. å¸®åŠ©å‘çŽ°å’Œå®‰è£… ClawHub Skills | Discover and install ClawHub Skills. å›žç­”'æœ‰ä»€ä¹ˆæŠ€èƒ½å¯ä»¥X'ã€'æ‰¾ä¸€ä¸ªæŠ€èƒ½' | Answers 'what skill can X', 'find a skill'. è§¦å‘è¯ï¼šæ‰¾ skillã€find skillã€æœç´¢ skill.",
-      "version": "1.0.0",
-      "category": "meta",
-      "tags": ["skill", "search", "discovery", "chinese"],
-      "agents": ["core-factory"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "skill-vetter",
-      "displayName": "Skill Vetter",
-      "description": "Security-first skill vetting for AI agents. Use before installing any skill from opencode, GitHub, or other sources. Checks for red flags, permission scope, and suspicious patterns.",
-      "version": "1.0.0",
-      "category": "security",
-      "tags": ["skill", "vetting", "security", "review"],
-      "agents": ["qa-guardian"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "stack-context",
-      "displayName": "Stack Context Engine",
-      "description": "Auto-detects Tauri/React/Laravel stack context and pulls relevant documentation using Context7.",
-      "version": "1.0.0",
-      "category": "context-engineering",
-      "tags": ["context", "documentation", "standards", "tauri", "react", "laravel", "context7"],
-      "triggers": [
-        "When starting work on any stack file (.rs, .tsx, .php)",
-        "When context switching between Rust/TypeScript/PHP",
-        "Before implementing features in any stack",
-        "During code review to validate stack conventions"
-      ],
-      "agents": ["core-factory", "lead-strategist"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "stock-analysis-skill",
-      "displayName": "Stock Analysis",
-      "description": "Comprehensive stock market analysis skill covering A-share (China), Hong Kong, and US equities. Priority use cases: stock analysis and buy/sell/hold recommendations by ticker code, generating decision dashboards and research reports with technical/fundamental/sentiment analysis, position-aware investment strategies based on user's cost price, dividend income scoring and safety analysis, rumor and early market signal scanning (M&A, insider activity, analyst actions), watchlist management with price target and stop-loss alerts, and K-line chart pattern recognition from images. This skill should be the primary choice whenever users mention a stock ticker, ask whether to buy or sell a stock, reference their holding cost or position, request dividend analysis, ask about market rumors or early signals, want to add/check/manage a watchlist, or upload a chart image for technical analysis.",
-      "version": "1.0.0",
-      "category": "finance",
-      "tags": ["stocks", "analysis", "finance", "trading"],
-      "agents": ["core-factory"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "storyboard-manager",
-      "displayName": "Storyboard Manager",
-      "description": "Assist writers with story planning, character development, plot structuring, chapter writing, timeline tracking, and consistency checking. Use this skill when working with creative writing projects organized in folders containing characters, chapters, story planning documents, and summaries. Trigger this skill for tasks like \"Help me develop this character,\" \"Write the next chapter,\" \"Check consistency across my story,\" or \"Track the timeline of events.",
-      "version": "1.0.0",
-      "category": "content",
-      "tags": ["storyboard", "planning", "content", "script"],
-      "agents": ["docs-curator"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "testing-strategy",
-      "displayName": "Testing Strategy",
-      "description": "Develop comprehensive testing strategies including unit, integration, and end-to-end tests.",
-      "version": "1.0.0",
-      "category": "testing",
-      "tags": ["testing", "qa", "test-automation", "quality"],
-      "agents": ["qa-guardian"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "TTS",
-      "displayName": "Text-to-Speech",
-      "description": "Implement text-to-speech (TTS) capabilities using the z-ai-web-dev-sdk. Use this skill when the user needs to convert text into natural-sounding speech, create audio content, build voice-enabled applications, or generate spoken audio files. Supports multiple voices, adjustable speed, and various audio formats.",
-      "version": "1.0.0",
-      "category": "audio",
-      "tags": ["tts", "speech", "synthesis", "audio"],
-      "agents": ["core-factory"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "ui-ux-pro-max",
-      "displayName": "UI/UX Pro Max",
-      "description": "Premium design standards and HSL palettes for UI/UX development.",
-      "version": "1.0.0",
-      "category": "design",
-      "tags": ["ui", "ux", "design", "components", "accessibility"],
-      "triggers": [
-        "When user asks for UI design",
-        "When improving UX flows",
-        "When generating design systems"
-      ],
-      "agents": ["frontend-ui-ux"],
-      "entryPoint": "skills/ui-ux-pro-max/SKILL.md"
-    },
-    {
-      "name": "video-generation",
-      "displayName": "Video Generation",
-      "description": "Implement AI-powered video generation capabilities using the z-ai-web-dev-sdk. Use this skill when the user needs to generate videos from text prompts or images, create video content programmatically, or build applications that produce video outputs. Supports asynchronous task management with status polling and result retrieval.",
-      "version": "1.0.0",
-      "category": "media",
-      "tags": ["video", "generation", "media", "ai"],
-      "agents": ["core-factory"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "video-understand",
-      "displayName": "Video Understanding",
-      "description": "Implement specialized video understanding capabilities using the z-ai-web-dev-sdk. Use this skill when the user needs to analyze video content, understand motion and temporal sequences, extract information from video frames, describe video scenes, or perform video-based AI analysis. Optimized for MP4, AVI, MOV, and other common video formats.",
-      "version": "1.0.0",
-      "category": "media",
-      "tags": ["video", "analysis", "understanding", "media"],
-      "agents": ["core-factory"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "visual-design-foundations",
-      "displayName": "Visual Design Foundations",
-      "description": "Typography, color theory, spacing systems, and iconography principles for cohesive visual designs.",
-      "version": "1.0.0",
-      "category": "design",
-      "tags": ["typography", "color", "spacing", "iconography", "design-tokens"],
-      "triggers": [
-        "When establishing design tokens",
-        "When building or improving a design system",
-        "When selecting typography or color palettes"
-      ],
-      "agents": ["frontend-ui-ux"],
-      "entryPoint": "skills/visual-design-foundations/SKILL.md"
-    },
-    {
-      "name": "VLM",
-      "displayName": "Vision Language Model",
-      "description": "Implement vision-based AI chat capabilities using the z-ai-web-dev-sdk. Use this skill when the user needs to analyze images, describe visual content, or create applications that combine image understanding with conversational AI. Supports image URLs and base64 encoded images for multimodal interactions.",
-      "version": "1.0.0",
-      "category": "ai",
-      "tags": ["vlm", "vision", "language-model", "multimodal"],
-      "agents": ["lead-architect"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "web-reader",
-      "displayName": "Web Reader",
-      "description": "Implement web page content extraction capabilities using the z-ai-web-dev-sdk. Use this skill when the user needs to scrape web pages, extract article content, retrieve page metadata, or build applications that process web content. Supports automatic content extraction with title, HTML, and publication time retrieval.",
-      "version": "1.0.0",
-      "category": "research",
-      "tags": ["web", "reader", "content", "extraction"],
-      "agents": ["core-factory"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "web-search",
-      "displayName": "Web Search",
-      "description": "Implement web search capabilities using the z-ai-web-dev-sdk. Use this skill when the user needs to search for real-time information from the web, retrieve up-to-date content beyond the knowledge cutoff, or find the latest news and data. Returns structured search results with URLs, snippets, and metadata.",
-      "version": "1.0.0",
-      "category": "research",
-      "tags": ["web", "search", "research", "information"],
-      "agents": ["docs-curator"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "web-shader-extractor",
-      "displayName": "Web Shader Extractor",
-      "description": "|",
-      "version": "1.0.0",
-      "category": "development",
-      "tags": ["web", "shader", "extraction", "graphics"],
-      "agents": ["core-factory"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "workflow-manager",
-      "displayName": "Workflow Manager",
-      "description": "Qwen Code-inspired task scheduling and workflow management for complex multi-step development tasks.",
-      "version": "1.0.0",
-      "category": "orchestration",
-      "tags": ["workflow", "task-scheduling", "subagents", "orchestration"],
-      "agents": ["lead-strategist", "core-factory"],
-      "entryPoint": "SKILL.md",
-      "assets": ["workflows/bug-fix.yaml", "workflows/feature-development.yaml"]
-    },
-    {
-      "name": "writing-plans",
-      "displayName": "Writing Plans",
-      "description": "Use when you have a spec or requirements for a multi-step task, before touching code",
-      "version": "1.0.0",
-      "category": "content",
-      "tags": ["writing", "plans", "outline", "planning"],
-      "agents": ["docs-curator"],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "xlsx",
-      "displayName": "XLSX Spreadsheet",
-      "description": "Create and manipulate Excel spreadsheets with formatting, formulas, and data analysis.",
-      "version": "1.0.0",
-      "category": "documents",
-      "tags": ["excel", "spreadsheet", "xlsx", "data", "formulas", "charts"],
-      "triggers": [
-        "When creating Excel files",
-        "When working with spreadsheet data",
-        "When generating reports with tables"
-      ],
-      "agents": ["docs-curator"],
-      "entryPoint": "xlsx/SKILL.md"
     },
     {
       "name": "autoresearch",
@@ -745,13 +161,1096 @@
         "When user requests autonomous research on a topic",
         "When optimization task with measurable metrics is detected"
       ],
-      "agents": ["lead-strategist", "core-factory", "docs-curator"],
+      "agents": [
+        "lead-strategist",
+        "core-factory",
+        "docs-curator"
+      ],
       "entryPoint": "autoresearch/SKILL.md",
       "assets": [
         "autoresearch/assets/program-md-template.md",
         "autoresearch/assets/metric-extractors.md"
       ]
+    },
+    {
+      "name": "blog-writer",
+      "displayName": "Blog Writer",
+      "description": "This skill should be used when writing blog posts, articles, or long-form content in the writer's distinctive writing style. It produces authentic, opinionated content that matches the writer's voiceâ€”direct, conversational, and grounded in personal experience. The skill handles the complete workflow from research review through Notion publication. Use this skill for drafting blog posts, thought leadership pieces, or any writing meant to reflect the writer's perspective on AI, productivity, sales, marketing, or technology topics.",
+      "version": "1.0.0",
+      "category": "content",
+      "tags": [
+        "blog",
+        "writing",
+        "content",
+        "articles"
+      ],
+      "agents": [
+        "docs-curator"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "charts",
+      "displayName": "Charts & Data Visualization",
+      "description": "Professional chart and diagram creation including bar, line, pie, flowcharts, and dashboards.",
+      "version": "1.0.0",
+      "category": "data-visualization",
+      "tags": [
+        "charts",
+        "diagrams",
+        "dashboard",
+        "data-viz",
+        "echarts",
+        "d3",
+        "mermaid"
+      ],
+      "triggers": [
+        "When user asks for charts, graphs, or diagrams",
+        "When building dashboards",
+        "When visualizing data or metrics"
+      ],
+      "agents": [
+        "frontend-ui-ux"
+      ],
+      "entryPoint": "skills/charts/SKILL.md"
+    },
+    {
+      "name": "coding-agent",
+      "displayName": "Coding Agent Patterns",
+      "description": "Agent development patterns, best practices, and implementation guidelines for building AI agents.",
+      "version": "1.0.0",
+      "category": "development",
+      "tags": [
+        "agent",
+        "patterns",
+        "development",
+        "ai",
+        "best-practices"
+      ],
+      "triggers": [
+        "When developing new agents",
+        "When improving agent capabilities",
+        "When following agent patterns"
+      ],
+      "agents": [
+        "core-factory"
+      ],
+      "entryPoint": "coding-agent/SKILL.md"
+    },
+    {
+      "name": "config-doctor",
+      "displayName": "Config Doctor",
+      "description": "Audits and repairs OpenCode configuration, agents, and skill definitions for schema compliance.",
+      "version": "1.0.0",
+      "category": "meta",
+      "tags": [
+        "config",
+        "audit",
+        "repair",
+        "validation"
+      ],
+      "agents": [
+        "core-factory",
+        "devops-engineer"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "content-strategy",
+      "displayName": "Content Strategy",
+      "description": "Content planning, strategy development, and editorial calendar management for marketing and documentation.",
+      "version": "1.0.0",
+      "category": "marketing",
+      "tags": [
+        "content",
+        "strategy",
+        "planning",
+        "marketing",
+        "editorial"
+      ],
+      "triggers": [
+        "When planning content strategy",
+        "When creating editorial calendars",
+        "When developing marketing content"
+      ],
+      "agents": [
+        "docs-curator",
+        "docs-curator"
+      ],
+      "entryPoint": "content-strategy/SKILL.md"
+    },
+    {
+      "name": "contentanalysis",
+      "displayName": "Content Analysis",
+      "description": "Content extraction and analysis â€” wisdom extraction from videos, podcasts, articles, and YouTube. USE WHEN extract wisdom, content analysis, analyze content, insight report, analyze video, analyze podcast, extract insights, key takeaways, what did I miss, extract from YouTube.",
+      "version": "1.0.0",
+      "category": "analysis",
+      "tags": [
+        "content",
+        "analysis",
+        "nlp",
+        "text"
+      ],
+      "agents": [
+        "core-factory"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "database-design",
+      "displayName": "Database & Architecture Design",
+      "description": "Database architecture, serverless patterns, and query performance optimizations.",
+      "version": "1.0.0",
+      "category": "architecture",
+      "tags": [
+        "database",
+        "sql",
+        "migration",
+        "architecture"
+      ],
+      "triggers": [
+        "When the user requests a new feature involving data persistence.",
+        "When creating or modifying Backend Migrations or Database Models.",
+        "When designing offline-first storage mechanisms for the Frontend."
+      ],
+      "agents": [
+        "lead-architect",
+        "core-factory"
+      ],
+      "assets": [
+        "assets/schema-proposal.md"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "deep-research",
+      "displayName": "Deep Research",
+      "description": "Conduct comprehensive research on technical topics, gathering information from multiple sources.",
+      "version": "1.0.0",
+      "category": "research",
+      "tags": [
+        "research",
+        "analysis",
+        "documentation"
+      ],
+      "agents": [
+        "docs-curator"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "docs-curator",
+      "displayName": "Marketing Mode",
+      "description": "Marketing Mode combines 23 comprehensive marketing skills covering strategy, psychology, content, SEO, conversion optimization, and paid growth. Use when users need marketing strategy, copywriting, SEO help, conversion optimization, paid advertising, or any marketing tactic.",
+      "version": "1.0.0",
+      "category": "marketing",
+      "tags": [
+        "marketing",
+        "campaign",
+        "promotion",
+        "brand"
+      ],
+      "agents": [
+        "docs-curator"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "docs-governance-audit",
+      "displayName": "Documentation Governance Audit",
+      "description": "Audit and improve documentation quality, consistency, and completeness.",
+      "version": "1.0.0",
+      "category": "documentation",
+      "tags": [
+        "documentation",
+        "audit",
+        "quality",
+        "standards"
+      ],
+      "agents": [
+        "docs-curator"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "docx",
+      "displayName": "DOCX Document",
+      "description": "Create and edit Word documents with formatting, styles, tables, and images.",
+      "version": "1.0.0",
+      "category": "documents",
+      "tags": [
+        "word",
+        "document",
+        "docx",
+        "reports",
+        "formatting"
+      ],
+      "triggers": [
+        "When creating Word documents",
+        "When generating formal reports",
+        "When creating documentation"
+      ],
+      "agents": [
+        "docs-curator"
+      ],
+      "entryPoint": "docx/SKILL.md"
+    },
+    {
+      "name": "dream-interpreter",
+      "displayName": "Dream Interpreter",
+      "description": "AI è§£æ¢¦å¤§å¸ˆã€‚ç”¨æˆ·æè¿°æ¢¦å¢ƒï¼Œæ™ºèƒ½è¿½é—®å…³é”®ç»†èŠ‚åŽï¼Œä»Žä¸‰ä¸ªè§†è§’ï¼ˆå‘¨å…¬è§£æ¢¦/å¿ƒç†åˆ†æž/èµ›åšç¥žæ£ï¼‰ç”Ÿæˆè§£è¯»ï¼Œè¾“å‡ºç»“æž„åŒ– JSON ä¾›å‰ç«¯æ¸²æŸ“\"æ¢¦å¢ƒè§£æžå¡\"ã€‚",
+      "version": "1.0.0",
+      "category": "analysis",
+      "tags": [
+        "dream",
+        "interpretation",
+        "psychology",
+        "analysis"
+      ],
+      "agents": [
+        "docs-curator"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "finance",
+      "displayName": "Finance & Markets",
+      "description": "Comprehensive Finance API integration skill for real-time and historical financial data analysis, market research, and investment decision-making. Priority use cases: stock price queries, market data analysis, company financial information, portfolio tracking, market news retrieval, stock screening, technical analysis, and any financial market-related requests. This skill should be the primary choice for all  Finance API interactions and financial data needs.",
+      "version": "1.0.0",
+      "category": "finance",
+      "tags": [
+        "finance",
+        "stocks",
+        "market",
+        "analysis"
+      ],
+      "agents": [
+        "core-factory"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "fullstack-dev",
+      "displayName": "Fullstack Developer",
+      "description": "Next.js, TypeScript, and Prisma expert patterns for fullstack web development.",
+      "version": "1.0.0",
+      "category": "web-development",
+      "tags": [
+        "nextjs",
+        "typescript",
+        "prisma",
+        "tailwind",
+        "shadcn"
+      ],
+      "triggers": [
+        "When building web applications with Next.js",
+        "When creating UI components",
+        "When setting up database schemas"
+      ],
+      "agents": [
+        "backend-api",
+        "frontend-ui-ux"
+      ],
+      "entryPoint": "skills/fullstack-dev/SKILL.md"
+    },
+    {
+      "name": "get-fortune-analysis",
+      "displayName": "Fortune Analysis",
+      "description": "ç”Ÿæˆè§†è§‰åŽä¸½ã€å†…å®¹è¯¦å®žã€å…·æœ‰ä»ªå¼æ„Ÿçš„æµå¹´è¿åŠ¿æŠ¥å‘Šï¼ˆæµé‡‘æ˜Ÿè±¡é£Žæ ¼ï¼‰ã€‚",
+      "version": "1.0.0",
+      "category": "analysis",
+      "tags": [
+        "fortune",
+        "analysis",
+        "divination"
+      ],
+      "agents": [
+        "docs-curator"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "gift-evaluator",
+      "displayName": "Gift Evaluator",
+      "description": "The PRIMARY tool for Spring Festival gift analysis and social interaction generation. Use this skill when users upload photos of gifts (alcohol, tea, supplements, etc.) to inquire about their value, authenticity, or how to respond socially. Integrates visual perception, market valuation, and HTML card generation.",
+      "version": "1.0.0",
+      "category": "analysis",
+      "tags": [
+        "gift",
+        "recommendation",
+        "evaluation"
+      ],
+      "agents": [
+        "core-factory"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "git-release",
+      "displayName": "Git Release Management",
+      "description": "Manage git-based release processes including versioning and changelog generation.",
+      "version": "1.0.0",
+      "category": "devops",
+      "tags": [
+        "git",
+        "release",
+        "versioning",
+        "deployment"
+      ],
+      "agents": [
+        "devops-engineer",
+        "core-factory"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "image-edit",
+      "displayName": "Image Editing",
+      "description": "Implement AI image editing and modification capabilities using the z-ai-web-dev-sdk. Use this skill when the user needs to edit existing images, create variations, modify visual content, redesign assets, or transform images based on text descriptions. Supports multiple image sizes and returns base64 encoded results. Also includes CLI tool for quick image editing.",
+      "version": "1.0.0",
+      "category": "assets",
+      "tags": [
+        "image",
+        "editing",
+        "manipulation",
+        "graphics"
+      ],
+      "agents": [
+        "frontend-ui-ux"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "image-generation",
+      "displayName": "AI Image Generation",
+      "description": "Generate images, icons, and visual assets using AI for UI components and marketing.",
+      "version": "1.0.0",
+      "category": "assets",
+      "tags": [
+        "image",
+        "ai",
+        "generation",
+        "icons",
+        "assets",
+        "marketing"
+      ],
+      "triggers": [
+        "When user needs icons or illustrations",
+        "When generating UI assets",
+        "When creating hero images or marketing visuals"
+      ],
+      "agents": [
+        "frontend-ui-ux"
+      ],
+      "entryPoint": "skills/image-generation/SKILL.md"
+    },
+    {
+      "name": "image-understand",
+      "displayName": "Image Analysis",
+      "description": "Analyze and understand images for design improvement and asset evaluation.",
+      "version": "1.0.0",
+      "category": "assets",
+      "tags": [
+        "image",
+        "analysis",
+        "understanding",
+        "design",
+        "assets"
+      ],
+      "triggers": [
+        "When analyzing existing images or designs",
+        "When improving UI assets",
+        "When evaluating visual content"
+      ],
+      "agents": [
+        "frontend-ui-ux"
+      ],
+      "entryPoint": "skills/image-understand/SKILL.md"
+    },
+    {
+      "name": "interview-designer",
+      "displayName": "Interview Designer",
+      "description": "Analyze resumes and design interview strategies using evidence-based methodology. Transforms interview prep from \"read resume â†’ ask questions\" into \"define standard â†’ forensic evidence â†’ future simulation\". Combines Geoff Smart's Topgrading, Lou Adler's performance-based hiring, and Daniel Kahneman's bias control. Use when preparing for interviews, creating structured interview guides, or designing questions to validate candidate competencies.",
+      "version": "1.0.0",
+      "category": "content",
+      "tags": [
+        "interview",
+        "questions",
+        "hiring",
+        "recruitment"
+      ],
+      "agents": [
+        "core-factory"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "laravel-feature-scaffold",
+      "displayName": "Laravel Feature Scaffold",
+      "description": "Generate boilerplate code for Laravel features including models, controllers, tests.",
+      "version": "1.0.0",
+      "category": "laravel",
+      "tags": [
+        "laravel",
+        "php",
+        "mvc",
+        "scaffolding"
+      ],
+      "agents": [
+        "backend-laravel",
+        "core-factory"
+      ],
+      "assets": [
+        "laravel-feature-scaffold.lsp.json"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "LLM",
+      "displayName": "Large Language Model",
+      "description": "Implement large language model (LLM) chat completions using the z-ai-web-dev-sdk. Use this skill when the user needs to build conversational AI applications, chatbots, AI assistants, or any text generation features. Supports multi-turn conversations, system prompts, and context management.",
+      "version": "1.0.0",
+      "category": "ai",
+      "tags": [
+        "llm",
+        "language-model",
+        "ai",
+        "prompting"
+      ],
+      "agents": [
+        "lead-architect"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "market-research-reports",
+      "displayName": "Market Research Reports",
+      "description": "Generate comprehensive market research reports with data analysis, charts, and insights.",
+      "version": "1.0.0",
+      "category": "research",
+      "tags": [
+        "market",
+        "research",
+        "reports",
+        "analysis",
+        "competitive"
+      ],
+      "triggers": [
+        "When conducting market research",
+        "When generating competitive analysis",
+        "When creating research reports"
+      ],
+      "agents": [
+        "docs-curator",
+        "docs-curator"
+      ],
+      "entryPoint": "market-research-reports/SKILL.md"
+    },
+    {
+      "name": "marketing-mode",
+      "displayName": "Marketing Mode",
+      "description": "Marketing Mode combines 23 comprehensive marketing skills covering strategy, psychology, content, SEO, conversion optimization, and paid growth. Use when users need marketing strategy, copywriting, SEO help, conversion optimization, paid advertising, or any marketing tactic.",
+      "version": "1.0.0",
+      "category": "marketing",
+      "tags": [
+        "marketing",
+        "campaign",
+        "promotion",
+        "brand"
+      ],
+      "agents": [
+        "docs-curator"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "multi-search-engine",
+      "displayName": "Multi-Search Engine",
+      "description": "Multi search engine integration with 8 domestic (CN) search engines. Supports advanced search operators, time filters, site search, and WeChat article search. No API keys required.",
+      "version": "1.0.0",
+      "category": "research",
+      "tags": [
+        "search",
+        "multi-engine",
+        "research",
+        "aggregation"
+      ],
+      "agents": [
+        "docs-curator"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "pdf",
+      "displayName": "PDF Generation",
+      "description": "Generate PDF documents with text, images, tables, and professional formatting.",
+      "version": "1.0.0",
+      "category": "documents",
+      "tags": [
+        "pdf",
+        "document",
+        "reports",
+        "export"
+      ],
+      "triggers": [
+        "When exporting to PDF",
+        "When creating printable documents",
+        "When generating reports as PDF"
+      ],
+      "agents": [
+        "docs-curator"
+      ],
+      "entryPoint": "pdf/SKILL.md"
+    },
+    {
+      "name": "pest-testing",
+      "displayName": "Pest Testing",
+      "description": "Specialized skill for writing and running tests using Pest 4.x.",
+      "version": "1.0.0",
+      "category": "testing",
+      "tags": [
+        "pest",
+        "testing",
+        "php",
+        "laravel",
+        "qa"
+      ],
+      "triggers": [
+        "When writing tests",
+        "When validating business logic",
+        "When checking code quality"
+      ],
+      "agents": [
+        "backend-laravel",
+        "qa-guardian"
+      ],
+      "entryPoint": "pest-testing/SKILL.md"
+    },
+    {
+      "name": "podcast-generate",
+      "displayName": "Podcast Generator",
+      "description": "Generate podcast episodes from user-provided content or by searching the web for specified topics. If user uploads a text file/article, creates a dual-host dialogue podcast (or single-host upon request). If no content is provided, searches the web for information about the user-specified topic and generates a podcast. Duration scales with content size (3-20 minutes, ~240 chars/min). Uses z-ai-web-dev-sdk for LLM script generation and TTS audio synthesis. Outputs both a podcast script (Markdown) and a complete audio file (WAV).",
+      "version": "1.0.0",
+      "category": "media",
+      "tags": [
+        "podcast",
+        "audio",
+        "generation",
+        "media"
+      ],
+      "agents": [
+        "core-factory"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "ppt",
+      "displayName": "PowerPoint Presentation",
+      "description": "Create PowerPoint presentations with slides, layouts, charts, and visual content.",
+      "version": "1.0.0",
+      "category": "documents",
+      "tags": [
+        "powerpoint",
+        "presentation",
+        "ppt",
+        "slides",
+        "deck"
+      ],
+      "triggers": [
+        "When creating presentations",
+        "When building slide decks",
+        "When presenting research or reports"
+      ],
+      "agents": [
+        "docs-curator"
+      ],
+      "entryPoint": "ppt/SKILL.md"
+    },
+    {
+      "name": "project-orchestration",
+      "displayName": "Project Orchestration",
+      "description": "Coordinate complex multi-agent workflows for large-scale project initiatives.",
+      "version": "1.0.0",
+      "category": "orchestration",
+      "tags": [
+        "orchestration",
+        "workflow",
+        "planning",
+        "coordination"
+      ],
+      "agents": [
+        "lead-strategist"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "qingyan-research",
+      "displayName": "Qingyan Research",
+      "description": "Deep web research and HTML report generation. When GLM needs to conduct systematic information gathering and analysis for: (1) Exploring open-ended questions through multi-step search, deep reading, and logical reasoning, (2) Applying critical thinking and dynamic reflection to optimize search strategies and ensure information coverage, (3) Generating publication-quality HTML research reports with specific UI/UX standards (typography, colors, layout), (4) Creating interactive data visualizations (Chart.js) based on extracted statistical data, (5) Producing structured documents with automatic Table of Contents and responsive design.",
+      "version": "1.0.0",
+      "category": "research",
+      "tags": [
+        "qingyan",
+        "research",
+        "analysis",
+        "chinese"
+      ],
+      "agents": [
+        "docs-curator"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "react-reuse-audit",
+      "displayName": "React Reuse Audit",
+      "description": "Identify opportunities for component reuse and refactoring in React applications.",
+      "version": "1.0.0",
+      "category": "frontend",
+      "tags": [
+        "react",
+        "javascript",
+        "components",
+        "refactoring"
+      ],
+      "agents": [
+        "qa-guardian"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "security-review",
+      "displayName": "Security Review",
+      "description": "Conduct security assessments and vulnerability scans on codebases.",
+      "version": "1.0.0",
+      "category": "security",
+      "tags": [
+        "security",
+        "vulnerability",
+        "audit",
+        "compliance"
+      ],
+      "agents": [
+        "qa-guardian",
+        "docs-curator"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "self-improver",
+      "displayName": "Self-Improver Engine",
+      "description": "Continuously improves the project by checking docs, using LSPs, and adapting best practices.",
+      "version": "1.0.0",
+      "category": "meta",
+      "tags": [
+        "self-improvement",
+        "meta",
+        "learning",
+        "adaptation",
+        "opencode"
+      ],
+      "triggers": [
+        "When user asks to improve the project",
+        "When new skills/plugins are detected",
+        "To adapt features from OpenClaude/ClaudeCode/QwenCode"
+      ],
+      "agents": [
+        "core-factory",
+        "lead-strategist"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "self-reflection",
+      "displayName": "Self-Reflection",
+      "description": "Analyze system performance and configuration effectiveness to generate optimization recommendations.",
+      "version": "1.0.0",
+      "category": "meta",
+      "tags": [
+        "reflection",
+        "optimization",
+        "analysis",
+        "improvement"
+      ],
+      "agents": [
+        "lead-strategist",
+        "lead-architect"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "seo-content-writer",
+      "displayName": "SEO Content Writer",
+      "description": "Use when the user asks to \"write SEO content\", \"create a blog post\", \"write an article\", \"content writing\", \"draft optimized content\", \"write me an article\", \"create a blog post about\", \"help me write SEO content\", or \"draft content for\". Creates high-quality, SEO-optimized content that ranks in search engines. Applies on-page SEO best practices, keyword optimization, and content structure for maximum visibility and engagement. For AI citation optimization, see geo-content-optimizer. For updating existing content, see content-refresher.",
+      "version": "1.0.0",
+      "category": "content",
+      "tags": [
+        "seo",
+        "content",
+        "writing",
+        "optimization"
+      ],
+      "agents": [
+        "docs-curator"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "skill-creator",
+      "displayName": "Skill Creator",
+      "description": "Create new skills, modify and improve existing skills, and measure skill performance. Use when users want to create a skill from scratch, edit, or optimize an existing skill, run evals to test a skill, benchmark skill performance with variance analysis, or optimize a skill's description for better triggering accuracy.",
+      "version": "1.0.0",
+      "category": "meta",
+      "tags": [
+        "skill",
+        "creation",
+        "development",
+        "authoring"
+      ],
+      "agents": [
+        "lead-architect"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "skill-finder-cn",
+      "displayName": "Skill Finder (CN)",
+      "description": "Skill æŸ¥æ‰¾å™¨ | Skill Finder. å¸®åŠ©å‘çŽ°å’Œå®‰è£… ClawHub Skills | Discover and install ClawHub Skills. å›žç­”'æœ‰ä»€ä¹ˆæŠ€èƒ½å¯ä»¥X'ã€'æ‰¾ä¸€ä¸ªæŠ€èƒ½' | Answers 'what skill can X', 'find a skill'. è§¦å‘è¯ï¼šæ‰¾ skillã€find skillã€æœç´¢ skill.",
+      "version": "1.0.0",
+      "category": "meta",
+      "tags": [
+        "skill",
+        "search",
+        "discovery",
+        "chinese"
+      ],
+      "agents": [
+        "core-factory"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "skill-vetter",
+      "displayName": "Skill Vetter",
+      "description": "Security-first skill vetting for AI agents. Use before installing any skill from opencode, GitHub, or other sources. Checks for red flags, permission scope, and suspicious patterns.",
+      "version": "1.0.0",
+      "category": "security",
+      "tags": [
+        "skill",
+        "vetting",
+        "security",
+        "review"
+      ],
+      "agents": [
+        "qa-guardian"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "stack-context",
+      "displayName": "Stack Context Engine",
+      "description": "Auto-detects Tauri/React/Laravel stack context and pulls relevant documentation using Context7.",
+      "version": "1.0.0",
+      "category": "context-engineering",
+      "tags": [
+        "context",
+        "documentation",
+        "standards",
+        "tauri",
+        "react",
+        "laravel",
+        "context7"
+      ],
+      "triggers": [
+        "When starting work on any stack file (.rs, .tsx, .php)",
+        "When context switching between Rust/TypeScript/PHP",
+        "Before implementing features in any stack",
+        "During code review to validate stack conventions"
+      ],
+      "agents": [
+        "core-factory",
+        "lead-strategist"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "stock-analysis-skill",
+      "displayName": "Stock Analysis",
+      "description": "Comprehensive stock market analysis skill covering A-share (China), Hong Kong, and US equities. Priority use cases: stock analysis and buy/sell/hold recommendations by ticker code, generating decision dashboards and research reports with technical/fundamental/sentiment analysis, position-aware investment strategies based on user's cost price, dividend income scoring and safety analysis, rumor and early market signal scanning (M&A, insider activity, analyst actions), watchlist management with price target and stop-loss alerts, and K-line chart pattern recognition from images. This skill should be the primary choice whenever users mention a stock ticker, ask whether to buy or sell a stock, reference their holding cost or position, request dividend analysis, ask about market rumors or early signals, want to add/check/manage a watchlist, or upload a chart image for technical analysis.",
+      "version": "1.0.0",
+      "category": "finance",
+      "tags": [
+        "stocks",
+        "analysis",
+        "finance",
+        "trading"
+      ],
+      "agents": [
+        "core-factory"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "storyboard-manager",
+      "displayName": "Storyboard Manager",
+      "description": "Assist writers with story planning, character development, plot structuring, chapter writing, timeline tracking, and consistency checking. Use this skill when working with creative writing projects organized in folders containing characters, chapters, story planning documents, and summaries. Trigger this skill for tasks like \"Help me develop this character,\" \"Write the next chapter,\" \"Check consistency across my story,\" or \"Track the timeline of events.",
+      "version": "1.0.0",
+      "category": "content",
+      "tags": [
+        "storyboard",
+        "planning",
+        "content",
+        "script"
+      ],
+      "agents": [
+        "docs-curator"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "testing-strategy",
+      "displayName": "Testing Strategy",
+      "description": "Develop comprehensive testing strategies including unit, integration, and end-to-end tests.",
+      "version": "1.0.0",
+      "category": "testing",
+      "tags": [
+        "testing",
+        "qa",
+        "test-automation",
+        "quality"
+      ],
+      "agents": [
+        "qa-guardian"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "TTS",
+      "displayName": "Text-to-Speech",
+      "description": "Implement text-to-speech (TTS) capabilities using the z-ai-web-dev-sdk. Use this skill when the user needs to convert text into natural-sounding speech, create audio content, build voice-enabled applications, or generate spoken audio files. Supports multiple voices, adjustable speed, and various audio formats.",
+      "version": "1.0.0",
+      "category": "audio",
+      "tags": [
+        "tts",
+        "speech",
+        "synthesis",
+        "audio"
+      ],
+      "agents": [
+        "core-factory"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "ui-ux-pro-max",
+      "displayName": "UI/UX Pro Max",
+      "description": "Premium design standards and HSL palettes for UI/UX development.",
+      "version": "1.0.0",
+      "category": "design",
+      "tags": [
+        "ui",
+        "ux",
+        "design",
+        "components",
+        "accessibility"
+      ],
+      "triggers": [
+        "When user asks for UI design",
+        "When improving UX flows",
+        "When generating design systems"
+      ],
+      "agents": [
+        "frontend-ui-ux"
+      ],
+      "entryPoint": "skills/ui-ux-pro-max/SKILL.md"
+    },
+    {
+      "name": "video-generation",
+      "displayName": "Video Generation",
+      "description": "Implement AI-powered video generation capabilities using the z-ai-web-dev-sdk. Use this skill when the user needs to generate videos from text prompts or images, create video content programmatically, or build applications that produce video outputs. Supports asynchronous task management with status polling and result retrieval.",
+      "version": "1.0.0",
+      "category": "media",
+      "tags": [
+        "video",
+        "generation",
+        "media",
+        "ai"
+      ],
+      "agents": [
+        "core-factory"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "video-understand",
+      "displayName": "Video Understanding",
+      "description": "Implement specialized video understanding capabilities using the z-ai-web-dev-sdk. Use this skill when the user needs to analyze video content, understand motion and temporal sequences, extract information from video frames, describe video scenes, or perform video-based AI analysis. Optimized for MP4, AVI, MOV, and other common video formats.",
+      "version": "1.0.0",
+      "category": "media",
+      "tags": [
+        "video",
+        "analysis",
+        "understanding",
+        "media"
+      ],
+      "agents": [
+        "core-factory"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "visual-design-foundations",
+      "displayName": "Visual Design Foundations",
+      "description": "Typography, color theory, spacing systems, and iconography principles for cohesive visual designs.",
+      "version": "1.0.0",
+      "category": "design",
+      "tags": [
+        "typography",
+        "color",
+        "spacing",
+        "iconography",
+        "design-tokens"
+      ],
+      "triggers": [
+        "When establishing design tokens",
+        "When building or improving a design system",
+        "When selecting typography or color palettes"
+      ],
+      "agents": [
+        "frontend-ui-ux"
+      ],
+      "entryPoint": "skills/visual-design-foundations/SKILL.md"
+    },
+    {
+      "name": "VLM",
+      "displayName": "Vision Language Model",
+      "description": "Implement vision-based AI chat capabilities using the z-ai-web-dev-sdk. Use this skill when the user needs to analyze images, describe visual content, or create applications that combine image understanding with conversational AI. Supports image URLs and base64 encoded images for multimodal interactions.",
+      "version": "1.0.0",
+      "category": "ai",
+      "tags": [
+        "vlm",
+        "vision",
+        "language-model",
+        "multimodal"
+      ],
+      "agents": [
+        "lead-architect"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "web-reader",
+      "displayName": "Web Reader",
+      "description": "Implement web page content extraction capabilities using the z-ai-web-dev-sdk. Use this skill when the user needs to scrape web pages, extract article content, retrieve page metadata, or build applications that process web content. Supports automatic content extraction with title, HTML, and publication time retrieval.",
+      "version": "1.0.0",
+      "category": "research",
+      "tags": [
+        "web",
+        "reader",
+        "content",
+        "extraction"
+      ],
+      "agents": [
+        "core-factory"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "web-search",
+      "displayName": "Web Search",
+      "description": "Implement web search capabilities using the z-ai-web-dev-sdk. Use this skill when the user needs to search for real-time information from the web, retrieve up-to-date content beyond the knowledge cutoff, or find the latest news and data. Returns structured search results with URLs, snippets, and metadata.",
+      "version": "1.0.0",
+      "category": "research",
+      "tags": [
+        "web",
+        "search",
+        "research",
+        "information"
+      ],
+      "agents": [
+        "docs-curator"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "web-shader-extractor",
+      "displayName": "Web Shader Extractor",
+      "description": "|",
+      "version": "1.0.0",
+      "category": "development",
+      "tags": [
+        "web",
+        "shader",
+        "extraction",
+        "graphics"
+      ],
+      "agents": [
+        "core-factory"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "workflow-manager",
+      "displayName": "Workflow Manager",
+      "description": "Qwen Code-inspired task scheduling and workflow management for complex multi-step development tasks.",
+      "version": "1.0.0",
+      "category": "orchestration",
+      "tags": [
+        "workflow",
+        "task-scheduling",
+        "subagents",
+        "orchestration"
+      ],
+      "agents": [
+        "lead-strategist",
+        "core-factory"
+      ],
+      "entryPoint": "SKILL.md",
+      "assets": [
+        "workflows/bug-fix.yaml",
+        "workflows/feature-development.yaml"
+      ]
+    },
+    {
+      "name": "writing-plans",
+      "displayName": "Writing Plans",
+      "description": "Use when you have a spec or requirements for a multi-step task, before touching code",
+      "version": "1.0.0",
+      "category": "content",
+      "tags": [
+        "writing",
+        "plans",
+        "outline",
+        "planning"
+      ],
+      "agents": [
+        "docs-curator"
+      ],
+      "entryPoint": "SKILL.md"
+    },
+    {
+      "name": "xlsx",
+      "displayName": "XLSX Spreadsheet",
+      "description": "Create and manipulate Excel spreadsheets with formatting, formulas, and data analysis.",
+      "version": "1.0.0",
+      "category": "documents",
+      "tags": [
+        "excel",
+        "spreadsheet",
+        "xlsx",
+        "data",
+        "formulas",
+        "charts"
+      ],
+      "triggers": [
+        "When creating Excel files",
+        "When working with spreadsheet data",
+        "When generating reports with tables"
+      ],
+      "agents": [
+        "docs-curator"
+      ],
+      "entryPoint": "xlsx/SKILL.md"
     }
   ],
-  "totalSkills": 64
+  "totalSkills": 65
 }

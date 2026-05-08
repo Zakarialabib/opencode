@@ -1,5 +1,5 @@
 import { parseJsonc, stringifyJson } from "./jsonc-utils";
-import { Plugin, tool } from "@opencode-ai/plugin";
+import { type Plugin, tool } from "@opencode-ai/plugin";
 import { readFileSync, writeFileSync, accessSync } from "node:fs";
 import { join, dirname, parse } from "node:path";
 

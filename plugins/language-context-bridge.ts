@@ -1,4 +1,4 @@
-import { Plugin, tool } from "@opencode-ai/plugin";
+import { type Plugin, tool } from "@opencode-ai/plugin";
 import { readFile } from "fs/promises";
 import { join } from "path";
 
@@ -286,7 +286,7 @@ const LanguageContextBridgePlugin: Plugin = async ({ client, project, directory 
 
           if (includeDiagnostics) {
             result += `- Diagnostic errors and warnings\n`;
-            result += `\nNote: Check Trae\'s Problems panel for real-time diagnostics.`;
+            result += `\nNote: Check Trae's Problems panel for real-time diagnostics.`;
           }
 
           return result;
@@ -315,7 +315,7 @@ const LanguageContextBridgePlugin: Plugin = async ({ client, project, directory 
           result += `- Global PHP functions and Laravel helpers\n`;
           result += `- Real-time syntax and semantic diagnostics\n`;
           result += `- Cross-file references (Find usages)\n`;
-          result += `\nNote: Intelephense provides deep intelligence for Laravel 13+. Use Trae\'s Go to Symbol (@) to navigate.`;
+          result += `\nNote: Intelephense provides deep intelligence for Laravel 13+. Use Trae's Go to Symbol (@) to navigate.`;
 
           return result;
         },

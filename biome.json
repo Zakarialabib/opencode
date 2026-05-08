@@ -5,11 +5,32 @@
     "indentWidth": 2,
     "lineWidth": 100
   },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true
+    }
+  },
   "javascript": {
     "formatter": {
       "quoteStyle": "double",
       "semicolons": "always",
       "trailingCommas": "es5"
     }
+  },
+  "files": {
+    "includes": [
+      "**/*.ts",
+      "**/*.js",
+      "**/*.json",
+      "!!**/node_modules",
+      "!!**/dist",
+      "!!**/coverage",
+      "!!**/.nyc_output",
+      "!!**/skills",
+      "!!**/OpenCode-skills",
+      "!!**/__tests__",
+      "!!**/*.test.ts"
+    ]
   }
 }
