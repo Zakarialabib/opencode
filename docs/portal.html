@@ -57,7 +57,7 @@
         border-right: 1px solid var(--glass-border);
         padding: 2rem;
         display: flex;
-        flex-column: column;
+        flex-direction: column;
         gap: 2rem;
         z-index: 10;
       }
@@ -225,14 +225,22 @@
       <div>
         <div class="logo"><span>🌌</span> OpenCode Docs</div>
         <ul class="nav-list">
-          <li class="nav-item active" onclick="loadPage('User-Guide')"><span>🏠</span> User Guide</li>
-          <li class="nav-item" onclick="loadPage('Agents-Guide')"><span>👥</span> Engineering Team</li>
+          <li class="nav-item active" onclick="loadPage('User-Guide')">
+            <span>🏠</span> User Guide
+          </li>
+          <li class="nav-item" onclick="loadPage('Agents-Guide')">
+            <span>👥</span> Engineering Team
+          </li>
           <li class="nav-item" onclick="loadPage('Workflows-Guide')"><span>⚡</span> Workflows</li>
           <li class="nav-item" onclick="loadPage('Plugins-Guide')"><span>🔌</span> Plugins</li>
           <li class="nav-item" onclick="loadPage('Skills-Guide')"><span>🛠️</span> Skills Guide</li>
-          <li class="nav-item" onclick="loadPage('Agent-Loop-Guide')"><span>🔄</span> Agent Loop</li>
+          <li class="nav-item" onclick="loadPage('Agent-Loop-Guide')">
+            <span>🔄</span> Agent Loop
+          </li>
           <li class="nav-item" onclick="loadPage('Prompting-Guide')"><span>💬</span> Prompting</li>
-          <li class="nav-item" onclick="loadPage('Prompting-and-Context-Engineering')"><span>🧠</span> Context Engineering</li>
+          <li class="nav-item" onclick="loadPage('Prompting-and-Context-Engineering')">
+            <span>🧠</span> Context Engineering
+          </li>
         </ul>
       </div>
     </div>
@@ -244,8 +252,8 @@
     </div>
 
     <script>
-              const pages = {
-                  home: `# 🌌 OpenCode User Guide
+      const pages = {
+        home: `# 🌌 OpenCode User Guide
 
       Welcome to the **OpenCode** ecosystem. This guide will help you navigate the powerful agentic framework, leverage built-in skills, and automate your development workflow.
 
@@ -299,7 +307,7 @@
 
       > [!TIP]
       > Need help with a specific stack? Check out the [**Skills Guide**](Skills-Guide.md) to see how OpenCode auto-detects your project type.`,
-                  agents: `# 🤖 Agents Guide
+        agents: `# 🤖 Agents Guide
 
       OpenCode features a diverse team of **18+ specialized agents**. Each agent is optimized for specific phases of the software development lifecycle.
 
@@ -367,7 +375,7 @@
 
       > [!IMPORTANT]
       > Some agents have restricted permissions. For example, the \`plan\` agent is **read-only** by default to prevent accidental modifications during the discovery phase.`,
-                  workflows: `# ⚡ Workflows Guide
+        workflows: `# ⚡ Workflows Guide
 
       Workflows are automated, multi-agent sequences designed to handle complex development tasks without manual intervention between steps.
 
@@ -443,7 +451,7 @@
 
       > [!NOTE]
       > Workflows are the best way to leverage the "Swarm" power of OpenCode. They turn a series of manual prompts into a single, reliable automation.`,
-                  plugins: `# 🔌 Plugins Guide
+        plugins: `# 🔌 Plugins Guide
 
       Plugins extend the core functionality of OpenCode, providing new commands, UI enhancements, and background capabilities.
 
@@ -513,7 +521,7 @@
 
       > [!CAUTION]
       > Always install plugins from trusted sources. Since plugins have access to your terminal and filesystem, they should be audited carefully.`,
-                  skills: `# 🛠️ Skills Guide
+        skills: `# 🛠️ Skills Guide
 
       Skills are specialized capabilities that agents can "load" to handle specific technologies or complex workflows.
 
@@ -587,7 +595,7 @@
 
       > [!TIP]
       > Use the \`skill-creator\` skill to help you draft new skill definitions! It knows exactly how to format the \`SKILL.md\` for maximum agent compatibility.`,
-                  catalog: `# 📚 OpenCode Skills Catalog
+        catalog: `# 📚 OpenCode Skills Catalog
 
       The \`OpenCode-skills\` directory contains a rich library of specialized capabilities. Agents can leverage these to perform complex tasks outside of standard coding.
 
@@ -663,56 +671,70 @@
       ---
 
       > [!TIP]
-      > Use the **\`skill-finder-cn\`** skill if you are looking for specific community-contributed skills from the Zhipu AI ecosystem.`
-              };
+      > Use the **\`skill-finder-cn\`** skill if you are looking for specific community-contributed skills from the Zhipu AI ecosystem.`,
+      };
 
-              function formatCallouts(html) {
-                  return html
-                      .replace(/> \[!TIP\]\n> (.*)/g, '<div class="callout callout-tip"><strong>💡 Tip:</strong> $1</div>')
-                      .replace(/> \[!NOTE\]\n> (.*)/g, '<div class="callout callout-note"><strong>ℹ️ Note:</strong> $1</div>')
-                      .replace(/> \[!IMPORTANT\]\n> (.*)/g, '<div class="callout callout-important"><strong>⚠️ Important:</strong> $1</div>')
-                      .replace(/> \[!CAUTION\]\n> (.*)/g, '<div class="callout callout-caution"><strong>🛑 Caution:</strong> $1</div>');
-              }
+      function formatCallouts(html) {
+        return html
+          .replace(
+            /> \[!TIP\]\n> (.*)/g,
+            '<div class="callout callout-tip"><strong>💡 Tip:</strong> $1</div>'
+          )
+          .replace(
+            /> \[!NOTE\]\n> (.*)/g,
+            '<div class="callout callout-note"><strong>ℹ️ Note:</strong> $1</div>'
+          )
+          .replace(
+            /> \[!IMPORTANT\]\n> (.*)/g,
+            '<div class="callout callout-important"><strong>⚠️ Important:</strong> $1</div>'
+          )
+          .replace(
+            /> \[!CAUTION\]\n> (.*)/g,
+            '<div class="callout callout-caution"><strong>🛑 Caution:</strong> $1</div>'
+          );
+      }
 
-              function loadPage(pageKey) {
-                  // Update active state
-                  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-                  const navItems = document.querySelectorAll('.nav-item');
-                  const index = Array.from(navItems).findIndex(el => el.onclick.toString().includes(pageKey));
-                  if (index !== -1) navItems[index].classList.add('active');
+      function loadPage(pageKey) {
+        // Update active state
+        document.querySelectorAll(".nav-item").forEach((el) => el.classList.remove("active"));
+        const navItems = document.querySelectorAll(".nav-item");
+        const index = Array.from(navItems).findIndex((el) =>
+          el.onclick.toString().includes(pageKey)
+        );
+        if (index !== -1) navItems[index].classList.add("active");
 
-                  const contentDiv = document.getElementById('content');
+        const contentDiv = document.getElementById("content");
 
-                  // Animation reset
-                  contentDiv.style.animation = 'none';
-                  contentDiv.offsetHeight; // trigger reflow
-                  contentDiv.style.animation = null;
+        // Animation reset
+        contentDiv.style.animation = "none";
+        contentDiv.offsetHeight; // trigger reflow
+        contentDiv.style.animation = null;
 
-                  // Check if page is hardcoded
-                  if (pages[pageKey]) {
-                      let md = pages[pageKey];
-                      let html = marked.parse(md);
-                      html = formatCallouts(html);
-                      contentDiv.innerHTML = `<div class="markdown-body">${html}</div>`;
-                      Prism.highlightAll();
-                  } else {
-                      // Load MD file dynamically
-                      fetch(`${pageKey}.md`)
-                          .then(response => response.text())
-                          .then(md => {
-                              let html = marked.parse(md);
-                              html = formatCallouts(html);
-                              contentDiv.innerHTML = `<div class="markdown-body">${html}</div>`;
-                              Prism.highlightAll();
-                          })
-                          .catch(error => {
-                              contentDiv.innerHTML = `<div class="markdown-body"><h1>Error</h1><p>Failed to load ${pageKey}.md: ${error.message}</p></div>`;
-                          });
-                  }
-              }
+        // Check if page is hardcoded
+        if (pages[pageKey]) {
+          let md = pages[pageKey];
+          let html = marked.parse(md);
+          html = formatCallouts(html);
+          contentDiv.innerHTML = `<div class="markdown-body">${html}</div>`;
+          Prism.highlightAll();
+        } else {
+          // Load MD file dynamically
+          fetch(`${pageKey}.md`)
+            .then((response) => response.text())
+            .then((md) => {
+              let html = marked.parse(md);
+              html = formatCallouts(html);
+              contentDiv.innerHTML = `<div class="markdown-body">${html}</div>`;
+              Prism.highlightAll();
+            })
+            .catch((error) => {
+              contentDiv.innerHTML = `<div class="markdown-body"><h1>Error</h1><p>Failed to load ${pageKey}.md: ${error.message}</p></div>`;
+            });
+        }
+      }
 
-              // Initialize with User-Guide
-              loadPage('User-Guide');
+      // Initialize with User-Guide
+      loadPage("User-Guide");
     </script>
   </body>
 </html>
