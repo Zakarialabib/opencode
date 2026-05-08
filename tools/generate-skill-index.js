@@ -3,7 +3,7 @@ const path = require("path");
 
 const skillsDir = path.resolve(__dirname, "..", "skills");
 const indexPath = path.join(skillsDir, "index.json");
-const existingIndex = JSON.parse(fs.readFileSync(indexPath, "utf-8"));
+const existingIndex = JSON.parse(fs.readFileSync(indexPath, "utf8"));
 const existingNames = new Set(existingIndex.skills.map((s) => s.name));
 
 const allDirs = fs

@@ -117,6 +117,7 @@ These skills are managed via `skills/index.json` with agent assignments:
 | **`docx`**                     | documents           | docs-curator                    |
 | **`ppt`**                      | documents           | docs-curator                    |
 | **`xlsx`**                     | documents           | docs-curator                    |
+| **`autoresearch`**             | research            | core-factory, lead-strategist   |
 
 ### All Skills (63 total)
 
@@ -133,6 +134,94 @@ Skills can leverage MCP servers for enhanced capabilities:
 | `sequential-thinking` | workflow-manager                  | Step-by-step reasoning           |
 | `memory`              | self-improver, workflow-manager   | Persistent state across sessions |
 | `fetch`               | agent-browser, deep-research      | Web content fetching             |
+
+---
+
+## 🔬 Spotlight: Autoresearch Skill
+
+The `autoresearch` skill (located at `skills/autoresearch/SKILL.md`) enables autonomous experiment loops for code optimization.
+
+### Key Features
+
+- **Three-file architecture**: `program.md` (human-written instructions), target script (AI-modified), benchmark script (immutable)
+- **Bun server benchmarking**: Uses `bun benchmark.js` for accurate local performance measurement
+- **Git-based experiment tracking**: Each experiment = 1 commit on `autoresearch/` branch
+- **Automatic revert**: Failed experiments are reverted with `git reset --hard HEAD~1`
+
+### Real-World Example: portal.html Optimization
+
+| Metric          | Value                                                     |
+| --------------- | --------------------------------------------------------- |
+| **Target**      | `docs/portal.html`                                        |
+| **Baseline**    | 0.8ms load time                                           |
+| **Final**       | 0.5ms load time                                           |
+| **Improvement** | 37.5% (exceeds 20% target)                                |
+| **Experiments** | 2 commits (`exp 1: Fix invalid CSS`, `exp 2: Minify CSS`) |
+
+### Bun Benchmark Pattern
+
+Create a `benchmark.js` for Bun server-based testing:
+
+```javascript
+// benchmark.js - Bun server benchmark
+const server = Bun.serve({
+  port: 3000,
+  fetch(request) {
+    // Serve target file
+    return Bun.file("target.html");
+  },
+});
+
+// Run 50 sequential requests
+const samples = 50;
+let totalLoadTime = 0;
+for (let i = 0; i < samples; i++) {
+  const start = performance.now();
+  const response = await fetch("http://localhost:3000/target.html");
+  await response.text();
+  totalLoadTime += performance.now() - start;
+}
+
+console.log(
+  JSON.stringify({
+    load_time_ms: Number((totalLoadTime / samples).toFixed(1)),
+    samples: samples,
+  })
+);
+server.stop();
+```
+
+### program.md Template
+
+Reference `docs/program.md` for the full template structure:
+
+```markdown
+# Research Program: Optimize [Target]
+
+## Goal
+
+Reduce [metric] by **20%** when measured via [method].
+
+## Baseline Metric
+
+- **Metric**: [metric_name] (average of N samples)
+- **Benchmark**: `bun benchmark.js`
+- **Target**: 20% reduction from baseline
+
+## Constraints
+
+- **Only modify**: [target files]
+- **Max experiment time**: 5 minutes per iteration
+- **No new dependencies**: Keep or remove external resources
+
+## Exploration Areas
+
+### 1. [Area 1]
+
+### 2. [Area 2]
+
+...
+```
 
 ---
 

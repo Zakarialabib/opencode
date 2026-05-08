@@ -1,4 +1,4 @@
-import { Plugin, tool } from "@opencode-ai/plugin";
+import { type Plugin, tool } from "@opencode-ai/plugin";
 import { parseJsonc } from "./jsonc-utils";
 import { readFile, writeFile, copyFile, rename } from "fs/promises";
 import { execSync } from "child_process";

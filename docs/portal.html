@@ -10,214 +10,8 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css"
     />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Inter:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
-    <style>
-      :root {
-        --primary: #6366f1;
-        --primary-hover: #4f46e5;
-        --bg: #0f172a;
-        --sidebar-bg: rgba(30, 41, 59, 0.7);
-        --card-bg: rgba(30, 41, 59, 0.5);
-        --text: #f1f5f9;
-        --text-dim: #94a3b8;
-        --glass-border: rgba(255, 255, 255, 0.1);
-      }
 
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: "Inter", sans-serif;
-        background-color: var(--bg);
-        color: var(--text);
-        height: 100vh;
-        display: flex;
-        overflow: hidden;
-      }
-
-      h1,
-      h2,
-      h3,
-      h4 {
-        font-family: "Outfit", sans-serif;
-        margin-bottom: 1rem;
-      }
-
-      /* Sidebar */
-      .sidebar {
-        width: 300px;
-        background: var(--sidebar-bg);
-        backdrop-filter: blur(12px);
-        border-right: 1px solid var(--glass-border);
-        padding: 2rem;
-        display: flex;
-        flex-column: column;
-        gap: 2rem;
-        z-index: 10;
-      }
-
-      .logo {
-        font-size: 1.5rem;
-        font-weight: 600;
-        background: linear-gradient(135deg, #818cf8, #c084fc);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 2rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-
-      .nav-list {
-        list-style: none;
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-      }
-
-      .nav-item {
-        padding: 0.75rem 1rem;
-        border-radius: 12px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        color: var(--text-dim);
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-      }
-
-      .nav-item:hover {
-        background: rgba(255, 255, 255, 0.05);
-        color: var(--text);
-      }
-
-      .nav-item.active {
-        background: rgba(99, 102, 241, 0.15);
-        color: var(--primary);
-        border-left: 3px solid var(--primary);
-      }
-
-      /* Main Content */
-      .main-content {
-        flex: 1;
-        padding: 3rem;
-        overflow-y: auto;
-        position: relative;
-      }
-
-      .content-card {
-        max-width: 900px;
-        margin: 0 auto;
-        background: var(--card-bg);
-        backdrop-filter: blur(8px);
-        border: 1px solid var(--glass-border);
-        padding: 3rem;
-        border-radius: 24px;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        animation: fadeIn 0.4s ease-out;
-      }
-
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translateY(10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      /* Markdown Styling */
-      .markdown-body {
-        line-height: 1.6;
-      }
-
-      .markdown-body h1 {
-        font-size: 2.5rem;
-        margin-top: 0;
-      }
-      .markdown-body h2 {
-        font-size: 1.75rem;
-        margin-top: 2rem;
-        border-bottom: 1px solid var(--glass-border);
-        padding-bottom: 0.5rem;
-      }
-      .markdown-body p {
-        margin-bottom: 1.25rem;
-      }
-      .markdown-body code {
-        background: rgba(0, 0, 0, 0.3);
-        padding: 0.2rem 0.4rem;
-        border-radius: 4px;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 0.9em;
-      }
-      .markdown-body pre {
-        margin-bottom: 1.5rem;
-        border-radius: 12px;
-        overflow: hidden;
-        border: 1px solid var(--glass-border);
-      }
-      .markdown-body table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 1.5rem;
-      }
-      .markdown-body th,
-      .markdown-body td {
-        padding: 0.75rem;
-        border: 1px solid var(--glass-border);
-        text-align: left;
-      }
-      .markdown-body th {
-        background: rgba(255, 255, 255, 0.05);
-      }
-
-      .callout {
-        padding: 1rem;
-        border-radius: 12px;
-        margin-bottom: 1.5rem;
-        border-left: 4px solid;
-      }
-      .callout-tip {
-        background: rgba(16, 185, 129, 0.1);
-        border-color: #10b981;
-      }
-      .callout-note {
-        background: rgba(59, 130, 246, 0.1);
-        border-color: #3b82f6;
-      }
-      .callout-important {
-        background: rgba(245, 158, 11, 0.1);
-        border-color: #f59e0b;
-      }
-      .callout-caution {
-        background: rgba(239, 68, 68, 0.1);
-        border-color: #ef4444;
-      }
-
-      /* Custom Scrollbar */
-      ::-webkit-scrollbar {
-        width: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.2);
-      }
+    <style>:root{--primary:#6366f1;--primary-hover:#4f46e5;--bg:#0f172a;--sidebar-bg:rgba(30,41,59,0.7);--card-bg:rgba(30,41,59,0.5);--text:#f1f5f9;--text-dim:#94a3b8;--glass-border:rgba(255,255,255,0.1);}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:"Inter",sans-serif;background-color:var(--bg);color:var(--text);height:100vh;display:flex;overflow:hidden;}h1,h2,h3,h4{font-family:"Outfit",sans-serif;margin-bottom:1rem;}.sidebar{width:300px;background:var(--sidebar-bg);backdrop-filter:blur(12px);border-right:1px solid var(--glass-border);padding:2rem;display:flex;flex-direction:column;gap:2rem;z-index:10;}.logo{font-size:1.5rem;font-weight:600;background:linear-gradient(135deg,#818cf8,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:2rem;display:flex;align-items:center;gap:0.5rem;}.nav-list{list-style:none;display:flex;flex-direction:column;gap:0.5rem;}.nav-item{padding:0.75rem 1rem;border-radius:12px;cursor:pointer;transition:all 0.2s ease;color:var(--text-dim);font-weight:500;display:flex;align-items:center;gap:0.75rem;}.nav-item:hover{background:rgba(255,255,255,0.05);color:var(--text);}.nav-item.active{background:rgba(99,102,241,0.15);color:var(--primary);border-left:3px solid var(--primary);}.main-content{flex:1;padding:3rem;overflow-y:auto;position:relative;}.content-card{max-width:900px;margin:0 auto;background:var(--card-bg);backdrop-filter:blur(8px);border:1px solid var(--glass-border);padding:3rem;border-radius:24px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);animation:fadeIn 0.4s ease-out;}@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}.markdown-body{line-height:1.6;}.markdown-body h1{font-size:2.5rem;margin-top:0;}.markdown-body h2{font-size:1.75rem;margin-top:2rem;border-bottom:1px solid var(--glass-border);padding-bottom:0.5rem;}.markdown-body p{margin-bottom:1.25rem;}.markdown-body code{background:rgba(0,0,0,0.3);padding:0.2rem 0.4rem;border-radius:4px;font-family:"JetBrains Mono",monospace;font-size:0.9em;}.markdown-body pre{margin-bottom:1.5rem;border-radius:12px;overflow:hidden;border:1px solid var(--glass-border);}.markdown-body table{width:100%;border-collapse:collapse;margin-bottom:1.5rem;}.markdown-body th,.markdown-body td{padding:0.75rem;border:1px solid var(--glass-border);text-align:left;}.markdown-body th{background:rgba(255,255,255,0.05);}.callout{padding:1rem;border-radius:12px;margin-bottom:1.5rem;border-left:4px solid;}.callout-tip{background:rgba(16,185,129,0.1);border-color:#10b981;}.callout-note{background:rgba(59,130,246,0.1);border-color:#3b82f6;}.callout-important{background:rgba(245,158,11,0.1);border-color:#f59e0b;}.callout-caution{background:rgba(239,68,68,0.1);border-color:#ef4444;}::-webkit-scrollbar{width:8px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:10px;}::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.2);}
     </style>
   </head>
   <body>
@@ -225,14 +19,22 @@
       <div>
         <div class="logo"><span>🌌</span> OpenCode Docs</div>
         <ul class="nav-list">
-          <li class="nav-item active" onclick="loadPage('User-Guide')"><span>🏠</span> User Guide</li>
-          <li class="nav-item" onclick="loadPage('Agents-Guide')"><span>👥</span> Engineering Team</li>
+          <li class="nav-item active" onclick="loadPage('User-Guide')">
+            <span>🏠</span> User Guide
+          </li>
+          <li class="nav-item" onclick="loadPage('Agents-Guide')">
+            <span>👥</span> Engineering Team
+          </li>
           <li class="nav-item" onclick="loadPage('Workflows-Guide')"><span>⚡</span> Workflows</li>
           <li class="nav-item" onclick="loadPage('Plugins-Guide')"><span>🔌</span> Plugins</li>
           <li class="nav-item" onclick="loadPage('Skills-Guide')"><span>🛠️</span> Skills Guide</li>
-          <li class="nav-item" onclick="loadPage('Agent-Loop-Guide')"><span>🔄</span> Agent Loop</li>
+          <li class="nav-item" onclick="loadPage('Agent-Loop-Guide')">
+            <span>🔄</span> Agent Loop
+          </li>
           <li class="nav-item" onclick="loadPage('Prompting-Guide')"><span>💬</span> Prompting</li>
-          <li class="nav-item" onclick="loadPage('Prompting-and-Context-Engineering')"><span>🧠</span> Context Engineering</li>
+          <li class="nav-item" onclick="loadPage('Prompting-and-Context-Engineering')">
+            <span>🧠</span> Context Engineering
+          </li>
         </ul>
       </div>
     </div>
@@ -244,8 +46,8 @@
     </div>
 
     <script>
-              const pages = {
-                  home: `# 🌌 OpenCode User Guide
+      const pages = {
+        home: `# 🌌 OpenCode User Guide
 
       Welcome to the **OpenCode** ecosystem. This guide will help you navigate the powerful agentic framework, leverage built-in skills, and automate your development workflow.
 
@@ -299,7 +101,7 @@
 
       > [!TIP]
       > Need help with a specific stack? Check out the [**Skills Guide**](Skills-Guide.md) to see how OpenCode auto-detects your project type.`,
-                  agents: `# 🤖 Agents Guide
+        agents: `# 🤖 Agents Guide
 
       OpenCode features a diverse team of **18+ specialized agents**. Each agent is optimized for specific phases of the software development lifecycle.
 
@@ -367,7 +169,7 @@
 
       > [!IMPORTANT]
       > Some agents have restricted permissions. For example, the \`plan\` agent is **read-only** by default to prevent accidental modifications during the discovery phase.`,
-                  workflows: `# ⚡ Workflows Guide
+        workflows: `# ⚡ Workflows Guide
 
       Workflows are automated, multi-agent sequences designed to handle complex development tasks without manual intervention between steps.
 
@@ -443,7 +245,7 @@
 
       > [!NOTE]
       > Workflows are the best way to leverage the "Swarm" power of OpenCode. They turn a series of manual prompts into a single, reliable automation.`,
-                  plugins: `# 🔌 Plugins Guide
+        plugins: `# 🔌 Plugins Guide
 
       Plugins extend the core functionality of OpenCode, providing new commands, UI enhancements, and background capabilities.
 
@@ -513,7 +315,7 @@
 
       > [!CAUTION]
       > Always install plugins from trusted sources. Since plugins have access to your terminal and filesystem, they should be audited carefully.`,
-                  skills: `# 🛠️ Skills Guide
+        skills: `# 🛠️ Skills Guide
 
       Skills are specialized capabilities that agents can "load" to handle specific technologies or complex workflows.
 
@@ -587,7 +389,7 @@
 
       > [!TIP]
       > Use the \`skill-creator\` skill to help you draft new skill definitions! It knows exactly how to format the \`SKILL.md\` for maximum agent compatibility.`,
-                  catalog: `# 📚 OpenCode Skills Catalog
+        catalog: `# 📚 OpenCode Skills Catalog
 
       The \`OpenCode-skills\` directory contains a rich library of specialized capabilities. Agents can leverage these to perform complex tasks outside of standard coding.
 
@@ -663,56 +465,70 @@
       ---
 
       > [!TIP]
-      > Use the **\`skill-finder-cn\`** skill if you are looking for specific community-contributed skills from the Zhipu AI ecosystem.`
-              };
+      > Use the **\`skill-finder-cn\`** skill if you are looking for specific community-contributed skills from the Zhipu AI ecosystem.`,
+      };
 
-              function formatCallouts(html) {
-                  return html
-                      .replace(/> \[!TIP\]\n> (.*)/g, '<div class="callout callout-tip"><strong>💡 Tip:</strong> $1</div>')
-                      .replace(/> \[!NOTE\]\n> (.*)/g, '<div class="callout callout-note"><strong>ℹ️ Note:</strong> $1</div>')
-                      .replace(/> \[!IMPORTANT\]\n> (.*)/g, '<div class="callout callout-important"><strong>⚠️ Important:</strong> $1</div>')
-                      .replace(/> \[!CAUTION\]\n> (.*)/g, '<div class="callout callout-caution"><strong>🛑 Caution:</strong> $1</div>');
-              }
+      function formatCallouts(html) {
+        return html
+          .replace(
+            /> \[!TIP\]\n> (.*)/g,
+            '<div class="callout callout-tip"><strong>💡 Tip:</strong> $1</div>'
+          )
+          .replace(
+            /> \[!NOTE\]\n> (.*)/g,
+            '<div class="callout callout-note"><strong>ℹ️ Note:</strong> $1</div>'
+          )
+          .replace(
+            /> \[!IMPORTANT\]\n> (.*)/g,
+            '<div class="callout callout-important"><strong>⚠️ Important:</strong> $1</div>'
+          )
+          .replace(
+            /> \[!CAUTION\]\n> (.*)/g,
+            '<div class="callout callout-caution"><strong>🛑 Caution:</strong> $1</div>'
+          );
+      }
 
-              function loadPage(pageKey) {
-                  // Update active state
-                  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-                  const navItems = document.querySelectorAll('.nav-item');
-                  const index = Array.from(navItems).findIndex(el => el.onclick.toString().includes(pageKey));
-                  if (index !== -1) navItems[index].classList.add('active');
+      function loadPage(pageKey) {
+        // Update active state
+        document.querySelectorAll(".nav-item").forEach((el) => el.classList.remove("active"));
+        const navItems = document.querySelectorAll(".nav-item");
+        const index = Array.from(navItems).findIndex((el) =>
+          el.onclick.toString().includes(pageKey)
+        );
+        if (index !== -1) navItems[index].classList.add("active");
 
-                  const contentDiv = document.getElementById('content');
+        const contentDiv = document.getElementById("content");
 
-                  // Animation reset
-                  contentDiv.style.animation = 'none';
-                  contentDiv.offsetHeight; // trigger reflow
-                  contentDiv.style.animation = null;
+        // Animation reset
+        contentDiv.style.animation = "none";
+        contentDiv.offsetHeight; // trigger reflow
+        contentDiv.style.animation = null;
 
-                  // Check if page is hardcoded
-                  if (pages[pageKey]) {
-                      let md = pages[pageKey];
-                      let html = marked.parse(md);
-                      html = formatCallouts(html);
-                      contentDiv.innerHTML = `<div class="markdown-body">${html}</div>`;
-                      Prism.highlightAll();
-                  } else {
-                      // Load MD file dynamically
-                      fetch(`${pageKey}.md`)
-                          .then(response => response.text())
-                          .then(md => {
-                              let html = marked.parse(md);
-                              html = formatCallouts(html);
-                              contentDiv.innerHTML = `<div class="markdown-body">${html}</div>`;
-                              Prism.highlightAll();
-                          })
-                          .catch(error => {
-                              contentDiv.innerHTML = `<div class="markdown-body"><h1>Error</h1><p>Failed to load ${pageKey}.md: ${error.message}</p></div>`;
-                          });
-                  }
-              }
+        // Check if page is hardcoded
+        if (pages[pageKey]) {
+          let md = pages[pageKey];
+          let html = marked.parse(md);
+          html = formatCallouts(html);
+          contentDiv.innerHTML = `<div class="markdown-body">${html}</div>`;
+          Prism.highlightAll();
+        } else {
+          // Load MD file dynamically
+          fetch(`${pageKey}.md`)
+            .then((response) => response.text())
+            .then((md) => {
+              let html = marked.parse(md);
+              html = formatCallouts(html);
+              contentDiv.innerHTML = `<div class="markdown-body">${html}</div>`;
+              Prism.highlightAll();
+            })
+            .catch((error) => {
+              contentDiv.innerHTML = `<div class="markdown-body"><h1>Error</h1><p>Failed to load ${pageKey}.md: ${error.message}</p></div>`;
+            });
+        }
+      }
 
-              // Initialize with User-Guide
-              loadPage('User-Guide');
+      // Initialize with User-Guide
+      loadPage("User-Guide");
     </script>
   </body>
 </html>

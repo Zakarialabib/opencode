@@ -1,4 +1,4 @@
-import { Plugin, tool } from "@opencode-ai/plugin";
+import { type Plugin, tool } from "@opencode-ai/plugin";
 import { readFile } from "fs/promises";
 import { join } from "path";
 

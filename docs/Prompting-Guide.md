@@ -11,9 +11,10 @@ Master the art of prompting OpenCode's 10 agents, 63+ skills, and workflow orche
 1. [Prompting Basics](#prompting-basics)
 2. [Agent-Specific Prompts](#agent-specific-prompts)
 3. [Using Skills in Prompts](#using-skills-in-prompts)
-4. [Multi-Agent Workflow Prompts](#multi-agent-workflow-prompts)
-5. [Ambient LSP Feedback](#ambient-lsp-feedback)
-6. [Best Practices](#best-practices)
+4. [Autonomous Optimization (/autoresearch)](#autonomous-optimization-autoresearch)
+5. [Multi-Agent Workflow Prompts](#multi-agent-workflow-prompts)
+6. [Ambient LSP Feedback](#ambient-lsp-feedback)
+7. [Best Practices](#best-practices)
 
 ---
 
@@ -154,6 +155,52 @@ Output: Architecture document with diagrams and implementation phases.
 
 Skills provide specialized capabilities. Mention them explicitly for best results.
 
+### Autonomous Optimization (/autoresearch)
+
+Use the `autoresearch` skill for autonomous experiment loops that optimize code performance. The AI agent iteratively modifies code, runs benchmarks, and keeps improvements.
+
+**Real Example: portal.html Optimization**
+
+- **Target**: `docs/portal.html`
+- **Baseline**: 0.8ms load time
+- **Final**: 0.5ms load time
+- **Improvement**: 37.5% (exceeds 20% target)
+- **Experiments**:
+  - `exp 1: Fix invalid CSS`
+  - `exp 2: Minify CSS`
+
+**How to Use**:
+
+```
+Using autoresearch skill:
+
+Optimize docs/portal.html load time by 20%:
+
+Setup:
+- Benchmark: bun benchmark.js (in docs/ directory)
+- Target: portal.html (only file to modify)
+- Server: Bun serves on localhost:3000
+- Metric: load_time_ms (average of 50 sequential requests)
+
+program.md template is at docs/program.md with full instructions.
+```
+
+**Benchmark Command**:
+
+```bash
+cd C:\opencode\docs
+bun benchmark.js
+```
+
+Expected output: `{"load_time_ms": X, "samples": 50}`
+
+**Key Points**:
+
+- Uses Bun server for accurate local benchmarking
+- Each experiment = 1 commit on `autoresearch/` branch
+- Failed experiments auto-revert via `git reset --hard HEAD~1`
+- Only modify target files (never benchmark.js or program.md)
+
 ### Laravel Feature Scaffolding
 
 ```
@@ -191,7 +238,7 @@ Use parallel_groups to generate multiple variants simultaneously.
 
 ---
 
-## 🔄 Multi-Agent Workflow Prompts
+## 🔄 Multi-Agent Workflow Prompts (5)
 
 ### Feature Development Workflow
 
@@ -234,7 +281,7 @@ Performance tracking: Store time_to_fix in sqlite MCP.
 
 ---
 
-## 🔍 Ambient LSP Feedback
+## 🔍 Ambient LSP Feedback (6)
 
 **New:** OpenCode now automatically detects syntax errors after file edits and injects them into the model's context.
 
@@ -277,7 +324,7 @@ Performance tracking: Store time_to_fix in sqlite MCP.
 
 ---
 
-## 📚 Best Practices
+## 📚 Best Practices (7)
 
 ### 1. Use the Golden Structure
 

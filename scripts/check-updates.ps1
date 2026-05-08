@@ -15,7 +15,7 @@
     Check all dependencies (composer, npm, git)
 
 .EXAMPLE
-    .\check-updates.ps1 -Path C:\laragon\www\poly-marketplace
+    .\check-updates.ps1 -Path C:\opencode
 
 .EXAMPLE
     .\check-updates.ps1 -All
