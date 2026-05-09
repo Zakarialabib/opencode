@@ -65,21 +65,6 @@ const categoryMap = {
     tags: ["dream", "interpretation", "psychology", "analysis"],
     agents: ["docs-curator"],
   },
-  finance: {
-    category: "finance",
-    tags: ["finance", "stocks", "market", "analysis"],
-    agents: ["core-factory"],
-  },
-  "get-fortune-analysis": {
-    category: "analysis",
-    tags: ["fortune", "analysis", "divination"],
-    agents: ["docs-curator"],
-  },
-  "gift-evaluator": {
-    category: "analysis",
-    tags: ["gift", "recommendation", "evaluation"],
-    agents: ["core-factory"],
-  },
   "image-edit": {
     category: "assets",
     tags: ["image", "editing", "manipulation", "graphics"],
@@ -125,20 +110,10 @@ const categoryMap = {
     tags: ["skill", "creation", "development", "authoring"],
     agents: ["lead-architect"],
   },
-  "skill-finder-cn": {
-    category: "meta",
-    tags: ["skill", "search", "discovery", "chinese"],
-    agents: ["core-factory"],
-  },
   "skill-vetter": {
     category: "security",
     tags: ["skill", "vetting", "security", "review"],
     agents: ["qa-guardian"],
-  },
-  "stock-analysis-skill": {
-    category: "finance",
-    tags: ["stocks", "analysis", "finance", "trading"],
-    agents: ["core-factory"],
   },
   "storyboard-manager": {
     category: "content",
@@ -201,9 +176,6 @@ const displayNameMap = {
   "blog-writer": "Blog Writer",
   contentanalysis: "Content Analysis",
   "dream-interpreter": "Dream Interpreter",
-  finance: "Finance & Markets",
-  "get-fortune-analysis": "Fortune Analysis",
-  "gift-evaluator": "Gift Evaluator",
   "image-edit": "Image Editing",
   "interview-designer": "Interview Designer",
   "marketing-mode": "Marketing Mode",
@@ -212,9 +184,7 @@ const displayNameMap = {
   "qingyan-research": "Qingyan Research",
   "seo-content-writer": "SEO Content Writer",
   "skill-creator": "Skill Creator",
-  "skill-finder-cn": "Skill Finder (CN)",
   "skill-vetter": "Skill Vetter",
-  "stock-analysis-skill": "Stock Analysis",
   "storyboard-manager": "Storyboard Manager",
   "video-generation": "Video Generation",
   "video-understand": "Video Understanding",

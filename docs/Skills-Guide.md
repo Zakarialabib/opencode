@@ -109,8 +109,6 @@ These skills are managed via `skills/index.json` with agent assignments:
 | **`blog-writer`**              | content             | docs-curator                    |
 | **`seo-content-writer`**       | content             | docs-curator                    |
 | **`charts`**                   | data-visualization  | frontend-ui-ux                  |
-| **`finance`**                  | finance             | core-factory                    |
-| **`stock-analysis-skill`**     | finance             | core-factory                    |
 | **`image-generation`**         | assets              | frontend-ui-ux                  |
 | **`image-understand`**         | assets              | frontend-ui-ux                  |
 | **`pdf`**                      | documents           | docs-curator                    |

@@ -1,0 +1,15 @@
+# Auto-generated workflow: 2026-05-08T21-36-17
+# Task: Refactor the auth system to use JWT instead of sessions
+# Type: REFACTOR
+
+name: REFACTOR: Refactor the auth system to...
+description: Refactor the auth system to use JWT instead of sessions
+version: 2.0.0
+trigger: auto-generated
+mcp_servers:
+  - context7
+  - filesystem
+phases:
+  - {"name":"Analysis","description":"Analyze codebase and identify patterns","agents":["lead-architect","qa-guardian"],"use_agent_router":true,"mcp_tools":{"context7":["fetch_library_docs"],"memory":["search_nodes"]}}
+  - {"name":"Implementation","description":"Core development","agents":["core-factory","backend-laravel","backend-api"],"use_agent_router":true,"dependencies":["Analysis"],"mcp_tools":{"context7":["fetch_library_docs"],"git":["add","commit"],"filesystem":["read_file","write_file"]}}
+  - {"name":"Quality Assurance","description":"QA and security validation","agents":["qa-guardian"],"dependencies":["Implementation"],"mcp_tools":{"git":["diff"],"context7":["fetch_library_docs"]}}

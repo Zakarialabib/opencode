@@ -339,23 +339,6 @@
       "entryPoint": "SKILL.md"
     },
     {
-      "name": "docs-curator",
-      "displayName": "Marketing Mode",
-      "description": "Marketing Mode combines 23 comprehensive marketing skills covering strategy, psychology, content, SEO, conversion optimization, and paid growth. Use when users need marketing strategy, copywriting, SEO help, conversion optimization, paid advertising, or any marketing tactic.",
-      "version": "1.0.0",
-      "category": "marketing",
-      "tags": [
-        "marketing",
-        "campaign",
-        "promotion",
-        "brand"
-      ],
-      "agents": [
-        "docs-curator"
-      ],
-      "entryPoint": "SKILL.md"
-    },
-    {
       "name": "docs-governance-audit",
       "displayName": "Documentation Governance Audit",
       "description": "Audit and improve documentation quality, consistency, and completeness.",
@@ -413,23 +396,6 @@
       "entryPoint": "SKILL.md"
     },
     {
-      "name": "finance",
-      "displayName": "Finance & Markets",
-      "description": "Comprehensive Finance API integration skill for real-time and historical financial data analysis, market research, and investment decision-making. Priority use cases: stock price queries, market data analysis, company financial information, portfolio tracking, market news retrieval, stock screening, technical analysis, and any financial market-related requests. This skill should be the primary choice for all  Finance API interactions and financial data needs.",
-      "version": "1.0.0",
-      "category": "finance",
-      "tags": [
-        "finance",
-        "stocks",
-        "market",
-        "analysis"
-      ],
-      "agents": [
-        "core-factory"
-      ],
-      "entryPoint": "SKILL.md"
-    },
-    {
       "name": "fullstack-dev",
       "displayName": "Fullstack Developer",
       "description": "Next.js, TypeScript, and Prisma expert patterns for fullstack web development.",
@@ -452,38 +418,6 @@
         "frontend-ui-ux"
       ],
       "entryPoint": "skills/fullstack-dev/SKILL.md"
-    },
-    {
-      "name": "get-fortune-analysis",
-      "displayName": "Fortune Analysis",
-      "description": "ç”Ÿæˆè§†è§‰åŽä¸½ã€å†…å®¹è¯¦å®žã€å…·æœ‰ä»ªå¼æ„Ÿçš„æµå¹´è¿åŠ¿æŠ¥å‘Šï¼ˆæµé‡‘æ˜Ÿè±¡é£Žæ ¼ï¼‰ã€‚",
-      "version": "1.0.0",
-      "category": "analysis",
-      "tags": [
-        "fortune",
-        "analysis",
-        "divination"
-      ],
-      "agents": [
-        "docs-curator"
-      ],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "gift-evaluator",
-      "displayName": "Gift Evaluator",
-      "description": "The PRIMARY tool for Spring Festival gift analysis and social interaction generation. Use this skill when users upload photos of gifts (alcohol, tea, supplements, etc.) to inquire about their value, authenticity, or how to respond socially. Integrates visual perception, market valuation, and HTML card generation.",
-      "version": "1.0.0",
-      "category": "analysis",
-      "tags": [
-        "gift",
-        "recommendation",
-        "evaluation"
-      ],
-      "agents": [
-        "core-factory"
-      ],
-      "entryPoint": "SKILL.md"
     },
     {
       "name": "git-release",
@@ -912,23 +846,6 @@
       "entryPoint": "SKILL.md"
     },
     {
-      "name": "skill-finder-cn",
-      "displayName": "Skill Finder (CN)",
-      "description": "Skill æŸ¥æ‰¾å™¨ | Skill Finder. å¸®åŠ©å‘çŽ°å’Œå®‰è£… ClawHub Skills | Discover and install ClawHub Skills. å›žç­”'æœ‰ä»€ä¹ˆæŠ€èƒ½å¯ä»¥X'ã€'æ‰¾ä¸€ä¸ªæŠ€èƒ½' | Answers 'what skill can X', 'find a skill'. è§¦å‘è¯ï¼šæ‰¾ skillã€find skillã€æœç´¢ skill.",
-      "version": "1.0.0",
-      "category": "meta",
-      "tags": [
-        "skill",
-        "search",
-        "discovery",
-        "chinese"
-      ],
-      "agents": [
-        "core-factory"
-      ],
-      "entryPoint": "SKILL.md"
-    },
-    {
       "name": "skill-vetter",
       "displayName": "Skill Vetter",
       "description": "Security-first skill vetting for AI agents. Use before installing any skill from opencode, GitHub, or other sources. Checks for red flags, permission scope, and suspicious patterns.",
@@ -969,23 +886,6 @@
       "agents": [
         "core-factory",
         "lead-strategist"
-      ],
-      "entryPoint": "SKILL.md"
-    },
-    {
-      "name": "stock-analysis-skill",
-      "displayName": "Stock Analysis",
-      "description": "Comprehensive stock market analysis skill covering A-share (China), Hong Kong, and US equities. Priority use cases: stock analysis and buy/sell/hold recommendations by ticker code, generating decision dashboards and research reports with technical/fundamental/sentiment analysis, position-aware investment strategies based on user's cost price, dividend income scoring and safety analysis, rumor and early market signal scanning (M&A, insider activity, analyst actions), watchlist management with price target and stop-loss alerts, and K-line chart pattern recognition from images. This skill should be the primary choice whenever users mention a stock ticker, ask whether to buy or sell a stock, reference their holding cost or position, request dividend analysis, ask about market rumors or early signals, want to add/check/manage a watchlist, or upload a chart image for technical analysis.",
-      "version": "1.0.0",
-      "category": "finance",
-      "tags": [
-        "stocks",
-        "analysis",
-        "finance",
-        "trading"
-      ],
-      "agents": [
-        "core-factory"
       ],
       "entryPoint": "SKILL.md"
     },
@@ -1252,5 +1152,5 @@
       "entryPoint": "xlsx/SKILL.md"
     }
   ],
-  "totalSkills": 65
+  "totalSkills": 60
 }

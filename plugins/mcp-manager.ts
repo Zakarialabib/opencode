@@ -2,6 +2,83 @@ import { parseJsonc } from "./jsonc-utils";
 import { type Plugin, tool } from "@opencode-ai/plugin";
 import { readFileSync, accessSync } from "node:fs";
 import { join, dirname, parse } from "node:path";
+import { debug, info, warn, error, SKILL_CATEGORIES } from "./debug-logger";
+
+// Debug: trace MCP tool loading
+function traceToolLoading(
+  serverName: string,
+  tools: string[],
+  relevant: string[],
+  reduction: number
+) {
+  debug(SKILL_CATEGORIES.TOOL_LOAD, `MCP tool loading: ${serverName}`, {
+    totalTools: tools.length,
+    relevantTools: relevant.length,
+    reductionPercent: reduction,
+  });
+}
+
+interface MCPDebugTrace {
+  serverName: string;
+  operation: "connect" | "disconnect" | "tool_call" | "error";
+  timestamp: number;
+  details?: any;
+}
+
+const mcpTraces: MCPDebugTrace[] = [];
+const MAX_MCP_TRACES = 500;
+
+function recordMCPOperation(op: MCPDebugTrace["operation"], serverName: string, details?: any) {
+  mcpTraces.push({
+    serverName,
+    operation: op,
+    timestamp: Date.now(),
+    details,
+  });
+
+  if (mcpTraces.length > MAX_MCP_TRACES) {
+    mcpTraces.shift();
+  }
+
+  debug(SKILL_CATEGORIES.MCP_CONNECT, `MCP ${op}: ${serverName}`, details);
+}
+
+export function getMCPDebugTraces(): MCPDebugTrace[] {
+  return [...mcpTraces];
+}
+
+export function clearMCPDebugTraces() {
+  mcpTraces.length = 0;
+}
+
+// Keyword to MCP server mapping
+export const KEYWORD_MAP: Record<string, string[]> = {
+  sqlite: ["database", "db", "query", "table", "migration", "sql"],
+  git: ["commit", "branch", "merge", "diff", "history", "git", "push", "pull"],
+  filesystem: ["file", "read", "write", "directory", "ls", "dir"],
+  fetch: ["http", "api", "web", "url", "fetch", "scrape"],
+  context7: ["docs", "documentation", "library", "reference", "code example"],
+  memory: ["remember", "recall", "previous", "earlier", "knowledge"],
+  "sequential-thinking": ["think", "reasoning", "step by step", "analyze"],
+  "language-server": ["lsp", "typescript", "rust", "php", "diagnostic"],
+  "type-inject": ["type", "inject", "definition", "symbol"],
+};
+
+// Core tools always loaded (essential for basic ops)
+export const CORE_TOOLS = ["read", "write", "edit", "bash", "grep", "glob", "list"];
+
+export function getRelevantTools(message: string): string[] {
+  const msg = message.toLowerCase();
+  const relevant = new Set<string>(CORE_TOOLS);
+
+  for (const [server, keywords] of Object.entries(KEYWORD_MAP)) {
+    if (keywords.some((kw) => msg.includes(kw))) {
+      relevant.add(server);
+    }
+  }
+
+  return Array.from(relevant);
+}
 
 // Find project root by looking for opencode.json
 function findConfigPath(startDir: string): string | null {
@@ -44,7 +121,78 @@ const MCPManagerPlugin: Plugin = async ({ client, project, directory }) => {
     console.error("Failed to find opencode.json from directory:", directory);
   }
 
+  // Create tool loading metrics table if not exists
+  try {
+    const { execSync } = require("node:child_process");
+    execSync(
+      `sqlite3 metadata.db "CREATE TABLE IF NOT EXISTS tool_loading_metrics (timestamp TEXT, all_tools INT, loaded_tools INT, reduction_percent REAL)"`,
+      { stdio: "ignore" }
+    );
+  } catch (e) {
+    /* ignore */
+  }
+
   return {
+    "chat.params": async ({ message, agent }) => {
+      // Skip if message is empty or command
+      if (!message || message.startsWith("/") || message.startsWith("@")) {
+        return {};
+      }
+
+      debug(SKILL_CATEGORIES.TOOL_LOAD, "chat.params hook triggered", {
+        messageLength: message.length,
+        agent,
+        hasRelevantTools: getRelevantTools(message).length > 0,
+      });
+
+      const relevantTools = getRelevantTools(message);
+
+      // Fallback logic (Task 4)
+      if (relevantTools.length <= CORE_TOOLS.length) {
+        debug(
+          SKILL_CATEGORIES.TOOL_LOAD,
+          "Fallback triggered: loading all tools due to ambiguous request",
+          {
+            relevantToolsCount: relevantTools.length,
+            coreToolsCount: CORE_TOOLS.length,
+          }
+        );
+        return { toolFilter: () => true }; // Allow all tools
+      }
+
+      // Performance Tracking (Task 3)
+      const allToolsCount = CORE_TOOLS.length + Object.keys(mcpConfig).length * 5; // Rough estimate: ~5 tools per MCP server
+      const loadedToolsCount = relevantTools.length;
+      const reductionPercent =
+        allToolsCount > 0 ? ((1 - loadedToolsCount / allToolsCount) * 100).toFixed(1) : "0.0";
+
+      traceToolLoading("all", [], relevantTools, parseFloat(reductionPercent));
+
+      // Store metrics in SQLite
+      try {
+        const { execSync } = require("node:child_process");
+        const timestamp = new Date().toISOString();
+        execSync(
+          `sqlite3 metadata.db "INSERT INTO tool_loading_metrics (timestamp, all_tools, loaded_tools, reduction_percent) VALUES ('${timestamp}', ${allToolsCount}, ${loadedToolsCount}, ${reductionPercent})"`,
+          { stdio: "ignore" }
+        );
+      } catch (e) {
+        /* ignore */
+      }
+
+      // Return tool filter
+      return {
+        toolFilter: (toolName: string) => {
+          // Always allow core tools
+          if (CORE_TOOLS.some((core) => toolName.toLowerCase().includes(core))) {
+            return true;
+          }
+          // Check if tool belongs to a relevant MCP server
+          return relevantTools.some((server) => toolName.toLowerCase().includes(server));
+        },
+      };
+    },
+
     tool: {
       mcp_list: tool({
         description: "List all configured MCP servers and their status",

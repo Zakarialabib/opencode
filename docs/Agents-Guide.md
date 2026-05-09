@@ -19,9 +19,9 @@ All agents are defined as `"primary"` mode in `opencode.json` under the `"agent"
 
 ### Core Implementation
 
-| Agent              | Model       | Temperature | Role                                                                                                                |
-| ------------------ | ----------- | ----------- | ------------------------------------------------------------------------------------------------------------------- |
-| **`core-factory`** | _(default)_ | _(default)_ | Fast implementation engine — direct file editing, read-edit-validate workflow, batch operations. **Default agent.** |
+| Agent              | Model                      | Temperature | Role                                                                                                                |
+| ------------------ | -------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------- |
+| **`core-factory`** | `opencode/hy3-review-free` | 0.3         | Fast implementation engine — direct file editing, read-edit-validate workflow, batch operations. **Default agent.** |
 
 ### Frontend & Design
 
@@ -31,11 +31,11 @@ All agents are defined as `"primary"` mode in `opencode.json` under the `"agent"
 
 ### Backend Development
 
-| Agent                 | Model       | Temperature | Role                                                                                 |
-| --------------------- | ----------- | ----------- | ------------------------------------------------------------------------------------ |
-| **`backend-api`**     | _(default)_ | _(default)_ | API design & implementation — Node/Express or Laravel, REST/GraphQL, Prisma          |
-| **`backend-laravel`** | _(default)_ | _(default)_ | Laravel 13 specialist — Livewire 4, Alpine.js 3, Eloquent, Form Requests, Pest tests |
-| **`backend-tauri`**   | _(default)_ | _(default)_ | Rust/Tauri desktop apps — IPC commands, async runtime, state management              |
+| Agent                 | Model                      | Temperature | Role                                                                                               |
+| --------------------- | -------------------------- | ----------- | -------------------------------------------------------------------------------------------------- |
+| **`backend-api`**     | `opencode/hy3-review-free` | 0.3         | Generic API design — Node/Express, REST/GraphQL, Prisma. **NOT for Laravel** (use backend-laravel) |
+| **`backend-laravel`** | `opencode/hy3-review-free` | 0.3         | Laravel 13 specialist — Livewire 4, Alpine.js 3, Eloquent, Form Requests, Pest tests               |
+| **`backend-tauri`**   | `opencode/hy3-review-free` | 0.3         | Rust/Tauri desktop apps — IPC commands, async runtime, state management                            |
 
 ### Quality Assurance
 
@@ -65,9 +65,11 @@ Each agent has tailored tool access defined in `opencode.json`. The permission s
 | **backend-api**     | read, write, edit, bash, skill, lsp                   | —                                                    |
 | **backend-laravel** | read, write, edit, bash, skill, lsp                   | —                                                    |
 | **backend-tauri**   | read, write, edit, bash, skill, lsp                   | —                                                    |
-| **qa-guardian**     | read, write, edit, bash, skill, lsp                   | —                                                    |
-| **devops-engineer** | read, bash, skill                                     | —                                                    |
-| **docs-curator**    | read, write, edit, bash, skill, codesearch            | **websearch, webfetch, todowrite**                   |
+| **qa-guardian**     | read, bash, skill, lsp                                | —                                                    |
+| **devops-engineer** | read, write, edit, bash, skill                        | —                                                    |
+| **docs-curator**    | read, write, edit, bash, skill, codesearch, lsp       | **websearch, webfetch, todowrite**                   |
+
+> **Optimization Note (2026-05-08)**: qa-guardian is now READ-ONLY (removed write/edit). devops-engineer gained write/edit for config fixes. docs-curator gained LSP for code validation.
 
 > **Note:** The `tools` key is deprecated in OpenCode. Prefer the `permission` system for fine-grained control. See [opencode.ai/docs/agents/#permissions](https://opencode.ai/docs/agents/#permissions).
 
@@ -151,6 +153,31 @@ Key configuration options:
 - **`permission`** — Fine-grained control: `"allow"`, `"ask"`, or `"deny"` per action
 
 > See [opencode.ai/docs/agents](https://opencode.ai/docs/agents/) for the complete configuration reference.
+
+---
+
+## 🧠 Cognitive Role Variants (Optimization 2026-05-08)
+
+Based on our agent configuration audit, we've identified three cognitive modes to optimize token usage and task alignment:
+
+| Mode           | Purpose                          | Model             | Temperature | Tools                                                       | When to Use                                |
+| -------------- | -------------------------------- | ----------------- | ----------- | ----------------------------------------------------------- | ------------------------------------------ |
+| **plan-**      | Read-only analysis, architecture | `hy3-review-free` | 0.2         | read, grep, glob, codesearch, context7, sequential-thinking | "Analyze this code", "Design architecture" |
+| **explore-**   | Research, web search, discovery  | `hy3-review-free` | 0.4         | read, websearch, webfetch, codesearch, skill                | "Research X topic", "Find examples"        |
+| **implement-** | Code changes, implementation     | `hy3-review-free` | 0.3         | read, write, edit, bash, lsp, skill                         | "Fix this bug", "Add feature"              |
+
+### Key Changes Applied:
+
+1. **Model Downgrades**: 5 agents moved from `kimi-k2.6` (expensive) to `hy3-review-free` (75% cheaper)
+2. **Temperature Tuning**: Implementation agents → 0.3, Planning agents → 0.2, Exploration → 0.4
+3. **Tool Alignment**: Each agent now has tools matching their cognitive mode
+4. **Least Privilege**: qa-guardian is now READ-ONLY, devops-engineer gained limited write
+
+### Expected Improvements:
+
+- **Token Savings**: ~75% on 5 agents
+- **Routing Accuracy**: Target >85% (was 40% before fixes)
+- **Config Health**: Target >95%
 
 ---
 

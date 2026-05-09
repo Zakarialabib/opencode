@@ -364,6 +364,7 @@
     "core-factory": {
       "instructions": [
         "CORE: Fast implementation engine. Always think in <thinking> blocks.",
+        "CONVENTIONS: Query memory MCP for project-conventions entity at session start. Apply coding style conventions with confidence >0.7.",
         "WORKFLOW: Read-Edit-Validate. Use grep/glob for discovery, edit tool with oldString/newString.",
         "If edit fails (not found/multi-match), re-read and add context.",
         "Batch independent reads/edits. Use replaceAll for mass renames – but NOT simple variable name changes.",
@@ -393,7 +394,7 @@
         "edit": "allow",
         "grep": "allow",
         "glob": "allow",
-        "command": "ask"
+        "command": { "git status*": "allow", "ls": "allow", "npm test*": "allow" }
       },
       "description": "Core implementation and direct file editing (merged builder/planner/opencoder)."
     },
@@ -443,8 +444,6 @@
       "description": "Technical vision and long-term structural integrity."
     },
     "frontend-ui-ux": {
-      "model": "opencode/hy3-preview-free",
-      "temperature": 0.3,
       "instructions": [
         "FRONTEND STACK: Next.js, TypeScript, Tailwind CSS, shadcn/ui, Prisma ORM. Use fullstack-dev skill for scaffolding.",
         "DESIGN SYSTEM: Use ui-ux-pro-max skill for design patterns, bundled assets, and design system generation.",
@@ -478,6 +477,8 @@
       "description": "Premium UI/UX implementation for Next.js 16 + TypeScript + Tailwind 4 + shadcn/ui."
     },
     "backend-api": {
+      "model": "opencode/hy3-review-free",
+      "temperature": 0.3,
       "instructions": [
         "BACKEND: API design (Node/Express or Laravel). Use fullstack-dev skills.",
         "Stack: Laravel (PHP) or Node/Express + TypeScript as needed.",
@@ -497,6 +498,7 @@
     "backend-laravel": {
       "instructions": [
         "Laravel 13 + Livewire 4 + Alpine.js 3 + Tailwind 4 specialist.",
+        "CONVENTIONS: Query memory MCP for project-conventions entity at session start. Apply Laravel/PHP conventions with confidence >0.7.",
         "Follow rules/laravel.md and rules/laravel-boost.md.",
         "NAMING: Controllers in singular StudlyCase (UserController), Blade files in snake_case (user-profile.blade.php).",
         "LIVEWIRE: Keep components focused; use `wire:model` for form binding, `wire:click` for actions.",
@@ -519,6 +521,8 @@
       "description": "Specialized Laravel 13 and Livewire 4 development."
     },
     "backend-tauri": {
+      "model": "opencode/hy3-review-free",
+      "temperature": 0.3,
       "instructions": [
         "Rust/Tauri developer. Follow rules/tauri.md.",
         "Use `cargo check` frequently; never commit without passing.",
@@ -548,13 +552,12 @@
         "QUALITY: Code review, testing, security scanning, and debugging.",
         "Use qa-tester skill, security-scan skill, and debug utilities.",
         "Always enforce rules/general.md and project conventions.",
+        "CONVENTIONS: Query memory MCP for project-conventions entity at session start. Use testing conventions (Pest vs PHPUnit) with confidence >0.7.",
         "Run linting (`npm run lint`) and tests (`npm test`) as needed.",
         "Security: never expose secrets, scan for vulnerabilities."
       ],
       "tools": {
         "read": true,
-        "write": true,
-        "edit": true,
         "bash": true,
         "skill": true,
         "lsp": true
@@ -571,6 +574,8 @@
       ],
       "tools": {
         "read": true,
+        "write": true,
+        "edit": true,
         "bash": true,
         "skill": true
       },
@@ -591,6 +596,7 @@
         "edit": true,
         "bash": true,
         "skill": true,
+        "lsp": true,
         "codesearch": true,
         "websearch": true,
         "webfetch": true,

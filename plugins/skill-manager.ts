@@ -2,6 +2,22 @@ import { parseJsonc } from "./jsonc-utils";
 import { type Plugin, tool } from "@opencode-ai/plugin";
 import { readFileSync, accessSync } from "node:fs";
 import { join, dirname, parse } from "node:path";
+import { debug, info, warn, error, SKILL_CATEGORIES } from "./debug-logger";
+
+// Debug: trace skill execution
+function traceSkillExecution(skillName: string, args: any, result: any, err?: any) {
+  debug(
+    SKILL_CATEGORIES.SKILL_EXECUTE,
+    `Skill "${skillName}" execution ${err ? "FAILED" : "completed"}`,
+    {
+      skillName,
+      args: JSON.stringify(args).slice(0, 200),
+      hasError: !!err,
+      errorMessage: err?.message || err?.toString(),
+      resultPreview: typeof result === "string" ? result.slice(0, 100) : typeof result,
+    }
+  );
+}
 
 interface SkillEntry {
   name: string;
@@ -13,9 +29,20 @@ interface SkillEntry {
   agents?: string[];
   triggers?: string[];
   entryPoint: string;
+  _loadedAt?: number;
 }
 
-// Find project root by looking for opencode.json
+interface SkillExecutionTrace {
+  skillName: string;
+  startedAt: number;
+  duration?: number;
+  status: "loading" | "executing" | "completed" | "error";
+  error?: string;
+}
+
+const skillExecutionTraces = new Map<string, SkillExecutionTrace>();
+const MAX_TRACES = 100;
+
 function findProjectRoot(startDir: string): string | null {
   let current = startDir;
   const root = parse(current).root;
@@ -29,7 +56,6 @@ function findProjectRoot(startDir: string): string | null {
     }
   }
 
-  // Check root
   try {
     accessSync(join(root, "opencode.json"));
     return root;
@@ -38,30 +64,99 @@ function findProjectRoot(startDir: string): string | null {
   }
 }
 
+export function getSkillExecutionTrace(
+  skillName?: string
+): SkillExecutionTrace | SkillExecutionTrace[] {
+  if (skillName) {
+    return (
+      skillExecutionTraces.get(skillName) || {
+        skillName,
+        startedAt: 0,
+        status: "completed" as const,
+        error: "Not found in trace",
+      }
+    );
+  }
+  return Array.from(skillExecutionTraces.values());
+}
+
+export function clearSkillTraces() {
+  skillExecutionTraces.clear();
+}
+
+function recordSkillStart(skillName: string): void {
+  const trace: SkillExecutionTrace = {
+    skillName,
+    startedAt: Date.now(),
+    status: "loading",
+  };
+  skillExecutionTraces.set(skillName, trace);
+  debug(SKILL_CATEGORIES.SKILL_LOAD, `Skill "${skillName}" loading started`, {
+    existingTraces: skillExecutionTraces.size,
+  });
+}
+
+function recordSkillComplete(skillName: string, status: "completed" | "error", err?: string): void {
+  const trace = skillExecutionTraces.get(skillName);
+  if (trace) {
+    trace.duration = Date.now() - trace.startedAt;
+    trace.status = status;
+    trace.error = err;
+    debug(
+      SKILL_CATEGORIES.SKILL_EXECUTE,
+      `Skill "${skillName}" ${status} in ${trace.duration}ms`,
+      err ? { error: err } : undefined
+    );
+  }
+
+  if (skillExecutionTraces.size > MAX_TRACES) {
+    const oldest = Array.from(skillExecutionTraces.entries())
+      .sort((a, b) => a[1].startedAt - b[1].startedAt)
+      .slice(0, 10);
+    for (const [key] of oldest) {
+      skillExecutionTraces.delete(key);
+    }
+  }
+}
+
 const SkillManagerPlugin: Plugin = async ({ directory }) => {
   const projectRoot = findProjectRoot(directory);
   let skillsIndexPath: string | null = null;
   let skills: SkillEntry[] = [];
 
+  debug(SKILL_CATEGORIES.SKILL_LOAD, "SkillManager initializing", { projectRoot, directory });
+
   if (projectRoot) {
     const candidate = join(projectRoot, "skills", "index.json");
     try {
+      const content = readFileSync(candidate, "utf8");
       readFileSync(candidate, "utf8");
       skillsIndexPath = candidate;
-    } catch {
-      // ignore
+      debug(SKILL_CATEGORIES.SKILL_LOAD, `Found skills index at ${candidate}`);
+    } catch (e) {
+      warn(SKILL_CATEGORIES.SKILL_LOAD, `Failed to read skills index from ${candidate}`, {
+        error: (e as Error).message,
+      });
     }
+  } else {
+    warn(SKILL_CATEGORIES.SKILL_LOAD, `Could not find project root from ${directory}`);
   }
 
   if (skillsIndexPath) {
     try {
       const skillsIndex = parseJsonc(readFileSync(skillsIndexPath, "utf8"));
-      skills = skillsIndex.skills || [];
+      skills = (skillsIndex.skills || []).map((s: SkillEntry) => ({
+        ...s,
+        _loadedAt: Date.now(),
+      }));
+      debug(SKILL_CATEGORIES.SKILL_LOAD, `Loaded ${skills.length} skills from index`);
     } catch (e) {
-      console.error("Failed to read skills index:", e);
+      error(SKILL_CATEGORIES.SKILL_LOAD, "Failed to parse skills index", {
+        error: (e as Error).message,
+      });
     }
   } else {
-    console.error("Failed to find skills index from directory:", directory);
+    error(SKILL_CATEGORIES.SKILL_LOAD, "No skills index path found", { directory });
   }
 
   return {
@@ -74,22 +169,37 @@ const SkillManagerPlugin: Plugin = async ({ directory }) => {
             .optional()
             .describe("Filter by category (e.g., frontend, backend, testing)"),
         },
-        async execute({ category }) {
+        async execute({ category }: { category?: string }, _context: any) {
+          const startTime = Date.now();
+          debug(SKILL_CATEGORIES.SKILL_EXECUTE, "skill_list called", { category });
+
           let filtered = skills;
           if (category) {
             filtered = skills.filter((s) => s.category === category);
           }
 
-          if (filtered.length === 0) return "No skills found.";
+          const result =
+            filtered.length === 0
+              ? "No skills found."
+              : filtered.map((s) => ({
+                  name: s.name,
+                  displayName: s.displayName,
+                  category: s.category,
+                  description: s.description,
+                  agents: s.agents,
+                  tags: s.tags,
+                }));
 
-          let result = `## Registered Skills (${filtered.length})\n\n`;
-          for (const skill of filtered) {
-            result += `### ${skill.displayName || skill.name} (\`${skill.name}\`)\n`;
-            result += `- Category: ${skill.category}\n`;
-            result += `- Description: ${skill.description}\n`;
-            result += `- Agents: ${skill.agents?.join(", ") || "None"}\n`;
-            result += `- Tags: ${skill.tags?.join(", ") || "None"}\n\n`;
-          }
+          recordSkillComplete("skill_list", "completed");
+          debug(
+            SKILL_CATEGORIES.SKILL_EXECUTE,
+            `skill_list completed in ${Date.now() - startTime}ms`,
+            {
+              count: filtered.length,
+              category,
+            }
+          );
+
           return result;
         },
       }),
@@ -99,25 +209,39 @@ const SkillManagerPlugin: Plugin = async ({ directory }) => {
         args: {
           skillName: tool.schema.string().describe("Name or display name of the skill to look up"),
         },
-        async execute({ skillName }) {
+        async execute({ skillName }: { skillName: string }, _context: any) {
+          const startTime = Date.now();
+          recordSkillStart(`skill_info:${skillName}`);
+          debug(SKILL_CATEGORIES.SKILL_EXECUTE, `skill_info called for "${skillName}"`);
+
           const skill = skills.find((s) => s.name === skillName || s.displayName === skillName);
-          if (!skill) return `❌ Skill "${skillName}" not found.`;
-
-          let result = `## Skill: ${skill.displayName || skill.name}\n\n`;
-          result += `- **Name**: \`${skill.name}\`\n`;
-          result += `- **Version**: ${skill.version || "N/A"}\n`;
-          result += `- **Category**: ${skill.category}\n`;
-          result += `- **Description**: ${skill.description}\n`;
-          result += `- **Agents**: ${skill.agents?.join(", ") || "None"}\n`;
-          result += `- **Entry Point**: \`${skill.entryPoint}\`\n`;
-          result += `- **Tags**: ${skill.tags?.join(", ") || "None"}\n`;
-
-          if (skill.triggers && skill.triggers.length > 0) {
-            result += `\n### Triggers\n`;
-            for (const trigger of skill.triggers) {
-              result += `- ${trigger}\n`;
-            }
+          if (!skill) {
+            recordSkillComplete(
+              `skill_info:${skillName}`,
+              "error",
+              `Skill not found: ${skillName}`
+            );
+            return `❌ Skill "${skillName}" not found.`;
           }
+
+          const result = {
+            name: skill.name,
+            displayName: skill.displayName,
+            version: skill.version,
+            category: skill.category,
+            description: skill.description,
+            agents: skill.agents,
+            entryPoint: skill.entryPoint,
+            tags: skill.tags,
+            triggers: skill.triggers,
+          };
+
+          recordSkillComplete(`skill_info:${skillName}`, "completed");
+          debug(
+            SKILL_CATEGORIES.SKILL_EXECUTE,
+            `skill_info completed in ${Date.now() - startTime}ms`
+          );
+
           return result;
         },
       }),
@@ -127,7 +251,10 @@ const SkillManagerPlugin: Plugin = async ({ directory }) => {
         args: {
           query: tool.schema.string().describe("Search term (searches name, description, tags)"),
         },
-        async execute({ query }) {
+        async execute({ query }: { query: string }, _context: any) {
+          const startTime = Date.now();
+          debug(SKILL_CATEGORIES.SKILL_EXECUTE, `skill_search called with "${query}"`);
+
           const queryLower = query.toLowerCase();
           const matches = skills.filter(
             (s) =>
@@ -137,13 +264,41 @@ const SkillManagerPlugin: Plugin = async ({ directory }) => {
               (s.tags && s.tags.some((tag) => tag.toLowerCase().includes(queryLower)))
           );
 
-          if (matches.length === 0) return `No skills found matching "${query}".`;
+          const result =
+            matches.length === 0
+              ? `No skills found matching "${query}".`
+              : matches.map((s) => ({
+                  name: s.name,
+                  displayName: s.displayName,
+                  description: s.description,
+                }));
 
-          let result = `## Skill Search Results (${matches.length})\n\n`;
-          for (const skill of matches) {
-            result += `- **${skill.displayName || skill.name}** (\`${skill.name}\`): ${skill.description}\n`;
-          }
+          debug(
+            SKILL_CATEGORIES.SKILL_EXECUTE,
+            `skill_search completed in ${Date.now() - startTime}ms`,
+            {
+              query,
+              matches: matches.length,
+            }
+          );
+
           return result;
+        },
+      }),
+
+      skill_debug_status: tool({
+        description: "Debug: Get skill system status and traces",
+        args: {},
+        async execute(_args: {}, _context: any) {
+          const traces = getSkillExecutionTrace();
+          const traceArray = Array.isArray(traces) ? traces : [traces];
+          return {
+            totalSkillsLoaded: skills.length,
+            activeTraces: traceArray.length,
+            recentTraces: traceArray.slice(-10),
+            projectRoot,
+            skillsIndexPath,
+          };
         },
       }),
     },
