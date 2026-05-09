@@ -1029,5 +1029,3 @@ function generateAnalysis(agent: string, metric: string) {
   // Implement per-agent analysis
   return `TODO: Implement ${metric} analysis for ${agent}`;
 }
-
-export const SelfImprovePlugin;

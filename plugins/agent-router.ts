@@ -28,6 +28,39 @@ function findConfigPath(startDir: string): string | null {
   }
 }
 
+function resolveConfigPath(startDir: string): string | null {
+  const explicitConfig = process.env.OPENCODE_CONFIG;
+  if (explicitConfig) {
+    try {
+      accessSync(explicitConfig);
+      return explicitConfig;
+    } catch {
+      // Fall back to directory search.
+    }
+  }
+
+  const explicitDir = process.env.OPENCODE_CONFIG_DIR;
+  if (explicitDir) {
+    const candidate = join(explicitDir, "opencode.json");
+    try {
+      accessSync(candidate);
+      return candidate;
+    } catch {
+      // Fall back to directory search.
+    }
+  }
+
+  const cwdCandidate = join(process.cwd(), "opencode.json");
+  try {
+    accessSync(cwdCandidate);
+    return cwdCandidate;
+  } catch {
+    // Fall back to directory search.
+  }
+
+  return findConfigPath(startDir);
+}
+
 // Type definitions
 interface AgentRule {
   agent: string;
@@ -255,11 +288,11 @@ const DEFAULT_AGENT_RULES: AgentRule[] = [
   },
 ];
 
-const AgentRouterPlugin: Plugin = async ({ client, project, directory }) => {
+const AgentRouterPlugin: Plugin = async ({ directory }) => {
   // Load agent routing rules from config, fallback to defaults
   let AGENT_RULES: AgentRule[] = DEFAULT_AGENT_RULES;
 
-  const configPath = findConfigPath(directory);
+  const configPath = resolveConfigPath(directory);
   if (configPath) {
     try {
       const config = parseJsonc(readFileSync(configPath, "utf8"));

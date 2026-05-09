@@ -64,6 +64,30 @@ function findProjectRoot(startDir: string): string | null {
   }
 }
 
+function resolveConfigRoot(startDir: string): string | null {
+  const explicitDir = process.env.OPENCODE_CONFIG_DIR;
+  if (explicitDir) {
+    try {
+      accessSync(join(explicitDir, "opencode.json"));
+      return explicitDir;
+    } catch {
+      // Fall back to directory search.
+    }
+  }
+
+  const explicitConfig = process.env.OPENCODE_CONFIG;
+  if (explicitConfig) {
+    try {
+      accessSync(explicitConfig);
+      return dirname(explicitConfig);
+    } catch {
+      // Fall back to directory search.
+    }
+  }
+
+  return findProjectRoot(startDir);
+}
+
 export function getSkillExecutionTrace(
   skillName?: string
 ): SkillExecutionTrace | SkillExecutionTrace[] {
@@ -120,7 +144,7 @@ function recordSkillComplete(skillName: string, status: "completed" | "error", e
 }
 
 const SkillManagerPlugin: Plugin = async ({ directory }) => {
-  const projectRoot = findProjectRoot(directory);
+  const projectRoot = resolveConfigRoot(directory);
   let skillsIndexPath: string | null = null;
   let skills: SkillEntry[] = [];
 
@@ -129,17 +153,16 @@ const SkillManagerPlugin: Plugin = async ({ directory }) => {
   if (projectRoot) {
     const candidate = join(projectRoot, "skills", "index.json");
     try {
-      const content = readFileSync(candidate, "utf8");
       readFileSync(candidate, "utf8");
       skillsIndexPath = candidate;
       debug(SKILL_CATEGORIES.SKILL_LOAD, `Found skills index at ${candidate}`);
     } catch (e) {
-      warn(SKILL_CATEGORIES.SKILL_LOAD, `Failed to read skills index from ${candidate}`, {
+      debug(SKILL_CATEGORIES.SKILL_LOAD, `No skills index found at ${candidate}`, {
         error: (e as Error).message,
       });
     }
   } else {
-    warn(SKILL_CATEGORIES.SKILL_LOAD, `Could not find project root from ${directory}`);
+    debug(SKILL_CATEGORIES.SKILL_LOAD, `No opencode project root found for ${directory}`);
   }
 
   if (skillsIndexPath) {
@@ -156,7 +179,9 @@ const SkillManagerPlugin: Plugin = async ({ directory }) => {
       });
     }
   } else {
-    error(SKILL_CATEGORIES.SKILL_LOAD, "No skills index path found", { directory });
+    debug(SKILL_CATEGORIES.SKILL_LOAD, "SkillManager running without local skills index", {
+      directory,
+    });
   }
 
   return {
@@ -181,14 +206,14 @@ const SkillManagerPlugin: Plugin = async ({ directory }) => {
           const result =
             filtered.length === 0
               ? "No skills found."
-              : filtered.map((s) => ({
+              : JSON.stringify(filtered.map((s) => ({
                   name: s.name,
                   displayName: s.displayName,
                   category: s.category,
                   description: s.description,
                   agents: s.agents,
                   tags: s.tags,
-                }));
+                })));
 
           recordSkillComplete("skill_list", "completed");
           debug(
@@ -242,7 +267,7 @@ const SkillManagerPlugin: Plugin = async ({ directory }) => {
             `skill_info completed in ${Date.now() - startTime}ms`
           );
 
-          return result;
+          return JSON.stringify(result);
         },
       }),
 
@@ -267,11 +292,11 @@ const SkillManagerPlugin: Plugin = async ({ directory }) => {
           const result =
             matches.length === 0
               ? `No skills found matching "${query}".`
-              : matches.map((s) => ({
+              : JSON.stringify(matches.map((s) => ({
                   name: s.name,
                   displayName: s.displayName,
                   description: s.description,
-                }));
+                })));
 
           debug(
             SKILL_CATEGORIES.SKILL_EXECUTE,
@@ -292,13 +317,13 @@ const SkillManagerPlugin: Plugin = async ({ directory }) => {
         async execute(_args: {}, _context: any) {
           const traces = getSkillExecutionTrace();
           const traceArray = Array.isArray(traces) ? traces : [traces];
-          return {
+          return JSON.stringify({
             totalSkillsLoaded: skills.length,
             activeTraces: traceArray.length,
             recentTraces: traceArray.slice(-10),
             projectRoot,
             skillsIndexPath,
-          };
+          });
         },
       }),
     },

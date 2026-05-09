@@ -105,8 +105,33 @@ function findConfigPath(startDir: string): string | null {
   }
 }
 
+function resolveConfigPath(startDir: string): string | null {
+  const explicitConfig = process.env.OPENCODE_CONFIG;
+  if (explicitConfig) {
+    try {
+      accessSync(explicitConfig);
+      return explicitConfig;
+    } catch {
+      // Fall back to directory search.
+    }
+  }
+
+  const explicitDir = process.env.OPENCODE_CONFIG_DIR;
+  if (explicitDir) {
+    const candidate = join(explicitDir, "opencode.json");
+    try {
+      accessSync(candidate);
+      return candidate;
+    } catch {
+      // Fall back to directory search.
+    }
+  }
+
+  return findConfigPath(startDir);
+}
+
 const MCPManagerPlugin: Plugin = async ({ client, project, directory }) => {
-  const configPath = findConfigPath(directory);
+  const configPath = resolveConfigPath(directory);
   let mcpConfig: Record<string, any> = {};
 
   if (configPath) {
@@ -115,10 +140,13 @@ const MCPManagerPlugin: Plugin = async ({ client, project, directory }) => {
       const config = parseJsonc(content);
       mcpConfig = config.mcp || {};
     } catch (e) {
-      console.error("Failed to read MCP config:", e);
+      error(SKILL_CATEGORIES.MCP_ERROR, "Failed to read MCP config", {
+        directory,
+        error: (e as Error).message,
+      });
     }
   } else {
-    console.error("Failed to find opencode.json from directory:", directory);
+    debug(SKILL_CATEGORIES.MCP_CONNECT, "No opencode.json found for MCP manager", { directory });
   }
 
   // Create tool loading metrics table if not exists
@@ -134,18 +162,18 @@ const MCPManagerPlugin: Plugin = async ({ client, project, directory }) => {
 
   return {
     "chat.params": async ({ message, agent }) => {
-      // Skip if message is empty or command
-      if (!message || message.startsWith("/") || message.startsWith("@")) {
-        return {};
+      const messageText = typeof message === "string" ? message : (message as any)?.content || "";
+      if (!messageText || messageText.startsWith("/") || messageText.startsWith("@")) {
+        return;
       }
 
       debug(SKILL_CATEGORIES.TOOL_LOAD, "chat.params hook triggered", {
-        messageLength: message.length,
+        messageLength: messageText.length,
         agent,
-        hasRelevantTools: getRelevantTools(message).length > 0,
+        hasRelevantTools: getRelevantTools(messageText).length > 0,
       });
 
-      const relevantTools = getRelevantTools(message);
+      const relevantTools = getRelevantTools(messageText);
 
       // Fallback logic (Task 4)
       if (relevantTools.length <= CORE_TOOLS.length) {
@@ -157,7 +185,7 @@ const MCPManagerPlugin: Plugin = async ({ client, project, directory }) => {
             coreToolsCount: CORE_TOOLS.length,
           }
         );
-        return { toolFilter: () => true }; // Allow all tools
+        return { toolFilter: () => true } as any; // Allow all tools
       }
 
       // Performance Tracking (Task 3)
@@ -190,7 +218,7 @@ const MCPManagerPlugin: Plugin = async ({ client, project, directory }) => {
           // Check if tool belongs to a relevant MCP server
           return relevantTools.some((server) => toolName.toLowerCase().includes(server));
         },
-      };
+      } as any;
     },
 
     tool: {

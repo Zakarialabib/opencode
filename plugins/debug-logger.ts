@@ -113,6 +113,7 @@ export const SKILL_CATEGORIES = {
   SKILL_EXECUTE: "skill:execute",
   SKILL_ERROR: "skill:error",
   TOOL_REGISTER: "tool:register",
+  TOOL_LOAD: "tool:load",
   TOOL_EXECUTE: "tool:execute",
   MCP_CONNECT: "mcp:connect",
   MCP_ERROR: "mcp:error",
