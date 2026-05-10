@@ -117,21 +117,63 @@ These skills are managed via `skills/index.json` with agent assignments:
 | **`xlsx`**                     | documents           | docs-curator                    |
 | **`autoresearch`**             | research            | core-factory, lead-strategist   |
 
-### All Skills (63 total)
+### All Skills (34 total)
 
 The full skill registry is in `skills/index.json`. Browse available skills with `skill_list` or search with `skill_search query:"keyword"`.
 
-### MCP Integration
+### Core Skills (34)
 
-Skills can leverage MCP servers for enhanced capabilities:
+| Skill                       | Category      | Agents                          |
+| --------------------------- | ------------- | ------------------------------- |
+| **Coding**                  |               |                                 |
+| `stack-context`             | context       | core-factory, lead-strategist   |
+| `coding-agent`              | development   | core-factory                    |
+| `fullstack-dev`             | web-dev       | backend-api, frontend-ui-ux     |
+| `laravel-feature-scaffold`  | laravel       | backend-laravel, core-factory   |
+| `database-design`           | architecture  | lead-architect, core-factory    |
+| `react-reuse-audit`         | frontend      | qa-guardian                     |
+| **Testing/Security**        |               |                                 |
+| `testing-strategy`          | testing       | qa-guardian                     |
+| `pest-testing`              | testing       | backend-laravel, qa-guardian    |
+| `security-review`           | security      | qa-guardian, docs-curator       |
+| `agent-browser`             | testing       | qa-guardian                     |
+| **UI/Design**               |               |                                 |
+| `ui-ux-pro-max`             | design        | frontend-ui-ux                  |
+| `visual-design-foundations` | design        | frontend-ui-ux                  |
+| `charts`                    | data-viz      | frontend-ui-ux                  |
+| **Meta/Ops**                |               |                                 |
+| `self-improver`             | meta          | core-factory, lead-strategist   |
+| `self-reflection`           | meta          | lead-strategist, lead-architect |
+| `skill-creator`             | meta          | lead-architect                  |
+| `skill-vetter`              | security      | qa-guardian                     |
+| `config-doctor`             | meta          | core-factory, devops-engineer   |
+| `project-memory`            | context       | core-factory, lead-strategist   |
+| **Orchestration**           |               |                                 |
+| `workflow-manager`          | orchestration | lead-strategist, core-factory   |
+| `dynamic-workflow`          | orchestration | lead-strategist, core-factory   |
+| `project-orchestration`     | orchestration | lead-strategist                 |
+| `autoresearch`              | research      | core-factory, lead-strategist   |
+| `spec-driven-design`        | design        | lead-architect, core-factory    |
+| **Docs/Content**            |               |                                 |
+| `docs-governance-audit`     | docs          | docs-curator                    |
+| `writing-plans`             | content       | docs-curator                    |
+| `content-strategy`          | marketing     | docs-curator                    |
+| `seo-content-writer`        | content       | docs-curator                    |
+| `market-research-reports`   | research      | docs-curator                    |
+| **Reports**                 |               |                                 |
+| `pdf`                       | documents     | docs-curator                    |
+| `docx`                      | documents     | docs-curator                    |
+| `ppt`                       | documents     | docs-curator                    |
+| `xlsx`                      | documents     | docs-curator                    |
+| `git-release`               | devops        | devops-engineer, core-factory   |
 
-| MCP Server            | Used By Skills                    | Purpose                          |
-| --------------------- | --------------------------------- | -------------------------------- |
-| `context7`            | stack-context, deep-research      | Up-to-date documentation         |
-| `sqlite`              | testing-strategy, database-design | Database operations, test data   |
-| `sequential-thinking` | workflow-manager                  | Step-by-step reasoning           |
-| `memory`              | self-improver, workflow-manager   | Persistent state across sessions |
-| `fetch`               | agent-browser, deep-research      | Web content fetching             |
+| MCP Server            | Used By Skills                       | Purpose                          |
+| --------------------- | ------------------------------------ | -------------------------------- |
+| `context7`            | stack-context                        | Up-to-date documentation         |
+| `sqlite`              | testing-strategy, database-design    | Database operations, test data   |
+| `sequential-thinking` | workflow-manager, spec-driven-design | Step-by-step reasoning           |
+| `memory`              | self-improver, project-memory        | Persistent state across sessions |
+| `filesystem`          | all skills                           | File operations                  |
 
 ---
 

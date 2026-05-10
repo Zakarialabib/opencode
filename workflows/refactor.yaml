@@ -1,0 +1,80 @@
+name: codebase-refactor
+description: Multi-phase codebase refactoring workflow with specialized agents
+version: "1.0"
+
+phases:
+  - name: discovery
+    description: Full codebase discovery and structural mapping
+    agents:
+      - refactor-architect
+      - explore
+    tasks:
+      - map-codebase-structure
+      - identify-naming-violations
+      - catalog-imports-and-dependencies
+      - detect-redundant-code
+
+  - name: analysis
+    description: Deep analysis of findings with research-backed recommendations
+    agents:
+      - research-analyst
+      - refactor-architect
+    tasks:
+      - research-best-practices
+      - gap-analysis
+      - dependency-audit
+      - benchmark-current-state
+
+  - name: planning
+    description: Generate detailed refactoring plan with priorities
+    agents:
+      - refactor-architect
+      - lead-strategist
+    tasks:
+      - prioritize-refactoring-tasks
+      - generate-migration-scripts
+      - define-quality-gates
+      - create-rollback-strategies
+
+  - name: implementation
+    description: Execute refactoring changes with quality checks
+    agents:
+      - core-factory
+      - code-reviewer
+    tasks:
+      - apply-naming-fixes
+      - remove-redundant-code
+      - restructure-modules
+      - update-imports
+
+  - name: validation
+    description: Test and validate all changes
+    agents:
+      - integration-test
+      - qa-guardian
+    tasks:
+      - run-test-suite
+      - verify-no-regressions
+      - measure-coverage
+      - performance-benchmark
+
+  - name: documentation
+    description: Update all documentation to match new codebase
+    agents:
+      - docs-evolver
+      - lead-architect
+    tasks:
+      - update-api-docs
+      - generate-changelog
+      - update-adrs
+      - sync-rules
+
+artifacts:
+  - refactoring-report.md
+  - naming-audit.json
+  - import-map.json
+  - redundancy-report.md
+  - refactoring-plan.md
+  - migration-scripts/
+  - test-results.json
+  - changelog.md

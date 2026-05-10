@@ -14,41 +14,41 @@ All agents are defined as `"primary"` mode in `opencode.json` under the `"agent"
 
 | Agent                 | Model                       | Temperature | Role                                                                                    |
 | --------------------- | --------------------------- | ----------- | --------------------------------------------------------------------------------------- |
-| **`lead-strategist`** | `opencode/hy3-preview-free` | 0.2         | Strategic orchestrator — multi-agent delegation, workflow coordination, project roadmap |
-| **`lead-architect`**  | `opencode/hy3-preview-free` | 0.2         | Technical architect — system design, Context7 docs, memory MCP, sequential-thinking     |
+| **`lead-strategist`** | Strategic orchestrator — multi-agent delegation, workflow coordination, project roadmap |
+| **`lead-architect`**  | Technical architect — system design, Context7 docs, memory MCP, sequential-thinking     |
 
 ### Core Implementation
 
 | Agent              | Model                      | Temperature | Role                                                                                                                |
 | ------------------ | -------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------- |
-| **`core-factory`** | `opencode/hy3-review-free` | 0.3         | Fast implementation engine — direct file editing, read-edit-validate workflow, batch operations. **Default agent.** |
+| **`core-factory`** | Fast implementation engine — direct file editing, read-edit-validate workflow, batch operations. **Default agent.** |
 
 ### Frontend & Design
 
 | Agent                | Model                       | Temperature | Role                                                                                        |
 | -------------------- | --------------------------- | ----------- | ------------------------------------------------------------------------------------------- |
-| **`frontend-ui-ux`** | `opencode/hy3-preview-free` | 0.3         | Premium UI/UX — Next.js 16, TypeScript, Tailwind 4, shadcn/ui, design tokens, accessibility |
+| **`frontend-ui-ux`** | | Premium UI/UX — Next.js 16, TypeScript, Tailwind 4, shadcn/ui, design tokens, accessibility |
 
 ### Backend Development
 
 | Agent                 | Model                      | Temperature | Role                                                                                               |
 | --------------------- | -------------------------- | ----------- | -------------------------------------------------------------------------------------------------- |
-| **`backend-api`**     | `opencode/hy3-review-free` | 0.3         | Generic API design — Node/Express, REST/GraphQL, Prisma. **NOT for Laravel** (use backend-laravel) |
-| **`backend-laravel`** | `opencode/hy3-review-free` | 0.3         | Laravel 13 specialist — Livewire 4, Alpine.js 3, Eloquent, Form Requests, Pest tests               |
-| **`backend-tauri`**   | `opencode/hy3-review-free` | 0.3         | Rust/Tauri desktop apps — IPC commands, async runtime, state management                            |
+| **`backend-api`**     | Generic API design — Node/Express, REST/GraphQL, Prisma. **NOT for Laravel** (use backend-laravel) |
+| **`backend-laravel`** | Laravel 13 specialist — Livewire 4, Alpine.js 3, Eloquent, Form Requests, Pest tests               |
+| **`backend-tauri`**   | Rust/Tauri desktop apps — IPC commands, async runtime, state management                            |
 
 ### Quality Assurance
 
 | Agent             | Model                       | Temperature | Role                                                            |
 | ----------------- | --------------------------- | ----------- | --------------------------------------------------------------- |
-| **`qa-guardian`** | `opencode/hy3-preview-free` | 0.1         | Unified QA — code review, testing, security scanning, debugging |
+| **`qa-guardian`** | Unified QA — code review, testing, security scanning, debugging |
 
 ### Operations & Knowledge
 
 | Agent                 | Model                       | Temperature | Role                                                                                   |
 | --------------------- | --------------------------- | ----------- | -------------------------------------------------------------------------------------- |
-| **`devops-engineer`** | `opencode/hy3-preview-free` | 0.1         | Operational tasks — terminal execution, MCP management, backups, db operations         |
-| **`docs-curator`**    | `opencode/hy3-preview-free` | 0.2         | Knowledge management — documentation, self-improvement, web research, system evolution |
+| **`devops-engineer`** | Operational tasks — terminal execution, MCP management, backups, db operations         |
+| **`docs-curator`**    | Knowledge management — documentation, self-improvement, web research, system evolution |
 
 ---
 
@@ -127,8 +127,6 @@ Agents are configured in `opencode.json` under the `"agent"` key. Each entry sup
   "agent": {
     "my-agent": {
       "description": "What this agent does",
-      "model": "opencode/hy3-preview-free",
-      "temperature": 0.2,
       "instructions": ["System instruction 1", "System instruction 2"],
       "tools": {
         "read": true,

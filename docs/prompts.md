@@ -1,4 +1,4 @@
-Based on your Prompting Guide and architecture, I can give you **15 production-ready, copy-paste prompts** that turn OpenCode into a self-improving system. These leverage your 12 agents, 63+ skills, MCP servers, and workflow engine to auto-extend on demand.
+Based on your Prompting Guide and architecture, I can give you **15 production-ready, copy-paste prompts** that turn OpenCode into a self-improving system. These leverage your 10 agents, 34 skills, MCP servers, and workflow engine to auto-extend on demand.
 
 Here they are, organized by improvement domain:
 
@@ -9,6 +9,7 @@ Here they are, organized by improvement domain:
 ### Category 1: Configuration & Agent Evolution (3 prompts)
 
 **Prompt 1: Agent Configuration Auto-Optimization**
+
 ```
 /agent lead-strategist
 
@@ -47,6 +48,7 @@ Exit criteria: Config health >95% AND routing accuracy >85% AND no agent lacks e
 ```
 
 **Prompt 2: Permission Matrix Hardening**
+
 ```
 /agent qa-guardian
 
@@ -75,6 +77,7 @@ Output: security/permission-audit.md + updated opencode.json patch
 ```
 
 **Prompt 3: Model Router Calibration**
+
 ```
 /agent lead-architect
 
@@ -115,6 +118,7 @@ Exit criteria: 10% cost reduction OR 20% latency improvement without accuracy lo
 ### Category 2: Plugin Hardening & Extension (3 prompts)
 
 **Prompt 4: Plugin Test Suite Expansion**
+
 ```
 /agent qa-guardian
 
@@ -158,6 +162,7 @@ Exit criteria: 100+ tests passing, >80% code coverage, all critical paths tested
 ```
 
 **Prompt 5: Lazy Tool Loading Implementation**
+
 ```
 /agent core-factory
 
@@ -200,6 +205,7 @@ Exit criteria: Average tool count per request < 5 (from ~12), zero functional re
 ```
 
 **Prompt 6: Checkpoint Manager Plugin**
+
 ```
 /agent core-factory
 
@@ -249,11 +255,12 @@ Exit criteria: /undo successfully restores all 4 layers in <2 seconds
 ### Category 3: Skill Governance & Auto-Creation (3 prompts)
 
 **Prompt 7: Skill Registry Audit & Versioning**
-```
+
+````
 /agent docs-curator
 
 Context:
-- 63+ skills in skills/ directory
+- 34 skills in skills/ directory
 - Format: SKILL.md with YAML frontmatter
 - Gap: No versioning, no compatibility checks, no drift detection
 
@@ -273,7 +280,7 @@ PLAN:
    version: 1.2.0
    compatibility: opencode >=2.0.0
    ---
-   ```
+````
 
 2. Create skill-check tool:
    - Validate SKILL.md schema
@@ -287,7 +294,8 @@ PLAN:
 4. Add CHANGELOG.md to each skill directory
 
 DELEGATE (parallel_groups):
-- Group 1: docs-curator audits all 63 skills and generates report
+
+- Group 1: docs-curator audits all 34 skills and generates report
 - Group 2: core-factory adds version fields and validation logic
 - Group 3: qa-guardian writes skill-check tests
 
@@ -295,13 +303,16 @@ Store audit results in sqlite MCP.
 Use memory MCP to track skill evolution over time.
 
 Output: docs/skill-governance-report.md + updated skills/index.json
+
 ```
 
 **Prompt 8: Auto-Skill Generation**
 ```
+
 /agent lead-strategist
 
 Context:
+
 - User frequently asks for similar custom capabilities
 - Manual skill creation is repetitive (create folder, SKILL.md, register)
 - Goal: Generate skills automatically from successful agent interactions
@@ -311,38 +322,46 @@ Task: Design auto-skill-generation workflow
 Workflow: skill-generation.yaml
 
 Phase 1: DETECT
+
 - Monitor memory MCP for recurring successful patterns
 - Identify: "This agent solved X type of problem 3+ times using Y approach"
 - Trigger: When pattern confidence > 0.8
 
 Phase 2: EXTRACT
+
 - Use memory MCP to retrieve all interactions matching the pattern
 - Extract: instructions, best practices, tool usage, error handling
 - Use sequential-thinking MCP to generalize into reusable instructions
 
 Phase 3: GENERATE
+
 - core-factory creates skills/auto-generated/{pattern-name}/SKILL.md
 - Frontmatter includes: auto_generated: true, source_interactions: [ids]
 - Register in skills/index.json under category: auto-generated
 
 Phase 4: VALIDATE
+
 - qa-guardian tests the skill on a sample task
 - docs-curator reviews documentation quality
 - If validation fails: mark as draft, retry with refinements
 
 Phase 5: EVOLVE
+
 - Weekly: Review auto-generated skills
 - Promote high-quality ones to official category
 - Deprecate low-usage ones
 
 Exit criteria: Skill passes validation test AND has clear instructions
+
 ```
 
 **Prompt 9: Skill Marketplace Integration**
 ```
+
 /agent lead-architect
 
 Context:
+
 - Skills are local-only currently
 - Community could contribute skills
 - Need: Discovery, installation, and compatibility checking
@@ -350,6 +369,7 @@ Context:
 Task: Extend skill-manager plugin with marketplace capabilities
 
 Design:
+
 1. skill_search enhancement:
    - Query local skills first
    - If not found, query GitHub API for repos tagged opencode-skill
@@ -372,11 +392,13 @@ Design:
    - Refresh daily or on manual skill_search
 
 DELEGATE:
+
 - backend-api: Implement GitHub API integration
 - frontend-ui-ux: Design CLI output for skill listing
 - qa-guardian: Write validation logic for installed skills
 
 Exit criteria: Can search, install, and validate a community skill in <30 seconds
+
 ```
 
 ---
@@ -385,9 +407,11 @@ Exit criteria: Can search, install, and validate a community skill in <30 second
 
 **Prompt 10: Dynamic Workflow Generation**
 ```
+
 /agent lead-strategist
 
 Context:
+
 - Current workflows: feature-development.yaml, bug-fix.yaml (static)
 - Limitation: Novel tasks don't fit pre-defined templates
 - Goal: Generate workflow YAML on-the-fly for any task
@@ -395,11 +419,13 @@ Context:
 Task: Implement dynamic workflow generation
 
 ANALYZE:
+
 - Read existing workflow YAMLs to extract patterns
 - Identify common phase structures: ANALYZE→PLAN→DELEGATE→SYNTHESIZE→VERIFY
 - Use sequential-thinking MCP to model workflow composition rules
 
 PLAN:
+
 1. Create skills/dynamic-workflow/SKILL.md:
    - Template system with Mustache-style variables
    - Phase library: reusable phase definitions
@@ -422,24 +448,28 @@ PLAN:
 Example:
 Input: "Refactor the auth system to use JWT instead of sessions"
 Output: workflows/auto/refactor-auth-jwt.yaml with:
-  - Phase 1: Analyze current auth (lead-architect)
-  - Phase 2: Design JWT architecture (lead-architect)
-  - Phase 3: Implement backend (backend-laravel)
-  - Phase 4: Update frontend (frontend-ui-ux)
-  - Phase 5: Migrate data (devops-engineer)
-  - Phase 6: QA & security (qa-guardian)
+
+- Phase 1: Analyze current auth (lead-architect)
+- Phase 2: Design JWT architecture (lead-architect)
+- Phase 3: Implement backend (backend-laravel)
+- Phase 4: Update frontend (frontend-ui-ux)
+- Phase 5: Migrate data (devops-engineer)
+- Phase 6: QA & security (qa-guardian)
 
 Store generated workflows in workflows/auto/ with timestamp.
 Use memory MCP to track which generated workflows succeeded/failed.
 
 Exit criteria: Generated workflow executes successfully for 3 different task types
+
 ```
 
 **Prompt 11: Workflow Performance Optimization**
 ```
+
 /agent devops-engineer
 
 Context:
+
 - Workflows track time_to_complete in sqlite MCP
 - No systematic optimization of slow phases
 - Some phases run sequentially when they could be parallel
@@ -447,6 +477,7 @@ Context:
 Task: Analyze and optimize all workflow executions
 
 ANALYZE:
+
 - Query sqlite MCP for workflow metrics:
   SELECT workflow_name, phase_name, AVG(duration), failure_rate
   FROM workflow_executions
@@ -459,6 +490,7 @@ ANALYZE:
   - Sequential phases with no dependencies that could be parallel
 
 PLAN:
+
 1. For each slow phase:
    - If agent is overworked: Add parallel agent instances
    - If MCP timeout: Increase timeout or add caching
@@ -478,18 +510,22 @@ PLAN:
    - Use sequential-thinking MCP for optimization proposals
 
 DELEGATE:
+
 - core-factory: Implement performance alerts in plugins/
 - docs-curator: Document optimization patterns
 - qa-guardian: Verify optimizations don't break exit criteria
 
 Output: reports/workflow-performance.md + optimized workflow YAMLs
+
 ```
 
 **Prompt 12: Workflow Recovery & Resume**
 ```
+
 /agent lead-architect
 
 Context:
+
 - Long workflows can fail mid-execution
 - Current behavior: Start from scratch
 - Need: Resume from last successful phase
@@ -497,6 +533,7 @@ Context:
 Task: Add checkpoint/resume capability to workflow engine
 
 Design:
+
 1. Phase-level checkpoints:
    - After each phase completes: save state to sqlite MCP
    - State includes: completed tasks, artifacts, agent outputs, memory observations
@@ -518,11 +555,13 @@ Design:
    - If fix is auto-applicable: retry with fix, else escalate
 
 Implementation:
+
 - Extend workflow-manager skill with resume logic
 - Add workflow_state table to sqlite MCP
 - Add hooks: workflow.phase_complete, workflow.failure
 
 Exit criteria: Can resume a 5-phase workflow from Phase 3 without data loss
+
 ```
 
 ---
@@ -531,9 +570,11 @@ Exit criteria: Can resume a 5-phase workflow from Phase 3 without data loss
 
 **Prompt 13: Project Memory Auto-Learning**
 ```
+
 /agent docs-curator
 
 Context:
+
 - Each session starts fresh — no project conventions loaded
 - User repeatedly states preferences (coding style, patterns)
 - Goal: Auto-load project context on agent startup
@@ -541,6 +582,7 @@ Context:
 Task: Implement cross-session project memory
 
 ANALYZE:
+
 - Scan memory MCP for recurring observations:
   - "User prefers arrow functions over function declarations"
   - "We use repository pattern for all data access"
@@ -550,6 +592,7 @@ ANALYZE:
 - Identify high-confidence conventions (mentioned 3+ times, no contradictions)
 
 PLAN:
+
 1. Create project-memory skill:
    - On session start: query memory MCP for project conventions
    - Inject into agent system prompts automatically
@@ -571,18 +614,22 @@ PLAN:
    - qa-guardian: Load testing conventions
 
 DELEGATE:
+
 - memory MCP: Create entity types (convention, preference, pattern)
 - core-factory: Implement auto-injection in agent initialization
 - qa-guardian: Test that conventions affect agent output
 
 Exit criteria: Agent automatically uses project conventions without user prompting
+
 ```
 
 **Prompt 14: Failure Pattern Learning**
 ```
+
 /agent lead-strategist
 
 Context:
+
 - Agents sometimes repeat failed approaches across sessions
 - No systematic learning from past mistakes
 - Goal: Remember what didn't work and avoid it
@@ -590,6 +637,7 @@ Context:
 Task: Implement failure pattern learning
 
 Workflow:
+
 1. CAPTURE:
    - After any task failure: store in sqlite MCP:
      - Task description
@@ -620,13 +668,16 @@ Example output:
 "⚠️ Pattern detected: 3 previous attempts to add columns to existing tables failed due to missing ->nullable(). Suggesting nullable() by default for new columns."
 
 Exit criteria: 30% reduction in repeated failure types over 4 weeks
+
 ```
 
 **Prompt 15: Self-Healing Configuration**
 ```
+
 /agent docs-curator
 
 Context:
+
 - opencode.json can drift out of sync with actual project state
 - Agents added but not registered, MCP servers disabled accidentally
 - /doctor exists but requires manual fixes
@@ -634,6 +685,7 @@ Context:
 Task: Make /doctor auto-heal configuration issues
 
 ANALYZE:
+
 - Read opencode.json
 - Check against ground truth:
   - agents/ directory exists for each configured agent
@@ -643,6 +695,7 @@ ANALYZE:
   - Workflow files exist for registered workflows
 
 PLAN:
+
 1. Extend /doctor with auto-fix mode:
    - Missing agent file: Suggest removal or create stub
    - Missing plugin file: Disable plugin or download
@@ -666,11 +719,13 @@ PLAN:
    - If fix caused regression: Rollback and blacklist
 
 DELEGATE:
+
 - core-factory: Implement auto-fix logic
 - qa-guardian: Test auto-fix on corrupted configs
 - devops-engineer: Add scheduled execution
 
 Exit criteria: /doctor --fix resolves 80% of issues without human intervention
+
 ```
 
 ---
@@ -680,7 +735,7 @@ Exit criteria: /doctor --fix resolves 80% of issues without human intervention
 ### Week 1: Foundation
 1. **Prompt 1** (Agent Optimization) — Establishes baseline
 2. **Prompt 4** (Test Expansion) — Hardens what exists
-3. **Prompt 7** (Skill Governance) — Cleans up 63 skills
+3. **Prompt 7** (Skill Governance) — Cleans up 34 skills
 
 ### Week 2: Core Infrastructure
 4. **Prompt 5** (Lazy Loading) — Immediate performance win
@@ -715,3 +770,4 @@ Exit criteria: /doctor --fix resolves 80% of issues without human intervention
 Each prompt is designed to be **idempotent** — you can run it multiple times and it will either improve further or report "already optimal." This is the key to true auto-improvement.
 
 Want me to expand any of these into a full workflow YAML, or generate the actual plugin/skill code for any specific prompt?
+```

@@ -4,7 +4,7 @@ const path = require("path");
 const ROOT = "C:\\opencode";
 const config = JSON.parse(fs.readFileSync(path.join(ROOT, "opencode.json"), "utf-8"));
 
-let issues = [];
+const issues = [];
 
 // === PLUGIN CHECKS ===
 console.log("=== PLUGIN AUDIT ===");

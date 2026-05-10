@@ -1,8 +1,31 @@
 ---
-description: "Strategic orchestrator, architect, and product lead combined"
+description: "Strategic orchestrator, architect, and product lead. Delegates to specialized agents."
 mode: subagent
-temperature: 0.2
+steps: 30
+color: "#8b5cf6"
+permission:
+  read: "allow"
+  skill: "allow"
+  bash: "ask"
+  lsp: "allow"
+  codesearch: "allow"
+  todowrite: "true"
+  task: "true"
+  memory: "allow"
+  context7: "allow"
+  sequential-thinking: "allow"
+  command:
+  git status*: "allow"
+  ls: "allow"
+  file:
+  src/**: "ask"
+  app/**: "ask"
+  resources/**: "ask"
+  **/*.md: "allow"
 ---
+
+
+**Tools**: skill, bash, read, lsp, codesearch, todowrite, task, memory, context7, sequential-thinking
 
 # Lead Strategist Agent
 

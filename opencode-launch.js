@@ -79,6 +79,71 @@ function parseProjectRootArg(argv) {
   return null;
 }
 
+// Kill any existing opencode processes on port 4096
+function killExistingServer(port = 4096) {
+  if (process.platform !== "win32") return;
+
+  try {
+    const { execFileSync } = require("child_process");
+
+    // Find process using the port
+    const netstatOutput = execFileSync(
+      `netstat.exe`,
+      ["-ano", "-p", "TCP"],
+      { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }
+    );
+
+    const lines = netstatOutput.split(/\r?\n/);
+    for (const line of lines) {
+      if (line.includes(`:${port}`) && line.includes("LISTENING")) {
+        const parts = line.trim().split(/\s+/);
+        const pidIndex = parts.length - 1;
+        const pid = parseInt(parts[pidIndex], 10);
+
+        if (pid && !isNaN(pid)) {
+          console.log(`   Killing existing process on port ${port} (PID: ${pid})`);
+          try {
+            execFileSync("taskkill.exe", ["/F", "/PID", pid.toString()], {
+              stdio: "ignore",
+            });
+          } catch (e) {
+            // Process may already be dead
+          }
+        }
+      }
+    }
+
+    // Also kill any opencode processes that might be hanging
+    const tasklistOutput = execFileSync("tasklist.exe", ["/FI", "IMAGENAME eq opencode*", "/FO", "CSV", "/NH"], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"]
+    });
+
+    const taskLines = tasklistOutput.split(/\r?\n/).filter(Boolean);
+    for (const taskLine of taskLines) {
+      const match = taskLine.match(/"([^"]+)","(\d+)"/);
+      if (match) {
+        const [, imageName, pid] = match;
+        if (imageName.startsWith("opencode")) {
+          console.log(`   Killing opencode process: ${imageName} (PID: ${pid})`);
+          try {
+            execFileSync("taskkill.exe", ["/F", "/PID", pid], {
+              stdio: "ignore",
+            });
+          } catch (e) {
+            // Process may already be dead
+          }
+        }
+      }
+    }
+  } catch (e) {
+    // Ignore errors - just means no process to kill
+  }
+}
+
+// Kill existing server before launching
+killExistingServer(4096);
+
 // Main launch logic
 function launch() {
   const cwd = process.cwd();

@@ -56,3 +56,7 @@ dist/
 # Coverage
 coverage/
 .nyc_output/
+
+# Auto-generated workflows (session artifacts)
+workflows/auto/
+workflows/auto/*.yaml

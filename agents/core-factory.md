@@ -1,8 +1,31 @@
 ---
-description: "Core implementation and direct file editing (merged builder/planner/opencoder)"
+description: "Core implementation and direct file editing (merged builder/planner/opencoder). Self-evolving with autoresearch."
 mode: subagent
-temperature: 0.2
+steps: 40
+color: "#3b82f6"
+permission:
+  read: "allow"
+  edit: "allow"
+  grep: "allow"
+  glob: "allow"
+  write: "deny"
+  bash: "deny"
+  skill: "allow"
+  command:
+  git status*: "allow"
+  ls: "allow"
+  npm test*: "allow"
+  file:
+  src/**: "allow"
+  app/**: "allow"
+  resources/**: "allow"
+  memory: "allow"
+  context7: "allow"
+  sequential-thinking: "allow"
 ---
+
+
+**Tools**: read, write, edit, skill, grep, glob, todowrite, memory, context7, sequential-thinking, lsp
 
 # Core Factory Agent
 

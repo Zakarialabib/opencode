@@ -1,4 +1,5 @@
 # OpenCode Improvement Roadmap
+
 ## Comprehensive Analysis & Actionable Instructions
 
 **Repository:** https://github.com/Zakarialabib/opencode  
@@ -26,18 +27,18 @@
 
 ### What You've Built (Strong Foundation)
 
-| Component | Status | Quality |
-|-----------|--------|---------|
-| **12 Specialized Agents** | ✅ Shipped | Well-categorized by domain |
-| **Agent Router Plugin** | ✅ Shipped | Keyword/skill scoring |
-| **10+ TypeScript Plugins** | ✅ Shipped | Node.js compatible, Bun-free |
-| **63+ Skills** | ✅ Shipped | Broad coverage |
-| **Workflow Engine (YAML v2.0.0)** | ✅ Shipped | Parallel groups, retry policies, MCP integration |
-| **8+ MCP Servers** | ✅ Shipped | Good timeout configuration |
-| **Ambient LSP Feedback** | ✅ Shipped | Non-blocking diagnostic injection |
-| **Plugin Test Suite** | ✅ 56 tests passing | Structural + behavioral coverage |
-| **Documentation** | ✅ 8 guides | Comprehensive |
-| **Cross-platform Launch** | ✅ npm start, .bat, .sh | Good UX |
+| Component                         | Status                  | Quality                                          |
+| --------------------------------- | ----------------------- | ------------------------------------------------ |
+| **10 Specialized Agents**         | ✅ Shipped              | Well-categorized by domain                       |
+| **Agent Router Plugin**           | ✅ Shipped              | Keyword/skill scoring                            |
+| **10+ TypeScript Plugins**        | ✅ Shipped              | Node.js compatible, Bun-free                     |
+| **34 Skills**                     | ✅ Shipped              | Coding-focused, paid API skills removed          |
+| **Workflow Engine (YAML v2.0.0)** | ✅ Shipped              | Parallel groups, retry policies, MCP integration |
+| **9 MCP Servers**                 | ✅ Shipped              | Good timeout configuration                       |
+| **Ambient LSP Feedback**          | ✅ Shipped              | Non-blocking diagnostic injection                |
+| **Plugin Test Suite**             | ✅ 70 tests passing     | Structural + behavioral coverage                 |
+| **Documentation**                 | ✅ 8 guides             | Comprehensive                                    |
+| **Cross-platform Launch**         | ✅ npm start, .bat, .sh | Good UX                                          |
 
 ### What's Working Well
 
@@ -71,13 +72,15 @@ These are production blockers. Fix them before adding new features.
 **Problem:** Your `chat.message` hook likely logs diagnostics via `client.app.log()`, which writes to the application log stream but does **not** automatically prepend content to the LLM message array. The model never sees the diagnostics.
 
 **Verification:**
+
 ```javascript
 // In your test, assert this:
 const messages = input.messages;
-assert(messages.some(m => m.content.includes('LSP Diagnostic')));
+assert(messages.some((m) => m.content.includes("LSP Diagnostic")));
 ```
 
 **Fix:**
+
 ```typescript
 // plugins/index.ts
 "chat.message": async (input, output) => {
@@ -106,23 +109,25 @@ assert(messages.some(m => m.content.includes('LSP Diagnostic')));
 ```
 
 **Test to add:**
+
 ```javascript
 // ambient-feedback.test.js
-it('injects diagnostics into model context', async () => {
-  const input = { messages: [{ role: 'user', content: 'fix the code' }] };
-  storeDiagnostic('session-1', { file: 'test.ts', line: 5, message: 'Type error' });
+it("injects diagnostics into model context", async () => {
+  const input = { messages: [{ role: "user", content: "fix the code" }] };
+  storeDiagnostic("session-1", { file: "test.ts", line: 5, message: "Type error" });
 
   await chatMessageHook(input, {});
 
   assert(input.messages.length === 2);
-  assert(input.messages[0].role === 'system');
-  assert(input.messages[0].content.includes('Type error'));
+  assert(input.messages[0].role === "system");
+  assert(input.messages[0].content.includes("Type error"));
 });
 ```
 
 ### 2.2 Unify LSP Bridge with CLI Fallbacks
 
 **Problem:** You maintain two diagnostic pipelines:
+
 - `language-context-bridge.ts` with live LSP connections
 - `index.ts` shelling out to `php -l`, `npx tsc`, `cargo check`
 
@@ -148,6 +153,7 @@ export async function getLspDiagnostics(filePath: string): Promise<Diagnostic[]>
 **Problem:** Same error emitted multiple times; race between async linter and next message.
 
 **Fix:**
+
 ```typescript
 const pendingChecks = new Map<string, Promise<void>>();
 const seenDiagnostics = new Map<string, number>(); // hash -> timestamp
@@ -161,7 +167,7 @@ async function runQuickCheck(filePath: string, sessionId: string) {
       const hash = `${d.file}:${d.line}:${d.message}`;
       const lastSeen = seenDiagnostics.get(hash);
 
-      if (!lastSeen || (now - lastSeen) > 30000) {
+      if (!lastSeen || now - lastSeen > 30000) {
         seenDiagnostics.set(hash, now);
         storeDiagnostic(sessionId, d);
       }
@@ -192,11 +198,11 @@ if (pendingChecks.has(sessionId)) {
 ```typescript
 // Extend the Task tool payload
 interface TaskBriefing {
-  recentFiles: string[];        // Last 5 read/edit operations
-  activeDecisions: string[];    // Key architectural decisions
-  failedApproaches: string[];   // What didn't work (prevents repetition)
-  contextWindow: number;        // Remaining tokens
-  parentAgent: string;          // Who delegated
+  recentFiles: string[]; // Last 5 read/edit operations
+  activeDecisions: string[]; // Key architectural decisions
+  failedApproaches: string[]; // What didn't work (prevents repetition)
+  contextWindow: number; // Remaining tokens
+  parentAgent: string; // Who delegated
 }
 
 // In lead-strategist before delegation:
@@ -205,17 +211,19 @@ const briefing: TaskBriefing = {
   activeDecisions: extractDecisionsFromMemory(),
   failedApproaches: getFailedApproaches(),
   contextWindow: estimateRemainingTokens(),
-  parentAgent: 'lead-strategist'
+  parentAgent: "lead-strategist",
 };
 
 // Child agent prepends to system prompt:
-const systemPrompt = `\n[Briefing from ${briefing.parentAgent}]\n` +
-  `Recent files: ${briefing.recentFiles.join(', ')}\n` +
-  `Decisions: ${briefing.activeDecisions.join('\n')}\n` +
-  `Avoid: ${briefing.failedApproaches.join('\n')}\n`;
+const systemPrompt =
+  `\n[Briefing from ${briefing.parentAgent}]\n` +
+  `Recent files: ${briefing.recentFiles.join(", ")}\n` +
+  `Decisions: ${briefing.activeDecisions.join("\n")}\n` +
+  `Avoid: ${briefing.failedApproaches.join("\n")}\n`;
 ```
 
 **Implementation:**
+
 1. Add `briefing` field to Task tool schema
 2. Modify `lead-strategist` to auto-generate briefings before delegation
 3. Child agents check for briefing and prepend to context
@@ -254,6 +262,7 @@ const clarifyTool = {
 ```
 
 **When to trigger:**
+
 - Requirements mention "etc." or "and so on"
 - No acceptance criteria provided
 - Multiple valid interpretations exist
@@ -335,7 +344,7 @@ async function getLazyTools(agentId: string, conversation: string): Promise<Tool
 
   for (const [server, tools] of Object.entries(allTools)) {
     const keywords = toolKeywords[server] || [];
-    const isNeeded = keywords.some(kw => 
+    const isNeeded = keywords.some(kw =>
       conversation.toLowerCase().includes(kw)
     );
 
@@ -380,6 +389,7 @@ tools:
 ```
 
 **Usage in workflow:**
+
 ```yaml
 phases:
   - name: Visual Verification
@@ -390,6 +400,7 @@ phases:
 ```
 
 **Implementation:**
+
 1. Install `@anthropic-ai/playwright-mcp-server` or build custom
 2. Add to `opencode.json` MCP servers
 3. Give `qa-guardian` and `frontend-ui-ux` browser tool permissions
@@ -401,42 +412,42 @@ phases:
 
 ### Sprint 1: Velocity (This Week)
 
-| # | Feature | Effort | Impact |
-|---|---------|--------|--------|
-| 1 | Fix diagnostic injection | 2h | 🔴 Critical |
-| 2 | Unify LSP bridge | 4h | 🔴 Critical |
-| 3 | Deduplication + race safety | 3h | 🟡 High |
-| 4 | Task briefing inheritance | 6h | 🟡 High |
-| 5 | Clarification gate | 4h | 🟡 High |
+| #   | Feature                     | Effort | Impact      |
+| --- | --------------------------- | ------ | ----------- |
+| 1   | Fix diagnostic injection    | 2h     | 🔴 Critical |
+| 2   | Unify LSP bridge            | 4h     | 🔴 Critical |
+| 3   | Deduplication + race safety | 3h     | 🟡 High     |
+| 4   | Task briefing inheritance   | 6h     | 🟡 High     |
+| 5   | Clarification gate          | 4h     | 🟡 High     |
 
 ### Sprint 2: Resilience (Next 2 Weeks)
 
-| # | Feature | Effort | Impact |
-|---|---------|--------|--------|
-| 6 | Unified checkpointing | 8h | 🟡 High |
-| 7 | Lazy tool loading | 6h | 🟡 High |
-| 8 | Browser MCP server | 8h | 🟡 High |
-| 9 | Token budget tracking | 4h | 🟢 Medium |
-| 10 | Skill versioning | 6h | 🟢 Medium |
+| #   | Feature               | Effort | Impact    |
+| --- | --------------------- | ------ | --------- |
+| 6   | Unified checkpointing | 8h     | 🟡 High   |
+| 7   | Lazy tool loading     | 6h     | 🟡 High   |
+| 8   | Browser MCP server    | 8h     | 🟡 High   |
+| 9   | Token budget tracking | 4h     | 🟢 Medium |
+| 10  | Skill versioning      | 6h     | 🟢 Medium |
 
 ### Sprint 3: Intelligence (Next Month)
 
-| # | Feature | Effort | Impact |
-|---|---------|--------|--------|
-| 11 | Dynamic workflow generation | 12h | 🟡 High |
-| 12 | Cognitive role sub-agents | 10h | 🟡 High |
-| 13 | Cross-session memory | 8h | 🟢 Medium |
-| 14 | Inner TDD loop | 8h | 🟢 Medium |
-| 15 | Agent team dashboard | 10h | 🟢 Medium |
+| #   | Feature                     | Effort | Impact    |
+| --- | --------------------------- | ------ | --------- |
+| 11  | Dynamic workflow generation | 12h    | 🟡 High   |
+| 12  | Cognitive role sub-agents   | 10h    | 🟡 High   |
+| 13  | Cross-session memory        | 8h     | 🟢 Medium |
+| 14  | Inner TDD loop              | 8h     | 🟢 Medium |
+| 15  | Agent team dashboard        | 10h    | 🟢 Medium |
 
 ### Sprint 4: Ecosystem (Quarter)
 
-| # | Feature | Effort | Impact |
-|---|---------|--------|--------|
-| 16 | Plugin marketplace | 16h | 🟢 Medium |
-| 17 | Community skill registry | 12h | 🟢 Medium |
-| 18 | Multi-repo orchestration | 14h | 🟢 Medium |
-| 19 | Self-healing configuration | 10h | 🟢 Medium |
+| #   | Feature                    | Effort | Impact    |
+| --- | -------------------------- | ------ | --------- |
+| 16  | Plugin marketplace         | 16h    | 🟢 Medium |
+| 17  | Community skill registry   | 12h    | 🟢 Medium |
+| 18  | Multi-repo orchestration   | 14h    | 🟢 Medium |
+| 19  | Self-healing configuration | 10h    | 🟢 Medium |
 
 ---
 
@@ -468,6 +479,7 @@ Add a web dashboard at `http://127.0.0.1:59596/dashboard` showing:
 ```
 
 **Implementation:**
+
 - Extend existing web server (`opencode web`)
 - WebSocket connection for real-time updates
 - Store metrics in sqlite MCP, stream to dashboard
@@ -543,16 +555,16 @@ Estimated Completion: 12m
 
 ### 6.2 Tests to Add Immediately
 
-| Test Category | What to Test | Priority |
-|--------------|-------------|----------|
-| **Behavioral** | Model receives diagnostics after write | 🔴 Critical |
-| **Behavioral** | Task briefing reaches child agent | 🔴 Critical |
-| **Behavioral** | Clarification gate blocks on low confidence | 🟡 High |
-| **Integration** | Workflow checkpoint creates 4 layers | 🟡 High |
-| **Integration** | Lazy tool loading reduces context by 60% | 🟡 High |
-| **Integration** | Browser MCP captures screenshot | 🟢 Medium |
-| **E2E** | Full feature-development workflow | 🟢 Medium |
-| **E2E** | Bug-fix workflow with retry policy | 🟢 Medium |
+| Test Category   | What to Test                                | Priority    |
+| --------------- | ------------------------------------------- | ----------- |
+| **Behavioral**  | Model receives diagnostics after write      | 🔴 Critical |
+| **Behavioral**  | Task briefing reaches child agent           | 🔴 Critical |
+| **Behavioral**  | Clarification gate blocks on low confidence | 🟡 High     |
+| **Integration** | Workflow checkpoint creates 4 layers        | 🟡 High     |
+| **Integration** | Lazy tool loading reduces context by 60%    | 🟡 High     |
+| **Integration** | Browser MCP captures screenshot             | 🟢 Medium   |
+| **E2E**         | Full feature-development workflow           | 🟢 Medium   |
+| **E2E**         | Bug-fix workflow with retry policy          | 🟢 Medium   |
 
 ### 6.3 Test Infrastructure
 
@@ -566,12 +578,12 @@ export async function runWorkflow(
   const runner = new WorkflowRunner(workflow);
 
   // Mock MCP servers for isolation
-  runner.mockMcp('sqlite', mockSqlite);
-  runner.mockMcp('memory', mockMemory);
+  runner.mockMcp("sqlite", mockSqlite);
+  runner.mockMcp("memory", mockMemory);
 
   // Track all delegations
   const delegations: TaskDelegation[] = [];
-  runner.on('delegate', (d) => delegations.push(d));
+  runner.on("delegate", (d) => delegations.push(d));
 
   const result = await runner.execute(inputs);
 
@@ -586,6 +598,7 @@ export async function runWorkflow(
 ### 7.1 Plugin Marketplace
 
 **Structure:**
+
 ```
 marketplace/
 ├── plugins/
@@ -601,6 +614,7 @@ marketplace/
 ```
 
 **Discovery:**
+
 ```bash
 # Search marketplace
 opencode marketplace search "browser"
@@ -619,6 +633,7 @@ opencode marketplace install @community/browser-mcp
 Add to `.github/`:
 
 **Plugin template:**
+
 ```typescript
 // .github/templates/plugin.ts
 import { Plugin, tool } from "@opencode-ai/plugin";
@@ -646,15 +661,16 @@ export default {{name}};
 ```
 
 **Skill template:**
+
 ```markdown
 ---
-name: {{name}}
-description: {{description}}
+name: { { name } }
+description: { { description } }
 license: MIT
 compatibility: opencode >=2.0.0
 metadata:
   audience: developers
-  category: {{category}}
+  category: { { category } }
 ---
 
 ## What I do
@@ -698,6 +714,7 @@ docs/
 ```
 
 **Deploy to GitHub Pages:**
+
 ```yaml
 # .github/workflows/docs.yml
 name: Deploy Docs
@@ -760,7 +777,7 @@ npm test -- --grep "mcp-manager"
 
 ### 8.2 Playbook: Creating a Dynamic Workflow
 
-```typescript
+````typescript
 // skills/dynamic-workflow/SKILL.md
 ---
 name: dynamic-workflow
@@ -798,8 +815,9 @@ phases:
       - {{.}}
       {{/criteria}}
   {{/phases}}
-```
-```
+````
+
+````
 
 ### 8.3 Playbook: Adding Cognitive Role Sub-Agents
 
@@ -858,9 +876,10 @@ phases:
     }
   }
 }
-```
+````
 
 **Usage in workflow:**
+
 ```yaml
 phases:
   - name: Plan
@@ -883,20 +902,21 @@ phases:
 
 ### 9.1 Key Performance Indicators
 
-| Metric | Current | Target | Measurement |
-|--------|---------|--------|-------------|
-| Test pass rate | 56/56 | 100/100 | CI/CD |
-| Workflow success rate | ? | >90% | sqlite MCP tracking |
-| Average task completion time | ? | <5 min | Performance plugin |
-| Token efficiency | ? | <50K per task | Token budget plugin |
-| Agent routing accuracy | ? | >85% | User feedback + auto-scoring |
-| User clarification rate | ? | <20% | Clarification gate tracking |
-| Plugin load time | ? | <2s | Process monitor |
-| MCP health uptime | ? | >99% | Health check logs |
+| Metric                       | Current | Target        | Measurement                  |
+| ---------------------------- | ------- | ------------- | ---------------------------- |
+| Test pass rate               | 56/56   | 100/100       | CI/CD                        |
+| Workflow success rate        | ?       | >90%          | sqlite MCP tracking          |
+| Average task completion time | ?       | <5 min        | Performance plugin           |
+| Token efficiency             | ?       | <50K per task | Token budget plugin          |
+| Agent routing accuracy       | ?       | >85%          | User feedback + auto-scoring |
+| User clarification rate      | ?       | <20%          | Clarification gate tracking  |
+| Plugin load time             | ?       | <2s           | Process monitor              |
+| MCP health uptime            | ?       | >99%          | Health check logs            |
 
 ### 9.2 Success Criteria by Sprint
 
 **Sprint 1 (Velocity):**
+
 - [ ] All diagnostics reach model context (verified by behavioral test)
 - [ ] LSP bridge unified with CLI fallback
 - [ ] No duplicate diagnostics within 30s window
@@ -904,6 +924,7 @@ phases:
 - [ ] Clarification gate triggers on <0.7 confidence
 
 **Sprint 2 (Resilience):**
+
 - [ ] `/undo` rolls back git + db + memory + task state
 - [ ] Lazy tool loading reduces initial context by 60%
 - [ ] Browser MCP captures and compares screenshots
@@ -911,6 +932,7 @@ phases:
 - [ ] All skills have semver in frontmatter
 
 **Sprint 3 (Intelligence):**
+
 - [ ] Dynamic workflow generation for 5 novel task types
 - [ ] Cognitive roles reduce token usage by 25%
 - [ ] Cross-session memory loads user preferences
@@ -918,6 +940,7 @@ phases:
 - [ ] Dashboard shows real-time agent status
 
 **Sprint 4 (Ecosystem):**
+
 - [ ] 10+ community plugins in marketplace
 - [ ] Documentation site deployed to GitHub Pages
 - [ ] Multi-repo orchestration works across 3+ repos
@@ -1062,43 +1085,43 @@ opencode/
 
 ### Commands
 
-| Command | Purpose | Agent |
-|---------|---------|-------|
-| `/agent <name>` | Switch agent | Any |
-| `/build` | Run build | core-factory |
-| `/test` | Run tests | qa-guardian |
-| `/lint` | Run linter | qa-guardian |
-| `/undo` | Rollback checkpoint | devops-engineer |
-| `/doctor` | Health check | devops-engineer |
-| `/reflect` | Self-improvement | docs-curator |
-| `/workflow <name>` | Run workflow | lead-strategist |
-| `/checkpoint` | Manual snapshot | devops-engineer |
+| Command            | Purpose             | Agent           |
+| ------------------ | ------------------- | --------------- |
+| `/agent <name>`    | Switch agent        | Any             |
+| `/build`           | Run build           | core-factory    |
+| `/test`            | Run tests           | qa-guardian     |
+| `/lint`            | Run linter          | qa-guardian     |
+| `/undo`            | Rollback checkpoint | devops-engineer |
+| `/doctor`          | Health check        | devops-engineer |
+| `/reflect`         | Self-improvement    | docs-curator    |
+| `/workflow <name>` | Run workflow        | lead-strategist |
+| `/checkpoint`      | Manual snapshot     | devops-engineer |
 
 ### Plugin Hooks
 
-| Hook | When | Use Case |
-|------|------|----------|
-| `tool.execute.before` | Before tool runs | Validation, logging |
-| `tool.execute.after` | After tool runs | LSP feedback, checkpointing |
-| `chat.message` | Before model sees message | Inject diagnostics, briefing |
-| `chat.params` | Before API call | Lazy tool loading, budget check |
-| `workflow.start` | Workflow begins | Auto-checkpoint |
-| `workflow.end` | Workflow completes | Metrics, cleanup |
+| Hook                  | When                      | Use Case                        |
+| --------------------- | ------------------------- | ------------------------------- |
+| `tool.execute.before` | Before tool runs          | Validation, logging             |
+| `tool.execute.after`  | After tool runs           | LSP feedback, checkpointing     |
+| `chat.message`        | Before model sees message | Inject diagnostics, briefing    |
+| `chat.params`         | Before API call           | Lazy tool loading, budget check |
+| `workflow.start`      | Workflow begins           | Auto-checkpoint                 |
+| `workflow.end`        | Workflow completes        | Metrics, cleanup                |
 
 ### Workflow Features
 
-| Feature | YAML Key | Description |
-|---------|----------|-------------|
-| Parallel execution | `parallel_groups` | Run tasks concurrently |
-| Retry policy | `retry_policy` | Exponential/linear backoff |
-| MCP tools | `mcp_tools` | Per-phase tool scoping |
-| Exit criteria | `exit_criteria` | Phase completion conditions |
-| Notifications | `notifications` | Slack/webhook alerts |
-| Performance | `performance` | Metrics tracking |
-| Security | `security` | Vulnerability scanning |
+| Feature            | YAML Key          | Description                 |
+| ------------------ | ----------------- | --------------------------- |
+| Parallel execution | `parallel_groups` | Run tasks concurrently      |
+| Retry policy       | `retry_policy`    | Exponential/linear backoff  |
+| MCP tools          | `mcp_tools`       | Per-phase tool scoping      |
+| Exit criteria      | `exit_criteria`   | Phase completion conditions |
+| Notifications      | `notifications`   | Slack/webhook alerts        |
+| Performance        | `performance`     | Metrics tracking            |
+| Security           | `security`        | Vulnerability scanning      |
 
 ---
 
-*Generated for OpenCode v2.0.0 by strategic analysis of current architecture vs. state-of-the-art agentic frameworks (Claude Code, OpenCode SST, OpenClaude, Cline, Roo Code).*
+_Generated for OpenCode v2.0.0 by strategic analysis of current architecture vs. state-of-the-art agentic frameworks (Claude Code, OpenCode SST, OpenClaude, Cline, Roo Code)._
 
-*Last updated: 2026-05-08*
+_Last updated: 2026-05-08_

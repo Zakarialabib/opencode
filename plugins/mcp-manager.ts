@@ -3,6 +3,7 @@ import { type Plugin, tool } from "@opencode-ai/plugin";
 import { readFileSync, accessSync } from "node:fs";
 import { join, dirname, parse } from "node:path";
 import { debug, info, warn, error, SKILL_CATEGORIES } from "./debug-logger";
+import { execSync } from "node:child_process";
 
 // Debug: trace MCP tool loading
 function traceToolLoading(
@@ -198,7 +199,6 @@ const MCPManagerPlugin: Plugin = async ({ client, project, directory }) => {
 
       // Store metrics in SQLite
       try {
-        const { execSync } = require("node:child_process");
         const timestamp = new Date().toISOString();
         execSync(
           `sqlite3 metadata.db "INSERT INTO tool_loading_metrics (timestamp, all_tools, loaded_tools, reduction_percent) VALUES ('${timestamp}', ${allToolsCount}, ${loadedToolsCount}, ${reductionPercent})"`,

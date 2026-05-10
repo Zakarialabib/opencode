@@ -84,7 +84,7 @@ const DEFAULT_AGENT_RULES: AgentRule[] = [
       "phpunit",
       "laravel 13",
     ],
-    skills: ["laravel-feature-scaffold"],
+    skills: ["laravel-feature-scaffold", "pest-testing"],
     description:
       "Laravel 13, Livewire 4, PHP 8.3 development - NOT for generic API (use backend-api)",
   },
@@ -111,14 +111,7 @@ const DEFAULT_AGENT_RULES: AgentRule[] = [
       "next.js",
       "shadcn",
     ],
-    skills: [
-      "ui-ux-pro-max",
-      "react-reuse-audit",
-      "charts",
-      "visual-design-foundations",
-      "image-generation",
-      "image-understand",
-    ],
+    skills: ["ui-ux-pro-max", "react-reuse-audit", "charts", "visual-design-foundations"],
     description: "Premium UI/UX design and frontend development (Next.js, TypeScript, Tailwind)",
   },
   {
@@ -254,7 +247,6 @@ const DEFAULT_AGENT_RULES: AgentRule[] = [
       "market",
     ],
     skills: [
-      "deep-research",
       "xlsx",
       "docx",
       "pdf",
@@ -262,7 +254,8 @@ const DEFAULT_AGENT_RULES: AgentRule[] = [
       "content-strategy",
       "market-research-reports",
       "docs-governance-audit",
-      "self-improver",
+      "writing-plans",
+      "seo-content-writer",
     ],
     description: "Documentation, self-improvement, and system evolution",
   },

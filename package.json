@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^2.0.47",
+    "@hey-api/client-fetch": "^0.13.1",
     "@nick-vi/opencode-type-inject": "latest",
     "@opencode-ai/plugin": "1.3.17",
     "@tarquinen/opencode-dcp": "latest",

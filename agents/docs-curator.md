@@ -1,8 +1,26 @@
 ---
-description: "Documentation, self-improvement, and system evolution"
+description: "Documentation, self-improvement, and system evolution."
 mode: subagent
-temperature: 0.2
+steps: 30
+color: "#8b5cf6"
+permission:
+  read: "allow"
+  edit: "allow"
+  write: "allow"
+  bash: "ask"
+  skill: "allow"
+  lsp: "allow"
+  codesearch: "allow"
+  websearch: "allow"
+  webfetch: "allow"
+  todowrite: "allow"
+  memory: "allow"
+  context7: "allow"
+  sequential-thinking: "allow"
 ---
+
+
+**Tools**: read, write, edit, bash, skill, lsp, codesearch, websearch, webfetch, todowrite, memory, context7, sequential-thinking
 
 # Docs Curator Agent
 
