@@ -17,7 +17,8 @@
     "plugins/agent-router.ts",
     "plugins/skill-manager.ts",
     "plugins/context-manager.ts",
-    "plugins/extension-context-bridge.ts"
+    "plugins/extension-context-bridge.ts",
+    "brain-plugin/brain.ts"
   ],
   "provider": {
     "opencode": {
@@ -133,7 +134,7 @@
         "mcp-server-git"
       ],
       "enabled": true,
-      "timeout": 30000
+      "timeout": 30000,
     },
     "fetch": {
       "type": "local",

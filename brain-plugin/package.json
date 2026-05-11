@@ -1,0 +1,14 @@
+{
+  "name": "@opencode-ai/brain",
+  "version": "0.1.0",
+  "description": "Cognitive layer for OpenCode - growing decision tree for context-aware software development",
+  "type": "module",
+  "main": "brain.ts",
+  "dependencies": {
+    "@lancedb/lancedb": "^0.15.0",
+    "glob": "^11.0.0"
+  },
+  "peerDependencies": {
+    "@opencode-ai/plugin": "*"
+  }
+}
