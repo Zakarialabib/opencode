@@ -186,21 +186,24 @@ Run with: `bun benchmark.js`
 
 ---
 
-## 🔗 Plugin Ecosystem (11 plugins)
+## 🔗 Plugin Ecosystem (12 plugins)
 
-| Plugin                        | Purpose                                     |
-| ----------------------------- | ------------------------------------------- |
-| `agent-router.ts`             | Intelligent task-to-agent routing           |
-| `model-router.ts`             | Smart model selection based on capabilities |
-| `mcp-manager.ts`              | MCP server health and toggle management     |
-| `skill-manager.ts`            | Skill registry access and search            |
-| `context-manager.ts`          | Dynamic context configuration               |
-| `index.ts`                    | LM Studio management + self-improvement     |
-| `jsonc-utils.ts`              | Shared JSONC parser (comment-safe)          |
-| `extension-context-bridge.ts` | Trae IDE extension bridge                   |
-| `ide-mcp-bridge.ts`           | IDE MCP bridge                              |
-| `language-context-bridge.ts`  | LSP integration bridge                      |
-| `process-monitor.ts`          | Process monitoring                          |
+| Plugin                        | Purpose                                           |
+| ----------------------------- | ------------------------------------------------- |
+| `agent-router.ts`             | Intelligent task-to-agent routing                 |
+| `model-router.ts`             | Smart model selection based on capabilities       |
+| `mcp-manager.ts`              | MCP server health and toggle management           |
+| `skill-manager.ts`            | Skill registry access and search                  |
+| `context-manager.ts`          | Dynamic context configuration                     |
+| `index.ts`                    | LM Studio management + self-improvement           |
+| `brain-plugin/brain.ts`       | **RAG engine**: auto-index, vector search, speculative decoding, codebase context |
+| `jsonc-utils.ts`              | Shared JSONC parser (comment-safe)                |
+| `extension-context-bridge.ts` | Trae IDE extension bridge                         |
+| `ide-mcp-bridge.ts`           | IDE MCP bridge                                    |
+| `language-context-bridge.ts`  | LSP integration bridge                            |
+| `process-monitor.ts`          | Process monitoring                                |
+
+> The **Brain Plugin** provides RAG-powered codebase context: auto-indexes your project, embeds code with LM Studio, and injects relevant chunks into LLM prompts. See [**Brain Plugin Docs**](brain-plugin-docs.md) for details.
 
 > See [**Plugins Guide**](Plugins-Guide.md) for complete details.
 

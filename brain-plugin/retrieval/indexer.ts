@@ -1,139 +1,54 @@
-import { defaultProvider } from "../provider/lmstudio";
-import { lancadb } from "./lancadb";
+const BRAIN_EMBED_URL = "http://127.0.0.1:7878";
 
-export interface Chunk {
-  text: string;
-  path: string;
-  startLine: number;
-  endLine: number;
-  mtime: number;
-}
-
-export interface IndexResult {
-  status: "indexed" | "fresh" | "error";
+export interface IndexProgress {
+  status: "indexed" | "error";
+  files_indexed: number;
   chunks: number;
+  duration_ms: number;
   message?: string;
 }
 
-const CHUNK_SIZE = 40;
-const CHUNK_OVERLAP = 10;
-const IGNORE_PATTERNS = [
-  "node_modules/**",
-  "target/**",
-  "vendor/**",
-  ".git/**",
-  "dist/**",
-  "build/**",
-  "*.lock",
-  ".next/**",
-];
-
-export class Indexer {
-  async run(projectRoot: string, opts: { force?: boolean } = {}): Promise<IndexResult> {
-    const fs = await import("fs");
-    const path = await import("path");
-    const dbPath = `${projectRoot}/.opencode/brain.lance`;
-
-    await lancadb.initialize(dbPath);
-
-    if (!opts.force) {
-      const stats = await lancadb.getStats();
-      if (stats.totalChunks > 0) {
-        return { status: "fresh", chunks: stats.totalChunks };
-      }
-    }
-
-    try {
-      const files = await this.discoverFiles(projectRoot);
-      console.log(`[Brain Indexer] Discovered ${files.length} files`);
-
-      const allChunks: Chunk[] = [];
-
-      for (const file of files) {
-        const chunks = await this.chunkFile(file);
-        allChunks.push(...chunks);
-      }
-
-      console.log(`[Brain Indexer] Generated ${allChunks.length} chunks`);
-
-      if (allChunks.length > 0) {
-        await lancadb.addChunks(allChunks);
-      }
-
-      return { status: "indexed", chunks: allChunks.length };
-    } catch (error: any) {
-      console.error(`[Brain Indexer] Error:`, error);
-      return { status: "error", chunks: 0, message: error.message };
-    }
-  }
-
-  private async discoverFiles(projectRoot: string): Promise<string[]> {
-    const files: string[] = [];
-    const extensions = [".ts", ".tsx", ".js", ".jsx", ".py", ".rs", ".go", ".java", ".php", ".vue", ".svelte"];
-
-    const walkDir = async (dir: string) => {
-      try {
-        const entries = fs.readdirSync(dir, { withFileTypes: true });
-
-        for (const entry of entries) {
-          const fullPath = path.join(dir, entry.name);
-
-          if (entry.isDirectory()) {
-            if (
-              !entry.name.startsWith(".") &&
-              !IGNORE_PATTERNS.some((p) => {
-                if (p.endsWith("/**")) {
-                  return fullPath.includes(p.replace("/**", ""));
-                }
-                return entry.name === p.replace("**/", "");
-              })
-            ) {
-              await walkDir(fullPath);
-            }
-          } else if (entry.isFile()) {
-            const ext = path.extname(entry.name).toLowerCase();
-            if (extensions.includes(ext)) {
-              files.push(fullPath);
-            }
-          }
-        }
-      } catch {
-        // Skip directories we can't read
-      }
-    };
-
-    await walkDir(projectRoot);
-    return files;
-  }
-
-  private async chunkFile(filePath: string): Promise<Chunk[]> {
-    try {
-      const fs = await import("fs");
-      const content = fs.readFileSync(filePath, "utf-8");
-      const lines = content.split("\n");
-      const chunks: Chunk[] = [];
-      const mtime = fs.statSync(filePath).mtimeMs;
-
-      for (let i = 0; i < lines.length; i += CHUNK_SIZE - CHUNK_OVERLAP) {
-        const chunkLines = lines.slice(i, i + CHUNK_SIZE);
-        const chunkText = chunkLines.join("\n").trim();
-
-        if (chunkText.length > 20) {
-          chunks.push({
-            text: chunkText,
-            path: filePath,
-            startLine: i + 1,
-            endLine: Math.min(i + CHUNK_SIZE, lines.length),
-            mtime,
-          });
-        }
-      }
-
-      return chunks;
-    } catch {
-      return [];
-    }
-  }
+function toWslPath(windowsPath: string): string {
+  return windowsPath.replace(/^([A-Z]):\\/i, (_: string, d: string) => `/mnt/${d.toLowerCase()}/`).replace(/\\/g, '/');
 }
 
-export const indexer = new Indexer();
+function projectIdFromPath(projectRoot: string): string {
+  let hash = 0;
+  for (let i = 0; i < projectRoot.length; i++) {
+    const char = projectRoot.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0;
+  }
+  return `proj_${Math.abs(hash).toString(36)}`;
+}
+
+export async function indexProject(
+  projectRoot: string,
+  opts: { force?: boolean } = {}
+): Promise<IndexProgress> {
+  const wslPath = toWslPath(projectRoot);
+  const projectId = projectIdFromPath(projectRoot);
+
+  const res = await fetch(`${BRAIN_EMBED_URL}/index`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      project_root: wslPath,
+      force: opts.force ?? false,
+      project_id: projectId,
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Index failed (${res.status}): ${text}`);
+  }
+
+  const data = await res.json();
+  return {
+    status: "indexed",
+    files_indexed: data.files_indexed,
+    chunks: data.chunks,
+    duration_ms: data.duration_ms,
+  };
+}

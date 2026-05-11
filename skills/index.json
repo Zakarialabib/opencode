@@ -9,6 +9,13 @@
       "agents": ["core-factory", "lead-strategist"],
       "category": "research"
     },
+    "knowledge-architect" : {
+      "path": "skills/knowledge-architect/SKILL.md",
+      "name": "knowledge-architect",
+      "description": "Architect and manage knowledge graphs for project success",
+      "agents": ["docs-curator", "lead-architect"],
+      "category": "research"
+    },
     "deep-research": {
       "path": "skills/deep-research/SKILL.md",
       "name": "deep-research",

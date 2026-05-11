@@ -163,7 +163,7 @@
         "@modelcontextprotocol/server-sequential-thinking"
       ],
       "enabled": true,
-      "timeout": 60000
+      "timeout": 45000
     },
     "language-server": {
       "type": "local",
@@ -305,7 +305,15 @@
       ".\\**": "allow",
       "~\\**": "ask"
     },
-    "doom_loop": "deny"
+    "doom_loop": "deny",
+    "brain_diagnostic": "allow",
+    "brain_sidecar_status": "allow",
+    "brain_status": "allow",
+    "brain_metrics": "allow",
+    "brain_search": "allow",
+    "brain_embed_test": "allow",
+    "brain_index_project": "allow",
+    "brain_speculative_status": "allow"
   },
   "tools": {
     "read": true,
@@ -330,7 +338,15 @@
     "sqlite": true,
     "sequential-thinking": true,
     "language-server": true,
-    "type-inject": true
+    "type-inject": true,
+    "brain_diagnostic": true,
+    "brain_sidecar_status": true,
+    "brain_status": true,
+    "brain_metrics": true,
+    "brain_search": true,
+    "brain_embed_test": true,
+    "brain_index_project": true,
+    "brain_speculative_status": true
   },
   "lsp": {
     "typescript": {
@@ -453,7 +469,9 @@
     "Auto-format based on rules/auto-format.md.",
     "REASONING: Always use <thinking> blocks before acting.",
     "ERROR HANDLING: If a tool fails, try one alternative before asking for help.",
-    "STYLE: Strict naming conventions and architectural patterns."
+    "STYLE: Strict naming conventions and architectural patterns.",
+    "BRAIN: For non-trivial codebase work, check brain_sidecar_status or brain_diagnostic, use brain_search/brain_embed_test for semantic discovery, then read the retrieved files directly.",
+    "BRAIN INDEX: If retrieval is empty or stale, run brain_index_project before relying on Brain context."
   ],
   "command": {
     "audit": {
@@ -529,13 +547,15 @@
       "description": "Primary build agent — fast implementation, direct file editing, all tools enabled.",
       "instructions": [
         "CORE: Fast implementation. Read → Analyze → Write → Validate.",
+        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
         "STRICT: No speculation. Only state what you know or can verify.",
         "CONCISE: Use minimal words. Long descriptions waste tokens.",
         "WORKFLOW: Read file → Use edit tool (oldString→newString) → Validate.",
         "If edit fails: re-read file, add context to oldString.",
         "No unnecessary comments. Reference lines as file_path:line_number.",
         "PROJECT STACK: Tauri (Rust), React (TypeScript), Laravel (PHP).",
-        "Auto-format after edits per rules/auto-format.md."
+        "Auto-format after edits per rules/auto-format.md.",
+        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
       ],
       "permission": {
         "file": {
@@ -552,6 +572,16 @@
           "ls": "allow",
           "npm test*": "allow"
         }
+      },
+      "tools": {
+        "brain_diagnostic": true,
+        "brain_sidecar_status": true,
+        "brain_status": true,
+        "brain_metrics": true,
+        "brain_search": true,
+        "brain_embed_test": true,
+        "brain_index_project": true,
+        "brain_speculative_status": true
       }
     },
     "plan": {
@@ -561,6 +591,20 @@
       "permission": {
         "edit": "deny",
         "bash": "deny"
+      },
+      "instructions": [
+        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
+        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
+      ],
+      "tools": {
+        "brain_diagnostic": true,
+        "brain_sidecar_status": true,
+        "brain_status": true,
+        "brain_metrics": true,
+        "brain_search": true,
+        "brain_embed_test": true,
+        "brain_index_project": true,
+        "brain_speculative_status": true
       }
     },
     "explore": {
@@ -571,6 +615,20 @@
         "edit": "deny",
         "bash": "deny",
         "write": "deny"
+      },
+      "instructions": [
+        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
+        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
+      ],
+      "tools": {
+        "brain_diagnostic": true,
+        "brain_sidecar_status": true,
+        "brain_status": true,
+        "brain_metrics": true,
+        "brain_search": true,
+        "brain_embed_test": true,
+        "brain_index_project": true,
+        "brain_speculative_status": true
       }
     },
     "scout": {
@@ -582,6 +640,20 @@
         "bash": "ask",
         "webfetch": "allow",
         "websearch": "allow"
+      },
+      "instructions": [
+        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
+        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
+      ],
+      "tools": {
+        "brain_diagnostic": true,
+        "brain_sidecar_status": true,
+        "brain_status": true,
+        "brain_metrics": true,
+        "brain_search": true,
+        "brain_embed_test": true,
+        "brain_index_project": true,
+        "brain_speculative_status": true
       }
     },
     "core-factory": {
@@ -599,7 +671,9 @@
         "Auto-format after edits per rules/auto-format.md.",
         "SELF-EVOLUTION: After completing complex tasks, use skill:autoresearch to benchmark and optimize your implementation patterns.",
         "REFACTORING: When refactoring, first use skill:self-improver to analyze the codebase, then use skill:autoresearch to validate improvements.",
-        "INTEGRATION: Always check for redundant imports, unused code, and naming convention violations before and after edits."
+        "INTEGRATION: Always check for redundant imports, unused code, and naming convention violations before and after edits.",
+        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
+        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
       ],
       "tools": {
         "read": true,
@@ -612,7 +686,15 @@
         "todowrite": true,
         "context7": true,
         "memory": true,
-        "sequential-thinking": true
+        "sequential-thinking": true,
+        "brain_diagnostic": true,
+        "brain_sidecar_status": true,
+        "brain_status": true,
+        "brain_metrics": true,
+        "brain_search": true,
+        "brain_embed_test": true,
+        "brain_index_project": true,
+        "brain_speculative_status": true
       },
       "permission": {
         "file": {
@@ -644,7 +726,9 @@
         "Use skill:autoresearch for autonomous optimization loops on code, benchmarks, or metrics.",
         "Use skill:self-improver to analyze and improve project configuration.",
         "REALITY CHECK: Always assess feasibility against actual codebase state before proposing changes.",
-        "GAP ANALYSIS: Identify gaps between current implementation and target architecture."
+        "GAP ANALYSIS: Identify gaps between current implementation and target architecture.",
+        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
+        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
       ],
       "tools": {
         "skill": true,
@@ -656,7 +740,15 @@
         "task": true,
         "memory": true,
         "context7": true,
-        "sequential-thinking": true
+        "sequential-thinking": true,
+        "brain_diagnostic": true,
+        "brain_sidecar_status": true,
+        "brain_status": true,
+        "brain_metrics": true,
+        "brain_search": true,
+        "brain_embed_test": true,
+        "brain_index_project": true,
+        "brain_speculative_status": true
       },
       "permission": {
         "file": {
@@ -683,7 +775,9 @@
         "Use task tool for parallel execution when independent.",
         "Use skill:autoresearch for autonomous optimization loops.",
         "Use skill:self-improver to analyze and improve project configuration.",
-        "NORMING: Check all proposed patterns against existing codebase conventions before recommending."
+        "NORMING: Check all proposed patterns against existing codebase conventions before recommending.",
+        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
+        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
       ],
       "tools": {
         "read": true,
@@ -697,7 +791,15 @@
         "mcp": true,
         "context7": true,
         "memory": true,
-        "sequential-thinking": true
+        "sequential-thinking": true,
+        "brain_diagnostic": true,
+        "brain_sidecar_status": true,
+        "brain_status": true,
+        "brain_metrics": true,
+        "brain_search": true,
+        "brain_embed_test": true,
+        "brain_index_project": true,
+        "brain_speculative_status": true
       }
     },
     "frontend-ui-ux": {
@@ -711,7 +813,9 @@
         "Use ui-ux-pro-max skill for design tokens.",
         "Use parallel execution for independent components.",
         "Validate accessibility (WCAG AA) after implementation.",
-        "REUSABILITY: Check for existing components before creating new ones. Use react-reuse-audit skill."
+        "REUSABILITY: Check for existing components before creating new ones. Use react-reuse-audit skill.",
+        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
+        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
       ],
       "tools": {
         "read": true,
@@ -725,7 +829,15 @@
         "mcp": true,
         "context7": true,
         "memory": true,
-        "sequential-thinking": true
+        "sequential-thinking": true,
+        "brain_diagnostic": true,
+        "brain_sidecar_status": true,
+        "brain_status": true,
+        "brain_metrics": true,
+        "brain_search": true,
+        "brain_embed_test": true,
+        "brain_index_project": true,
+        "brain_speculative_status": true
       }
     },
     "backend-api": {
@@ -738,7 +850,9 @@
         "Use fullstack-dev skill for web patterns.",
         "Validate with LSP after changes.",
         "NO REDUNDANCY: Check for existing endpoints/services before implementing.",
-        "IMPORT AUDIT: Only add external imports when necessary. Prefer stdlib."
+        "IMPORT AUDIT: Only add external imports when necessary. Prefer stdlib.",
+        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
+        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
       ],
       "tools": {
         "read": true,
@@ -748,7 +862,15 @@
         "skill": true,
         "lsp": true,
         "context7": true,
-        "memory": true
+        "memory": true,
+        "brain_diagnostic": true,
+        "brain_sidecar_status": true,
+        "brain_status": true,
+        "brain_metrics": true,
+        "brain_search": true,
+        "brain_embed_test": true,
+        "brain_index_project": true,
+        "brain_speculative_status": true
       }
     },
     "backend-laravel": {
@@ -762,7 +884,9 @@
         "Use pest-testing for tests.",
         "Run php artisan pint after edits.",
         "IMPORT AUDIT: Check for unused imports after every file change.",
-        "NAMING: Follow Laravel conventions strictly (PascalCase models, snake_case tables)."
+        "NAMING: Follow Laravel conventions strictly (PascalCase models, snake_case tables).",
+        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
+        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
       ],
       "tools": {
         "read": true,
@@ -772,7 +896,15 @@
         "skill": true,
         "lsp": true,
         "context7": true,
-        "memory": true
+        "memory": true,
+        "brain_diagnostic": true,
+        "brain_sidecar_status": true,
+        "brain_status": true,
+        "brain_metrics": true,
+        "brain_search": true,
+        "brain_embed_test": true,
+        "brain_index_project": true,
+        "brain_speculative_status": true
       }
     },
     "backend-tauri": {
@@ -790,7 +922,9 @@
         "Always run rust-analyzer diagnostics before final edits.",
         "For React-Tauri bridging: use @tauri-apps/api packages, never direct DOM manipulation bypassing React.",
         "Refer to Tauri v2 documentation, not v1, unless specified.",
-        "IMPORT AUDIT: Check Cargo.toml for unused dependencies regularly."
+        "IMPORT AUDIT: Check Cargo.toml for unused dependencies regularly.",
+        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
+        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
       ],
       "tools": {
         "read": true,
@@ -800,7 +934,15 @@
         "skill": true,
         "lsp": true,
         "context7": true,
-        "memory": true
+        "memory": true,
+        "brain_diagnostic": true,
+        "brain_sidecar_status": true,
+        "brain_status": true,
+        "brain_metrics": true,
+        "brain_search": true,
+        "brain_embed_test": true,
+        "brain_index_project": true,
+        "brain_speculative_status": true
       }
     },
     "qa-guardian": {
@@ -813,7 +955,9 @@
         "CONCISE: Brief issues found. No lengthy reports.",
         "Run lint/test commands to validate changes.",
         "Never expose secrets in code.",
-        "REDUNDANCY CHECK: Flag duplicate code, unused imports, dead code paths."
+        "REDUNDANCY CHECK: Flag duplicate code, unused imports, dead code paths.",
+        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
+        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
       ],
       "tools": {
         "read": true,
@@ -821,7 +965,15 @@
         "skill": true,
         "lsp": true,
         "context7": true,
-        "memory": true
+        "memory": true,
+        "brain_diagnostic": true,
+        "brain_sidecar_status": true,
+        "brain_status": true,
+        "brain_metrics": true,
+        "brain_search": true,
+        "brain_embed_test": true,
+        "brain_index_project": true,
+        "brain_speculative_status": true
       }
     },
     "devops-engineer": {
@@ -832,7 +984,9 @@
         "DEVOPS: Terminal, MCP, system tasks.",
         "CONCISE: Brief execution. No explanation unless asked.",
         "Use bash with safety checks.",
-        "Handle db:init, clean, process:check."
+        "Handle db:init, clean, process:check.",
+        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
+        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
       ],
       "tools": {
         "read": true,
@@ -841,7 +995,15 @@
         "bash": true,
         "skill": true,
         "context7": true,
-        "memory": true
+        "memory": true,
+        "brain_diagnostic": true,
+        "brain_sidecar_status": true,
+        "brain_status": true,
+        "brain_metrics": true,
+        "brain_search": true,
+        "brain_embed_test": true,
+        "brain_index_project": true,
+        "brain_speculative_status": true
       }
     },
     "docs-curator": {
@@ -855,7 +1017,9 @@
         "Format with biome/prettier after edits.",
         "Use skill:autoresearch for autonomous research loops.",
         "Use skill:self-improver for system evolution.",
-        "REALITY CHECK: Verify docs match actual codebase before writing."
+        "REALITY CHECK: Verify docs match actual codebase before writing.",
+        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
+        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
       ],
       "tools": {
         "read": true,
@@ -870,7 +1034,15 @@
         "todowrite": true,
         "memory": true,
         "context7": true,
-        "sequential-thinking": true
+        "sequential-thinking": true,
+        "brain_diagnostic": true,
+        "brain_sidecar_status": true,
+        "brain_status": true,
+        "brain_metrics": true,
+        "brain_search": true,
+        "brain_embed_test": true,
+        "brain_index_project": true,
+        "brain_speculative_status": true
       }
     }
   },

@@ -5,7 +5,6 @@
   "type": "module",
   "main": "brain.ts",
   "dependencies": {
-    "@lancedb/lancedb": "^0.15.0",
     "glob": "^11.0.0"
   },
   "peerDependencies": {

@@ -21,13 +21,26 @@ export interface RetrievalOptions {
   rerank: boolean;
 }
 
+function projectIdFromPath(projectRoot: string): string {
+  let hash = 0;
+  for (let i = 0; i < projectRoot.length; i++) {
+    const char = projectRoot.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0;
+  }
+  return `proj_${Math.abs(hash).toString(36)}`;
+}
+
 export async function searchContext(
   query: string,
-  opts: RetrievalOptions
+  opts: RetrievalOptions,
+  projectRoot?: string
 ): Promise<RetrievalResult> {
   if (opts.depth === "none" || opts.maxChunks === 0) {
     return { chunks: [], totalChunks: 0 };
   }
+
+  const projectId = projectRoot ? projectIdFromPath(projectRoot) : undefined;
 
   const res = await fetch(`${BRAIN_EMBED_URL}/search`, {
     method: "POST",
@@ -35,7 +48,7 @@ export async function searchContext(
     body: JSON.stringify({
       query,
       top_k: opts.maxChunks,
-      project_id: opts.strategy, // or something
+      project_id: projectId,
     }),
   });
 
@@ -45,13 +58,12 @@ export async function searchContext(
   }
 
   const results = await res.json();
-  // Assume results is array of { path, start_line, text, score }
   const chunks: Chunk[] = results.map((r: any) => ({
     text: r.text,
     path: r.path,
     startLine: r.start_line,
     endLine: r.start_line + r.text.split('\n').length - 1,
-    mtime: 0, // not provided
+    mtime: 0,
   }));
 
   return {
