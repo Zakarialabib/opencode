@@ -3,7 +3,6 @@
   "model": "inclusionai/ring-2.6-1t:free",
   "default_agent": "core-factory",
   "autoupdate": true,
-  "shell": "pwsh",
   "share": "manual",
   "enabled_providers": [
     "opencode",
@@ -134,7 +133,7 @@
         "mcp-server-git"
       ],
       "enabled": true,
-      "timeout": 30000,
+      "timeout": 30000
     },
     "fetch": {
       "type": "local",

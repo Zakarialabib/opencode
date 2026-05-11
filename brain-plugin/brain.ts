@@ -2,7 +2,7 @@ import { tool, type Plugin } from "@opencode-ai/plugin";
 import { DecisionTree } from "./tree/engine";
 import { LMStudioProvider } from "./provider/lmstudio";
 import { indexer } from "./retrieval/indexer";
-import { searcher } from "./retrieval/searcher";
+import { searchContext } from "./retrieval/searcher";
 import { contextInjector } from "./context/injector";
 import { sessionMemory } from "./state/session";
 import type { SignalBundle } from "./tree/engine";
@@ -22,6 +22,22 @@ const BrainPlugin: Plugin = async ({ directory }) => {
     tree = new DecisionTree();
     provider = new LMStudioProvider(LM_STUDIO_URL);
   }
+
+  // Start brain-embed sidecar if not running
+  /*
+  try {
+    await fetch("http://127.0.0.1:7878/health", { signal: AbortSignal.timeout(500) });
+    console.log("[Brain] Rust sidecar already running");
+  } catch {
+    console.log("[Brain] Starting Rust sidecar...");
+    // Assume brain-embed.exe is in the plugin dir or PATH
+    const { spawn } = await import("child_process");
+    const sidecar = spawn("brain-embed.exe", [], { detached: true, stdio: "ignore" });
+    sidecar.unref();
+    // Wait a bit for it to start
+    await new Promise(resolve => setTimeout(resolve, 2000));
+  }
+  */
 
   return {
     "message.updated": async (input: any, output: any) => {
@@ -49,15 +65,15 @@ const BrainPlugin: Plugin = async ({ directory }) => {
       }
 
       try {
-        const context = await searcher.search(
+        const context = await searchContext(
           msg.content,
           {
             strategy: strategy.name,
             depth: strategy.depth,
             maxChunks: strategy.maxChunks,
             rerank: strategy.rerank,
-          },
-          directory,
+          }
+        );
           signals.lspSymbols
         );
 
@@ -134,10 +150,9 @@ const BrainPlugin: Plugin = async ({ directory }) => {
           top_k: tool.schema.number().optional().describe("Number of results (default: 5)"),
         },
         async execute(args: any) {
-          const context = await searcher.search(
+          const context = await searchContext(
             args.query,
-            { strategy: "manual", depth: "broad", maxChunks: args.top_k ?? 5, rerank: true },
-            directory
+            { strategy: "manual", depth: "broad", maxChunks: args.top_k ?? 5, rerank: true }
           );
           return contextInjector.formatResults(context);
         },

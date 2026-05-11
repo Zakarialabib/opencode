@@ -2,7 +2,7 @@
 
 > Cognitive layer for OpenCode: auto-classifies developer intent, retrieves
 > relevant codebase context via local embeddings, and augments LLM prompts
-> with RAG — all running 100% locally through LM Studio.
+> with RAG — all running 100% locally through LM Studio and Rust sidecar.
 
 ---
 
@@ -35,8 +35,9 @@
 │             ▼                                           │
 │  ┌───────────────────────────────────┐                  │
 │  │         Context Searcher          │                  │
-│  │  (embed query → cosine search →   │                  │
-│  │   optional rerank → top-K chunks) │                  │
+│  │  (HTTP call to Rust sidecar       │                  │
+│  │   → embed query → vector search   │                  │
+│  │   → top-K chunks)                 │                  │
 │  └──────────┬────────────────────────┘                  │
 │             │                                           │
 │             ▼                                           │
@@ -55,8 +56,12 @@
 │  │   diagnostics, successes/failures)│                  │
 │  └───────────────────────────────────┘                  │
 │                                                         │
-│  Storage: JSON embedding files under C:/opencode/.indexes/│
-│  Vector math: pure JS cosine similarity (no native deps)  │
+│  ┌───────────────────────────────────┐                  │
+│  │       Rust Sidecar                │                  │
+│  │  (HTTP server with LM Studio      │                  │
+│  │   client, Tree-sitter chunking,   │                  │
+│  │   HNSW vector storage)            │                  │
+│  └───────────────────────────────────┘                  │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -64,11 +69,11 @@
 
 | Decision | Rationale |
 |----------|-----------|
-| JSON file storage instead of LanceDB | LanceDB native module hangs on Windows; JSON is portable, debuggable, zero-dep |
-| Pure JS cosine similarity | No numpy/tensorflow needed; runs anywhere Node runs |
-| nomic-embed for indexing | ~24× faster than qwen3-embed (1s vs 39s per 32 texts), sufficient quality |
-| Incremental + hash-based dedup | Skips unchanged files; removes repeated chunks; saves hours on re-index |
-| Active-project-only indexing | Default indexes only the project you're working in; `--all` flag for full sweep |
+| Rust sidecar instead of JS | Better performance for vector ops, Tree-sitter parsing; avoids Node.js memory limits |
+| HTTP API separation | Decouples TS plugin from Rust; allows independent scaling, testing, deployment |
+| HNSW for vector storage | Fast approximate nearest neighbor search; in-memory with persistence |
+| Tree-sitter for chunking | AST-aware code splitting; preserves semantic boundaries |
+| LM Studio integration | Local embedding API; no cloud dependencies; supports multiple models |
 
 ---
 
@@ -92,8 +97,8 @@ The plugin registers OpenCode hooks and tools:
 
 | Tool | Purpose |
 |------|---------|
-| `brain_index_project` | Index current or specified project (`--force` to re-index) |
-| `brain_search` | Manual semantic search across the codebase |
+| `brain_index_project` | Index current or specified project (calls Rust /index endpoint) |
+| `brain_search` | Manual semantic search across the codebase (calls Rust /search endpoint) |
 | `brain_status` | Show decision tree stats, intent weights, session memory |
 | `brain_reset` | Clear all memory and reset decision tree |
 
@@ -133,26 +138,51 @@ Central wrapper around LM Studio REST API. Provides four operations:
 
 ### 2.4 Context Searcher — `retrieval/searcher.ts`
 
-Retrieves relevant code chunks given a user query:
+### 2.4 Context Searcher — `retrieval/searcher.ts`
 
-1. **Embed query** using nomic-embed
-2. **Query vector store** — cosine similarity search across all stored chunks
-3. **Strategy-specific adjustments:**
-   - `diagnostic`: filter to files with LSP errors, merge with symbol context
-   - `precise`: extract `file:line` references from query, load exact code windows
-   - `shallow/broad/targeted`: pure vector search with different chunk limits
-4. **Rerank** (optional): embed top candidates + query again, compute cosine scores, sort
+The context searcher is now a simple HTTP client that calls the Rust sidecar:
 
-Depth strategies control retrieval breadth:
+```typescript
+export async function searchContext(query: string, strategy: RetrievalStrategy): Promise<ContextChunk[]> {
+  const response = await fetch(`${BRAIN_EMBED_URL}/search`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query, strategy })
+  });
+  return response.json();
+}
+```
 
-| Depth | When used | Max chunks | Rerank |
-|-------|-----------|------------|--------|
-| `none` | quick_chat | 0 | no |
-| `shallow` | refactor single function | 8 | no |
-| `targeted` | test, debug | 10–12 | no |
-| `broad` | feature, learn, refactor multi-file | 15–25 | yes |
-| `diagnostic` | error + LSP diagnostics | 10 | no |
-| `precise` | stack trace references | 5 | yes |
+**Constants:**
+- `BRAIN_EMBED_URL = "http://localhost:3001"` (configurable via env)
+
+The actual embedding and vector search happens in the Rust sidecar.
+
+### 2.5 Rust Sidecar — `brain-embed/`
+
+The Rust sidecar provides HTTP endpoints for indexing and searching:
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/health` | GET | Health check |
+| `/index` | POST | Index project files (chunk + embed + store) |
+| `/search` | POST | Search for relevant chunks |
+| `/embed` | POST | Generate embeddings for text |
+
+**Components:**
+- **LM Studio Client** (`lmstudio.rs`): HTTP client for embedding API
+- **Chunker** (`chunk.rs`): Tree-sitter based code chunking
+- **Storage** (`store_hnsw.rs`): HNSW vector storage for fast search
+- **Server** (`main.rs`): Axum HTTP server
+
+**Build & Run:**
+```bash
+cd brain-embed
+cargo build --release
+./target/release/brain-embed
+```
+
+**Note:** Currently not building on Windows due to disk space and toolchain issues. Use Linux/Mac for production.
 
 ### 2.5 Context Injector — `context/injector.ts`
 
@@ -206,42 +236,31 @@ Memory is summarized and appended to the compacted session context on `session.c
 
 ### 3.2 Indexing Process
 
-The indexer (`indexer.mjs`) processes each project:
+The indexer in Rust (`indexer.rs`) processes each project:
 
 1. **File discovery** — walk project directory, skip `node_modules`, `.git`, `vendor`, `dist`, `build`, `.next`, `__pycache__`
-2. **File categorization** — assign chunking strategy by extension:
+2. **File categorization** — assign chunking strategy by extension using Tree-sitter parsers:
 
-| Category | Extensions | Chunk size | Overlap |
-|----------|-----------|------------|---------|
-| code | `.ts`, `.tsx`, `.js`, `.jsx`, `.php`, `.java`, `.go`, `.rs`, `.py`, `.vue`, `.svelte`, `.c`, `.cpp`, `.h` | 30 lines | 8 lines |
-| docs | `.md`, `.txt`, `.rst` | 60 lines | 15 lines |
-| config | `.json`, `.yaml`, `.yml`, `.toml`, `.ini`, `.env.example` | 20 lines | 5 lines |
-| sql | `.sql` | 25 lines | 8 lines |
+| Category | Extensions | Chunking Method |
+|----------|-----------|-----------------|
+| code | `.ts`, `.tsx`, `.js`, `.jsx`, `.php`, `.java`, `.go`, `.rs`, `.py`, `.vue`, `.svelte`, `.c`, `.cpp`, `.h` | AST-aware chunking |
+| docs | `.md`, `.txt`, `.rst` | Line-based chunking |
+| config | `.json`, `.yaml`, `.yml`, `.toml`, `.ini`, `.env.example` | Line-based chunking |
+| sql | `.sql` | Line-based chunking |
 
-3. **Hash-based change detection** — each file's `mtime + size` is hashed; unchanged files are skipped on incremental runs
-4. **Chunk deduplication** — identical chunks (by content hash) are stored once, references merged
-5. **Embedding** — batch size 16, sequential API calls with retry (4 attempts with backoff)
-6. **Storage** — JSON file at `C:/opencode/.indexes/<project-id>/embeddings.json`
-7. **State file** — `C:/opencode/.indexes/<project-id>/state.json` tracks file hashes, timestamp, model used
+3. **Tree-sitter Chunking** — Parse code into AST, extract semantic units (functions, classes, etc.), chunk at boundaries
+4. **Embedding** — batch embed chunks using LM Studio API
+5. **Storage** — HNSW index stored in binary format for fast loading/search
+6. **Incremental** — Not yet implemented; full re-index on each run
 
-### 3.3 Incremental Indexing
+### 3.3 Search
 
-Re-running `node indexer.mjs index` from a project directory:
-- Reads the state file
-- Compares every file's `mtime+size` hash
-- Only re-embeds changed/new files
-- Merges with existing embeddings
-- Typical re-index time: **<5 seconds** for unchanged projects
+Search uses HNSW approximate nearest neighbor:
+1. Embed the query string using LM Studio
+2. Query HNSW index for top-K nearest vectors
+3. Return corresponding chunks
 
-### 3.4 Search
-
-Search uses pure JS cosine similarity:
-1. Embed the query string (same model as indexing)
-2. Compute dot-product cosine similarity against every stored chunk vector
-3. Sort by score, return top-K
-4. Optional rerank: embed top candidates individually, rescore
-
-**Performance:** Search over 12,000 chunks completes in **<1 second** including embedding the query.
+**Performance:** Expected to be faster than JS cosine similarity, especially for large indexes.
 
 ---
 
@@ -349,36 +368,39 @@ The `brain-plugin/provider/lmstudio.ts` has `chatWithSpeculative()` fully implem
 
 ```
 c:\opencode\
-├── indexer.mjs                          # Standalone CLI indexer tool
+├── brain-plugin/
+│   ├── index.ts                         # Plugin entry point
+│   ├── brain.ts                         # Main plugin: hooks + tools + orchestration
+│   ├── package.json                     # Dependencies: none (pure fetch)
+│   │
+│   ├── provider/
+│   │   └── lmstudio.ts                  # LM Studio API wrapper (load/unload/embed/chat)
+│   │
+│   ├── retrieval/
+│   │   └── searcher.ts                  # HTTP client to Rust sidecar
+│   │
+│   ├── context/
+│   │   └── injector.ts                  # Prompt augmentation with retrieved context
+│   │
+│   ├── state/
+│   │   └── session.ts                   # Session memory: decisions, files, diagnostics
+│   │
+│   └── tree/
+│       └── engine.ts                    # Decision tree: intent classification + strategy selection
 │
-└── brain-plugin/
-    ├── index.ts                         # Plugin entry point
-    ├── brain.ts                         # Main plugin: hooks + tools + orchestration
-    ├── package.json                     # Dependencies: @lancedb/lancedb, glob
-    │
-    ├── provider/
-    │   └── lmstudio.ts                  # LM Studio API wrapper (load/unload/embed/chat)
-    │
-    ├── retrieval/
-    │   ├── indexer.ts                   # File discovery, chunking, embedding
-    │   ├── searcher.ts                  # Vector search, reranking, depth strategies
-    │   └── lancadb.ts                   # LanceDB client (vector storage/retrieval)
-    │
-    ├── context/
-    │   └── injector.ts                  # Prompt augmentation with retrieved context
-    │
-    ├── state/
-    │   └── session.ts                   # Session memory: decisions, files, diagnostics
-    │
-    └── tree/
-        └── engine.ts                    # Decision tree: intent classification + strategy selection
+└── brain-embed/                         # Rust sidecar project
+    ├── Cargo.toml                       # Dependencies: axum, reqwest, tree-sitter-*, instant-distance
+    ├── src/
+    │   ├── main.rs                      # HTTP server (Axum)
+    │   ├── lmstudio.rs                  # LM Studio API client
+    │   ├── chunk.rs                     # Tree-sitter chunking
+    │   ├── indexer.rs                   # File processing and embedding
+    │   ├── store_hnsw.rs                # HNSW vector storage
+    │   └── store.rs                     # (Unused) LanceDB storage
+    └── readme.md                        # Build instructions
 ```
 
-**Index storage:**
-```
-c:\opencode\.indexes\
-├── simple-signage/
-│   ├── embeddings.json                 # All chunk embeddings (versioned JSON)
+**Index storage:** HNSW binary files stored in Rust sidecar's working directory.
 │   └── state.json                      # File hashes, timestamps, model info
 ├── camcontrol/
 │   ├── embeddings.json
@@ -392,40 +414,33 @@ c:\opencode\.indexes\
 
 ## 7. Usage & Commands
 
-### Indexer CLI
+### Rust Sidecar
 
 ```bash
-# Index active project (auto-detected from current directory)
-node indexer.mjs index
+# Build and run the sidecar
+cd brain-embed
+cargo build --release
+./target/release/brain-embed
 
-# Force re-index active project
-node indexer.mjs index --force
-
-# Index ALL projects
-node indexer.mjs index --all
-
-# Index specific project
-node indexer.mjs index-specific Simple-Signage
-
-# Search all indexed projects
-node indexer.mjs search "authentication middleware"
-
-# Search specific project
-node indexer.mjs search-specific Simple-Signage "login validation"
-
-# Run benchmarks (embedding speed + speculative decoding)
-node indexer.mjs benchmark
-
-# Show indexing status
-node indexer.mjs status
+# The sidecar runs on http://localhost:3001
 ```
+
+**Note:** Currently not building on Windows. Use Linux/Mac for production deployment.
 
 ### Brain Plugin (via OpenCode)
 
 | Trigger | Action |
 |---------|--------|
-| User asks "how does the auth system work?" | → learn intent → broad search → 25 chunks injected |
-| User asks "fix this error" with stack trace | → debug+stacktrace intent → precise search → 5 chunks |
+| User asks "how does the auth system work?" | → learn intent → HTTP /search → chunks injected |
+| User asks "fix this error" with stack trace | → debug+stacktrace intent → HTTP /search → chunks |
+| Manual search | Use `brain_search` tool in chat |
+| Index project | Use `brain_index_project` tool in chat |
+
+### Testing
+
+Since the Rust sidecar is not running on Windows, the plugin will fail to retrieve context. The TS plugin loads successfully, but searches return empty results.
+
+For full testing, deploy on Linux/Mac where Rust builds successfully.
 | User asks "write tests for auth" | → test intent → targeted search → 12 chunks |
 | User asks "refactor this" in single file | → refactor+single intent → shallow search → 8 chunks |
 | User asks general chat | → quick_chat intent → no retrieval → direct response |
