@@ -1,3 +1,7 @@
+// DEPRECATED: LanceDB-based local indexing has been replaced by the Rust sidecar (brain-embed).
+// All indexing and search now goes through the Rust sidecar's /index and /search endpoints.
+// This file is kept for reference only and will be removed in a future cleanup.
+// See: brain-plugin/rust/ for the active implementation.
 import { defaultProvider } from "../provider/lmstudio";
 import { exec } from "child_process";
 import { promisify } from "util";
@@ -31,17 +35,7 @@ async function loadLanceDB() {
     lancedb = await import("@lancedb/lancedb");
     return lancedb;
   } catch (err) {
-    console.log("[Brain LanceDB] Package not found, attempting auto-install...");
-    try {
-      const { exec: execSync } = await import("child_process");
-      execSync("bun add @lancedb/lancedb", { stdio: "inherit" });
-      lancedb = await import("@lancedb/lancedb");
-      console.log("[Brain LanceDB] Auto-install successful!");
-      return lancedb;
-    } catch (installErr) {
-      console.log("[Brain LanceDB] Auto-install failed:", installErr);
-      return null;
-    }
+    return null;
   }
 }
 
@@ -51,132 +45,21 @@ class LanceDBClient {
   private isConnected = false;
 
   async connect(dbPath: string): Promise<boolean> {
-    try {
-      const lib = await loadLanceDB();
-      if (!lib) {
-        console.log("[Brain LanceDB] LanceDB not available");
-        return false;
-      }
-      this.db = await lib.connect(dbPath);
-      this.isConnected = true;
-      console.log(`[Brain LanceDB] Connected to ${dbPath}`);
-      return true;
-    } catch (error: any) {
-      console.log("[Brain LanceDB] Connect failed:", error.message);
-      this.isConnected = false;
-      return false;
-    }
+    return false;
   }
 
-  async initialize(dbPath: string): Promise<void> {
-    const connected = await this.connect(dbPath);
-    if (!connected) return;
+  async initialize(dbPath: string): Promise<void> {}
 
-    try {
-      const tableNames = await this.db.tableNames();
-      if (tableNames.includes("codebase")) {
-        this.table = await this.db.openTable("codebase");
-        console.log("[Brain LanceDB] Opened existing 'codebase' table");
-      }
-    } catch (error: any) {
-      console.log("[Brain LanceDB] Table init:", error.message);
-    }
-  }
+  async addChunks(chunks: Chunk[]): Promise<void> {}
 
-  async addChunks(chunks: Chunk[]): Promise<void> {
-    if (!chunks.length) return;
-    if (!this.isConnected || !this.db) {
-      console.log("[Brain LanceDB] Not connected, skipping chunk add");
-      return;
-    }
-
-    try {
-      const handle = await defaultProvider.load("text-embedding-nomic-embed-text-v1.5");
-      try {
-        const texts = chunks.map((c) => c.text);
-        const embeddings = await defaultProvider.embed("text-embedding-nomic-embed-text-v1.5", texts);
-
-        const records: LanceDBRecord[] = chunks.map((chunk, i) => ({
-          id: `${chunk.path}:${chunk.startLine}-${Date.now()}-${i}`,
-          text: chunk.text,
-          path: chunk.path,
-          startLine: chunk.startLine,
-          endLine: chunk.endLine,
-          mtime: chunk.mtime,
-          vector: embeddings[i] || new Array(768).fill(0),
-        }));
-
-        await this.addChunksFromRecords(records);
-      } finally {
-        await defaultProvider.unload(handle);
-      }
-    } catch (error: any) {
-      console.error("[Brain LanceDB] addChunks failed:", error.message);
-    }
-  }
-
-  async addChunksFromRecords(records: LanceDBRecord[]): Promise<void> {
-    if (!this.isConnected || !this.db) {
-      console.log("[Brain LanceDB] Not connected, skipping addChunksFromRecords");
-      return;
-    }
-
-    try {
-      if (this.table) {
-        await this.db.dropTable("codebase");
-        console.log("[Brain LanceDB] Dropped existing table");
-      }
-
-      this.table = await this.db.createTable("codebase", records);
-      console.log(`[Brain LanceDB] Created table with ${records.length} records`);
-
-      try {
-        await this.table.createIndex("vector", { metric: "cosine" });
-        console.log("[Brain LanceDB] Created vector index");
-      } catch (indexErr) {
-        console.log("[Brain LanceDB] Index creation skipped (may already exist):", indexErr);
-      }
-    } catch (error: any) {
-      console.error("[Brain LanceDB] addChunksFromRecords failed:", error.message);
-    }
-  }
+  async addChunksFromRecords(records: LanceDBRecord[]): Promise<void> {}
 
   async query(queryEmbedding: number[], limit: number): Promise<Chunk[]> {
-    if (!this.isConnected || !this.table) {
-      console.log("[Brain LanceDB] Not connected or no table, returning empty");
-      return [];
-    }
-
-    try {
-      const results = await this.table
-        .vectorSearch(queryEmbedding)
-        .limit(limit)
-        .toArray();
-
-      return results.map((r: any) => ({
-        text: r.text,
-        path: r.path,
-        startLine: r.startLine,
-        endLine: r.endLine,
-        mtime: r.mtime,
-      }));
-    } catch (error: any) {
-      console.error("[Brain LanceDB] Query failed:", error.message);
-      return [];
-    }
+    return [];
   }
 
   async getStats(): Promise<{ totalChunks: number; lastIndexed: number }> {
-    if (!this.isConnected || !this.table) {
-      return { totalChunks: 0, lastIndexed: 0 };
-    }
-
-    try {
-      const count = await this.table.count();
-      return { totalChunks: count, lastIndexed: Date.now() };
-    } catch {
-      return { totalChunks: 0, lastIndexed: 0 };
-    }
+    return { totalChunks: 0, lastIndexed: 0 };
   }
 
   async isFresh(projectRoot: string): Promise<boolean> {
@@ -184,7 +67,7 @@ class LanceDBClient {
   }
 
   isReady(): boolean {
-    return this.isConnected && this.table !== null;
+    return false;
   }
 }
 

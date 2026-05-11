@@ -1,8 +1,8 @@
 export const LM_STUDIO_API = "http://192.168.1.12:1234/api/v1";
 export const LM_STUDIO_V1 = "http://192.168.1.12:1234/v1";
-export const DEFAULT_EMBED_MODEL = "text-embedding-qwen3-embedding-0.6b";
+export const DEFAULT_EMBED_MODEL = "text-embedding-nomic-embed-text-v1.5";
 export const DEFAULT_CHAT_MODEL = "qwen3.5-4b-claude-4.6-opus-reasoning-distilled-v2";
-export const DEFAULT_DRAFT_MODEL = "qwen3.5-0.8b-claude-4.6-opus-reasoning-distilled-v2";
+export const DEFAULT_DRAFT_MODEL = "qwen3.5-0.8b-claude-4.6-opus-reasoning-distilled";
 
 export interface LoadOptions {
   contextLength?: number;
@@ -45,6 +45,9 @@ export class LMStudioProvider implements CustomProvider {
   name = "lmstudio";
   baseURL = LM_STUDIO_V1;
   apiURL = LM_STUDIO_API;
+  defaultEmbedModel = DEFAULT_EMBED_MODEL;
+  defaultChatModel = DEFAULT_CHAT_MODEL;
+  defaultDraftModel = DEFAULT_DRAFT_MODEL;
 
   async load(modelId: string, opts?: LoadOptions): Promise<ModelHandle> {
     const isEmbedding = modelId.includes("embedding") || modelId.includes("embed");

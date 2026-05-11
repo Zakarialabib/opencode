@@ -60,3 +60,6 @@ coverage/
 # Auto-generated workflows (session artifacts)
 workflows/auto/
 workflows/auto/*.yaml
+
+# Index caches (large, not needed in repo)
+.indexes/

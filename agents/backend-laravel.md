@@ -21,7 +21,7 @@ permission:
 ---
 
 
-**Tools**: read, write, edit, bash, skill, lsp, context7, memory
+**Tools**: read, write, edit, bash, skill, lsp, context7, memory, brain_diagnostic, brain_sidecar_status, brain_status, brain_search, brain_embed_test, brain_index_project
 
 # 🎨 Backend Laravel Agent
 
@@ -210,3 +210,11 @@ class BlogPostForm extends Component
 2. **Task Decomposition**: Break into logical units (Migration → Model → Controller → Livewire)
 3. **Subagent Delegation**: Spawn core-builder for file modifications
 4. **Validation**: Use LSP to ensure no new diagnostics
+
+<brain_plugin_workflow>
+- Check Brain health with brain_sidecar_status or brain_diagnostic before non-trivial debugging, feature work, refactors, architecture analysis, or documentation audits.
+- If the index is empty, stale, or missing expected results, run brain_index_project before relying on retrieval.
+- Use brain_search for semantic codebase discovery, then read the top matching files directly before making decisions or edits.
+- Use brain_embed_test when search quality matters or when choosing better query terms for a complex investigation.
+- After broad edits or generated files, confirm Brain can see the new context with brain_status or a targeted brain_search.
+</brain_plugin_workflow>

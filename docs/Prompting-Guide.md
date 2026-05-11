@@ -22,8 +22,9 @@
 12. [Multi-Agent Orchestration](#12-multi-agent-orchestration)
 13. [Self-Improvement & Evolution](#13-self-improvement--evolution)
 14. [Edge Cases & Troubleshooting](#14-edge-cases--troubleshooting)
-15. [Command Reference](#15-command-reference)
-16. [Anti-Patterns to Avoid](#16-anti-patterns-to-avoid)
+15. [Brain Plugin — RAG & Codebase Context](#15-brain-plugin--rag--codebase-context)
+16. [Command Reference](#16-command-reference)
+17. [Anti-Patterns to Avoid](#17-anti-patterns-to-avoid)
 
 ---
 
@@ -785,7 +786,70 @@ Runs config-doctor skill to:
 
 ---
 
-## 15. Command Reference
+## 15. Brain Plugin — RAG &amp; Codebase Context
+
+The **Brain Plugin** provides automatic RAG (Retrieval-Augmented Generation) for OpenCode. It indexes your project, embeds code with LM Studio, and injects relevant chunks into prompts automatically.
+
+### How RAG Works (Automatic)
+
+When you ask a question, the brain plugin:
+1. **Classifies intent** via decision tree (debug, refactor, feature, test, learn)
+2. **Prewarms** the embed model in LM Studio
+3. **Embeds** your query and searches the project index (HNSW vector store)
+4. **Injects** top-K code chunks into the prompt as context
+
+No manual action needed — it just works on every `message.updated`.
+
+### Manual Brain Commands
+
+| Command | Purpose |
+|---------|---------|
+| `brain_diagnostic` | Full pipeline check: sidecar, cache, search, models |
+| `brain_status` | Decision tree stats, GPU usage, cache hit rate |
+| `brain_search` | Manual semantic search: `brain_search query:"auth flow"` |
+| `brain_embed_test` | Test what context a query would retrieve |
+| `brain_sidecar_status` | Check Rust sidecar health + loaded models |
+| `brain_model_load` | Prewarm a model (chat/embed/draft) |
+| `brain_model_unload` | Free VRAM by unloading non-essential models |
+
+### Prompting with RAG Context
+
+The brain injects context as markdown code blocks at the top of your prompt:
+
+```
+## Context 1: `src/auth/login.ts:15-45`
+```typescript
+function authenticate(user, pass) { ... }
+```
+
+## Context 2: `src/auth/utils.ts:1-30`
+```typescript
+const TOKEN_EXPIRY = 3600;
+```
+
+---
+User request: <your message>
+```
+
+You can also force context retrieval with:
+
+```
+@build Use brain_search to find auth-related files, then read them.
+```
+
+### Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| RAG not injecting chunks | Run `brain_diagnostic` → if sidecar down, run `brain_sidecar_restart` |
+| 0 search results | Run `brain_index_project force:true` to (re)index |
+| LM Studio errors | Check `brain_speculative_status` — disable speculative if draft model incompatible |
+| VRAM full | `brain_model_unload` or reduce draft offload in LM Studio |
+| Want to see what's indexed | `brain_status` shows chunk count and indexed projects |
+
+---
+
+## 16. Command Reference
 
 ### System Commands
 
@@ -844,7 +908,7 @@ Runs config-doctor skill to:
 
 ---
 
-## 16. Anti-Patterns to Avoid
+## 17. Anti-Patterns to avoid
 
 ### ❌ Vague Prompts
 
