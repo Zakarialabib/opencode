@@ -1,8 +1,25 @@
 ---
-description: "Unified QA: review, testing, security, and debugging"
+description: "Unified QA: review, testing, security, and debugging."
 mode: subagent
-temperature: 0.1
+steps: 20
+color: "#ef4444"
+permission:
+  read: "allow"
+  bash: "allow"
+  skill: "allow"
+  lsp: "allow"
+  context7: "allow"
+  memory: "allow"
+  grep: "allow"
+  glob: "allow"
+  command:
+  npm test*: "allow"
+  npm run lint*: "allow"
+  cargo test*: "allow"
 ---
+
+
+**Tools**: read, bash, skill, lsp, context7, memory, grep, glob
 
 # QA Guardian Agent
 

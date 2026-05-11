@@ -1,8 +1,25 @@
 ---
-description: "UI/UX design intelligence and implementation guidance for building polished interfaces"
+description: "Premium UI/UX implementation for React + TypeScript + Tailwind + shadcn/ui."
 mode: subagent
-temperature: 0.1
+steps: 30
+color: "#ec4899"
+permission:
+  read: "allow"
+  edit: "allow"
+  write: "allow"
+  bash: "allow"
+  skill: "allow"
+  lsp: "allow"
+  codesearch: "allow"
+  task: "true"
+  mcp: "true"
+  memory: "allow"
+  context7: "allow"
+  sequential-thinking: "allow"
 ---
+
+
+**Tools**: read, write, edit, bash, skill, lsp, codesearch, task, mcp, memory, context7, sequential-thinking
 
 # Frontend UI/UX Specialist
 

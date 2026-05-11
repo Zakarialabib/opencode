@@ -9,6 +9,41 @@ const path = require("path");
 const fs = require("fs");
 const os = require("os");
 
+function resolveInstalledOpencode(scriptDir) {
+  if (process.platform !== "win32") return null;
+
+  try {
+    const { execFileSync } = require("child_process");
+    const output = execFileSync("where.exe", ["opencode"], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    });
+
+    const candidates = output
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .filter((candidate) => {
+        const normalized = path.normalize(candidate).toLowerCase();
+        const localBat = path.join(scriptDir, "opencode.bat").toLowerCase();
+        const localCmd = path.join(scriptDir, "opencode.cmd").toLowerCase();
+        const localJs = path.join(scriptDir, "opencode").toLowerCase();
+        return normalized !== localBat && normalized !== localCmd && normalized !== localJs;
+      });
+
+    const priority = [".cmd", ".exe", ".bat", ".ps1", ""];
+    candidates.sort((a, b) => {
+      const extA = path.extname(a).toLowerCase();
+      const extB = path.extname(b).toLowerCase();
+      return priority.indexOf(extA) - priority.indexOf(extB);
+    });
+
+    return candidates[0] || null;
+  } catch {
+    return null;
+  }
+}
+
 // Find project root by looking for opencode.json
 function findProjectRoot(startDir) {
   let current = startDir;
@@ -43,6 +78,71 @@ function parseProjectRootArg(argv) {
   }
   return null;
 }
+
+// Kill any existing opencode processes on port 4096
+function killExistingServer(port = 4096) {
+  if (process.platform !== "win32") return;
+
+  try {
+    const { execFileSync } = require("child_process");
+
+    // Find process using the port
+    const netstatOutput = execFileSync(
+      `netstat.exe`,
+      ["-ano", "-p", "TCP"],
+      { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }
+    );
+
+    const lines = netstatOutput.split(/\r?\n/);
+    for (const line of lines) {
+      if (line.includes(`:${port}`) && line.includes("LISTENING")) {
+        const parts = line.trim().split(/\s+/);
+        const pidIndex = parts.length - 1;
+        const pid = parseInt(parts[pidIndex], 10);
+
+        if (pid && !isNaN(pid)) {
+          console.log(`   Killing existing process on port ${port} (PID: ${pid})`);
+          try {
+            execFileSync("taskkill.exe", ["/F", "/PID", pid.toString()], {
+              stdio: "ignore",
+            });
+          } catch (e) {
+            // Process may already be dead
+          }
+        }
+      }
+    }
+
+    // Also kill any opencode processes that might be hanging
+    const tasklistOutput = execFileSync("tasklist.exe", ["/FI", "IMAGENAME eq opencode*", "/FO", "CSV", "/NH"], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"]
+    });
+
+    const taskLines = tasklistOutput.split(/\r?\n/).filter(Boolean);
+    for (const taskLine of taskLines) {
+      const match = taskLine.match(/"([^"]+)","(\d+)"/);
+      if (match) {
+        const [, imageName, pid] = match;
+        if (imageName.startsWith("opencode")) {
+          console.log(`   Killing opencode process: ${imageName} (PID: ${pid})`);
+          try {
+            execFileSync("taskkill.exe", ["/F", "/PID", pid], {
+              stdio: "ignore",
+            });
+          } catch (e) {
+            // Process may already be dead
+          }
+        }
+      }
+    }
+  } catch (e) {
+    // Ignore errors - just means no process to kill
+  }
+}
+
+// Kill existing server before launching
+killExistingServer(4096);
 
 // Main launch logic
 function launch() {
@@ -99,17 +199,6 @@ function launch() {
   // or just append it to ensure the CLI knows where to start.
   const args = [...process.argv.slice(2)];
 
-  const globalBin = path.join(
-    process.env.APPDATA || "C:/laragon/bin/nodejs/node-v22",
-    "npm",
-    "node_modules",
-    "opencode-ai",
-    "bin",
-    "opencode"
-  );
-  const laragonBin = "C:/laragon/bin/nodejs/node-v22/node_modules/opencode-ai/bin/opencode";
-  const targetBin = fs.existsSync(laragonBin) ? laragonBin : globalBin;
-
   // Ensure config exists in CWD for the actual CLI to find it if it doesn't respect environment variables
   const localConfigPath = path.join(cwd, "opencode.json");
   if (!fs.existsSync(localConfigPath)) {
@@ -125,13 +214,13 @@ function launch() {
     ...process.env,
     OPENCODE_PROJECT_ROOT: cwd,
     OPENCODE_CONFIG: configPath,
-    OPENCODE_CONFIG_DIR: configRoot,
     PATH: `${centralScriptsDir}${path.delimiter}${process.env.PATH}`,
   };
 
   function runCommand(command, commandArgs = []) {
     let finalCommand = command;
     const finalArgs = [...commandArgs, ...args];
+    let useShell = false;
 
     // On Windows, if we are not using shell: true, we must point to the .cmd or .exe
     if (process.platform === "win32") {
@@ -147,9 +236,19 @@ function launch() {
       }
     }
 
+    // Use shell when command might need PATH resolution or is just a name
+    if (process.platform === "win32" && (
+      finalCommand === "opencode.cmd" ||
+      finalCommand.endsWith(".cmd") ||
+      finalCommand.endsWith(".bat") ||
+      !path.isAbsolute(finalCommand)
+    )) {
+      useShell = true;
+    }
+
     return spawn(finalCommand, finalArgs, {
       stdio: "inherit",
-      shell: false,
+      shell: useShell,
       cwd: cwd, // Always run in original CWD
       env,
     });
@@ -169,13 +268,19 @@ function launch() {
   }
 
   let child;
-  const localBin = path.join(configRoot, "node_modules", ".bin", "opencode");
+  const localBin = path.join(
+    configRoot,
+    "node_modules",
+    ".bin",
+    "opencode" + (process.platform === "win32" ? ".cmd" : "")
+  );
   const bunLocal = path.join(
     os.homedir(),
     ".bun",
     "bin",
     "opencode" + (process.platform === "win32" ? ".exe" : "")
   );
+  const installedOpencode = resolveInstalledOpencode(scriptDir);
 
   if (fs.existsSync(localBin)) {
     console.log(`   Using local bin: ${localBin}`);
@@ -183,6 +288,9 @@ function launch() {
   } else if (fs.existsSync(bunLocal)) {
     console.log(`   Using bun bin: ${bunLocal}`);
     child = runCommand(bunLocal);
+  } else if (installedOpencode) {
+    console.log(`   Using installed CLI: ${installedOpencode}`);
+    child = runCommand(installedOpencode);
   } else {
     console.log(`   Searching for opencode on PATH...`);
     child = runCommand("opencode");

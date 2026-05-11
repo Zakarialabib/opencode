@@ -1,8 +1,28 @@
 ---
-description: "Operational tasks, MCP integration, and infrastructure"
+description: "Operational tasks, MCP integration, and infrastructure."
 mode: subagent
-temperature: 0.1
+steps: 20
+color: "#64748b"
+permission:
+  read: "allow"
+  edit: "allow"
+  write: "true"
+  bash: "allow"
+  skill: "allow"
+  context7: "allow"
+  memory: "allow"
+  command:
+  git status*: "allow"
+  ls: "allow"
+  npm*: "allow"
+  cargo*: "allow"
+  php*: "allow"
+  pnpm*: "allow"
+  bun*: "allow"
 ---
+
+
+**Tools**: read, write, edit, bash, skill, context7, memory
 
 # DevOps Engineer Agent
 

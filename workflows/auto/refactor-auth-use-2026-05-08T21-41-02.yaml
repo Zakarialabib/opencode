@@ -1,0 +1,39 @@
+# Auto-generated: 2026-05-08T21-41-02
+# Task: Refactor auth to use JWT
+# Type: REFACTOR
+
+name: "REFACTOR: Refactor auth to use JWT"
+description: Refactor auth to use JWT
+version: 2.0.0
+trigger: auto-generated
+mcp_servers:
+  - context7
+  - filesystem
+phases:
+  - name: Analysis
+    agents:
+      - lead-architect
+      - qa-guardian
+    use_agent_router: true
+    mcp_tools:
+      - context7
+      - memory
+  - name: Implementation
+    agents:
+      - core-factory
+      - backend-laravel
+    use_agent_router: true
+    dependencies:
+      - Analysis
+    mcp_tools:
+      - context7
+      - git
+      - filesystem
+  - name: Quality Assurance
+    agents:
+      - qa-guardian
+    dependencies:
+      - Implementation
+    mcp_tools:
+      - git
+      - context7

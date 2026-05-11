@@ -28,8 +28,41 @@ function findConfigPath(startDir: string): string | null {
   }
 }
 
-const ContextManagerPlugin: Plugin = async ({ client, project, directory }) => {
-  const configPath = findConfigPath(directory);
+function resolveConfigPath(startDir: string): string | null {
+  const explicitConfig = process.env.OPENCODE_CONFIG;
+  if (explicitConfig) {
+    try {
+      accessSync(explicitConfig);
+      return explicitConfig;
+    } catch {
+      // Fall back to directory search.
+    }
+  }
+
+  const explicitDir = process.env.OPENCODE_CONFIG_DIR;
+  if (explicitDir) {
+    const candidate = join(explicitDir, "opencode.json");
+    try {
+      accessSync(candidate);
+      return candidate;
+    } catch {
+      // Fall back to directory search.
+    }
+  }
+
+  const cwdCandidate = join(process.cwd(), "opencode.json");
+  try {
+    accessSync(cwdCandidate);
+    return cwdCandidate;
+  } catch {
+    // Fall back to directory search.
+  }
+
+  return findConfigPath(startDir);
+}
+
+const ContextManagerPlugin: Plugin = async ({ directory }) => {
+  const configPath = resolveConfigPath(directory);
 
   if (!configPath) {
     throw new Error(`Could not find opencode.json from directory: ${directory}`);

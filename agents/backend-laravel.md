@@ -1,3 +1,28 @@
+---
+description: "Specialized Laravel 13 and Livewire 4 development."
+mode: subagent
+steps: 30
+color: "#f59e0b"
+permission:
+  read: "allow"
+  edit: "allow"
+  write: "allow"
+  bash: "allow"
+  skill: "allow"
+  lsp: "allow"
+  context7: "allow"
+  memory: "allow"
+  command:
+  php artisan list*: "allow"
+  php artisan migrate*: "ask"
+  php artisan test*: "allow"
+  composer*: "allow"
+  pint*: "allow"
+---
+
+
+**Tools**: read, write, edit, bash, skill, lsp, context7, memory
+
 # 🎨 Backend Laravel Agent
 
 ## Role

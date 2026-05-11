@@ -49,8 +49,7 @@ async function getTraeMdContent(): Promise<string> {
     cachedTraeMd = await readFile(traeMdPath, "utf-8");
     cacheTimestamp = now;
     return cachedTraeMd;
-  } catch (e) {
-    console.error("Failed to read trae.md:", e);
+  } catch {
     return "";
   }
 }
@@ -65,8 +64,7 @@ async function parseTraeProcessTree(): Promise<TraeProcess[]> {
 
     const tree = JSON.parse(jsonMatch[0]);
     return tree.children || [];
-  } catch (e) {
-    console.error("Failed to parse trae.md:", e);
+  } catch {
     return [];
   }
 }
@@ -173,20 +171,8 @@ async function refreshTraeProcessTree(): Promise<TraeProcess[]> {
   return await parseTraeProcessTree();
 }
 
-const LanguageContextBridgePlugin: Plugin = async ({ client, project, directory }) => {
+const LanguageContextBridgePlugin: Plugin = async () => {
   return {
-    async onLoad() {
-      console.log("🔤 Language Context Bridge plugin loaded");
-
-      const processes = await parseTraeProcessTree();
-      const servers = findLanguageServers(processes);
-
-      console.log(`Found ${servers.length} language servers running in Trae`);
-      servers.forEach((server) => {
-        console.log(`  - ${server.name} (${server.type})`);
-      });
-    },
-
     tool: {
       trae_list_language_servers: tool({
         description: "List language servers currently running in Trae IDE",

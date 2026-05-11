@@ -28,6 +28,39 @@ function findConfigPath(startDir: string): string | null {
   }
 }
 
+function resolveConfigPath(startDir: string): string | null {
+  const explicitConfig = process.env.OPENCODE_CONFIG;
+  if (explicitConfig) {
+    try {
+      accessSync(explicitConfig);
+      return explicitConfig;
+    } catch {
+      // Fall back to directory search.
+    }
+  }
+
+  const explicitDir = process.env.OPENCODE_CONFIG_DIR;
+  if (explicitDir) {
+    const candidate = join(explicitDir, "opencode.json");
+    try {
+      accessSync(candidate);
+      return candidate;
+    } catch {
+      // Fall back to directory search.
+    }
+  }
+
+  const cwdCandidate = join(process.cwd(), "opencode.json");
+  try {
+    accessSync(cwdCandidate);
+    return cwdCandidate;
+  } catch {
+    // Fall back to directory search.
+  }
+
+  return findConfigPath(startDir);
+}
+
 // Type definitions
 interface AgentRule {
   agent: string;
@@ -36,13 +69,24 @@ interface AgentRule {
   description: string;
 }
 
-// Default agent routing rules
+// Default agent routing rules - UPDATED to match opencode.json agents
 const DEFAULT_AGENT_RULES: AgentRule[] = [
   {
     agent: "backend-laravel",
-    keywords: ["laravel", "php", "livewire", "eloquent", "artisan", "blade", "pest", "phpunit"],
-    skills: ["laravel-feature-scaffold"],
-    description: "Laravel 13, Livewire 4, PHP 8.3 development",
+    keywords: [
+      "laravel",
+      "php",
+      "livewire",
+      "eloquent",
+      "artisan",
+      "blade",
+      "pest",
+      "phpunit",
+      "laravel 13",
+    ],
+    skills: ["laravel-feature-scaffold", "pest-testing"],
+    description:
+      "Laravel 13, Livewire 4, PHP 8.3 development - NOT for generic API (use backend-api)",
   },
   {
     agent: "frontend-ui-ux",
@@ -64,16 +108,11 @@ const DEFAULT_AGENT_RULES: AgentRule[] = [
       "gradient",
       "dashboard",
       "widget",
+      "next.js",
+      "shadcn",
     ],
-    skills: [
-      "ui-ux-pro-max",
-      "react-reuse-audit",
-      "charts",
-      "visual-design-foundations",
-      "image-generation",
-      "image-understand",
-    ],
-    description: "Premium UI/UX design and frontend development",
+    skills: ["ui-ux-pro-max", "react-reuse-audit", "charts", "visual-design-foundations"],
+    description: "Premium UI/UX design and frontend development (Next.js, TypeScript, Tailwind)",
   },
   {
     agent: "backend-tauri",
@@ -83,12 +122,23 @@ const DEFAULT_AGENT_RULES: AgentRule[] = [
   },
   {
     agent: "backend-api",
-    keywords: ["api", "rest", "graphql", "prisma", "endpoint", "backend", "json:api"],
+    keywords: [
+      "api",
+      "rest",
+      "graphql",
+      "prisma",
+      "endpoint",
+      "backend",
+      "json:api",
+      "node",
+      "express",
+    ],
     skills: ["fullstack-dev"],
-    description: "API design and implementation",
+    description:
+      "Generic API design (Node/Express, REST/GraphQL) - NOT for Laravel (use backend-laravel)",
   },
   {
-    agent: "qa-tester",
+    agent: "qa-guardian",
     keywords: [
       "test",
       "testing",
@@ -98,33 +148,36 @@ const DEFAULT_AGENT_RULES: AgentRule[] = [
       "cargo test",
       "coverage",
       "test suite",
+      "security",
+      "vulnerability",
+      "secret",
+      "leak",
+      "audit",
+      "csrf",
+      "xss",
+      "injection",
+      "review",
+      "code review",
+      "standards",
+      "performance",
+      "refactor",
+      "quality",
+      "bug",
+      "debug",
+      "error",
+      "crash",
+      "troubleshoot",
+      "browser",
+      "reproduce",
     ],
-    skills: ["testing-strategy"],
-    description: "Test suite generation and automated verification",
-  },
-  {
-    agent: "qa-security",
-    keywords: ["security", "vulnerability", "secret", "leak", "audit", "csrf", "xss", "injection"],
-    skills: ["security-review"],
-    description: "Security vulnerability scanning and secret leak prevention",
-  },
-  {
-    agent: "qa-reviewer",
-    keywords: ["review", "code review", "standards", "performance", "refactor", "quality"],
-    skills: ["react-reuse-audit"],
-    description: "Senior code reviewer focusing on standards and performance",
-  },
-  {
-    agent: "qa-debugger",
-    keywords: ["bug", "debug", "error", "crash", "troubleshoot", "browser", "reproduce"],
-    skills: ["agent-browser"],
-    description: "Root cause analysis and browser-based troubleshooting",
+    skills: ["testing-strategy", "security-review", "react-reuse-audit"],
+    description: "Unified QA: code review, testing, security scanning, and debugging",
   },
   {
     agent: "lead-architect",
     keywords: ["architecture", "design", "system", "structure", "decision", "database", "schema"],
-    skills: ["database-design", "self-reflection"],
-    description: "High-level system design and architectural decision making",
+    skills: ["database-design", "self-reflection", "context7", "memory", "sequential-thinking"],
+    description: "Technical vision and long-term structural integrity",
   },
   {
     agent: "lead-strategist",
@@ -137,11 +190,11 @@ const DEFAULT_AGENT_RULES: AgentRule[] = [
       "complex",
       "strategy",
     ],
-    skills: ["workflow-manager", "project-orchestration"],
+    skills: ["workflow-manager", "project-orchestration", "task"],
     description: "Strategic orchestrator managing complex multi-agent workflows and coordination",
   },
   {
-    agent: "core-builder",
+    agent: "core-factory",
     keywords: [
       "implement",
       "code",
@@ -155,33 +208,10 @@ const DEFAULT_AGENT_RULES: AgentRule[] = [
       "pattern",
     ],
     skills: ["self-improver", "stack-context", "coding-agent"],
-    description:
-      "High-speed implementation, direct file modification, and agent development patterns",
+    description: "Core implementation and direct file editing (merged builder/planner/opencoder)",
   },
   {
-    agent: "core-planner",
-    keywords: ["plan", "strategy", "analyze", "discover", "architecture discovery", "research"],
-    skills: ["stack-context", "self-reflection"],
-    description: "Read-only strategic planning and architectural discovery",
-  },
-  {
-    agent: "marketing-mode",
-    keywords: [
-      "marketing",
-      "content",
-      "strategy",
-      "campaign",
-      "seo",
-      "social",
-      "brand",
-      "market",
-      "research",
-    ],
-    skills: ["content-strategy", "market-research-reports"],
-    description: "Marketing content strategy, campaigns, and market research",
-  },
-  {
-    agent: "docs-writer",
+    agent: "docs-curator",
     keywords: [
       "docs",
       "documentation",
@@ -196,61 +226,73 @@ const DEFAULT_AGENT_RULES: AgentRule[] = [
       "powerpoint",
       "presentation",
       "spreadsheet",
+      "governance",
+      "audit docs",
+      "standards",
+      "documentation audit",
+      "drift",
+      "improve",
+      "evolve",
+      "self-improve",
+      "research",
+      "learn",
+      "adapt",
+      "marketing",
+      "content",
+      "strategy",
+      "campaign",
+      "seo",
+      "social",
+      "brand",
+      "market",
     ],
     skills: [
-      "deep-research",
       "xlsx",
       "docx",
       "pdf",
       "ppt",
       "content-strategy",
       "market-research-reports",
+      "docs-governance-audit",
+      "writing-plans",
+      "seo-content-writer",
     ],
-    description:
-      "Technical documentation, content creation, and document generation (Excel, Word, PDF, PowerPoint)",
+    description: "Documentation, self-improvement, and system evolution",
   },
   {
-    agent: "docs-governor",
-    keywords: ["governance", "audit docs", "standards", "documentation audit", "drift"],
-    skills: ["docs-governance-audit"],
-    description: "Documentation auditing and standard enforcement",
-  },
-  {
-    agent: "docs-evolver",
-    keywords: ["improve", "evolve", "self-improve", "research", "learn", "adapt"],
-    skills: ["self-improver", "deep-research"],
-    description: "System self-improvement and research-driven evolution",
-  },
-  {
-    agent: "devops-ops",
-    keywords: ["ops", "terminal", "deploy", "build", "process", "operational", "git", "release"],
+    agent: "devops-engineer",
+    keywords: [
+      "ops",
+      "terminal",
+      "deploy",
+      "build",
+      "process",
+      "operational",
+      "git",
+      "release",
+      "mcp",
+      "server",
+      "integration",
+      "tool integration",
+      "mcp server",
+    ],
     skills: ["git-release"],
-    description: "Terminal execution and operational task runner",
-  },
-  {
-    agent: "devops-mcp",
-    keywords: ["mcp", "server", "integration", "tool integration", "mcp server"],
-    skills: [],
-    description: "MCP server research and tool integration expert",
-  },
-  {
-    agent: "backend-systems",
-    keywords: ["shell", "script", "infrastructure", "low-level", "system", "bash", "powershell"],
-    skills: [],
-    description: "Low-level systems, shell scripting, and infrastructure logic",
+    description: "Operational tasks, MCP integration, and infrastructure",
   },
 ];
 
-const AgentRouterPlugin: Plugin = async ({ client, project, directory }) => {
+const AgentRouterPlugin: Plugin = async ({ directory }) => {
   // Load agent routing rules from config, fallback to defaults
   let AGENT_RULES: AgentRule[] = DEFAULT_AGENT_RULES;
 
-  const configPath = findConfigPath(directory);
+  const configPath = resolveConfigPath(directory);
   if (configPath) {
     try {
       const config = parseJsonc(readFileSync(configPath, "utf8"));
-      if (config.agents && Array.isArray(config.agents)) {
-        AGENT_RULES = config.agents as AgentRule[];
+      // Check both "agent" (singular, current) and "agents" (plural, legacy)
+      const agentConfig = config.agent || config.agents;
+      if (agentConfig && Array.isArray(agentConfig)) {
+        AGENT_RULES = agentConfig as AgentRule[];
       }
     } catch (e) {
       console.log("Using default agent routing rules");

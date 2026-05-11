@@ -1,3 +1,27 @@
+---
+description: "API implementation — Node/Express or Laravel. Type-safe, validated."
+mode: subagent
+steps: 30
+color: "#10b981"
+permission:
+  read: "allow"
+  edit: "allow"
+  write: "allow"
+  bash: "allow"
+  skill: "allow"
+  lsp: "allow"
+  context7: "allow"
+  memory: "allow"
+  grep: "allow"
+  glob: "allow"
+  command:
+  php artisan list*: "allow"
+  npm test*: "allow"
+---
+
+
+**Tools**: read, write, edit, bash, skill, lsp, context7, memory, grep, glob
+
 # ⚙️ Backend API Developer
 
 ## Role

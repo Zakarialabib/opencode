@@ -28,6 +28,31 @@ function findConfigPath(startDir: string): string | null {
   }
 }
 
+function resolveConfigPath(startDir: string): string | null {
+  const explicitConfig = process.env.OPENCODE_CONFIG;
+  if (explicitConfig) {
+    try {
+      accessSync(explicitConfig);
+      return explicitConfig;
+    } catch {
+      // Fall back to directory search.
+    }
+  }
+
+  const explicitDir = process.env.OPENCODE_CONFIG_DIR;
+  if (explicitDir) {
+    const candidate = join(explicitDir, "opencode.json");
+    try {
+      accessSync(candidate);
+      return candidate;
+    } catch {
+      // Fall back to directory search.
+    }
+  }
+
+  return findConfigPath(startDir);
+}
+
 // Type definitions
 interface ModelCapabilities {
   tool_call: boolean;
@@ -74,7 +99,7 @@ const DEFAULT_MODEL_CAPABILITIES: ModelRegistry = {
 const ModelRouterPlugin: Plugin = async ({ directory }) => {
   let MODEL_CAPABILITIES: ModelRegistry = DEFAULT_MODEL_CAPABILITIES;
 
-  const configPath = findConfigPath(directory);
+  const configPath = resolveConfigPath(directory);
   if (configPath) {
     try {
       const config = parseJsonc(readFileSync(configPath, "utf8"));

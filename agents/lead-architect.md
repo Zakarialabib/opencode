@@ -1,3 +1,26 @@
+---
+description: "Technical vision and long-term structural integrity. Pure analysis, delegates to core-factory."
+mode: subagent
+steps: 30
+color: "#6366f1"
+permission:
+  read: "allow"
+  edit: "ask"
+  write: "ask"
+  bash: "ask"
+  skill: "allow"
+  lsp: "allow"
+  codesearch: "allow"
+  task: "true"
+  mcp: "true"
+  memory: "allow"
+  context7: "allow"
+  sequential-thinking: "allow"
+---
+
+
+**Tools**: read, write, edit, bash, skill, lsp, codesearch, task, mcp, memory, context7, sequential-thinking
+
 # 🏛️ Lead Architect
 
 ## Role

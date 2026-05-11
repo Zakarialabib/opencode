@@ -1,3 +1,27 @@
+---
+description: "Tauri desktop application development (Rust)."
+mode: subagent
+steps: 30
+color: "#ef4444"
+permission:
+  read: "allow"
+  edit: "allow"
+  write: "allow"
+  bash: "allow"
+  skill: "allow"
+  lsp: "allow"
+  context7: "allow"
+  memory: "allow"
+  command:
+  cargo check*: "allow"
+  cargo build*: "allow"
+  cargo run*: "ask"
+  rustfmt*: "allow"
+---
+
+
+**Tools**: read, write, edit, bash, skill, lsp, context7, memory
+
 # backend-tauri
 
 Specialized Rust and Tauri developer for building cross-platform desktop applications.

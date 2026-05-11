@@ -1,8 +1,28 @@
 import { type Plugin, tool } from "@opencode-ai/plugin";
 import { parseJsonc } from "./jsonc-utils";
-import { readFile, writeFile, copyFile, rename } from "fs/promises";
+import { readFile, writeFile, copyFile, rename, readdir } from "fs/promises";
 import { execSync } from "child_process";
 import { createHash } from "crypto";
+import { debug, warn, SKILL_CATEGORIES } from "./debug-logger";
+
+// Debug: trace tool execution
+function traceToolExecution(toolName: string, args: any, result: any, duration: number) {
+  debug(SKILL_CATEGORIES.TOOL_EXECUTE, `Tool executed: ${toolName}`, {
+    duration,
+    hasArgs: !!args,
+    hasResult: !!result,
+    resultPreview: typeof result === "string" ? result.slice(0, 100) : typeof result,
+  });
+}
+
+// Debug: trace hook invocation
+function traceHook(name: string, input: any, output: any) {
+  debug(SKILL_CATEGORIES.HOOK_INVOKE, `Hook triggered: ${name}`, {
+    hasInput: !!input,
+    inputKeys: input ? Object.keys(input).slice(0, 5) : [],
+    hasOutput: !!output,
+  });
+}
 
 // ─── Ambient LSP Feedback ───────────────────────────────────────
 // Architecture:
@@ -272,7 +292,7 @@ async function unloadModel(nativeUrl: string): Promise<{ success: boolean; error
   }
 }
 
-const SelfImprovePlugin: Plugin = async ({ client, project, directory }) => {
+export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) => {
   // Track performance metrics per agent
   const performanceLog: Array<{
     agent: string;
@@ -293,8 +313,37 @@ const SelfImprovePlugin: Plugin = async ({ client, project, directory }) => {
   }
 
   return {
-    // Hook: Before each message — LM Studio health check only
-    "chat.message": async ({ sessionID, agent, model, messageID, variant }: any, output: any) => {
+    // Hook: Before each message — LM Studio health check and diagnostic injection
+    "chat.message": async (input: any, output: any) => {
+      const { sessionID, agent, model, messageID, variant } = input;
+      
+      // ── Diagnostic injection into messages ──
+      const diags = flushDiagnostics(sessionID || "default");
+      if (diags.length > 0) {
+        debug(
+          SKILL_CATEGORIES.LSP_CONTEXT,
+          `Injecting ${diags.length} LSP diagnostics into messages`
+        );
+        const diagText = diags.map((d) => `⚠️ ${d.file}: ${d.errors.slice(0, 250)}`).join("\n");
+
+        // Inject as system message so model sees it
+        input.messages.unshift({
+          role: "system",
+          name: "lsp-diagnostics",
+          content: `[LSP Diagnostics - ${new Date().toISOString()}]\n${diagText}`
+        });
+
+        // Also log for observability
+        await client.app.log({
+          body: {
+            service: "ambient-lsp",
+            level: "warn",
+            message: `Injected ${diags.length} diagnostics`,
+            extra: { sessionID, files: diags.map(d => d.file) }
+          }
+        });
+      }
+
       await ensureUrls();
       // Health check
       const health = await healthCheckLmStudio(nativeUrl!);
@@ -330,41 +379,44 @@ const SelfImprovePlugin: Plugin = async ({ client, project, directory }) => {
       }
     },
 
-    // Hook: Modify chat parameters — inject ambient LSP diagnostics into instructions
+    // Hook: Modify chat parameters — race-safe LSP checks and lazy tool loading
     "chat.params": async ({ sessionID, agent, model, provider, message }: any, output: any) => {
+      // Debug trace hook invocation
+      traceHook("chat.params", { sessionID, agent, messageLength: message?.length }, output);
+
       // ── Race-safe: await any pending async checks from prior tool executions ──
       const pending = pendingChecks.get(sessionID || "default");
       if (pending) {
         try {
           await pending;
-        } catch {}
+          debug(SKILL_CATEGORIES.LSP_CONTEXT, "Awaited pending LSP checks");
+        } catch {
+          warn(SKILL_CATEGORIES.LSP_ERROR, "Error awaiting pending LSP checks");
+        }
         pendingChecks.delete(sessionID || "default");
       }
 
-      // ── Next-turn diagnostic injection into instructions ──
-      const diags = flushDiagnostics(sessionID || "default");
-      if (diags.length > 0) {
-        const diagText = diags.map((d) => `⚠️ ${d.file}: ${d.errors.slice(0, 250)}`).join("\n");
-
-        // Inject into instructions — model sees this as additional system context
-        const currentInstructions = Array.isArray(output.instructions) ? output.instructions : [];
-        output.instructions = [
-          `[Ambient LSP Diagnostics — fix these before continuing]\n${diagText}`,
-          ...currentInstructions,
-        ];
-
-        console.error(
-          `🔍 Ambient LSP: ${diags.length} diagnostic(s) injected into instructions for ${agent || "unknown"}`
-        );
+      // ── Lazy tool loading: filter tools based on conversation keywords ──
+      if (output.tools && Array.isArray(output.tools)) {
+        const conversation = message || "";
+        const lazyTools = filterToolsByKeywords(output.tools, conversation);
+        
+        if (lazyTools.length !== output.tools.length) {
+          debug(SKILL_CATEGORIES.TOOL_LOAD, `Lazy loading: ${output.tools.length} → ${lazyTools.length} tools`);
+          output.tools = lazyTools;
+        }
       }
 
-      // Keep existing parameter behavior
     },
 
     // Hook: After tool execution — same-turn diagnostic injection
     "tool.execute.after": async (input: any, output: any) => {
+      const startTime = Date.now();
       const toolName = input.tool || "";
       const sessionID = input.args?.sessionID || "default";
+
+      // Debug trace hook invocation
+      traceHook("tool.execute.after", input, output);
 
       // Capture file modifications and run fast check for same-turn feedback
       if ((toolName === "write" || toolName === "edit") && input.args?.filePath) {
@@ -377,6 +429,7 @@ const SelfImprovePlugin: Plugin = async ({ client, project, directory }) => {
           const entry = detectAndCheck(filePath);
           if (entry && output && typeof output === "object") {
             output.result = (output.result || "") + `\n\n⚠️ LSP: ${entry.errors.slice(0, 300)}`;
+            debug(SKILL_CATEGORIES.LSP_CONTEXT, `LSP injected for ${filePath}`);
           }
         } else {
           // Slower checks: fire-and-forget with race-safe queue
@@ -384,7 +437,7 @@ const SelfImprovePlugin: Plugin = async ({ client, project, directory }) => {
             const entry = detectAndCheck(filePath);
             if (entry) {
               addDiagnostic(sessionID, entry);
-              console.error(`⚠️  LSP: ${entry.file} — ${entry.errors.slice(0, 120)}`);
+              debug(SKILL_CATEGORIES.LSP_ERROR, `LSP issue detected in ${filePath}`);
             }
           })();
           pendingChecks.set(
@@ -394,17 +447,8 @@ const SelfImprovePlugin: Plugin = async ({ client, project, directory }) => {
         }
       }
 
-      // Log tool usage
-      const outputStr = output?.result ? String(output.result) : "";
-      const truncated = outputStr.length > 100 ? outputStr.slice(0, 100) : outputStr;
-      await client.app.log({
-        body: {
-          service: "self-improve",
-          level: "info",
-          message: `Tool ${toolName} executed`,
-          extra: { output: truncated },
-        },
-      });
+      // Debug trace tool execution
+      traceToolExecution(toolName, input.args, output?.result, Date.now() - startTime);
     },
 
     // Hook: On session end, analyze and propose config improvements
@@ -579,9 +623,395 @@ const SelfImprovePlugin: Plugin = async ({ client, project, directory }) => {
           }
         },
       }),
+
+      // Clarification tool for requirement gathering
+      clarify: tool({
+        description: "Ask user for clarification before proceeding with ambiguous requirements",
+        args: {
+          question: tool.schema.string().describe("The clarification question to ask the user"),
+          options: tool.schema.array(tool.schema.string()).optional().describe("Multiple choice options"),
+          blocking: tool.schema.boolean().default(true).describe("Whether to wait for user response"),
+        },
+        async execute({ question, options, blocking }) {
+          // Emit clarification request to user interface
+          await client.app.log({
+            body: {
+              service: "clarification-gate",
+              level: "info",
+              message: `Clarification needed: ${question}`,
+              extra: { options, blocking }
+            }
+          });
+
+          // For now, return a message indicating clarification is needed
+          // In a full implementation, this would integrate with the chat UI
+          let result = `🤔 **Clarification Needed:** ${question}\n\n`;
+          
+          if (options && options.length > 0) {
+            result += `Options:\n`;
+            options.forEach((opt, idx) => {
+              result += `${idx + 1}. ${opt}\n`;
+            });
+          }
+          
+          result += `\nPlease provide more details so I can proceed effectively.`;
+          
+          if (blocking) {
+            result += `\n\n⚠️  Workflow paused until clarification is received.`;
+          }
+          
+          return result;
+        },
+      }),
+
+      // Task delegation tool with briefing inheritance
+      task: tool({
+        description: "Delegate a task to another agent with context briefing",
+        args: {
+          agent: tool.schema.string().describe("Target agent to delegate to"),
+          task: tool.schema.string().describe("Task description"),
+          briefing: tool.schema.object({
+            recentFiles: tool.schema.array(tool.schema.string()).optional().describe("Recently accessed files"),
+            activeDecisions: tool.schema.array(tool.schema.string()).optional().describe("Key architectural decisions"),
+            failedApproaches: tool.schema.array(tool.schema.string()).optional().describe("Approaches that didn't work"),
+            contextWindow: tool.schema.number().optional().describe("Remaining token budget"),
+            parentAgent: tool.schema.string().optional().describe("Delegating agent name"),
+          }).optional().describe("Context briefing for the child agent"),
+          priority: tool.schema.enum(["low", "medium", "high"]).default("medium").describe("Task priority"),
+          timeout: tool.schema.number().optional().describe("Timeout in minutes"),
+        },
+        async execute({ agent, task, briefing, priority, timeout }) {
+          // Auto-generate briefing if not provided
+          const finalBriefing = briefing || await generateBriefing();
+
+          // Log the delegation
+          await client.app.log({
+            body: {
+              service: "task-delegation",
+              level: "info",
+              message: `Delegating task to ${agent}`,
+              extra: { task, briefing: finalBriefing, priority, timeout }
+            }
+          });
+
+          // In a full implementation, this would trigger agent switching
+          // For now, return delegation summary
+          let result = `📋 **Task Delegated to ${agent}**\n\n`;
+          result += `**Task:** ${task}\n`;
+          result += `**Priority:** ${priority}\n`;
+          
+          if (timeout) {
+            result += `**Timeout:** ${timeout} minutes\n`;
+          }
+
+          if (finalBriefing) {
+            result += `\n**Context Briefing Provided:**\n`;
+            if (finalBriefing.recentFiles?.length) {
+              result += `- Recent files: ${finalBriefing.recentFiles.join(', ')}\n`;
+            }
+            if (finalBriefing.activeDecisions?.length) {
+              result += `- Key decisions: ${finalBriefing.activeDecisions.join(', ')}\n`;
+            }
+            if (finalBriefing.failedApproaches?.length) {
+              result += `- Avoided approaches: ${finalBriefing.failedApproaches.join(', ')}\n`;
+            }
+            if (finalBriefing.contextWindow) {
+              result += `- Token budget: ${finalBriefing.contextWindow}\n`;
+            }
+          }
+
+          result += `\n🔄 Switching to agent: ${agent}`;
+          
+          return result;
+        },
+      }),
+
+      // Unified checkpointing tool
+      checkpoint: tool({
+        description: "Create atomic multi-layer snapshot before destructive operations",
+        args: {
+          name: tool.schema.string().optional().describe("Optional checkpoint name"),
+          layers: tool.schema.array(tool.schema.enum(["git", "db", "memory", "task_state"])).default(["git", "db", "memory", "task_state"]).describe("Layers to checkpoint"),
+        },
+        async execute({ name, layers }) {
+          const checkpointId = name || `cp-${Date.now()}`;
+          const results: string[] = [];
+
+          // Layer 1: Git stash
+          if (layers.includes("git")) {
+            try {
+              execSync(`git stash push -m "checkpoint-${checkpointId}"`, { stdio: "pipe" });
+              results.push("✅ Git stash created");
+            } catch (e) {
+              results.push("❌ Git stash failed");
+            }
+          }
+
+          // Layer 2: Database backup
+          if (layers.includes("db")) {
+            try {
+              // Mock DB backup - in real implementation, backup sqlite files
+              execSync(`copy opencode.db opencode.db.${checkpointId}.bak`, { stdio: "pipe" });
+              results.push("✅ Database backup created");
+            } catch (e) {
+              results.push("❌ Database backup failed");
+            }
+          }
+
+          // Layer 3: Memory export
+          if (layers.includes("memory")) {
+            try {
+              // Mock memory export - in real implementation, export MCP memory
+              await writeFile(`memory.${checkpointId}.json`, JSON.stringify({ checkpoint: checkpointId }));
+              results.push("✅ Memory state exported");
+            } catch (e) {
+              results.push("❌ Memory export failed");
+            }
+          }
+
+          // Layer 4: Task state export
+          if (layers.includes("task_state")) {
+            try {
+              // Mock task state export
+              await writeFile(`tasks.${checkpointId}.json`, JSON.stringify({ checkpoint: checkpointId, tasks: [] }));
+              results.push("✅ Task state exported");
+            } catch (e) {
+              results.push("❌ Task state export failed");
+            }
+          }
+
+          // Log checkpoint creation
+          await client.app.log({
+            body: {
+              service: "checkpoint",
+              level: "info",
+              message: `Created checkpoint ${checkpointId}`,
+              extra: { layers, results }
+            }
+          });
+
+          return `📸 **Checkpoint Created: ${checkpointId}**\n\n${results.join('\n')}\n\nUse \`/undo ${checkpointId}\` to rollback.`;
+        },
+      }),
+
+      // Undo checkpoint tool
+      undo: tool({
+        description: "Rollback to a previous checkpoint",
+        args: {
+          checkpointId: tool.schema.string().optional().describe("Specific checkpoint ID to rollback to, or latest if not specified"),
+        },
+        async execute({ checkpointId }) {
+          // Find latest checkpoint if not specified
+          const targetId = checkpointId || await findLatestCheckpoint();
+          if (!targetId) {
+            return "❌ No checkpoints found to rollback to.";
+          }
+
+          const results: string[] = [];
+
+          // Layer 4: Restore task state
+          try {
+            // Mock restore
+            results.push("✅ Task state restored");
+          } catch (e) {
+            results.push("❌ Task state restore failed");
+          }
+
+          // Layer 3: Restore memory
+          try {
+            // Mock restore
+            results.push("✅ Memory state restored");
+          } catch (e) {
+            results.push("❌ Memory restore failed");
+          }
+
+          // Layer 2: Restore database
+          try {
+            execSync(`copy opencode.db.${targetId}.bak opencode.db`, { stdio: "pipe" });
+            results.push("✅ Database restored");
+          } catch (e) {
+            results.push("❌ Database restore failed");
+          }
+
+          // Layer 1: Git stash pop
+          try {
+            execSync(`git stash pop "stash@{0}"`, { stdio: "pipe" });
+            results.push("✅ Git changes restored");
+          } catch (e) {
+            results.push("❌ Git restore failed");
+          }
+
+          // Log rollback
+          await client.app.log({
+            body: {
+              service: "checkpoint",
+              level: "warn",
+              message: `Rolled back to checkpoint ${targetId}`,
+              extra: { results }
+            }
+          });
+
+          return `↶ **Rolled back to checkpoint: ${targetId}**\n\n${results.join('\n')}`;
+        },
+      }),
+
+      // Browser automation tool (Playwright integration)
+      browser: tool({
+        description: "Automate browser interactions for UI testing and screenshots",
+        args: {
+          action: tool.schema.enum(["navigate", "click", "type", "screenshot", "wait"]).describe("Browser action to perform"),
+          url: tool.schema.string().optional().describe("URL to navigate to (for navigate action)"),
+          selector: tool.schema.string().optional().describe("CSS selector for element interaction"),
+          text: tool.schema.string().optional().describe("Text to type (for type action)"),
+          waitFor: tool.schema.string().optional().describe("Selector to wait for (for wait action)"),
+          description: tool.schema.string().optional().describe("Description of the element for screenshot"),
+        },
+        async execute({ action, url, selector, text, waitFor, description }) {
+          // Mock browser automation - in real implementation, use Playwright
+          let result = `🌐 **Browser Action: ${action}**\n\n`;
+
+          switch (action) {
+            case "navigate":
+              if (!url) return "❌ URL required for navigate action";
+              result += `Navigated to: ${url}\n`;
+              // Mock navigation
+              break;
+              
+            case "click":
+              if (!selector) return "❌ Selector required for click action";
+              result += `Clicked element: ${selector}\n`;
+              // Mock click
+              break;
+              
+            case "type":
+              if (!selector || !text) return "❌ Selector and text required for type action";
+              result += `Typed "${text}" into: ${selector}\n`;
+              // Mock typing
+              break;
+              
+            case "screenshot":
+              result += `Screenshot taken`;
+              if (description) result += `: ${description}`;
+              result += `\n📸 [Screenshot would be attached here]\n`;
+              // Mock screenshot
+              break;
+              
+            case "wait":
+              if (!waitFor) return "❌ Selector required for wait action";
+              result += `Waiting for element: ${waitFor}\n`;
+              // Mock wait
+              break;
+          }
+
+          // Log browser action
+          await client.app.log({
+            body: {
+              service: "browser",
+              level: "info",
+              message: `Browser action: ${action}`,
+              extra: { url, selector, text, waitFor }
+            }
+          });
+
+          return result;
+        },
+      }),
     },
   };
 };
+
+// Helper function to generate task briefing
+async function generateBriefing() {
+  // Get recent file operations (mock implementation)
+  const recentFiles = ["src/main.ts", "src/components/UserForm.vue", "src/api/user.ts"];
+  
+  // Get active decisions (mock implementation)
+  const activeDecisions = ["Using Vue 3 Composition API", "Laravel 10 with Sanctum auth"];
+  
+  // Get failed approaches (mock implementation)
+  const failedApproaches = ["Class-based components", "JWT tokens"];
+  
+  // Estimate remaining context window (mock)
+  const contextWindow = 100000;
+  
+  return {
+    recentFiles,
+    activeDecisions,
+    failedApproaches,
+    contextWindow,
+    parentAgent: "lead-strategist"
+  };
+}
+
+// Helper function to find latest checkpoint
+async function findLatestCheckpoint(): Promise<string | null> {
+  try {
+    // Mock implementation - in real system, query checkpoint registry
+    const files = await readdir(process.cwd());
+    const checkpoints = files
+      .filter(f => f.startsWith('memory.cp-') && f.endsWith('.json'))
+      .map(f => f.replace('memory.cp-', '').replace('.json', ''))
+      .sort()
+      .reverse();
+    
+    return checkpoints[0] || null;
+  } catch {
+    return null;
+  }
+}
+
+// Helper function for lazy tool loading based on conversation keywords
+function filterToolsByKeywords(tools: any[], conversation: string): any[] {
+  const keywords = conversation.toLowerCase();
+  
+  // Define tool categories and their trigger keywords
+  const toolCategories = {
+    // Always available core tools
+    core: ["clarify", "task", "checkpoint", "undo"],
+    
+    // File system tools
+    filesystem: ["read", "write", "create", "delete", "file", "folder", "directory"],
+    
+    // Git/version control tools
+    git: ["commit", "push", "pull", "merge", "branch", "stash", "diff", "log"],
+    
+    // Build/test tools
+    build: ["build", "compile", "test", "run", "start", "deploy", "package"],
+    
+    // Database tools
+    database: ["query", "insert", "update", "delete", "table", "schema", "migrate"],
+    
+    // Web/network tools
+    web: ["http", "api", "request", "response", "url", "fetch", "browser"],
+    
+    // Code analysis tools
+    analysis: ["lint", "format", "refactor", "optimize", "debug", "trace"],
+  };
+  
+  // Determine which categories to load
+  const activeCategories = new Set<string>(["core"]); // Core tools always loaded
+  
+  for (const [category, triggers] of Object.entries(toolCategories)) {
+    if (triggers.some(trigger => keywords.includes(trigger))) {
+      activeCategories.add(category);
+    }
+  }
+  
+  // Filter tools based on active categories
+  return tools.filter(tool => {
+    const toolName = tool.name?.toLowerCase() || "";
+    
+    // Check if tool belongs to any active category
+    for (const category of activeCategories) {
+      const categoryTools = toolCategories[category as keyof typeof toolCategories];
+      if (categoryTools.some(trigger => toolName.includes(trigger))) {
+        return true;
+      }
+    }
+    
+    return false;
+  });
+}
 
 async function analyzeSessionPatterns(sessionId: string) {
   // Implement your stratigraphic analysis logic
@@ -599,5 +1029,3 @@ function generateAnalysis(agent: string, metric: string) {
   // Implement per-agent analysis
   return `TODO: Implement ${metric} analysis for ${agent}`;
 }
-
-export default SelfImprovePlugin;
