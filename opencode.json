@@ -348,7 +348,8 @@
     "CONVENTIONS: Always query memory MCP for project-conventions at session start. Apply conventions with confidence >= 0.7.",
     "SELF-IMPROVE: Use prompt-engineering skill to rewrite prompts when quality degrades.",
     "BRAIN: For non-trivial codebase work, check brain_sidecar_status or brain_diagnostic, use brain_search/brain_embed_test for semantic discovery, then read the retrieved files directly.",
-    "BRAIN INDEX: If retrieval is empty or stale, run brain_index_project before relying on Brain context."
+    "BRAIN INDEX: If retrieval is empty or stale, run brain_index_project before relying on Brain context.",
+    "See rules/brain.md for Brain plugin usage."
   ],
   "command": {
     "audit": {
@@ -434,7 +435,7 @@
       "description": "Primary build agent — fast implementation, direct file editing, all tools enabled.",
       "instructions": [
         "CORE: Fast implementation. Read → Analyze → Write → Validate.",
-        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
+        "See rules/brain.md for Brain plugin usage.",
         "STRICT: No speculation. Only state what you know or can verify.",
         "CONCISE: Use minimal words. Long descriptions waste tokens.",
         "WORKFLOW: Read file → Use edit tool (oldString→newString) → Validate.",
@@ -442,7 +443,7 @@
         "No unnecessary comments. Reference lines as file_path:line_number.",
         "PROJECT STACK: Tauri (Rust), React (TypeScript), Laravel (PHP).",
         "Auto-format after edits per rules/auto-format.md.",
-        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
+        "See rules/brain.md for Brain plugin usage."
       ],
       "permission": {
         "file": {
@@ -479,10 +480,7 @@
         "edit": "deny",
         "bash": "deny"
       },
-      "instructions": [
-        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
-        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
-      ],
+      "instructions": ["See rules/brain.md for Brain plugin usage."],
       "tools": {
         "brain_diagnostic": true,
         "brain_sidecar_status": true,
@@ -503,10 +501,7 @@
         "bash": "deny",
         "write": "deny"
       },
-      "instructions": [
-        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
-        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
-      ],
+      "instructions": ["See rules/brain.md for Brain plugin usage."],
       "tools": {
         "brain_diagnostic": true,
         "brain_sidecar_status": true,
@@ -528,10 +523,7 @@
         "webfetch": "allow",
         "websearch": "allow"
       },
-      "instructions": [
-        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
-        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
-      ],
+      "instructions": ["See rules/brain.md for Brain plugin usage."],
       "tools": {
         "brain_diagnostic": true,
         "brain_sidecar_status": true,
@@ -559,8 +551,7 @@
         "SELF-EVOLUTION: After completing complex tasks, use skill:autoresearch to benchmark and optimize your implementation patterns.",
         "REFACTORING: When refactoring, first use skill:self-improver to analyze the codebase, then use skill:autoresearch to validate improvements.",
         "INTEGRATION: Always check for redundant imports, unused code, and naming convention violations before and after edits.",
-        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
-        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
+        "See rules/brain.md for Brain plugin usage."
       ],
       "tools": {
         "read": true,
@@ -614,8 +605,7 @@
         "Use skill:self-improver to analyze and improve project configuration.",
         "REALITY CHECK: Always assess feasibility against actual codebase state before proposing changes.",
         "GAP ANALYSIS: Identify gaps between current implementation and target architecture.",
-        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
-        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
+        "See rules/brain.md for Brain plugin usage."
       ],
       "tools": {
         "skill": true,
@@ -663,8 +653,7 @@
         "Use skill:autoresearch for autonomous optimization loops.",
         "Use skill:self-improver to analyze and improve project configuration.",
         "NORMING: Check all proposed patterns against existing codebase conventions before recommending.",
-        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
-        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
+        "See rules/brain.md for Brain plugin usage."
       ],
       "tools": {
         "read": true,
@@ -701,8 +690,7 @@
         "Use parallel execution for independent components.",
         "Validate accessibility (WCAG AA) after implementation.",
         "REUSABILITY: Check for existing components before creating new ones. Use react-reuse-audit skill.",
-        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
-        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
+        "See rules/brain.md for Brain plugin usage."
       ],
       "tools": {
         "read": true,
@@ -738,8 +726,7 @@
         "Validate with LSP after changes.",
         "NO REDUNDANCY: Check for existing endpoints/services before implementing.",
         "IMPORT AUDIT: Only add external imports when necessary. Prefer stdlib.",
-        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
-        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
+        "See rules/brain.md for Brain plugin usage."
       ],
       "tools": {
         "read": true,
@@ -772,8 +759,7 @@
         "Run php artisan pint after edits.",
         "IMPORT AUDIT: Check for unused imports after every file change.",
         "NAMING: Follow Laravel conventions strictly (PascalCase models, snake_case tables).",
-        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
-        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
+        "See rules/brain.md for Brain plugin usage."
       ],
       "tools": {
         "read": true,
@@ -810,8 +796,7 @@
         "For React-Tauri bridging: use @tauri-apps/api packages, never direct DOM manipulation bypassing React.",
         "Refer to Tauri v2 documentation, not v1, unless specified.",
         "IMPORT AUDIT: Check Cargo.toml for unused dependencies regularly.",
-        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
-        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
+        "See rules/brain.md for Brain plugin usage."
       ],
       "tools": {
         "read": true,
@@ -843,8 +828,7 @@
         "Run lint/test commands to validate changes.",
         "Never expose secrets in code.",
         "REDUNDANCY CHECK: Flag duplicate code, unused imports, dead code paths.",
-        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
-        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
+        "See rules/brain.md for Brain plugin usage."
       ],
       "tools": {
         "read": true,
@@ -872,8 +856,7 @@
         "CONCISE: Brief execution. No explanation unless asked.",
         "Use bash with safety checks.",
         "Handle db:init, clean, process:check.",
-        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
-        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
+        "See rules/brain.md for Brain plugin usage."
       ],
       "tools": {
         "read": true,
@@ -905,8 +888,7 @@
         "Use skill:autoresearch for autonomous research loops.",
         "Use skill:self-improver for system evolution.",
         "REALITY CHECK: Verify docs match actual codebase before writing.",
-        "BRAIN: Check brain_sidecar_status/brain_diagnostic when context quality matters; use brain_search or brain_embed_test before non-trivial analysis, debugging, refactors, features, and docs audits; read retrieved files before deciding.",
-        "BRAIN INDEX: Run brain_index_project when the index is empty, stale, or missing expected results; after broad edits, verify new context with brain_status or targeted brain_search."
+        "See rules/brain.md for Brain plugin usage."
       ],
       "tools": {
         "read": true,
