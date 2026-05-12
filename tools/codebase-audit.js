@@ -155,13 +155,12 @@ class IntelligentAuditor {
           // { foo, bar }
           imported = importMatch[1]
             .split(",")
-            .map((s) =>
+            .flatMap((s) =>
               s
                 .trim()
                 .replace(/\s+as\s+.+/, "")
                 .split(/\s*,\s*/)
-            )
-            .flat();
+            );
         } else if (importMatch[2]) imported = [importMatch[2]];
         else if (importMatch[3]) imported = [importMatch[3]];
 
@@ -382,7 +381,7 @@ class IntelligentAuditor {
       if (!content) continue;
 
       // Remove import lines from content for usage check
-      let contentWithoutImports = content;
+      const contentWithoutImports = content;
 
       for (const imp of imports) {
         // Skip if it's a type-only import (TypeScript)
@@ -445,7 +444,7 @@ class IntelligentAuditor {
         // Skip comment blocks
         if (block.every((l) => l.match(/^\s*(\/\/|\*|#)/))) continue;
         // Skip closing braces
-        if (block.every((l) => l.match(/^\s*[\})]/))) continue;
+        if (block.every((l) => l.match(/^\s*[})]/))) continue;
 
         // Normalize: remove leading whitespace for comparison
         const normalized = block.map((l) => l.replace(/^\s+/, "")).join("\n");

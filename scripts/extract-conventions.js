@@ -8,8 +8,8 @@
  * Usage: node scripts/extract-conventions.js [agent-name]
  */
 
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
+const path = require("node:path");
 
 // Convention patterns to detect in code
 const CONVENTION_PATTERNS = [
@@ -114,11 +114,11 @@ function scanForConventions(rootDir) {
               conventions[convention].count++;
             }
           }
-        } catch (e) {
+        } catch (_e) {
           // Skip unreadable files
         }
       }
-    } catch (e) {
+    } catch (_e) {
       // Skip inaccessible directories
     }
   }
@@ -161,7 +161,7 @@ function extractConventions(rootDir = ".") {
   }));
 
   console.log(`\n📊 Found ${sorted.length} conventions:`);
-  results.slice(0, 10).forEach(({ convention, type, count, confidence }) => {
+  results.slice(0, 10).forEach(({ convention, count, confidence }) => {
     console.log(`  [${confidence.toFixed(1)}] ${convention} (${count}x)`);
   });
 
@@ -169,7 +169,7 @@ function extractConventions(rootDir = ".") {
 }
 
 // Auto-run if run directly
-const agentName = process.argv[2] || "auto";
+const _agentName = process.argv[2] || "auto";
 const results = extractConventions(".");
 
 if (results.length > 0) {
