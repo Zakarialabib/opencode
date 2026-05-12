@@ -6,7 +6,10 @@
       "path": "skills/autoresearch/SKILL.md",
       "name": "autoresearch",
       "description": "Autonomous research loops for optimization",
-      "agents": ["core-factory", "lead-strategist"],
+      "agents": [
+        "core-factory",
+        "lead-strategist"
+      ],
       "category": "research"
     },
     "knowledge-architect" : {
@@ -20,273 +23,371 @@
       "path": "skills/deep-research/SKILL.md",
       "name": "deep-research",
       "description": "Deep domain research and knowledge synthesis",
-      "agents": ["docs-curator", "lead-architect"],
+      "agents": [
+        "docs-curator",
+        "lead-architect"
+      ],
       "category": "research"
     },
     "self-improver": {
       "path": "skills/self-improver/SKILL.md",
       "name": "self-improver",
       "description": "Continuous project improvement via web research and LSP analysis",
-      "agents": ["core-factory", "lead-strategist", "docs-curator"],
+      "agents": [
+        "core-factory",
+        "lead-strategist",
+        "docs-curator"
+      ],
       "category": "meta"
     },
     "self-evolver": {
       "path": "skills/self-evolver/SKILL.md",
       "name": "self-evolver",
       "description": "Enable core-factory to self-evolve by analyzing code quality, running research, and adapting patterns autonomously",
-      "agents": ["core-factory"],
+      "agents": [
+        "core-factory"
+      ],
       "category": "meta"
     },
     "config-doctor": {
       "path": "skills/config-doctor/SKILL.md",
       "name": "config-doctor",
       "description": "Ensure OpenCode configuration integrity",
-      "agents": ["docs-curator", "lead-strategist"],
+      "agents": [
+        "docs-curator",
+        "lead-strategist"
+      ],
       "category": "meta"
     },
     "laravel-feature-scaffold": {
       "path": "skills/laravel-feature-scaffold/SKILL.md",
       "name": "laravel-feature-scaffold",
       "description": "Scaffold Laravel features with consistent structure",
-      "agents": ["backend-laravel", "core-factory"],
+      "agents": [
+        "backend-laravel",
+        "core-factory"
+      ],
       "category": "framework"
     },
     "pest-testing": {
       "path": "skills/pest-testing/SKILL.md",
       "name": "pest-testing",
       "description": "Pest testing patterns for Laravel/PHP",
-      "agents": ["backend-laravel", "qa-guardian"],
+      "agents": [
+        "backend-laravel",
+        "qa-guardian"
+      ],
       "category": "testing"
     },
     "ui-ux-pro-max": {
       "path": "skills/ui-ux-pro-max/SKILL.md",
       "name": "ui-ux-pro-max",
       "description": "Premium UI/UX design tokens and patterns",
-      "agents": ["frontend-ui-ux"],
+      "agents": [
+        "frontend-ui-ux"
+      ],
       "category": "design"
     },
     "react-reuse-audit": {
       "path": "skills/react-reuse-audit/SKILL.md",
       "name": "react-reuse-audit",
       "description": "Audit React components for reuse opportunities",
-      "agents": ["frontend-ui-ux", "code-reviewer"],
+      "agents": [
+        "frontend-ui-ux",
+        "code-reviewer"
+      ],
       "category": "analysis"
     },
     "spec-driven-design": {
       "path": "skills/spec-driven-design/SKILL.md",
       "name": "spec-driven-design",
       "description": "Structured specification before implementation",
-      "agents": ["lead-architect", "lead-strategist"],
+      "agents": [
+        "lead-architect",
+        "lead-strategist"
+      ],
       "category": "process"
     },
     "fullstack-dev": {
       "path": "skills/fullstack-dev/SKILL.md",
       "name": "fullstack-dev",
       "description": "Full-stack development patterns for Tauri + React + Laravel",
-      "agents": ["backend-api", "backend-laravel", "backend-tauri", "frontend-ui-ux"],
+      "agents": [
+        "backend-api",
+        "backend-laravel",
+        "backend-tauri",
+        "frontend-ui-ux"
+      ],
       "category": "framework"
     },
     "git-release": {
       "path": "skills/git-release/SKILL.md",
       "name": "git-release",
       "description": "Consistent releases and changelogs",
-      "agents": ["docs-curator", "devops-engineer"],
+      "agents": [
+        "docs-curator",
+        "devops-engineer"
+      ],
       "category": "release"
     },
     "workflow-manager": {
       "path": "skills/workflow-manager/SKILL.md",
       "name": "workflow-manager",
       "description": "Manage and orchestrate complex multi-step workflows",
-      "agents": ["lead-strategist", "core-factory"],
+      "agents": [
+        "lead-strategist",
+        "core-factory"
+      ],
       "category": "process"
     },
     "coding-agent": {
       "path": "skills/coding-agent/SKILL.md",
       "name": "coding-agent",
       "description": "Structured coding agent with verification",
-      "agents": ["core-factory", "qa-guardian"],
+      "agents": [
+        "core-factory",
+        "qa-guardian"
+      ],
       "category": "implementation"
     },
     "contentanalysis": {
       "path": "skills/contentanalysis/SKILL.md",
       "name": "contentanalysis",
       "description": "Content analysis and wisdom extraction",
-      "agents": ["docs-curator"],
+      "agents": [
+        "docs-curator"
+      ],
       "category": "analysis"
     },
     "security-review": {
       "path": "skills/security-review/SKILL.md",
       "name": "security-review",
       "description": "Security scanning and vulnerability assessment",
-      "agents": ["qa-guardian"],
+      "agents": [
+        "qa-guardian"
+      ],
       "category": "security"
     },
     "qa-tester": {
       "path": "skills/qa-tester/SKILL.md",
       "name": "qa-tester",
       "description": "Comprehensive testing patterns and strategies",
-      "agents": ["qa-guardian", "integration-test"],
+      "agents": [
+        "qa-guardian",
+        "integration-test"
+      ],
       "category": "testing"
     },
     "database-design": {
       "path": "skills/database-design/SKILL.md",
       "name": "database-design",
       "description": "Database schema design and optimization",
-      "agents": ["backend-api", "backend-laravel"],
+      "agents": [
+        "backend-api",
+        "backend-laravel"
+      ],
       "category": "data"
     },
     "xlsx": {
       "path": "skills/xlsx/SKILL.md",
       "name": "xlsx",
       "description": "Excel file generation and manipulation",
-      "agents": ["core-factory"],
+      "agents": [
+        "core-factory"
+      ],
       "category": "utility"
     },
     "blog-writer": {
       "path": "skills/blog-writer/SKILL.md",
       "name": "blog-writer",
       "description": "Blog post writing and content creation",
-      "agents": ["docs-curator"],
+      "agents": [
+        "docs-curator"
+      ],
       "category": "content"
     },
     "image-generation": {
       "path": "skills/image-generation/SKILL.md",
       "name": "image-generation",
       "description": "AI image generation capabilities",
-      "agents": ["frontend-ui-ux"],
+      "agents": [
+        "frontend-ui-ux"
+      ],
       "category": "creative"
     },
     "charts": {
       "path": "skills/charts/SKILL.md",
       "name": "charts",
       "description": "Chart and visualization generation",
-      "agents": ["frontend-ui-ux", "backend-api"],
+      "agents": [
+        "frontend-ui-ux",
+        "backend-api"
+      ],
       "category": "visualization"
     },
     "marketing-mode": {
       "path": "skills/marketing-mode/SKILL.md",
       "name": "marketing-mode",
       "description": "Marketing content and strategy generation",
-      "agents": ["docs-curator"],
+      "agents": [
+        "docs-curator"
+      ],
       "category": "content"
     },
     "podcast-generate": {
       "path": "skills/podcast-generate/SKILL.md",
       "name": "podcast-generate",
       "description": "Podcast script generation and production",
-      "agents": ["docs-curator"],
+      "agents": [
+        "docs-curator"
+      ],
       "category": "content"
     },
     "video-generation": {
       "path": "skills/video-generation/SKILL.md",
       "name": "video-generation",
       "description": "Video content generation",
-      "agents": ["docs-curator"],
+      "agents": [
+        "docs-curator"
+      ],
       "category": "creative"
     },
     "writing-plans": {
       "path": "skills/writing-plans/SKILL.md",
       "name": "writing-plans",
       "description": "Structured writing and planning",
-      "agents": ["docs-curator"],
+      "agents": [
+        "docs-curator"
+      ],
       "category": "content"
     },
     "interview-designer": {
       "path": "skills/interview-designer/SKILL.md",
       "name": "interview-designer",
       "description": "Technical interview design and generation",
-      "agents": ["docs-curator"],
+      "agents": [
+        "docs-curator"
+      ],
       "category": "hr"
     },
     "dream-interpreter": {
       "path": "skills/dream-interpreter/SKILL.md",
       "name": "dream-interpreter",
       "description": "Dream interpretation and analysis",
-      "agents": ["docs-curator"],
+      "agents": [
+        "docs-curator"
+      ],
       "category": "creative"
     },
     "anti-pua": {
       "path": "skills/anti-pua/SKILL.md",
       "name": "anti-pua",
       "description": "Anti-manipulation and critical thinking",
-      "agents": ["docs-curator"],
+      "agents": [
+        "docs-curator"
+      ],
       "category": "social"
     },
     "aminer-academic-search": {
       "path": "skills/aminer-academic-search/SKILL.md",
       "name": "aminer-academic-search",
       "description": "Academic paper search and analysis",
-      "agents": ["research-analyst", "docs-curator"],
+      "agents": [
+        "research-analyst",
+        "docs-curator"
+      ],
       "category": "research"
     },
     "aminer-daily-paper": {
       "path": "skills/aminer-daily-paper/SKILL.md",
       "name": "aminer-daily-paper",
       "description": "Daily academic paper digest",
-      "agents": ["docs-curator"],
+      "agents": [
+        "docs-curator"
+      ],
       "category": "research"
     },
     "aminer-open-academic": {
       "path": "skills/aminer-open-academic/SKILL.md",
       "name": "aminer-open-academic",
       "description": "Open academic knowledge graph",
-      "agents": ["research-analyst"],
+      "agents": [
+        "research-analyst"
+      ],
       "category": "research"
     },
     "ai-news-collectors": {
       "path": "skills/ai-news-collectors/SKILL.md",
       "name": "ai-news-collectors",
       "description": "AI industry news collection",
-      "agents": ["docs-curator"],
+      "agents": [
+        "docs-curator"
+      ],
       "category": "news"
     },
     "agent-browser": {
       "path": "skills/agent-browser/SKILL.md",
       "name": "agent-browser",
       "description": "Web browsing and interaction capabilities",
-      "agents": ["scout", "research-analyst"],
+      "agents": [
+        "scout",
+        "research-analyst"
+      ],
       "category": "utility"
     },
     "auto-target-tracker": {
       "path": "skills/auto-target-tracker/SKILL.md",
       "name": "auto-target-tracker",
       "description": "Automatic target tracking and management",
-      "agents": ["core-factory"],
+      "agents": [
+        "core-factory"
+      ],
       "category": "utility"
     },
     "ASR": {
       "path": "skills/ASR/SKILL.md",
       "name": "ASR",
       "description": "Automatic speech recognition",
-      "agents": ["docs-curator"],
+      "agents": [
+        "docs-curator"
+      ],
       "category": "input"
     },
     "image-understand": {
       "path": "skills/image-understand/SKILL.md",
       "name": "image-understand",
       "description": "Image understanding and analysis",
-      "agents": ["frontend-ui-ux"],
+      "agents": [
+        "frontend-ui-ux"
+      ],
       "category": "analysis"
     },
     "image-edit": {
       "path": "skills/image-edit/SKILL.md",
       "name": "image-edit",
       "description": "Image editing capabilities",
-      "agents": ["frontend-ui-ux"],
+      "agents": [
+        "frontend-ui-ux"
+      ],
       "category": "creative"
     },
     "LLM": {
       "path": "skills/LLM/SKILL.md",
       "name": "LLM",
       "description": "Large language model interaction patterns",
-      "agents": ["core-factory", "lead-strategist"],
+      "agents": [
+        "core-factory",
+        "lead-strategist"
+      ],
       "category": "meta"
     },
     "dynamic-workflow": {
       "path": "skills/dynamic-workflow/SKILL.md",
       "name": "dynamic-workflow",
       "description": "Dynamic workflow creation and management",
-      "agents": ["lead-strategist"],
+      "agents": [
+        "lead-strategist"
+      ],
       "category": "process"
     }
   }
