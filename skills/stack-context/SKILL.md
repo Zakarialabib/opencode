@@ -10,6 +10,7 @@ Automatically detect the current stack (Tauri/Rust, React/TypeScript, Laravel/PH
 2. **Coding standards** from the appropriate rules file
 3. **Tool recommendations** (formatters, linters, test frameworks)
 4. **Common patterns** for the detected stack
+5. **Orchestration** — coordinate cross-stack tasks and validate context availability
 
 ## Auto-Detection Logic
 
@@ -19,66 +20,35 @@ Automatically detect the current stack (Tauri/Rust, React/TypeScript, Laravel/PH
 | `*.tsx`, `*.jsx`, `*.ts`, `vite.config.*` | **React (TypeScript)** | `rules/react.md`   | react, typescript, tailwindcss, vite |
 | `*.php`, `artisan`, `composer.json`       | **Laravel (PHP)**      | `rules/laravel.md` | laravel, php, eloquent, pest         |
 
-## Usage
+## Orchestration Workflow
 
-### Step 1: Detect Stack
+Before starting work on any cross-stack task, verify required context:
 
-```bash
-# For current file or task, check patterns above
-# If multiple stacks present, prioritize by task context
-```
+1. **Check MCP server health** — ensure relevant servers (context7, memory, filesystem) are responding
+2. **Check language server status** — rust-analyzer, TypeScript, PHP
+3. **Identify all stacks involved** — use detection logic above
+4. **Load rules for each stack**
+5. **Pull Context7 docs for each** — use context7 MCP tools
+6. **Provide unified context** — clear stack separation
 
-### Step 2: Load Rules
+### Example: Cross-stack Task
 
-Read the appropriate rules file:
+"Working on Tauri command that calls Laravel API"
+- Load both `rules/tauri.md` and `rules/laravel.md`
+- Pull Tauri IPC docs + Laravel API docs
+- Validate both language servers are active
+- Check MCP servers (context7, memory) are responding
 
-- Tauri → `rules/tauri.md`
-- React → `rules/react.md`
-- Laravel → `rules/laravel.md`
+## Context Validation
 
-### Step 3: Pull Context7 Docs
+Before executing, verify:
 
-Use Context7 MCP tools to get latest documentation:
-
-**For Tauri:**
-
-```
-1. context7_resolve-library-id → query: "Tauri v2"
-2. context7_query-docs → libraryId: "/tauri-apps/tauri", query: "[specific task]"
-```
-
-**For React:**
-
-```
-1. context7_resolve-library-id → query: "React hooks"
-2. context7_query-docs → libraryId: "/facebook/react", query: "[specific task]"
-```
-
-**For Laravel:**
-
-```
-1. context7_resolve-library-id → query: "Laravel 13 Eloquent"
-2. context7_query-docs → libraryId: "/laravel/laravel", query: "[specific task]"
-```
-
-### Step 4: Apply Standards
-
-- Load coding standards from rules file
-- Check if project uses recommended tools (biome, clippy, pint)
-- Suggest improvements if standards not met
-
-## Context Switching
-
-When switching between stacks in the same task:
-
-1. Identify all stacks involved
-2. Load rules for each stack
-3. Pull Context7 docs for each
-4. Provide unified context with clear stack separation
-
-Example: "Working on Tauri command that calls Laravel API"
-→ Load both `rules/tauri.md` and `rules/laravel.md`
-→ Pull Tauri IPC docs + Laravel API docs
+| Service           | How to Check                          | Fallback                          |
+| ----------------- | ------------------------------------- | --------------------------------- |
+| MCP servers       | `mcp_list` or health-check tool       | Use OpenCode defaults             |
+| Language servers  | LSP status tool                       | Open file of that type to trigger |
+| File patterns     | `glob` to detect stack files          | Ask user for stack context        |
+| Process health    | Check dev servers, background tasks   | Alert user, suggest restart       |
 
 ## Output Format
 
@@ -100,7 +70,45 @@ When invoked, provide:
 
 ### Common Patterns
 [Relevant code examples for the task]
+
+### Context Status
+- MCP servers: [✅/❌]
+- Language servers: [✅/❌]
+- Processes: [✅/❌]
 ```
+
+## Framework-Specific Guidance
+
+### React/TypeScript (from fullstack-dev)
+
+- Use existing shadcn/ui components instead of building from scratch
+- `'use client'` and `'use server'` for client/server code
+- Consistent card alignment: `p-4` or `p-6`, `gap-4` or `gap-6`
+- Long list handling: `max-h-96 overflow-y-auto`
+- Mobile-first responsive design with Tailwind breakpoints
+- Minimum 44px touch targets for interactive elements
+- Sticky footer: `min-h-screen flex flex-col` + `mt-auto` on footer
+- Semantic HTML with ARIA support
+- Loading states with spinners/skeletons during async operations
+- Toast notifications for user action feedback
+- Light/dark mode with `next-themes`
+
+### Tauri/Rust
+
+- Use `tauri::State` for shared resources, wrap with `Mutex` or `RwLock`
+- Return `Result<T, String>` for commands
+- Emit events with `app_handle.emit_all`, listen via `listen('event-name', ...)` in React
+- Avoid blocking main thread; use async commands
+- Refer to Tauri v2 documentation, not v1
+- Audit `Cargo.toml` for unused dependencies
+
+### Laravel/PHP
+
+- Follow Laravel conventions: PascalCase models, snake_case tables
+- Use laravel-feature-scaffold skill for new features
+- Use pest-testing skill for tests
+- Run `php artisan pint` after edits
+- Import audit: check for unused imports after every file change
 
 ## When to Use
 
@@ -109,10 +117,3 @@ When invoked, provide:
 - **Before implementation**: To ensure standards compliance
 - **During review**: To validate against stack conventions
 - **Context switching**: When moving between frontend/backend/native
-
-## Integration with Other Skills
-
-- Works with `testing-strategy` to suggest stack-specific tests
-- Feeds into `code-reviewer` for standards compliance
-- Supports `laravel-expert` and `tauri-expert` agents
-- Enhances `project-orchestrator` with multi-stack context

@@ -168,7 +168,10 @@ const SkillManagerPlugin: Plugin = async ({ directory }) => {
   if (skillsIndexPath) {
     try {
       const skillsIndex = parseJsonc(readFileSync(skillsIndexPath, "utf8"));
-      skills = (skillsIndex.skills || []).map((s: SkillEntry) => ({
+      const skillsData = Array.isArray(skillsIndex.skills)
+        ? skillsIndex.skills
+        : Object.values(skillsIndex.skills || {});
+      skills = (skillsData as SkillEntry[]).map((s: SkillEntry) => ({
         ...s,
         _loadedAt: Date.now(),
       }));
@@ -206,14 +209,16 @@ const SkillManagerPlugin: Plugin = async ({ directory }) => {
           const result =
             filtered.length === 0
               ? "No skills found."
-              : JSON.stringify(filtered.map((s) => ({
-                  name: s.name,
-                  displayName: s.displayName,
-                  category: s.category,
-                  description: s.description,
-                  agents: s.agents,
-                  tags: s.tags,
-                })));
+              : JSON.stringify(
+                  filtered.map((s) => ({
+                    name: s.name,
+                    displayName: s.displayName,
+                    category: s.category,
+                    description: s.description,
+                    agents: s.agents,
+                    tags: s.tags,
+                  }))
+                );
 
           recordSkillComplete("skill_list", "completed");
           debug(
@@ -292,11 +297,13 @@ const SkillManagerPlugin: Plugin = async ({ directory }) => {
           const result =
             matches.length === 0
               ? `No skills found matching "${query}".`
-              : JSON.stringify(matches.map((s) => ({
-                  name: s.name,
-                  displayName: s.displayName,
-                  description: s.description,
-                })));
+              : JSON.stringify(
+                  matches.map((s) => ({
+                    name: s.name,
+                    displayName: s.displayName,
+                    description: s.description,
+                  }))
+                );
 
           debug(
             SKILL_CATEGORIES.SKILL_EXECUTE,

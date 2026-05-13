@@ -3,7 +3,10 @@ import { type Plugin, tool } from "@opencode-ai/plugin";
 import { readFileSync, accessSync } from "node:fs";
 import { join, dirname, parse } from "node:path";
 import { debug, info, warn, error, SKILL_CATEGORIES } from "./debug-logger";
-import { execSync } from "node:child_process";
+import { execSync, exec } from "node:child_process";
+import { promisify } from "node:util";
+
+const execAsync = promisify(exec);
 
 // Debug: trace MCP tool loading
 function traceToolLoading(
@@ -279,6 +282,69 @@ const MCPManagerPlugin: Plugin = async ({ client, project, directory }) => {
 
           server.enabled = enable;
           return `MCP server "${serverName}" ${enable ? "✅ enabled" : "❌ disabled"}.\n⚠️ Restart OpenCode to apply changes.`;
+        },
+      }),
+
+      mcp_health: tool({
+        description: "Check health of all configured MCP servers with actual connectivity probes. Helps detect dead servers before task execution.",
+        args: {
+          serverName: tool.schema.string().optional().describe("Optional: check a specific server only"),
+        },
+        async execute({ serverName }) {
+          const servers = Object.entries(mcpConfig).filter(([name]) => !serverName || name === serverName);
+          if (servers.length === 0) return "No MCP servers found.";
+
+          const results = [];
+          for (const [name, config] of servers) {
+            const cfg = config as any;
+            const traces = mcpTraces.filter(t => t.serverName === name);
+            const lastUsed = traces.length > 0
+              ? new Date(Math.max(...traces.map(t => t.timestamp))).toISOString()
+              : "never";
+            const lastError = traces.filter(t => t.operation === "error").pop();
+
+            let probeStatus = "unknown";
+            let probeDetail = "";
+
+            if (!cfg.enabled) {
+              probeStatus = "disabled";
+            } else if (cfg.type === "local" && cfg.command?.length > 0) {
+              const cmdName = cfg.command[0];
+              try {
+                const isWin = typeof process !== "undefined" && process.platform === "win32";
+                const whichCmd = isWin ? "where" : "which";
+                await execAsync(`${whichCmd} ${cmdName}`);
+                probeStatus = "reachable";
+              } catch {
+                probeStatus = "unreachable";
+                probeDetail = `Command '${cmdName}' not found in PATH`;
+              }
+            } else {
+              probeStatus = "configured";
+            }
+
+            results.push({
+              server: name,
+              enabled: cfg.enabled,
+              type: cfg.type,
+              command: cfg.command?.join(" ") || "N/A",
+              probeStatus,
+              probeDetail,
+              lastUsed,
+              errors: traces.filter(t => t.operation === "error").length,
+              lastError: lastError?.details?.error || null,
+            });
+          }
+
+          const summary = {
+            total: results.length,
+            reachable: results.filter(r => r.probeStatus === "reachable").length,
+            disabled: results.filter(r => r.probeStatus === "disabled").length,
+            unreachable: results.filter(r => r.probeStatus === "unreachable").length,
+            unknown: results.filter(r => r.probeStatus === "unknown" || r.probeStatus === "configured").length,
+          };
+
+          return JSON.stringify({ summary, servers: results }, null, 2);
         },
       }),
     },

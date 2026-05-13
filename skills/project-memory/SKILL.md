@@ -1,19 +1,19 @@
 ---
 name: project-memory
-description: Auto-loads project conventions from memory on agent startup. Eliminates need for users to repeatedly state preferences.
-trigger: Automatic on session start, or /load-conventions command
-allowed_tools: Memory(read_graph, search_nodes, create_entities), Read(rules/*)
+description: "Project conventions, memory, and documentation governance. Auto-loads conventions on session start, audits docs for drift, and manages project knowledge."
+trigger: Automatic on session start, or /load-conventions, /audit-docs commands
+allowed_tools: Memory(read_graph, search_nodes, create_entities), Read(rules/*, docs/*), Grep, Glob
 ---
 
-# Project Memory Skill
+# Project Memory & Docs Governance
 
-This skill automatically loads project conventions into agent context at session start, eliminating the need for users to repeatedly state preferences.
+This skill combines project memory (convention tracking) with documentation governance (drift detection and audit). It auto-loads conventions on session start and provides tools to keep documentation aligned with code.
 
-## How It Works
+## Part 1: Project Memory
 
 ### 1. Session Start Injection
 
-On each agent session start, this skill:
+On each agent session start:
 
 1. Queries memory MCP for `project-conventions` entity
 2. Loads all observations with confidence score >= 0.7
@@ -52,133 +52,87 @@ qa-guardian → Testing conventions
 core-factory → General coding conventions
 ```
 
-## Usage
-
-```bash
-# Automatic on session start (no command needed)
-/load-conventions  # Manual trigger
-/conventions      # View current conventions
-```
-
-## Example Output
-
-When agent starts, system prompt includes:
-
-```
-Project conventions:
-- Use arrow functions, not function declarations
-- Repository pattern for data access
-- Use Pest over PHPUnit for testing
-- Livewire 4 with Alpine.js 3, not newer versions
-- Tailwind CSS, custom CSS only when necessary
-- TypeScript strict mode enabled
-- Environment variables in .env, never commit secrets
-```
-
-## Convention Types
-
-### Coding Style Preferences
-
-- Arrow functions vs function declarations
-- const vs let usage
-- Import order (stdlib, third-party, local)
-- Comment style (JSDoc, inline, none)
-- Line length limits
-
-### Code Patterns
-
-- Repository pattern for data access
-- Service layer pattern
-- DTO pattern
-- Event-driven architecture
-- Feature flags
-
-### Project Conventions
-
-- Testing framework (Pest vs PHPUnit)
-- CSS approach (Tailwind vs custom)
-- Component structure
-- API design (REST vs GraphQL)
-- Authentication (JWT vs sessions)
-
-## Integration Points
-
-### 1. Agent Startup Hook
-
-In each agent's instructions, add:
-
-```
-Load project conventions from memory MCP at session start.
-```
-
-### 2. Task Completion Hook
-
-After successful task, update memory:
-
-```javascript
-// Extract conventions from code written
-const conventions = extractConventions(code);
-memory.add_observations({
-  entityName: "project-conventions",
-  contents: conventions,
-});
-```
-
-### 3. Weekly Validation
-
-docs-curator reviews stored conventions and flags:
-
-- Outdated conventions (version upgrades)
-- Contradictions (conflicting patterns)
-- Unused conventions (never referenced)
-
-## Memory MCP Schema
+### 5. Memory MCP Schema
 
 ```json
 {
   "entityType": "convention",
   "name": "project-conventions",
   "observations": [
-    {
-      "text": "Use arrow functions over function declarations",
-      "confidence": 0.8,
-      "source": "frontend-ui-ux comments",
-      "mentions": 7,
-      "lastSeen": "2026-05-08"
-    },
-    {
-      "text": "Use Pest for testing, not PHPUnit",
-      "confidence": 0.9,
-      "source": "qa-guardian test files",
-      "mentions": 12,
-      "lastSeen": "2026-05-08"
-    }
+    { "text": "Use arrow functions over function declarations", "confidence": 0.8 },
+    { "text": "Use Pest for testing, not PHPUnit", "confidence": 0.9 }
   ]
 }
 ```
 
-## Convention Extraction Examples
+## Part 2: Docs Governance Audit
 
-| Code Pattern                | Extracted Convention             |
-| --------------------------- | -------------------------------- |
-| `const foo = () => {}`      | Prefer arrow functions           |
-| `$this->repository->get()`  | Use repository pattern           |
-| `test()` function in Pest   | Use Pest, not PHPUnit            |
-| `<div x-data="{}">`         | Use Alpine.js, not React hooks   |
-| `@wire:click`               | Use Livewire 4, not Livewire 3   |
-| `clsx('flex', ...)`         | Use clsx for conditional classes |
-| `tailwind.config.js` custom | Extend Tailwind theme            |
+Audit the docs folder against the actual codebase to find drift, stale guidance, and missing documentation.
 
-## Performance
+### Audit Goals
 
-- Memory query: ~50ms on session start
-- Convention extraction: ~200ms post-task
-- No performance impact on agent responsiveness
+- **Drift**: docs say one thing, code does another
+- **Gap**: important code exists but docs do not
+- **Redundancy**: duplicate docs, duplicate code, repeated guidance
+- **Deprecation**: docs or code still rely on outdated patterns
+- **Enhancement**: worthwhile improvement, but not necessarily broken
+- **Keep**: good patterns that should remain unchanged
+
+### Audit Workflow
+
+1. Map the documentation surface (glob `docs/**/*.md`)
+2. Map the code surface relevant to those docs (grep for module names, paths)
+3. Cross-check claimed paths, modules, and behaviors
+4. Classify findings by severity and type
+5. Produce an execution order, not just a report
+
+### Output Format
+
+```
+1. scope reviewed
+2. findings table
+3. priority plan
+4. specific docs/code updates to perform next
+```
+
+### Good Prompts
+
+- "Use project-memory to compare docs/ with the current codebase and rank cleanup opportunities."
+- "Audit this project for doc drift and deprecated patterns."
+- "Build a governance report for docs folder versus implementation."
+
+## Usage
+
+```bash
+# Automatic on session start (no command needed)
+/load-conventions  # Manual trigger
+/conventions       # View current conventions
+/audit-docs        # Run docs governance audit
+```
+
+## Integration Points
+
+### Agent Startup Hook
+
+In each agent's instructions:
+```
+Load project conventions from memory MCP at session start.
+```
+
+### Task Completion Hook
+
+After successful task, update memory with new conventions.
+
+### Weekly Validation
+
+docs-curator reviews stored conventions and flags:
+- Outdated conventions (version upgrades)
+- Contradictions (conflicting patterns)
+- Unused conventions (never referenced)
 
 ## Fallback Behavior
 
 If memory MCP unavailable:
-
 - Load from `rules/project-conventions.md`
 - Ask user for key preferences
 - Use empty conventions (no auto-loading)
