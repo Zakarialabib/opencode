@@ -1,6 +1,6 @@
-const fs = require("fs");
-const path = require("path");
-const { execSync } = require("child_process");
+import * as fs from "fs";
+import * as path from "path";
+import { execSync } from "child_process";
 
 /**
  * The Continuum Engine: Strata Exporter
@@ -18,7 +18,7 @@ if (!fs.existsSync(CONTINUUM_DIR)) {
 }
 
 // 1. Gather Thermal Map (recently changed files via Git)
-let recentFiles = [];
+let recentFiles: string[] = [];
 try {
   const gitStatus = execSync("git status --short", { cwd: WORKSPACE_DIR }).toString();
   recentFiles = gitStatus.split("\n").filter((line) => line.trim().length > 0);
@@ -28,7 +28,7 @@ try {
 
 // 2. Gather active skills metadata
 const skillsDir = path.join(WORKSPACE_DIR, ".opencode", "skills");
-let activeSkills = [];
+let activeSkills: string[] = [];
 if (fs.existsSync(skillsDir)) {
   activeSkills = fs
     .readdirSync(skillsDir)
@@ -52,3 +52,4 @@ const exportPath = path.join(CONTINUUM_DIR, filename);
 
 fs.writeFileSync(exportPath, JSON.stringify(strata, null, 2));
 console.log(`[Continuum Engine] Stratum successfully exported to: ${exportPath}`);
+

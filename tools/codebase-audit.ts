@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
- * codebase-audit.js — Intelligent Codebase Audit
+ * codebase-audit.ts — Intelligent Codebase Audit
  * Fixed: eliminates false positives from boilerplate matching
  * Focuses on REAL actionable issues
  */
 
-const fs = require("fs");
-const path = require("path");
+import * as fs from "fs";
+import * as path from "path";
 
 const EXCLUDE_DIRS = new Set([
   "node_modules",
@@ -49,8 +49,30 @@ const BOILERPLATE_PATTERNS = [
   /^\s*\* /, // JSDoc lines
 ];
 
-class IntelligentAuditor {
-  constructor(rootDir) {
+interface Finding {
+  category: string;
+  severity: string;
+  file: string;
+  line: number;
+  message: string;
+  suggestion: string;
+}
+
+export class IntelligentAuditor {
+  rootDir: string;
+  findings: Finding[];
+  stats: {
+    filesScanned: number;
+    issuesFound: number;
+    byCategory: Record<string, number>;
+    bySeverity: Record<string, number>;
+  };
+  allImports: Map<string, Array<{ var: string; source: string; line: number }>>;
+  allExports: Map<string, Array<{ name: string; line: number }>>;
+  fileContents: Map<string, string>;
+  fileLines: Map<string, string[]>;
+
+  constructor(rootDir?: string) {
     this.rootDir = rootDir || process.cwd();
     this.findings = [];
     this.stats = { filesScanned: 0, issuesFound: 0, byCategory: {}, bySeverity: {} };
@@ -60,7 +82,7 @@ class IntelligentAuditor {
     this.fileLines = new Map(); // filePath -> [lines]
   }
 
-  addFinding(category, severity, file, line, message, suggestion = "") {
+  addFinding(category: string, severity: string, file: string, line: number, message: string, suggestion = "") {
     this.findings.push({
       category,
       severity,
@@ -74,7 +96,7 @@ class IntelligentAuditor {
     this.stats.bySeverity[severity] = (this.stats.bySeverity[severity] || 0) + 1;
   }
 
-  getLineNumber(content, index) {
+  getLineNumber(content: string, index: number) {
     return content.substring(0, index).split("\n").length;
   }
 
@@ -93,7 +115,7 @@ class IntelligentAuditor {
     return this.generateReport();
   }
 
-  walkDir(dir) {
+  walkDir(dir: string) {
     let entries;
     try {
       entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -138,7 +160,7 @@ class IntelligentAuditor {
 
   // ========== TypeScript/JavaScript SCAN ==========
 
-  scanTSJS(filePath, content) {
+  scanTSJS(filePath: string, content: string) {
     const lines = content.split("\n");
 
     for (let i = 0; i < lines.length; i++) {
@@ -150,7 +172,7 @@ class IntelligentAuditor {
         /^import\s+(?:\{([^}]+)\}|\*\s+as\s+(\w+)|(\w+))\s+from\s+['"]([^'"]+)['"]/
       );
       if (importMatch) {
-        let imported;
+        let imported: string[] | undefined;
         if (importMatch[1]) {
           // { foo, bar }
           imported = importMatch[1]
@@ -169,7 +191,7 @@ class IntelligentAuditor {
           // External import — record for cross-file analysis
           if (!this.allImports.has(filePath)) this.allImports.set(filePath, []);
           imported.forEach((name) => {
-            this.allImports.get(filePath).push({ var: name, source, line: lineNum });
+            this.allImports.get(filePath)!.push({ var: name, source, line: lineNum });
           });
         }
       }
@@ -238,7 +260,7 @@ class IntelligentAuditor {
 
   // ========== RUST SCAN ==========
 
-  scanRust(filePath, content) {
+  scanRust(filePath: string, content: string) {
     const lines = content.split("\n");
 
     for (let i = 0; i < lines.length; i++) {
@@ -295,7 +317,7 @@ class IntelligentAuditor {
 
   // ========== PHP SCAN ==========
 
-  scanPHP(filePath, content) {
+  scanPHP(filePath: string, content: string) {
     const lines = content.split("\n");
 
     for (let i = 0; i < lines.length; i++) {
@@ -334,12 +356,12 @@ class IntelligentAuditor {
 
   // ========== PACKAGE.JSON SCAN ==========
 
-  scanPackageJson(filePath, content) {
+  scanPackageJson(filePath: string, content: string) {
     try {
       const pkg = JSON.parse(content);
 
       // --- Check for outdated dependencies ---
-      const knownOutdated = {
+      const knownOutdated: Record<string, { min: string; reason: string }> = {
         uuid: { min: "v9", reason: "v9+ uses crypto.randomUUID() natively" },
         lodash: { min: "v4.17.21", reason: "Security: prototype pollution patches" },
       };
@@ -464,10 +486,10 @@ class IntelligentAuditor {
     for (const [hash, locations] of blocks) {
       if (locations.length >= 2) {
         // Verify they're in different files or significantly apart
-        const uniqueFiles = new Set(locations.map((l) => l.file));
+        const uniqueFiles = new Set(locations.map((l: any) => l.file));
         if (uniqueFiles.size >= 2) {
           const fileList = locations
-            .map((l) => `${path.basename(l.file)}:${l.startLine}`)
+            .map((l: any) => `${path.basename(l.file)}:${l.startLine}`)
             .join(", ");
 
           this.addFinding(
@@ -566,18 +588,18 @@ class IntelligentAuditor {
 
   // ========== HELPERS ==========
 
-  snakeCase(str) {
+  snakeCase(str: string) {
     return str
       .replace(/([a-z])([A-Z])/g, "$1_$2")
       .replace(/([A-Z])([A-Z][a-z])/g, "$1_$2")
       .toLowerCase();
   }
 
-  pascalCase(str) {
+  pascalCase(str: string) {
     return str.replace(/(^|_)(\w)/g, (_, __, c) => c.toUpperCase());
   }
 
-  hash(str) {
+  hash(str: string) {
     let hash = 0x811c9dc5; // FNV offset basis
     for (let i = 0; i < str.length; i++) {
       hash ^= str.charCodeAt(i);
@@ -682,7 +704,7 @@ class IntelligentAuditor {
     if (high.length > 0) {
       md += "## 🟠 High Priority Issues\n\n";
       const displayed = high.slice(0, 50);
-      const grouped = {};
+      const grouped: Record<string, any[]> = {};
       for (const f of displayed) {
         if (!grouped[f.category]) grouped[f.category] = [];
         grouped[f.category].push(f);
@@ -709,8 +731,8 @@ class IntelligentAuditor {
     return report;
   }
 
-  generateRecommendations(critical, high, medium, low) {
-    const recs = [];
+  generateRecommendations(critical: Finding[], high: Finding[], medium: Finding[], low: Finding[]) {
+    const recs: any[] = [];
     const cats = this.stats.byCategory;
 
     if (cats.ARCHITECTURE > 0) {
@@ -764,10 +786,10 @@ class IntelligentAuditor {
       });
     }
 
-    if (low > 100) {
+    if (low.length > 100) {
       recs.push({
         priority: "LOW",
-        action: `Clean ${low} console/println/debug statements`,
+        action: `Clean ${low.length} console/println/debug statements`,
         command: "grep -rn 'console\\.\\|dbg!\\|println!' --include='*.ts' --include='*.rs' .",
         effort: "1-2 hours",
       });
@@ -775,13 +797,19 @@ class IntelligentAuditor {
 
     // Deduplicate
     return [...new Map(recs.map((r) => [r.action, r])).values()].sort((a, b) => {
-      const order = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+      const order: Record<string, number> = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
       return (order[a.priority] || 99) - (order[b.priority] || 99);
     });
   }
 }
 
 // Run
-const root = process.argv[2] || process.cwd();
-const auditor = new IntelligentAuditor(root);
-auditor.scan();
+const isMain = process.argv[1] && (
+  process.argv[1].endsWith("codebase-audit.ts") || 
+  process.argv[1].endsWith("codebase-audit.js")
+);
+if (isMain) {
+  const root = process.argv[2] || process.cwd();
+  const auditor = new IntelligentAuditor(root);
+  auditor.scan();
+}

@@ -1,18 +1,19 @@
-// Skill Registry for OpenCode
-// Provides discovery, loading, and management of skills
+import * as fs from "fs";
+import * as path from "path";
+import * as yaml from "yaml";
 
-const fs = require("fs");
-const path = require("path");
-const yaml = require("yaml");
+export class SkillRegistry {
+  private skillsDir: string;
+  private skills: Map<string, any>;
+  private index: any;
 
-class SkillRegistry {
-  constructor(skillsDir) {
+  constructor(skillsDir: string) {
     this.skillsDir = skillsDir;
     this.skills = new Map();
     this.index = null;
   }
 
-  async loadIndex() {
+  async loadIndex(): Promise<boolean> {
     try {
       const indexPath = path.join(this.skillsDir, "index.json");
       if (fs.existsSync(indexPath)) {
@@ -27,7 +28,7 @@ class SkillRegistry {
     return false;
   }
 
-  async loadSkills() {
+  async loadSkills(): Promise<void> {
     if (!this.index || !this.index.skills) return;
 
     for (const skillInfo of this.index.skills) {
@@ -39,7 +40,7 @@ class SkillRegistry {
     }
   }
 
-  async loadSkill(skillName) {
+  async loadSkill(skillName: string): Promise<any> {
     if (this.skills.has(skillName)) {
       return this.skills.get(skillName);
     }
@@ -60,7 +61,7 @@ class SkillRegistry {
     };
 
     // Load metadata from index if available
-    const indexSkill = this.index.skills.find((s) => s.name === skillName);
+    const indexSkill = this.index?.skills?.find((s: any) => s.name === skillName);
     if (indexSkill) {
       skill.metadata = { ...skill.metadata, ...indexSkill };
     }
@@ -69,8 +70,8 @@ class SkillRegistry {
     return skill;
   }
 
-  extractMetadata(content, skillName) {
-    const metadata = {};
+  extractMetadata(content: string, skillName: string): any {
+    const metadata: any = {};
     const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
     if (!match) {
       return metadata;
@@ -81,22 +82,22 @@ class SkillRegistry {
       if (parsed && typeof parsed === "object") {
         return parsed;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.warn(`Failed to parse SKILL.md frontmatter for ${skillName}:`, error.message);
     }
 
     return metadata;
   }
 
-  getSkill(skillName) {
+  getSkill(skillName: string): any {
     return this.skills.get(skillName) || null;
   }
 
-  listSkills() {
+  listSkills(): string[] {
     return Array.from(this.skills.keys());
   }
 
-  searchSkills(query) {
+  searchSkills(query: string): string[] {
     const lowerQuery = query.toLowerCase();
     return this.listSkills().filter((skillName) => {
       const skill = this.getSkill(skillName);
@@ -109,12 +110,12 @@ class SkillRegistry {
         (skill.metadata.description &&
           skill.metadata.description.toLowerCase().includes(lowerQuery)) ||
         (skill.metadata.tags &&
-          skill.metadata.tags.some((tag) => tag.toLowerCase().includes(lowerQuery)))
+          skill.metadata.tags.some((tag: string) => tag.toLowerCase().includes(lowerQuery)))
       );
     });
   }
 
-  getSkillsByAgent(agentName) {
+  getSkillsByAgent(agentName: string): string[] {
     return this.listSkills().filter((skillName) => {
       const skill = this.getSkill(skillName);
       if (!skill) return false;
@@ -122,7 +123,7 @@ class SkillRegistry {
     });
   }
 
-  getSkillsByCategory(category) {
+  getSkillsByCategory(category: string): string[] {
     return this.listSkills().filter((skillName) => {
       const skill = this.getSkill(skillName);
       if (!skill) return false;
@@ -130,11 +131,12 @@ class SkillRegistry {
     });
   }
 
-  async reload() {
+  async reload(): Promise<boolean> {
     this.skills.clear();
     this.index = null;
     return await this.loadIndex();
   }
 }
 
-module.exports = SkillRegistry;
+export default SkillRegistry;
+

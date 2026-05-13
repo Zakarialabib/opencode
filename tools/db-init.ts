@@ -1,16 +1,26 @@
-// db-init.js - Initialize OpenCode database with improved schema
-const fs = require("fs");
-const path = require("path");
-const { execSync } = require("child_process");
+import * as fs from "fs";
+import * as path from "path";
+import { execSync } from "child_process";
+import { fileURLToPath } from "url";
 
-class DatabaseInitializer {
-  constructor(projectRoot) {
+// Define interface for config
+interface OpenCodeConfig {
+  agent?: Record<string, any>;
+  mcp?: Record<string, any>;
+}
+
+export class DatabaseInitializer {
+  private projectRoot: string;
+  private dbPath: string;
+  private schemaPath: string;
+
+  constructor(projectRoot: string) {
     this.projectRoot = projectRoot;
     this.dbPath = path.join(projectRoot, "database.sqlite");
     this.schemaPath = path.join(projectRoot, "database", "schema.sql");
   }
 
-  async initialize() {
+  async initialize(): Promise<boolean> {
     console.log("🗄️  Initializing OpenCode database...");
 
     try {
@@ -75,20 +85,20 @@ class DatabaseInitializer {
 
       console.log("✅ Database initialization complete!");
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error("❌ Database initialization failed:", error.message);
       return false;
     }
   }
 
-  async insertDefaultData() {
+  async insertDefaultData(): Promise<boolean> {
     console.log("📥 Inserting default data...");
 
     try {
       // Insert default agents from opencode.json
       const configPath = path.join(this.projectRoot, "opencode.json");
       if (fs.existsSync(configPath)) {
-        const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+        const config: OpenCodeConfig = JSON.parse(fs.readFileSync(configPath, "utf8"));
 
         if (config.agent) {
           for (const [name, agent] of Object.entries(config.agent)) {
@@ -159,7 +169,7 @@ class DatabaseInitializer {
 
       console.log("✅ Default data inserted!");
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error("❌ Failed to insert default data:", error.message);
       return false;
     }
@@ -167,8 +177,13 @@ class DatabaseInitializer {
 }
 
 // Run if called directly
-if (require.main === module) {
-  const projectRoot = process.argv[2] || __dirname;
+const isMain = process.argv[1] && (
+  process.argv[1].endsWith("db-init.ts") || 
+  process.argv[1].endsWith("db-init.js")
+);
+
+if (isMain) {
+  const projectRoot = process.argv[2] || process.cwd();
   const initializer = new DatabaseInitializer(projectRoot);
 
   initializer
@@ -188,4 +203,3 @@ if (require.main === module) {
     });
 }
 
-module.exports = DatabaseInitializer;

@@ -36,7 +36,7 @@ class ConfigValidator {
     if (!valid) {
       return {
         valid: false,
-        errors: validate.errors.map((error) => ({
+        errors: this.compiledValidate.errors.map((error) => ({
           message: error.message,
           path: error.instancePath ? error.instancePath.slice(1) : [],
           schemaPath: error.schemaPath,

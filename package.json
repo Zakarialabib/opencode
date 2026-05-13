@@ -2,14 +2,14 @@
   "name": "opencode-local",
   "version": "1.0.0",
   "bin": {
-    "opencode": "./opencode-launch.js"
+    "opencode": "./scripts/opencode-launch.js"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^2.0.47",
     "@hey-api/client-fetch": "^0.13.1",
     "@lancedb/lancedb": "^0.27.2",
     "@nick-vi/opencode-type-inject": "latest",
-    "@opencode-ai/plugin": "1.3.17",
+    "@opencode-ai/plugin": "1.14.48",
     "@tarquinen/opencode-dcp": "latest",
     "@zenobius/opencode-skillful": "latest",
     "agentic-cli": "^0.1.9",
@@ -25,20 +25,21 @@
     "@types/node": "^22.19.18",
     "prettier": "^3.8.3",
     "prettier-plugin-tailwindcss": "^0.7.4",
+    "tsx": "^4.19.0",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.5"
+    "vitest": "^4.1.6"
   },
   "scripts": {
-    "start": "node opencode-launch.js",
+    "start": "node scripts/opencode-launch.js",
     "start:debug": "node scripts/debug-launch.js",
-    "debug": "DEBUG=* node opencode-launch.js",
-    "debug:skill": "DEBUG=skill:* node opencode-launch.js",
-    "debug:tool": "DEBUG=tool:* node opencode-launch.js",
-    "debug:mcp": "DEBUG=mcp:* node opencode-launch.js",
-    "debug:lsp": "DEBUG=lsp:* node opencode-launch.js",
-    "setup": "powershell -ExecutionPolicy Bypass -File setup.ps1",
-    "db:init": "node tools/db-init.js",
-    "health-check": "node tools/project-health-check.js",
+    "debug": "DEBUG=* node scripts/opencode-launch.js",
+    "debug:skill": "DEBUG=skill:* node scripts/opencode-launch.js",
+    "debug:tool": "DEBUG=tool:* node scripts/opencode-launch.js",
+    "debug:mcp": "DEBUG=mcp:* node scripts/opencode-launch.js",
+    "debug:lsp": "DEBUG=lsp:* node scripts/opencode-launch.js",
+    "setup": "npm install",
+    "db:init": "npx tsx tools/db-init.ts",
+    "health-check": "npx tsx tools/project-health-check.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -46,14 +47,14 @@
     "lint": "npm run lint:biome",
     "lint:biome": "npx @biomejs/biome lint --write . && npx @biomejs/biome format --write .",
     "format": "npx @biomejs/biome format --write .",
-    "format:check": "npx @biomejs/biome format --check .",
+    "format:check": "npx @biomejs/biome format .",
     "clean": "node -e \"const fs = require('fs'); ['dist', '.nyc_output', 'coverage'].forEach(d => fs.rmSync(d, { recursive: true, force: true }))\"",
     "check-all": "npm run lint && npm run format:check && npm run typecheck && npm run test",
-    "skills:generate": "node tools/generate-skill-index.js",
+    "skills:generate": "npx tsx tools/generate-skill-index.ts",
     "skills:validate": "node -e \"const fs = require('fs'); try { JSON.parse(fs.readFileSync('skills/index.json', 'utf8')); console.log('✅ skills/index.json is valid JSON') } catch (e) { console.error('❌ Invalid skills/index.json:', e.message); process.exit(1) }\"",
     "config:validate": "node -e \"const fs = require('fs'); try { JSON.parse(fs.readFileSync('opencode.json', 'utf8')); console.log('✅ opencode.json is valid JSON') } catch (e) { console.error('❌ Invalid opencode.json:', e.message); process.exit(1) }\"",
     "mcp:validate": "node -e \"const fs = require('fs'); const path = require('path'); const config = JSON.parse(fs.readFileSync('opencode.json', 'utf8')); const mcpPath = path.join(config.project?.root || '.', 'opencode.json'); try { JSON.parse(fs.readFileSync(mcpPath, 'utf8')); console.log('✅ MCP config is valid') } catch (e) { console.error('❌ Invalid MCP config:', e.message); process.exit(1) }\"",
     "autoresearch:test": "echo 'Running autoresearch dry run...' && node -e \"console.log('✅ /autoresearch feature ready (use /autoresearch in OpenCode CLI)')\"",
-    "lsp:check": "npx tsx scripts/lsp-health-check.ts || node tools/project-health-check.js --lsp"
+    "lsp:check": "npx tsx tools/project-health-check.ts --lsp"
   }
 }

@@ -13,6 +13,6 @@
     "resolveJsonModule": true,
     "types": ["bun", "node"]
   },
-  "include": ["opencode-launch.js", "plugins/**/*.ts", "tools/**/*.ts", "scripts/**/*.ts"],
+  "include": ["scripts/opencode-launch.js", "plugins/**/*.ts", "tools/**/*.ts", "scripts/**/*.ts"],
   "exclude": ["node_modules", "dist", "coverage", ".nyc_output", "**/__tests__/**", "**/*.test.ts"]
 }

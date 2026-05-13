@@ -1,10 +1,14 @@
-const fs = require("fs");
-const path = require("path");
+import * as fs from "fs";
+import * as path from "path";
+import { fileURLToPath } from "url";
 
-const skillsDir = path.resolve(__dirname, "..", "skills");
+const skillsDir = path.resolve(process.cwd(), "skills");
 const indexPath = path.join(skillsDir, "index.json");
 const existingIndex = JSON.parse(fs.readFileSync(indexPath, "utf8"));
-const existingNames = new Set(existingIndex.skills.map((s) => s.name));
+const existingSkills = Array.isArray(existingIndex.skills)
+  ? existingIndex.skills
+  : Object.values(existingIndex.skills || {});
+const existingNames = new Set(existingSkills.map((s: any) => s.name));
 
 const allDirs = fs
   .readdirSync(skillsDir, { withFileTypes: true })
@@ -14,7 +18,7 @@ const allDirs = fs
 const missing = allDirs.filter((d) => !existingNames.has(d));
 console.log("Missing from index (" + missing.length + "):", missing.join(", "));
 
-const categoryMap = {
+const categoryMap: Record<string, any> = {
   "ai-news-collectors": {
     category: "research",
     tags: ["ai", "news", "aggregation", "trends"],
@@ -162,7 +166,7 @@ const categoryMap = {
   },
 };
 
-const displayNameMap = {
+const displayNameMap: Record<string, string> = {
   ASR: "Automatic Speech Recognition",
   LLM: "Large Language Model",
   TTS: "Text-to-Speech",
@@ -194,7 +198,7 @@ const displayNameMap = {
   "writing-plans": "Writing Plans",
 };
 
-function extractDescription(dir) {
+function extractDescription(dir: string): string {
   const skillPath = path.join(skillsDir, dir, "SKILL.md");
   try {
     const content = fs.readFileSync(skillPath, "utf-8");
@@ -220,7 +224,7 @@ const newEntries = missing.map((dir) => {
 });
 
 existingIndex.lastUpdated = new Date().toISOString();
-existingIndex.skills = [...existingIndex.skills, ...newEntries].sort((a, b) =>
+existingIndex.skills = [...existingSkills, ...newEntries].sort((a, b) =>
   a.name.localeCompare(b.name)
 );
 existingIndex.totalSkills = existingIndex.skills.length;
@@ -228,3 +232,4 @@ existingIndex.totalSkills = existingIndex.skills.length;
 fs.writeFileSync(indexPath, JSON.stringify(existingIndex, null, 2) + "\n", "utf-8");
 console.log("Total skills in index: " + existingIndex.totalSkills);
 console.log("Added " + newEntries.length + " new entries");
+

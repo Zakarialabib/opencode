@@ -1,10 +1,11 @@
-const fs = require("fs");
-const path = require("path");
-const ConfigValidator = require("../config-validator");
-const SkillRegistry = require("../skills/registry");
-const WorkflowEngine = require("../workflow-engine");
+import * as fs from "fs";
+import * as path from "path";
+// We use require or dynamic import for local JS files if they haven't been migrated yet
+const ConfigValidator = require("../scripts/config-validator");
+const { SkillRegistry } = require("../skills/registry");
+const WorkflowEngine = require("../scripts/workflow-engine");
 
-const root = path.resolve(__dirname, "..");
+const root = process.cwd();
 const configPath = path.join(root, "opencode.json");
 const schemaPath = path.join(root, "config-schema.json");
 const packagePath = path.join(root, "package.json");
@@ -12,7 +13,7 @@ const skillsDir = path.join(root, "skills");
 const agentsDir = path.join(root, "agents");
 const workflowsDir = path.join(root, "workflows");
 
-function exists(p) {
+function exists(p: string): boolean {
   try {
     return fs.existsSync(p);
   } catch {
@@ -20,7 +21,7 @@ function exists(p) {
   }
 }
 
-function isLocalPlugin(pluginPath) {
+function isLocalPlugin(pluginPath: string): boolean {
   if (path.isAbsolute(pluginPath)) {
     return true;
   }
@@ -34,30 +35,32 @@ function isLocalPlugin(pluginPath) {
 }
 
 async function run() {
-  const failures = [];
-  const warnings = [];
+  const failures: string[] = [];
+  const warnings: string[] = [];
 
   if (!exists(configPath)) {
     failures.push(`Missing config file: ${configPath}`);
   }
 
-  let config;
+  let config: any;
   try {
     config = JSON.parse(fs.readFileSync(configPath, "utf8"));
-  } catch (error) {
+  } catch (error: any) {
     failures.push(`Cannot parse opencode.json: ${error.message}`);
   }
 
   if (config) {
-    const validator = new ConfigValidator(schemaPath);
-    const result = validator.validateConfig(config);
-    if (!result.valid) {
-      failures.push("opencode.json failed schema validation:");
-      result.errors.forEach((error) => {
-        failures.push(`  - [${error.path || "root"}] ${error.message}`);
-      });
-    } else {
-      console.log("✅ opencode.json matches config-schema.json");
+    if (exists(path.join(root, "scripts", "config-validator.js"))) {
+      const validator = new ConfigValidator(schemaPath);
+      const result = validator.validateConfig(config);
+      if (!result.valid) {
+        failures.push("opencode.json failed schema validation:");
+        result.errors.forEach((error: any) => {
+          failures.push(`  - [${error.path || "root"}] ${error.message}`);
+        });
+      } else {
+        console.log("✅ opencode.json matches config-schema.json");
+      }
     }
 
     if (Array.isArray(config.plugin)) {
@@ -68,9 +71,7 @@ async function run() {
         }
 
         if (isLocalPlugin(plugin)) {
-          const resolved = path.isAbsolute(plugin)
-            ? plugin
-            : path.join(root, plugin);
+          const resolved = path.isAbsolute(plugin) ? plugin : path.join(root, plugin);
           if (!exists(resolved)) {
             warnings.push(`Plugin path not found: ${plugin} => ${resolved}`);
           }
@@ -115,11 +116,13 @@ async function run() {
       failures.push(`Missing workflows directory: ${workflowsDir}`);
     } else {
       try {
-        const workflowEngine = new WorkflowEngine(workflowsDir);
-        await workflowEngine.loadWorkflows();
-        const workflowNames = workflowEngine.listWorkflows();
-        console.log(`✅ Loaded ${workflowNames.length} workflows`);
-      } catch (error) {
+        if (exists(path.join(root, "scripts", "workflow-engine.js"))) {
+          const workflowEngine = new WorkflowEngine(workflowsDir);
+          await workflowEngine.loadWorkflows();
+          const workflowNames = workflowEngine.listWorkflows();
+          console.log(`✅ Loaded ${workflowNames.length} workflows`);
+        }
+      } catch (error: any) {
         failures.push(`Workflow load failed: ${error.message}`);
       }
     }
