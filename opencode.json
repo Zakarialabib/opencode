@@ -10,7 +10,6 @@
     "plugins/agent-router.ts",
     "plugins/skill-manager.ts",
     "plugins/context-manager.ts",
-    "plugins/extension-context-bridge.ts",
     "brain-plugin/brain.ts"
   ],
   "provider": {
@@ -106,7 +105,7 @@
     "memory": {
       "type": "local",
       "command": ["npx", "-y", "@modelcontextprotocol/server-memory"],
-      "enabled": true,
+      "enabled": false,
       "timeout": 30000
     },
     "git": {
@@ -137,13 +136,13 @@
       "type": "local",
       "command": ["npx", "-y", "@modelcontextprotocol/server-language-server"],
       "enabled": true,
-      "timeout": 30000
+      "timeout": 45000
     },
     "type-inject": {
       "type": "local",
       "command": ["npx", "-y", "@nick-vi/type-inject-mcp"],
       "enabled": true,
-      "timeout": 30000
+      "timeout": 45000
     },
     "puppeteer": {
       "type": "local",
@@ -154,14 +153,14 @@
     "personal-knowledge": {
       "type": "local",
       "command": ["bunx", "opencode-personal-knowledge"],
-      "enabled": true,
+      "enabled": false,
       "timeout": 30000
     },
     "filesystem": {
       "type": "local",
       "command": ["bunx", "@modelcontextprotocol/server-filesystem", "c:/opencode"],
       "enabled": true,
-      "timeout": 30000
+      "timeout": 45000
     },
     "everything": {
       "type": "local",
@@ -258,7 +257,8 @@
     "brain_search": "allow",
     "brain_embed_test": "allow",
     "brain_index_project": "allow",
-    "brain_speculative_status": "allow"
+    "brain_speculative_status": "allow",
+    "brain_embed_lmstudio": "allow"
   },
   "tools": {
     "read": true,
@@ -291,7 +291,8 @@
     "brain_search": true,
     "brain_embed_test": true,
     "brain_index_project": true,
-    "brain_speculative_status": true
+    "brain_speculative_status": true,
+    "brain_embed_lmstudio": true
   },
   "lsp": {
     "typescript": {
@@ -339,7 +340,7 @@
     }
   },
   "instructions": [
-    "Follow project rules: rules/general.md, rules/project.md, rules/trae.md, rules/laravel-boost.md",
+    "Follow project rules: rules/general.md, rules/project.md, rules/laravel-boost.md",
     "Stack: Tauri (Rust), React (TypeScript), Laravel (PHP). Use auto-detect.",
     "Auto-format based on rules/auto-format.md.",
     "REASONING: Always use <thinking> blocks before acting.",
@@ -393,12 +394,12 @@
       "agent": "docs-curator"
     },
     "db:init": {
-      "template": "node tools/db-init.js",
+      "template": "npx tsx tools/db-init.ts",
       "description": "Initialize database",
       "agent": "devops-engineer"
     },
     "process:check": {
-      "template": "npx ts-node tools/process-check.ts",
+      "template": "npx tsx tools/process-check.ts",
       "description": "Check processes and health",
       "agent": "devops-engineer"
     },
@@ -469,7 +470,8 @@
         "brain_search": true,
         "brain_embed_test": true,
         "brain_index_project": true,
-        "brain_speculative_status": true
+        "brain_speculative_status": true,
+        "brain_embed_lmstudio": true
       }
     },
     "plan": {
@@ -489,7 +491,8 @@
         "brain_search": true,
         "brain_embed_test": true,
         "brain_index_project": true,
-        "brain_speculative_status": true
+        "brain_speculative_status": true,
+        "brain_embed_lmstudio": true
       }
     },
     "explore": {
@@ -510,7 +513,8 @@
         "brain_search": true,
         "brain_embed_test": true,
         "brain_index_project": true,
-        "brain_speculative_status": true
+        "brain_speculative_status": true,
+        "brain_embed_lmstudio": true
       }
     },
     "scout": {
@@ -532,7 +536,8 @@
         "brain_search": true,
         "brain_embed_test": true,
         "brain_index_project": true,
-        "brain_speculative_status": true
+        "brain_speculative_status": true,
+        "brain_embed_lmstudio": true
       }
     },
     "core-factory": {
@@ -572,7 +577,8 @@
         "brain_search": true,
         "brain_embed_test": true,
         "brain_index_project": true,
-        "brain_speculative_status": true
+        "brain_speculative_status": true,
+        "brain_embed_lmstudio": true
       },
       "permission": {
         "file": {
@@ -625,7 +631,8 @@
         "brain_search": true,
         "brain_embed_test": true,
         "brain_index_project": true,
-        "brain_speculative_status": true
+        "brain_speculative_status": true,
+        "brain_embed_lmstudio": true
       },
       "permission": {
         "file": {
@@ -675,7 +682,8 @@
         "brain_search": true,
         "brain_embed_test": true,
         "brain_index_project": true,
-        "brain_speculative_status": true
+        "brain_speculative_status": true,
+        "brain_embed_lmstudio": true
       }
     },
     "frontend-ui-ux": {
@@ -712,7 +720,8 @@
         "brain_search": true,
         "brain_embed_test": true,
         "brain_index_project": true,
-        "brain_speculative_status": true
+        "brain_speculative_status": true,
+        "brain_embed_lmstudio": true
       }
     },
     "backend-api": {
@@ -722,7 +731,7 @@
       "instructions": [
         "API: Node/Express or Laravel. Read → Implement → Validate.",
         "CONCISE: Brief code. No long explanations.",
-        "Use fullstack-dev skill for web patterns.",
+        "Use stack-context skill for web patterns.",
         "Validate with LSP after changes.",
         "NO REDUNDANCY: Check for existing endpoints/services before implementing.",
         "IMPORT AUDIT: Only add external imports when necessary. Prefer stdlib.",
@@ -744,7 +753,8 @@
         "brain_search": true,
         "brain_embed_test": true,
         "brain_index_project": true,
-        "brain_speculative_status": true
+        "brain_speculative_status": true,
+        "brain_embed_lmstudio": true
       }
     },
     "backend-laravel": {
@@ -777,7 +787,8 @@
         "brain_search": true,
         "brain_embed_test": true,
         "brain_index_project": true,
-        "brain_speculative_status": true
+        "brain_speculative_status": true,
+        "brain_embed_lmstudio": true
       }
     },
     "backend-tauri": {
@@ -814,7 +825,8 @@
         "brain_search": true,
         "brain_embed_test": true,
         "brain_index_project": true,
-        "brain_speculative_status": true
+        "brain_speculative_status": true,
+        "brain_embed_lmstudio": true
       }
     },
     "qa-guardian": {
@@ -844,7 +856,8 @@
         "brain_search": true,
         "brain_embed_test": true,
         "brain_index_project": true,
-        "brain_speculative_status": true
+        "brain_speculative_status": true,
+        "brain_embed_lmstudio": true
       }
     },
     "devops-engineer": {
@@ -873,7 +886,8 @@
         "brain_search": true,
         "brain_embed_test": true,
         "brain_index_project": true,
-        "brain_speculative_status": true
+        "brain_speculative_status": true,
+        "brain_embed_lmstudio": true
       }
     },
     "docs-curator": {
@@ -911,7 +925,8 @@
         "brain_search": true,
         "brain_embed_test": true,
         "brain_index_project": true,
-        "brain_speculative_status": true
+        "brain_speculative_status": true,
+        "brain_embed_lmstudio": true
       }
     }
   },
