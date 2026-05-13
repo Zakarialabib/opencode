@@ -6,28 +6,59 @@ export interface RetrievalResult {
   totalChunks: number;
 }
 
+export interface InjectOptions {
+  intent?: string;
+  sessionSummary?: string;
+  recentFiles?: string[];
+  diagnostics?: string[];
+}
+
 export class ContextInjector {
-  inject(userMessage: string, context: RetrievalResult): string {
-    if (context.chunks.length === 0) {
+  inject(
+    userMessage: string,
+    context: RetrievalResult,
+    opts?: InjectOptions
+  ): string {
+    if (context.chunks.length === 0 && !opts?.sessionSummary) {
       return userMessage;
     }
 
-    const chunksText = context.chunks
-      .map((c, i) => {
-        const pathDisplay = `${c.path}:${c.startLine}-${c.endLine}`;
-        return `## Context ${i + 1}: \`${pathDisplay}\`\n\`\`\`\n${c.text}\n\`\`\``;
-      })
-      .join("\n\n");
+    const parts: string[] = [];
 
-    return `You are working on a software development task. Relevant code context has been retrieved from the codebase.
+    // Session summary injection
+    if (opts?.sessionSummary) {
+      parts.push(`## Session Context\n${opts.sessionSummary}\n`);
+    }
 
-${chunksText}
+    // Code context injection
+    if (context.chunks.length > 0) {
+      const shownFiles = new Set<string>();
+      const targetedChunks = context.chunks.filter((c) => {
+        const key = `${c.path}:${c.startLine}`;
+        if (shownFiles.has(key)) return false;
+        shownFiles.add(key);
+        return true;
+      });
 
----
+      const chunksText = targetedChunks
+        .map((c, i) => {
+          const pathDisplay = `${c.path}:${c.startLine}-${c.endLine}`;
+          const tag = opts?.intent ? ` (relevant for: ${opts.intent})` : "";
+          return `## Context ${i + 1}: \`${pathDisplay}\`${tag}\n\`\`\`\n${c.text}\n\`\`\``;
+        })
+        .join("\n\n");
 
-User request: ${userMessage}
+      parts.push(`## Retrieved Code Context\n${chunksText}\n`);
+    }
 
-Analyze the context carefully before responding. If the context is insufficient or irrelevant, say so.`;
+    // Diagnostics context (for debug intent)
+    if (opts?.intent === "debug" && opts?.diagnostics && opts.diagnostics.length > 0) {
+      parts.push(`## Active Diagnostics\n${opts.diagnostics.join("\n")}\n`);
+    }
+
+    parts.push(`User request: ${userMessage}`);
+
+    return `You are working on a software development task. Relevant context has been injected.\n\n${parts.join("\n---\n")}\n\nAnalyze the provided context carefully before responding. If the context is insufficient or irrelevant, say so.`;
   }
 
   injectIntoSystem(systemPrompt: string, context: RetrievalResult): string {

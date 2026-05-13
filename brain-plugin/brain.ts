@@ -1,14 +1,14 @@
 import { tool, type Plugin } from "@opencode-ai/plugin";
 import { DecisionTree } from "./tree/engine";
-import { LMStudioProvider } from "./provider/lmstudio";
-import { searchContext } from "./retrieval/searcher";
+import { LMStudioProvider, DEFAULT_EMBED_MODEL } from "./provider/lmstudio";
+import { searchContext, searchContextLMStudio } from "./retrieval/searcher";
 import { indexProject, IndexProgress } from "./retrieval/indexer";
 import { contextInjector } from "./context/injector";
 import { sessionMemory } from "./state/session";
 import type { SignalBundle } from "./tree/engine";
 
-const LM_STUDIO_URL = "http://192.168.1.12:1234/v1";
-const BRAIN_EMBED_URL = "http://127.0.0.1:7878";
+const LM_STUDIO_URL = process.env.BRAIN_LMSTUDIO_URL || "http://192.168.1.12:1234/v1";
+const BRAIN_EMBED_URL = process.env.BRAIN_EMBED_URL || "http://127.0.0.1:7878";
 
 interface SidecarState {
   process: any | null;
@@ -222,8 +222,6 @@ const BrainPlugin: Plugin = async ({ directory }) => {
       const msg = input.message;
       if (msg.role !== "user") return;
 
-      if (!sidecar.healthy) return;
-
       const signals: SignalBundle = {
         message: msg.content,
         recentFiles: sessionMemory.getMemory().recentFiles,
@@ -244,28 +242,48 @@ const BrainPlugin: Plugin = async ({ directory }) => {
         return;
       }
 
-      // Prewarm embed model for search-heavy intents
       if (["debug", "refactor", "feature", "learn"].includes(scenario.intent)) {
         sidecarPrewarm("embed");
       }
 
       try {
-        const context = await searchContext(
-          msg.content,
-          {
-            strategy: strategy.name,
-            depth: strategy.depth,
-            maxChunks: strategy.maxChunks,
-            rerank: strategy.rerank,
-          },
-          directory
-        );
+        let context;
+        if (sidecar.healthy) {
+          context = await searchContext(
+            msg.content,
+            {
+              strategy: strategy.name,
+              depth: strategy.depth,
+              maxChunks: strategy.maxChunks,
+              rerank: strategy.rerank,
+            },
+            directory
+          );
+        } else {
+          console.log("[Brain] Sidecar unavailable, falling back to LM Studio embedding");
+          context = await searchContextLMStudio(
+            msg.content,
+            {
+              strategy: strategy.name,
+              depth: strategy.depth,
+              maxChunks: strategy.maxChunks,
+              rerank: strategy.rerank,
+            },
+            directory,
+            provider
+          );
+        }
 
         if (context.chunks.length > 0) {
           sessionMemory.markContextUsed(context.chunks);
-          const augmentedMessage = contextInjector.inject(msg.content, context);
+          const augmentedMessage = contextInjector.inject(msg.content, context, {
+            intent: scenario.intent,
+            sessionSummary: sessionMemory.getSummary(),
+            recentFiles: signals.recentFiles,
+            diagnostics: signals.diagnostics.map((d) => `${d.file}:${d.message}`),
+          });
           output.message.content = augmentedMessage;
-          console.log(`[Brain] +${context.chunks.length} chunks | intent: ${scenario.intent}`);
+          console.log(`[Brain] +${context.chunks.length} chunks | backend: ${sidecar.healthy ? "sidecar" : "lmstudio"} | intent: ${scenario.intent}`);
         }
         sessionMemory.recordDecision({
           timestamp: Date.now(),
@@ -620,8 +638,38 @@ const BrainPlugin: Plugin = async ({ directory }) => {
             results.push(`\n🔍 Search: ❌ ${e.message}`);
           }
 
+          // 5. LM Studio embedding fallback check
+          try {
+            const testEmbed = await provider.embed(provider.defaultEmbedModel, ["test"]);
+            results.push(`\n🧠 LM Studio Embedding: ✅ working (${testEmbed[0].length}-dim)`);
+          } catch {
+            results.push(`\n🧠 LM Studio Embedding: ❌ not available`);
+          }
+
           results.push(`\n📁 Project: ${directory}`);
           return results.join("\n");
+        },
+      }),
+
+      brain_embed_lmstudio: tool({
+        description: "Use LM Studio HTTP endpoint directly for embedding search (bypasses sidecar)",
+        args: {
+          query: tool.schema.string().describe("Search query"),
+          top_k: tool.schema.number().optional().describe("Number of results (default: 5)"),
+        },
+        async execute(args: any) {
+          try {
+            const context = await searchContextLMStudio(
+              args.query,
+              { strategy: "manual", depth: "broad", maxChunks: args.top_k ?? 5, rerank: true },
+              directory,
+              provider
+            );
+            if (context.chunks.length === 0) return "No relevant context found.";
+            return contextInjector.formatResults(context);
+          } catch (err: any) {
+            return `LM Studio embedding failed: ${err.message}`;
+          }
         },
       }),
 

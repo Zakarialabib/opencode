@@ -49,7 +49,7 @@ You leverage the **`fullstack-dev`** OpenCode skill (found in `skills/fullstack-
 
 ## Tooling Integration
 
-- **LSP Bridge**: Use Trae's TypeScript/Rust language servers to ensure type safety across the stack.
+- **LSP Bridge**: Use TypeScript/Rust language servers to ensure type safety across the stack.
 - **SQLite MCP**: Directly interact with `database.sqlite` for data verification and migration.
 - **Sequential Thinking**: Use the thinking MCP to solve complex logical problems step-by-step.
 
