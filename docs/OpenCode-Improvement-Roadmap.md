@@ -1,128 +1,58 @@
 # OpenCode Improvement Roadmap
 
-## Comprehensive Analysis & Actionable Instructions
+## Strategy
 
-**Repository:** https://github.com/Zakarialabib/opencode  
-**Version:** 2.0.0 (Workflow Orchestration)  
-**Last Updated:** 2026-05-08  
-**Analysis Date:** 2026-05-08
+Expand OpenCode within its existing plugin architecture. No new engine, no second system, no Tandem-style agent teams. The brain plugin stays as the central RAG layer. Everything else is consolidation, configuration, and targeted enhancement.
 
----
+## Key Decisions
 
-## Table of Contents
+| Decision | Rationale |
+|----------|-----------|
+| **Keep brain plugin as central RAG** | Enhance it — don't replace. It already handles context injection and hooks. |
+| **Option B: LM Studio HTTP endpoint for embeddings** | Remote HTTP call to LM Studio, not local model loading. Simpler, faster iteration. |
+| **Stay inside plugin architecture** | Avoid second-system effect. All work is plugin/tool changes, not engine rewrites. |
+| **Drop 5-tier memory store** | Session → Project is sufficient. No global/user/session/project/ephemeral tiers. |
+| **sqlite-vec as HNSW fallback** | If HNSW is problematic on Windows, swap it into the sidecar. No architecture change. |
 
-1. [Current State Assessment](#1-current-state-assessment)
-2. [Critical Gaps (Fix Immediately)](#2-critical-gaps-fix-immediately)
-3. [Architecture Improvements](#3-architecture-improvements)
-4. [Feature Roadmap](#4-feature-roadmap)
-5. [Developer Experience](#5-developer-experience)
-6. [Testing & Quality](#6-testing--quality)
-7. [Community & Ecosystem](#7-community--ecosystem)
-8. [Implementation Playbooks](#8-implementation-playbooks)
-9. [Metrics & Success Criteria](#9-metrics--success-criteria)
+## Skill Consolidation
 
----
+**Target:** ~25-30 skills (down from 63).
 
-## 1. Current State Assessment
+| Merged Skill | Absorbs | Reason |
+|---|---|---|
+| `stack-context` | `fullstack-dev`, `project-orchestration` | Stack detection and environment guidance cover both. |
+| `docs-curator` | `project-memory`, `docs-governance-audit` | Knowledge curation and project conventions are one concern. |
+| `self-improver` | `autoresearch`, `self-evolver` | Self-improvement workflows belong together. |
+| `contentanalysis` | `marketing-mode`, `blog-writer`, `writing-plans` | Content analysis pipeline covers all three. |
+| `creative` | `dream-interpreter`, `anti-pua`, `interview-designer` | Single creative/analysis entry point. |
 
-### What You've Built (Strong Foundation)
+### Kept Separate
 
-| Component                         | Status                  | Quality                                          |
-| --------------------------------- | ----------------------- | ------------------------------------------------ |
-| **10 Specialized Agents**         | ✅ Shipped              | Well-categorized by domain                       |
-| **Agent Router Plugin**           | ✅ Shipped              | Keyword/skill scoring                            |
-| **10+ TypeScript Plugins**        | ✅ Shipped              | Node.js compatible, Bun-free                     |
-| **34 Skills**                     | ✅ Shipped              | Coding-focused, paid API skills removed          |
-| **Workflow Engine (YAML v2.0.0)** | ✅ Shipped              | Parallel groups, retry policies, MCP integration |
-| **9 MCP Servers**                 | ✅ Shipped              | Good timeout configuration                       |
-| **Ambient LSP Feedback**          | ✅ Shipped              | Non-blocking diagnostic injection                |
-| **Plugin Test Suite**             | ✅ 70 tests passing     | Structural + behavioral coverage                 |
-| **Documentation**                 | ✅ 8 guides             | Comprehensive                                    |
-| **Cross-platform Launch**         | ✅ npm start, .bat, .sh | Good UX                                          |
+| Skill | Reason |
+|---|---|
+| `web-search` | Distinct external API, independent tool signature |
+| `web-reader` | Distinct external API, independent tool signature |
+| `security-review` | High-risk scope, kept isolated |
+| `laravel-feature-scaffold` | Domain-specific, narrow tooling |
 
-### What's Working Well
+## MCP Health-Checking
 
-1. **Plugin architecture is clean** — Zero Bun dependencies, proper exports, tool registry validation
-2. **Workflow orchestration is advanced** — Most open-source tools don't have declarative parallel execution with retry policies
-3. **MCP integration is thorough** — Per-phase tool scoping, health checks, toggle management
-4. **Test coverage for plugins** — 56 tests covering structure, exports, diagnostics, and JSONC parsing
-5. **Documentation is centralized** — 8 guides covering the full user journey
+Lightweight addition to `mcp-manager`: before task execution, verify configured MCP servers respond and report availability. Prevents mid-task failure from down servers (filesystem, memory, sqlite sidecar). No full MCP catalog — just readiness validation.
 
-### What's Missing or Brittle
+## Remaining Work
 
-1. **Diagnostic injection mechanism** — `client.app.log()` may not reach model context; needs message mutation
-2. **No unified checkpointing** — Git stash exists, but no DB/memory/task-state rollback
-3. **Static workflow definitions only** — No dynamic workflow generation for novel tasks
-4. **No lazy tool loading** — All tools load at agent initialization, burning context windows
-5. **No browser/visual testing** — `qa-guardian` reviews code but can't see UI
-6. **No task briefing inheritance** — Child agents re-hydrate context from scratch on every delegation
-7. **No clarification gate** — Agents don't ask clarifying questions before building
-8. **No skill versioning** — Skills are Markdown files without semver or compatibility checks
-9. **No token budget tracking** — Agents can burn context windows without warning
-10. **No cross-session memory** — Project conventions and user preferences aren't auto-loaded
+- [ ] Update brain plugin for LM Studio HTTP embedding (replace local embedding call with configurable HTTP endpoint)
+- [ ] Update brain plugin pipeline for targeted memory/context injection
+- [ ] Validate all skill frontmatter and tool metadata via `tools/generate-skill-index.js` / `scripts/validate-fix.js`
+- [ ] Run full test suite to confirm no regressions from consolidation
 
----
+## Expected Improvements
 
-## 2. Critical Gaps (Fix Immediately)
-
-These are production blockers. Fix them before adding new features.
-
-### 2.1 Fix Ambient LSP Feedback Injection
-
-**Problem:** Your `chat.message` hook likely logs diagnostics via `client.app.log()`, which writes to the application log stream but does **not** automatically prepend content to the LLM message array. The model never sees the diagnostics.
-
-**Verification:**
-
-```javascript
-// In your test, assert this:
-const messages = input.messages;
-assert(messages.some((m) => m.content.includes("LSP Diagnostic")));
-```
-
-**Fix:**
-
-```typescript
-// plugins/index.ts
-"chat.message": async (input, output) => {
-  const sessionId = getSessionId(input);
-  const diagnostics = flushDiagnostics(sessionId);
-
-  if (diagnostics.length > 0) {
-    // Inject as system message so model sees it
-    input.messages.unshift({
-      role: "system",
-      name: "lsp-diagnostics",
-      content: `[LSP Diagnostics - ${new Date().toISOString()}]\n${diagnostics.join("\n")}`
-    });
-
-    // Also log for observability
-    await client.app.log({
-      body: {
-        service: "ambient-lsp",
-        level: "warn",
-        message: `Injected ${diagnostics.length} diagnostics`,
-        extra: { sessionId, files: diagnostics.map(d => d.file) }
-      }
-    });
-  }
-}
-```
-
-**Test to add:**
-
-```javascript
-// ambient-feedback.test.js
-it("injects diagnostics into model context", async () => {
-  const input = { messages: [{ role: "user", content: "fix the code" }] };
-  storeDiagnostic("session-1", { file: "test.ts", line: 5, message: "Type error" });
-
-  await chatMessageHook(input, {});
-
-  assert(input.messages.length === 2);
-  assert(input.messages[0].role === "system");
-  assert(input.messages[0].content.includes("Type error"));
-});
-```
+- **Better memory usage** — Session → Project only, sqlite-vec or HNSW, no over-engineered tiers
+- **Stronger skill design** — Fewer, sharper skills with clear boundaries
+- **Smarter context curation** — Brain plugin coordinates with `context-manager` and `skill-manager` instead of duplicating them
+- **Efficient MCP health checks** — Lightweight readiness checks, no catalog sprawl
+- **Brain-aware workflow integration** — Context injection and memory retrieval wired through existing plugin hooks
 
 ### 2.2 Unify LSP Bridge with CLI Fallbacks
 
