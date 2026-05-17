@@ -156,6 +156,83 @@ function getStaleFiles(rootDir: string, db: ReturnType<typeof getDatabase>): str
   return stale;
 }
 
+function semanticChunkFile(filePath: string, content: string): ChunkResult[] {
+  const lang = detectLanguage(filePath);
+  const lines = content.split("\n");
+
+  const blockStartPatterns = [
+    /^(export\s+)?(async\s+)?function\s/,
+    /^(export\s+)?(async\s+)?const\s+\w+\s*[=(]/,
+    /^(export\s+)?class\s/,
+    /^(export\s+)?interface\s/,
+    /^(export\s+)?type\s/,
+    /^(export\s+)?enum\s/,
+    /^(pub\s+)?fn\s/,
+    /^(pub\s+)?async\s+fn\s/,
+    /^def\s/,
+    /^class\s/,
+    /^async\s+def\s/,
+    /^pub\s+def\s/,
+  ];
+
+  const boundaries: number[] = [0];
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.trim() === "" && i + 1 < lines.length && lines[i + 1].trim() !== "") {
+      const nextTrimmed = lines[i + 1].trimStart();
+      if (blockStartPatterns.some((p) => p.test(nextTrimmed))) {
+        boundaries.push(i + 1);
+        continue;
+      }
+    }
+    const trimmed = line.trimStart();
+    if (blockStartPatterns.some((p) => p.test(trimmed))) {
+      boundaries.push(i);
+    }
+  }
+
+  if (boundaries.length < 2) {
+    return chunkFile(filePath, content);
+  }
+
+  const chunks: ChunkResult[] = [];
+  const maxChunkSize = 50;
+  const fileName = filePath.split(/[/\\]/).pop() || filePath;
+
+  let i = 0;
+  while (i < boundaries.length) {
+    const startLine = boundaries[i];
+    let endLine = startLine + maxChunkSize;
+    if (i + 1 < boundaries.length) {
+      endLine = Math.min(boundaries[i + 1], startLine + maxChunkSize * 2);
+    }
+    endLine = Math.min(endLine, lines.length);
+
+    const chunkContent = lines.slice(startLine, endLine).join("\n");
+    if (chunkContent.trim().length >= 10) {
+      const id = computeHash(`${filePath}:${startLine}:${endLine}:${chunkContent.slice(0, 100)}`);
+      chunks.push({
+        id,
+        filepath: filePath,
+        language: lang,
+        type: "semantic_chunk",
+        name: lines[startLine].trim().slice(0, 60) || `${fileName}:${startLine + 1}`,
+        start_line: startLine + 1,
+        end_line: endLine,
+        content: chunkContent,
+      });
+    }
+
+    const currentLen = endLine - startLine;
+    i++;
+    while (i < boundaries.length && boundaries[i] - startLine < maxChunkSize) {
+      i++;
+    }
+  }
+
+  return chunks.length > 0 ? chunks : chunkFile(filePath, content);
+}
+
 function chunkFile(filePath: string, content: string): ChunkResult[] {
   const lines = content.split("\n");
   const chunks: ChunkResult[] = [];
@@ -241,7 +318,7 @@ export function indexProject(rootDir: string): ChunkResult[] {
 
       deleteFileRecord(relPath, db);
 
-      const chunks = chunkFile(filePath, content);
+      const chunks = semanticChunkFile(filePath, content);
       const textChunks = chunks.map((c) => c.content);
 
       let embeddings: number[][] = [];

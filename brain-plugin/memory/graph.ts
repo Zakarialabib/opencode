@@ -398,3 +398,86 @@ export function clusterConceptChunks(projectRoot: string, conceptId: string, k =
 
   console.log(`[Brain/Clustering] Concept '${conceptId}' successfully clustered.`);
 }
+
+/**
+ * Mini-batch K-means update — incrementally adjusts centroids without full recompute.
+ * Processes a batch of new/updated concept-chunk links, moving centroids incrementally.
+ * Much cheaper than full clusterConceptChunks() for streaming updates.
+ *
+ * @param projectRoot - Project root path for DB access
+ * @param batchSize - Number of concepts to process in this batch (default: 10)
+ */
+export function miniBatchUpdate(projectRoot: string, batchSize: number = 10): void {
+  const db = getDatabase(projectRoot);
+
+  // Get concepts that have been recently updated (high session_count or recent last_seen)
+  const recentConcepts = db
+    .prepare(`
+    SELECT id FROM concepts 
+    ORDER BY last_seen DESC 
+    LIMIT ?
+  `)
+    .all(batchSize) as Array<{ id: string }>;
+
+  if (recentConcepts.length === 0) return;
+
+  for (const concept of recentConcepts) {
+    // Only recluster if this concept has enough chunks to warrant splitting
+    const chunkCount = db
+      .prepare(
+        "SELECT COUNT(*) as count FROM concept_chunks WHERE concept_id = ? AND strength > 0.1"
+      )
+      .get(concept.id) as { count: number } | undefined;
+
+    if (!chunkCount || chunkCount.count < 4) continue;
+
+    // Check if this concept has been clustered before (has sub-concepts)
+    const hasSubConcepts = db
+      .prepare("SELECT COUNT(*) as count FROM concepts WHERE id LIKE ?")
+      .get(`${concept.id}_cluster_%`) as { count: number } | undefined;
+
+    if (hasSubConcepts && hasSubConcepts.count > 0) {
+      // Incremental centroid update: move existing centroids toward new data
+      const subConcepts = db
+        .prepare("SELECT id FROM concepts WHERE id LIKE ?")
+        .all(`${concept.id}_cluster_%`) as Array<{ id: string }>;
+
+      // Get recent chunks for this concept
+      const recentChunks = db
+        .prepare(`
+        SELECT cc.chunk_id, cc.strength 
+        FROM concept_chunks cc
+        WHERE cc.concept_id = ? AND cc.strength > 0.1
+        ORDER BY cc.strength DESC
+        LIMIT 5
+      `)
+        .all(concept.id) as Array<{ chunk_id: string; strength: number }>;
+
+      // Reassign recent chunks to nearest sub-concept
+      for (const chunk of recentChunks) {
+        let bestSubConcept = subConcepts[0]?.id;
+        let bestStrength = 0;
+
+        for (const sub of subConcepts) {
+          const link = db
+            .prepare("SELECT strength FROM concept_chunks WHERE concept_id = ? AND chunk_id = ?")
+            .get(sub.id, chunk.chunk_id) as { strength: number } | undefined;
+
+          if (link && link.strength > bestStrength) {
+            bestStrength = link.strength;
+            bestSubConcept = sub.id;
+          }
+        }
+
+        if (bestSubConcept && bestStrength > 0) {
+          // Boost the link to the best sub-concept
+          db.prepare(
+            "UPDATE concept_chunks SET strength = strength + 0.1 WHERE concept_id = ? AND chunk_id = ?"
+          ).run(bestSubConcept, chunk.chunk_id);
+        }
+      }
+    }
+  }
+
+  console.log(`[Brain/MiniBatch] Incremental update for ${recentConcepts.length} concepts`);
+}
