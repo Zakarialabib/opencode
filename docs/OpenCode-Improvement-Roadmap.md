@@ -6,45 +6,54 @@ Expand OpenCode within its existing plugin architecture. No new engine, no secon
 
 ## Key Decisions
 
-| Decision | Rationale |
-|----------|-----------|
-| **Keep brain plugin as central RAG** | Enhance it — don't replace. It already handles context injection and hooks. |
-| **Option B: LM Studio HTTP endpoint for embeddings** | Remote HTTP call to LM Studio, not local model loading. Simpler, faster iteration. |
-| **Stay inside plugin architecture** | Avoid second-system effect. All work is plugin/tool changes, not engine rewrites. |
-| **Drop 5-tier memory store** | Session → Project is sufficient. No global/user/session/project/ephemeral tiers. |
-| **sqlite-vec as HNSW fallback** | If HNSW is problematic on Windows, swap it into the sidecar. No architecture change. |
+| Decision                                             | Rationale                                                                            |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| **Keep brain plugin as central RAG**                 | Enhance it — don't replace. It already handles context injection and hooks.          |
+| **Option B: LM Studio HTTP endpoint for embeddings** | Remote HTTP call to LM Studio, not local model loading. Simpler, faster iteration.   |
+| **Stay inside plugin architecture**                  | Avoid second-system effect. All work is plugin/tool changes, not engine rewrites.    |
+| **Drop 5-tier memory store**                         | Session → Project is sufficient. No global/user/session/project/ephemeral tiers.     |
+| **sqlite-vec as HNSW fallback**                      | If HNSW is problematic on Windows, swap it into the sidecar. No architecture change. |
 
 ## Skill Consolidation
 
 **Target:** ~25-30 skills (down from 63).
 
-| Merged Skill | Absorbs | Reason |
-|---|---|---|
-| `stack-context` | `fullstack-dev`, `project-orchestration` | Stack detection and environment guidance cover both. |
-| `docs-curator` | `project-memory`, `docs-governance-audit` | Knowledge curation and project conventions are one concern. |
-| `self-improver` | `autoresearch`, `self-evolver` | Self-improvement workflows belong together. |
-| `contentanalysis` | `marketing-mode`, `blog-writer`, `writing-plans` | Content analysis pipeline covers all three. |
-| `creative` | `dream-interpreter`, `anti-pua`, `interview-designer` | Single creative/analysis entry point. |
+| Merged Skill      | Absorbs                                               | Reason                                                      |
+| ----------------- | ----------------------------------------------------- | ----------------------------------------------------------- |
+| `stack-context`   | `fullstack-dev`, `project-orchestration`              | Stack detection and environment guidance cover both.        |
+| `docs-curator`    | `project-memory`, `docs-governance-audit`             | Knowledge curation and project conventions are one concern. |
+| `self-improver`   | `autoresearch`, `self-evolver`                        | Self-improvement workflows belong together.                 |
+| `contentanalysis` | `marketing-mode`, `blog-writer`, `writing-plans`      | Content analysis pipeline covers all three.                 |
+| `creative`        | `dream-interpreter`, `anti-pua`, `interview-designer` | Single creative/analysis entry point.                       |
 
 ### Kept Separate
 
-| Skill | Reason |
-|---|---|
-| `web-search` | Distinct external API, independent tool signature |
-| `web-reader` | Distinct external API, independent tool signature |
-| `security-review` | High-risk scope, kept isolated |
-| `laravel-feature-scaffold` | Domain-specific, narrow tooling |
+| Skill                      | Reason                                            |
+| -------------------------- | ------------------------------------------------- |
+| `web-search`               | Distinct external API, independent tool signature |
+| `web-reader`               | Distinct external API, independent tool signature |
+| `security-review`          | High-risk scope, kept isolated                    |
+| `laravel-feature-scaffold` | Domain-specific, narrow tooling                   |
 
 ## MCP Health-Checking
 
 Lightweight addition to `mcp-manager`: before task execution, verify configured MCP servers respond and report availability. Prevents mid-task failure from down servers (filesystem, memory, sqlite sidecar). No full MCP catalog — just readiness validation.
 
+## Implemented: Phase 1-3 ✅
+
+The following roadmap items were completed (May 2026):
+
+- [x] **Phase 1 — Quick Wins**: Parallel keyword+dense via Promise.all, reranker expanded to learn+refactor+feature, confidence gate (>0.85 skips), memory-aware 15% boost, token-based compression (500/150 tokens via estimateTokens)
+- [x] **Phase 2 — Metrics**: computePrecisionAtK() + computeMRR() in tracer.ts, LRU embedding cache (500 entries), adaptive chunk count by confidence
+- [x] **Phase 3 — Advanced**: Pseudo-SPLADE sparse retrieval, miniBatchUpdate() in memory graph, semanticChunkFile() (AST-aware chunking)
+- [x] **Config**: All agent `instructions` arrays → `prompt` strings in opencode.json; brain_sidecar_status removed; brain_docs_cache registered
+- [x] **Documentation**: Updated Prompting-Guide.md, brain-plugin-docs.md, User-Guide.md with Phase 1-3 features
+
 ## Remaining Work
 
-- [ ] Update brain plugin for LM Studio HTTP embedding (replace local embedding call with configurable HTTP endpoint)
-- [ ] Update brain plugin pipeline for targeted memory/context injection
-- [ ] Validate all skill frontmatter and tool metadata via `tools/generate-skill-index.js` / `scripts/validate-fix.js`
-- [ ] Run full test suite to confirm no regressions from consolidation
+- [ ] Validate all skill frontmatter and tool metadata via skill registry
+- [ ] Run full test suite to confirm no regressions
+- [ ] Unify LSP bridge with CLI fallbacks (diagnostic deduplication)
 
 ## Expected Improvements
 
@@ -757,14 +766,9 @@ phases:
   "agent": {
     "plan-backend-laravel": {
       "description": "Planning mode for Laravel tasks",
-      "model": "opencode-go/kimi-k2.6",
+      "model": "lmstudio/qwen3.5-4b-reasoning",
       "temperature": 0.1,
-      "instructions": [
-        "You are a planner. Do not write code.",
-        "Analyze requirements and produce a detailed implementation plan.",
-        "Identify files to modify, dependencies, and potential risks.",
-        "Output: Markdown plan with checkboxes."
-      ],
+      "prompt": "You are a planner. Do not write code.\nAnalyze requirements and produce a detailed implementation plan.\nIdentify files to modify, dependencies, and potential risks.\nOutput: Markdown plan with checkboxes.",
       "permission": {
         "read": "allow",
         "write": "deny",
@@ -774,13 +778,9 @@ phases:
     },
     "explore-backend-laravel": {
       "description": "Exploration mode for Laravel tasks",
-      "model": "opencode/hy3-preview-free",
+      "model": "lmstudio/qwen3.5-4b",
       "temperature": 0.2,
-      "instructions": [
-        "You are an explorer. Do not write code.",
-        "Read files, understand patterns, and report findings.",
-        "Use codesearch and grep extensively."
-      ],
+      "prompt": "You are an explorer. Do not write code.\nRead files, understand patterns, and report findings.\nUse brain_search and grep for codebase navigation.",
       "permission": {
         "read": "allow",
         "write": "deny",
@@ -790,13 +790,9 @@ phases:
     },
     "implement-backend-laravel": {
       "description": "Implementation mode for Laravel tasks",
-      "model": "opencode-go/kimi-k2.6",
+      "model": "lmstudio/qwen3.5-4b-reasoning",
       "temperature": 0.3,
-      "instructions": [
-        "You are an implementer. Execute plans precisely.",
-        "Follow the provided plan from plan-backend-laravel.",
-        "Write clean, tested code following PSR-12."
-      ],
+      "prompt": "You are an implementer. Execute plans precisely.\nFollow the provided plan from plan-backend-laravel.\nWrite clean, tested code following PSR-12.",
       "permission": {
         "read": "allow",
         "write": "allow",
@@ -889,14 +885,15 @@ phases:
   "agents": {
     "lead-strategist": {
       "description": "Strategic orchestrator",
-      "model": "opencode-go/kimi-k2.6",
+      "model": "cerebras/qwen-3-235b-a22b-instruct-2507",
       "temperature": 0.2,
-      "instructions": ["..."],
+      "prompt": "You are a strategic orchestrator. Analyze requirements, coordinate sub-agents, and ensure cohesive execution. Use brain_search for RAG context when needed.",
+      "tools": ["task", "brain_search", "brain_status"],
       "permission": {
-        "task": "allow",
-        "skill": "allow",
-        "bash": "allow",
-        "clarify": "allow"
+        "read": "allow",
+        "write": "allow",
+        "edit": "allow",
+        "bash": "allow"
       }
     }
   },
@@ -1054,4 +1051,4 @@ opencode/
 
 _Generated for OpenCode v2.0.0 by strategic analysis of current architecture vs. state-of-the-art agentic frameworks (Claude Code, OpenCode SST, OpenClaude, Cline, Roo Code)._
 
-_Last updated: 2026-05-08_
+_Last updated: 2026-05-17_

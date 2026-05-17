@@ -793,6 +793,7 @@ The **Brain Plugin** provides automatic RAG (Retrieval-Augmented Generation) for
 ### How RAG Works (Automatic)
 
 When you ask a question, the brain plugin:
+
 1. **Classifies intent** via decision tree (debug, refactor, feature, test, learn)
 2. **Prewarms** the embed model in LM Studio
 3. **Embeds** your query and searches the project index (HNSW vector store)
@@ -802,50 +803,55 @@ No manual action needed — it just works on every `message.updated`.
 
 ### Manual Brain Commands
 
-| Command | Purpose |
-|---------|---------|
-| `brain_diagnostic` | Full pipeline check: sidecar, cache, search, models |
-| `brain_status` | Decision tree stats, GPU usage, cache hit rate |
-| `brain_search` | Manual semantic search: `brain_search query:"auth flow"` |
-| `brain_embed_test` | Test what context a query would retrieve |
-| `brain_sidecar_status` | Check Rust sidecar health + loaded models |
-| `brain_model_load` | Prewarm a model (chat/embed/draft) |
-| `brain_model_unload` | Free VRAM by unloading non-essential models |
+| Command               | Purpose                                                        |
+| --------------------- | -------------------------------------------------------------- |
+| `brain_diagnostic`    | Full pipeline check: health, cache, search, models             |
+| `brain_status`        | Decision tree stats, index stats, memory graph, cache hit rate |
+| `brain_search`        | Hybrid search: keyword + dense + sparse (RRF fusion)           |
+| `brain_embed_test`    | Test what context a query would retrieve                       |
+| `brain_model_load`    | Prewarm a model (chat/embed/draft)                             |
+| `brain_model_unload`  | Free VRAM by unloading non-essential models                    |
+| `brain_index_project` | Re-index current project (use `force:true` to rebuild)         |
 
 ### Prompting with RAG Context
 
 The brain injects context as markdown code blocks at the top of your prompt:
 
-```
+````
 ## Context 1: `src/auth/login.ts:15-45`
 ```typescript
 function authenticate(user, pass) { ... }
-```
+````
 
 ## Context 2: `src/auth/utils.ts:1-30`
+
 ```typescript
 const TOKEN_EXPIRY = 3600;
 ```
 
 ---
+
 User request: <your message>
+
 ```
 
 You can also force context retrieval with:
 
 ```
+
 @build Use brain_search to find auth-related files, then read them.
+
 ```
 
 ### Troubleshooting
 
 | Symptom | Fix |
 |---------|-----|
-| RAG not injecting chunks | Run `brain_diagnostic` → if sidecar down, run `brain_sidecar_restart` |
+| RAG not injecting chunks | Run `brain_diagnostic` → check LM Studio is running → `brain_index_project force:true` |
 | 0 search results | Run `brain_index_project force:true` to (re)index |
-| LM Studio errors | Check `brain_speculative_status` — disable speculative if draft model incompatible |
-| VRAM full | `brain_model_unload` or reduce draft offload in LM Studio |
-| Want to see what's indexed | `brain_status` shows chunk count and indexed projects |
+| LM Studio errors | Check LM Studio status at http://127.0.0.1:1234 — restart if needed |
+| VRAM full | `brain_model_unload` to free non-essential models |
+| Want to see what's indexed | `brain_status` shows chunk count, indexed projects, cache hit rate |
 
 ---
 
@@ -886,24 +892,26 @@ You can also force context retrieval with:
 ### Agent Invocation (in chat)
 
 ```
-@build          → core-factory (primary)
-@plan           → plan agent
-@explore        → explore subagent
-@scout          → scout subagent
-@code-reviewer  → code review agent
+
+@build → core-factory (primary)
+@plan → plan agent
+@explore → explore subagent
+@scout → scout subagent
+@code-reviewer → code review agent
 @lead-strategist→ strategic planning
 @lead-architect → architecture analysis
 @frontend-ui-ux → UI implementation
-@backend-api    → API development
+@backend-api → API development
 @backend-laravel→ Laravel development
-@backend-tauri  → Rust/Tauri development
-@qa-guardian    → Testing & security
+@backend-tauri → Rust/Tauri development
+@qa-guardian → Testing & security
 @devops-engineer→ Infrastructure
-@docs-curator   → Documentation
+@docs-curator → Documentation
 @refactor-architect → Refactoring coordination
-@research-analyst   → Research & analysis
-@integration-test  → Test generation/execution
-@docs-evolver      → Documentation sync
+@research-analyst → Research & analysis
+@integration-test → Test generation/execution
+@docs-evolver → Documentation sync
+
 ```
 
 ---
@@ -913,6 +921,7 @@ You can also force context retrieval with:
 ### ❌ Vague Prompts
 
 ```
+
 // BAD
 @build Fix the bug.
 
@@ -921,11 +930,13 @@ You can also force context retrieval with:
 The endpoint loads 500 users and makes 500 individual queries
 for the 'role' relationship. Use eager loading instead.
 File: app/Http/Controllers/UserController.php:45
+
 ```
 
 ### ❌ Too Much at Once
 
 ```
+
 // BAD
 @build Build an entire e-commerce platform.
 
@@ -934,46 +945,57 @@ File: app/Http/Controllers/UserController.php:45
 Then: @build Create the ProductController
 Then: @build Create the API routes
 ...
+
 ```
 
 ### ❌ Ignoring Existing Patterns
 
 ```
+
 // Always reference existing code:
 @build Follow the same pattern as UserController
 in src/http/controllers/post-controller.ts.
+
 ```
 
 ### ❌ Not Validating
 
 ```
+
 // Always ask for validation:
 @build Implement feature X.
 After implementation:
+
 1. Run cargo check
 2. Run npx tsc --noEmit
 3. Run npm test
 4. Report any errors
+
 ```
 
 ### ❌ Forgetting Tests
 
 ```
+
 // Always specify testing:
 @build Implement feature X with tests.
+
 - Write unit tests for edge cases
 - Run test suite after implementation
 - Report coverage percentage
+
 ```
 
 ### ❌ Not Using the Right Agent
 
 ```
+
 // DON'T use @build for planning
 // DON'T use @plan for implementation
 // DON'T use @explore for code changes
 // Use @refactor-architect for refactoring plans
 // Use @code-reviewer before merging
+
 ```
 
 ---
@@ -998,7 +1020,7 @@ From the latest `codebase-audit.js` run:
 2. **Fix Rust `unwrap()` calls** — Replace with `expect()` or proper error handling
 3. **Standardize naming** — Follow conventions per stack
 4. **Remove unused imports** — Clean up 5 identified imports
-5. **Add `project` and `trae` metadata** — Already done in `opencode.json.improved`
+5. **Add `project` and `trae` metadata** — Already done in `opencode.json`
 
 ---
 
@@ -1013,7 +1035,7 @@ From the latest `codebase-audit.js` run:
 | core-factory       | qwen3.5-4b-reasoning | lmstudio    | Implementation + evolution |
 | lead-strategist    | qwen-3-235b          | cerebras    | Orchestration & strategy   |
 | lead-architect     | qwen-3-235b          | cerebras    | Architecture decisions     |
-| frontend-ui-ux     | gemma-4-e4b          | lmstudio    | UI components & design     |
+| frontend-ui-ux     | qwen3.5-4b-reasoning | lmstudio    | UI components & design     |
 | backend-api        | qwen3.5-4b-reasoning | lmstudio    | API endpoints & logic      |
 | backend-laravel    | qwen3.5-4b-reasoning | lmstudio    | Laravel/PHP features       |
 | backend-tauri      | qwen3.5-4b-reasoning | lmstudio    | Rust/Tauri commands        |
@@ -1022,6 +1044,9 @@ From the latest `codebase-audit.js` run:
 | docs-curator       | qwen-3-235b          | cerebras    | Documentation & evolution  |
 | refactor-architect | qwen-3-235b          | cerebras    | Refactoring coordination   |
 | code-reviewer      | qwen3.5-4b-reasoning | lmstudio    | Code quality analysis      |
-| research-analyst   | qwen-3-235b          | opencode-go | Best practices & gaps      |
+| research-analyst   | qwen-3-235b          | cerebras    | Best practices & gaps      |
 | integration-test   | qwen3.5-4b-reasoning | lmstudio    | Test gen & execution       |
 | docs-evolver       | qwen-3-235b          | cerebras    | Doc sync & ADRs            |
+
+> **All 15 agents have Brain plugin tools** (brain_diagnostic, brain_status, brain_search, brain_index_project) for RAG-powered codebase context.
+```

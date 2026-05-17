@@ -26,10 +26,12 @@
 
 ```
 User types → message.updated hook
-  → Decision Tree (classify intent)
-  → Retrieval Pipeline (SQLite FTS5 + ONNX dense)
-  → Rerank (ONNX cross-encoder, 'learn' intent only)
-  → Context Injector (prepend chunks to prompt)
+  → Decision Tree (classify intent: debug, refactor, feature, test, learn, quick_chat)
+  → Retrieval Pipeline (parallel keyword FTS5 + dense ONNX + pseudo-SPLADE sparse)
+  → RRF fusion (adaptive weights per intent, memory-aware 15% boost for known concepts)
+  → Rerank via ONNX cross-encoder (learn/refactor/feature intents, confidence gate >0.85 skips)
+  → Adaptive chunk count by confidence score (high confidence → fewer chunks)
+  → Context Injector (token-based compression via estimateTokens(), prepend chunks to prompt)
   → Augmented prompt sent to LLM
 
 Storage:
@@ -104,7 +106,8 @@ Brain plugin hooks:
 | `quick_chat`     | default                         | 0      | false  |
 
 Note: `rerank` flag is set per-intent in the decision tree. The actual reranker activation
-is gated in the pipeline — only fires for `'learn'` intent with >= 10 results.
+is gated in the pipeline — fires for `learn`, `refactor`, and `feature` intents with >= 10 results
+AND only when the top-3 fusion scores don't already exceed 0.85 (confidence gate).
 
 ---
 
@@ -177,8 +180,10 @@ session.archived:
 
 ### 4.3 Fusion (`retrieval/fusion.ts`)
 
-- Weighted reciprocal-rank fusion of keyword + dense results
-- Configurable alpha/beta weights per intent
+- Weighted reciprocal-rank fusion of keyword + dense + sparse results
+- **Parallel execution** via `Promise.all` — keyword and dense run concurrently
+- **Memory-aware boost**: known concepts receive 15% score increase
+- Configurable alpha/beta weights per intent (auto-tuned by `feedback.ts`)
 
 ### 4.4 Reranker (`retrieval/reranker.ts`)
 
@@ -219,11 +224,10 @@ Replace prompt simulation with real task-tool routing:
 
 ### Diagnostic & Status
 
-| Tool                   | Purpose                                                  |
-| ---------------------- | -------------------------------------------------------- |
-| `brain_diagnostic`     | Full pipeline: health → cache → search test → config     |
-| `brain_status`         | Backend health, index stats, memory graph, decision tree |
-| `brain_sidecar_status` | LM Studio health: models loaded, VRAM usage              |
+| Tool               | Purpose                                                   |
+| ------------------ | --------------------------------------------------------- |
+| `brain_diagnostic` | Full pipeline: health → cache → search test → config      |
+| `brain_status`     | Backend health, index stats, memory graph, cache hit rate |
 
 ### RAG & Search
 
@@ -313,9 +317,10 @@ Dense embeddings default to CPU as well.
 
 ### 7.4 Context Compression (`context/compression.ts`)
 
-- Intent-aware character thresholds (debug/refactor/feature: 2000 chars; learn/quick_chat: 600 chars)
+- **Token-based** compression using `estimateTokens()` (not character-based)
+- Intent-aware token thresholds: debug/refactor/feature: 500 tokens, learn/quick_chat: 150 tokens
 - Uses LM Studio to summarize when content exceeds threshold, with fallback to `content.slice(0, threshold)`
-- **Not token-aware** — thresholds are character counts, hardcoded per intent
+- Falls back to heuristic estimation if LM Studio unavailable
 
 ### 7.5 Reasoning Compressor (`context/reasoning-compressor.ts`)
 
@@ -396,7 +401,7 @@ brain-plugin/
 ├── context/
 │   ├── injector.ts             # Prompt augmentation
 │   ├── reasoning-compressor.ts # Thought tag summarizer (was breadcrumb.ts)
-│   └── compression.ts          # Character-based truncation with token estimation
+│   └── compression.ts          # Token-based truncation (500/150 tokens per intent)
 ├── store/                      # SQLite storage layer
 ├── memory/
 │   └── graph.ts                # K-means memory graph (periodic recompute)
