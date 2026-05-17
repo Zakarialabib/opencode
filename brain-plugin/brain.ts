@@ -151,6 +151,8 @@ const BrainPlugin: Plugin = async ({ directory }) => {
     "server.start": async () => {
       console.log("[Brain] Plugin loaded - Cognitive v2 layer for OpenCode (Node-native)");
       console.log(`[Brain] LM Studio SDK: active`);
+      // No VRAM guard implemented. Reranker and dense embeddings run on CPU to preserve VRAM.
+      // Speculative decoding (draft_model) is not wired. The chat.params hook handles skill gaps instead.
 
       try {
         const fs = await import("fs");
@@ -260,7 +262,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
           `[Brain] Executing search for intent: "${scenario.intent}" (strategy: ${strategy.name})...`
         );
         const limit = strategy.maxChunks ?? 10;
-        const results = await searchProjectContext(directory, msg.content, limit);
+        const results = await searchProjectContext(directory, msg.content, limit, scenario.intent);
 
         const mappedChunks = results.map((r) => ({
           id: r.id,
@@ -440,7 +442,12 @@ const BrainPlugin: Plugin = async ({ directory }) => {
           top_k: tool.schema.number().optional().describe("Number of results (default: 5)"),
         },
         async execute(args: any) {
-          const results = await searchProjectContext(directory, args.query, args.top_k ?? 5);
+          const results = await searchProjectContext(
+            directory,
+            args.query,
+            args.top_k ?? 5,
+            "learn"
+          );
 
           const mappedChunks = results.map((r) => ({
             id: r.id,

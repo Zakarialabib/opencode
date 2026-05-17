@@ -79,7 +79,7 @@ export function dampenConceptChunkLink(
     SET strength = MAX(0.0, strength - ?)
     WHERE concept_id = ? AND chunk_id = ?
   `).run(factor, conceptId, chunkId);
-  
+
   // Clean up completely dead relationships
   db.prepare(`
     DELETE FROM concept_chunks WHERE strength <= 0.0
@@ -91,13 +91,15 @@ export function dampenConceptChunkLink(
  */
 export function getChunkConcepts(projectRoot: string, chunkId: string): Concept[] {
   const db = getDatabase(projectRoot);
-  return db.prepare(`
+  return db
+    .prepare(`
     SELECT c.* 
     FROM concepts c
     JOIN concept_chunks cc ON cc.concept_id = c.id
     WHERE cc.chunk_id = ?
     ORDER BY cc.strength DESC
-  `).all(chunkId) as Concept[];
+  `)
+    .all(chunkId) as Concept[];
 }
 
 /**
@@ -115,14 +117,16 @@ export function getConceptRelatedChunks(
   strength: number;
 }> {
   const db = getDatabase(projectRoot);
-  return db.prepare(`
+  return db
+    .prepare(`
     SELECT c.id, c.filepath, c.content, cc.strength
     FROM chunks c
     JOIN concept_chunks cc ON cc.chunk_id = c.id
     WHERE cc.concept_id = ?
     ORDER BY cc.strength DESC
     LIMIT ?
-  `).all(conceptId, limit) as any[];
+  `)
+    .all(conceptId, limit) as any[];
 }
 
 /**
@@ -138,20 +142,24 @@ export function updateConceptEmbedding(
   const tableName = modelType === "qwen" ? "chunk_embeddings" : "chunk_embeddings_nomic";
 
   // Select all chunk vector buffers associated with this concept
-  const rows = db.prepare(`
+  const rows = db
+    .prepare(`
     SELECT e.embedding
     FROM ${tableName} e
     JOIN chunks c ON c.rowid = e.rowid
     JOIN concept_chunks cc ON cc.chunk_id = c.id
     WHERE cc.concept_id = ? AND cc.strength > 0.3
-  `).all(conceptId) as Array<{ embedding: Buffer }>;
+  `)
+    .all(conceptId) as Array<{ embedding: Buffer }>;
 
   if (rows.length === 0) return;
 
   // sqlite-vec virtual table embedding is returned as a Buffer representing Float32Array bytes
-  const vectors = rows.map(r => new Float32Array(r.embedding.buffer, r.embedding.byteOffset, r.embedding.byteLength / 4));
+  const vectors = rows.map(
+    (r) => new Float32Array(r.embedding.buffer, r.embedding.byteOffset, r.embedding.byteLength / 4)
+  );
   const dimension = vectors[0].length;
-  
+
   // Compute average vector
   const average = new Float32Array(dimension);
   for (let i = 0; i < dimension; i++) {
@@ -164,11 +172,15 @@ export function updateConceptEmbedding(
 
   // Insert/replace into concept_embeddings (sqlite-vec virtual table)
   // Get rowid of the concept
-  const conceptRow = db.prepare("SELECT rowid FROM concepts WHERE id = ?").get(conceptId) as { rowid: number } | undefined;
+  const conceptRow = db.prepare("SELECT rowid FROM concepts WHERE id = ?").get(conceptId) as
+    | { rowid: number }
+    | undefined;
   if (!conceptRow) return;
 
-  db.prepare("INSERT OR REPLACE INTO concept_embeddings(rowid, embedding) VALUES(?, ?)")
-    .run(BigInt(conceptRow.rowid), average);
+  db.prepare("INSERT OR REPLACE INTO concept_embeddings(rowid, embedding) VALUES(?, ?)").run(
+    BigInt(conceptRow.rowid),
+    average
+  );
 }
 
 /**
@@ -217,49 +229,65 @@ export function archiveToolOutput(
     `).run(conceptSlug, refId);
   })();
 
-  console.log(`[Brain/Memory] Archived compressed tool run ${toolName} output under Ref ID: ${refId}`);
+  console.log(
+    `[Brain/Memory] Archived compressed tool run ${toolName} output under Ref ID: ${refId}`
+  );
   return `[Ref: ${refId}]`;
 }
 
 /**
- * Performs a K-means split on a general concept's chunk associations if the query latency is high.
+ * Full K-means reclustering (not incremental) of a general concept's chunk associations.
+ * Performs a complete assignment + centroid update pass (up to 10 iterations).
+ * Concept visit counts and relationship strengths ARE updated incrementally via
+ * addConcept() and linkConceptToChunk() — only the clustering is periodic on demand.
  * Prevents polysemy in generic concepts like "auth", "run", etc.
  */
-export function clusterConceptChunks(
-  projectRoot: string,
-  conceptId: string,
-  k = 2
-): void {
+export function clusterConceptChunks(projectRoot: string, conceptId: string, k = 2): void {
   const db = getDatabase(projectRoot);
-  
+
   // 1. Query all chunks associated with this concept slug
-  const chunkRows = db.prepare(`
+  const chunkRows = db
+    .prepare(`
     SELECT cc.chunk_id, cc.strength, c.rowid
     FROM concept_chunks cc
     JOIN chunks c ON c.id = cc.chunk_id
     WHERE cc.concept_id = ? AND cc.strength > 0.1
-  `).all(conceptId) as Array<{ chunk_id: string; strength: number; rowid: number }>;
+  `)
+    .all(conceptId) as Array<{ chunk_id: string; strength: number; rowid: number }>;
 
   if (chunkRows.length < k * 2) {
     return; // Not enough chunks to warrant splitting
   }
 
   // 2. Query vector embeddings for each chunk
-  const chunksWithEmbeds: Array<{ id: string; rowid: number; strength: number; vector: Float32Array }> = [];
-  
+  const chunksWithEmbeds: Array<{
+    id: string;
+    rowid: number;
+    strength: number;
+    vector: Float32Array;
+  }> = [];
+
   for (const row of chunkRows) {
     // Try Qwen embeddings first, fall back to Nomic
-    let embedRow = db.prepare("SELECT embedding FROM chunk_embeddings WHERE rowid = ?").get(row.rowid) as { embedding: Buffer } | undefined;
+    let embedRow = db
+      .prepare("SELECT embedding FROM chunk_embeddings WHERE rowid = ?")
+      .get(row.rowid) as { embedding: Buffer } | undefined;
     if (!embedRow) {
-      embedRow = db.prepare("SELECT embedding FROM chunk_embeddings_nomic WHERE rowid = ?").get(row.rowid) as { embedding: Buffer } | undefined;
+      embedRow = db
+        .prepare("SELECT embedding FROM chunk_embeddings_nomic WHERE rowid = ?")
+        .get(row.rowid) as { embedding: Buffer } | undefined;
     }
     if (embedRow) {
-      const vec = new Float32Array(embedRow.embedding.buffer, embedRow.embedding.byteOffset, embedRow.embedding.byteLength / 4);
+      const vec = new Float32Array(
+        embedRow.embedding.buffer,
+        embedRow.embedding.byteOffset,
+        embedRow.embedding.byteLength / 4
+      );
       chunksWithEmbeds.push({
         id: row.chunk_id,
         rowid: row.rowid,
         strength: row.strength,
-        vector: vec
+        vector: vec,
       });
     }
   }
@@ -270,7 +298,9 @@ export function clusterConceptChunks(
 
   // Cosine distance helper
   const cosineDist = (v1: Float32Array, v2: Float32Array): number => {
-    let dot = 0, n1 = 0, n2 = 0;
+    let dot = 0,
+      n1 = 0,
+      n2 = 0;
     for (let i = 0; i < v1.length; i++) {
       dot += v1[i] * v2[i];
       n1 += v1[i] * v1[i];
@@ -281,7 +311,10 @@ export function clusterConceptChunks(
   };
 
   // 3. Standard K-means initialization (select first k vectors as centroids)
-  const centroids = Array.from({ length: k }, (_, idx) => new Float32Array(chunksWithEmbeds[idx].vector));
+  const centroids = Array.from(
+    { length: k },
+    (_, idx) => new Float32Array(chunksWithEmbeds[idx].vector)
+  );
   const assignments = new Array(chunksWithEmbeds.length).fill(0);
 
   // K-means iteration (up to 10 passes for fast convergence)
@@ -331,7 +364,9 @@ export function clusterConceptChunks(
   }
 
   // 4. Split the generic concept by clusters in SQLite transaction
-  console.log(`[Brain/Clustering] Splitting polysemous concept '${conceptId}' into ${k} clustered sub-concepts.`);
+  console.log(
+    `[Brain/Clustering] Splitting polysemous concept '${conceptId}' into ${k} clustered sub-concepts.`
+  );
   const now = Date.now();
 
   db.transaction(() => {
@@ -363,4 +398,3 @@ export function clusterConceptChunks(
 
   console.log(`[Brain/Clustering] Concept '${conceptId}' successfully clustered.`);
 }
-

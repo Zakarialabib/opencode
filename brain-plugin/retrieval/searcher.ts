@@ -1,6 +1,7 @@
 import { getDatabase } from "../store";
 import { getEmbeddings } from "./dense";
 import { isVectorActive } from "../store/vec";
+import { rerankChunks } from "./reranker";
 
 export interface SearchResult {
   id: string;
@@ -118,13 +119,13 @@ async function denseSearch(
 export async function searchProjectContext(
   projectRoot: string,
   query: string,
-  topK: number = 5
+  topK: number = 5,
+  intent: string = "unknown"
 ): Promise<SearchResult[]> {
   const db = getDatabase(projectRoot);
 
-  const ftsResults = ftsSearch(db, query, topK);
-
-  const denseResults = await denseSearch(db, projectRoot, query, topK);
+  const ftsResults = ftsSearch(db, query, topK * 2);
+  const denseResults = await denseSearch(db, projectRoot, query, topK * 2);
 
   const seen = new Set<string>();
   const merged: SearchResult[] = [];
@@ -144,5 +145,8 @@ export async function searchProjectContext(
   }
 
   merged.sort((a, b) => b.score - a.score);
-  return merged.slice(0, topK);
+  const topFused = merged.slice(0, topK * 2);
+
+  const reranked = await rerankChunks(projectRoot, query, topFused, intent);
+  return reranked.slice(0, topK);
 }

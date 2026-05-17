@@ -2,7 +2,13 @@ import type { DecisionRecord, DevIntent } from "../tree/engine";
 import { sessionMemory } from "../state/session";
 import { docsStore } from "../docs-store";
 
-export interface EvalDataPoint {
+/**
+ * Internal tracer — lightweight session analytics for brain plugin.
+ * Replaced eval/bridge.ts (was an external-facing bridge).
+ * All observability is now internal: no external eval system dependency.
+ */
+
+export interface TraceDataPoint {
   intent: DevIntent;
   strategy: string;
   contextCount: number;
@@ -13,7 +19,7 @@ export interface EvalDataPoint {
   docsSource?: string;
 }
 
-export function getEvalData(): EvalDataPoint[] {
+export function getTraceData(): TraceDataPoint[] {
   const memory = sessionMemory.getMemory();
   return memory.decisions.map((d: DecisionRecord) => ({
     intent: d.intent,
@@ -27,7 +33,7 @@ export function getEvalData(): EvalDataPoint[] {
   }));
 }
 
-export function getEvalMetrics(): {
+export function getTraceMetrics(): {
   totalDecisions: number;
   successful: number;
   failed: number;

@@ -14,12 +14,11 @@
 4. [Retrieval Pipeline](#4-retrieval-pipeline)
 5. [Tool Reference](#5-tool-reference)
 6. [Models & LM Studio](#6-models--lm-studio)
-7. [Speculative Decoding](#7-speculative-decoding)
-8. [Memory & Learning](#8-memory--learning)
-9. [Session Memory](#9-session-memory)
-10. [Eval Integration](#10-eval-integration)
-11. [File Structure](#11-file-structure)
-12. [Usage & Commands](#12-usage--commands)
+7. [Memory & Learning](#7-memory--learning)
+8. [Session Memory](#8-session-memory)
+9. [Internal Tracing](#9-internal-tracing)
+10. [File Structure](#10-file-structure)
+11. [Usage & Commands](#11-usage--commands)
 
 ---
 
@@ -29,7 +28,7 @@
 User types → message.updated hook
   → Decision Tree (classify intent)
   → Retrieval Pipeline (SQLite FTS5 + ONNX dense)
-  → Fusion + Rerank (optional)
+  → Rerank (ONNX cross-encoder, 'learn' intent only)
   → Context Injector (prepend chunks to prompt)
   → Augmented prompt sent to LLM
 
@@ -37,33 +36,38 @@ Storage:
   ├── SQLite (better-sqlite3):
   │   ├── FTS5 keyword index (instant)
   │   ├── ONNX dense embeddings (xenova/transformers)
-  │   └── Memory graph (K-means clusters)
+  │   └── Memory graph (K-means clusters, full recompute on demand)
   ├── LM Studio SDK (@lmstudio/sdk):
   │   ├── Chat completions
-  │   ├── Embeddings (no sidecar needed)
-  │   └── Speculative decoding (draft_model param)
-  └── Docs store (SQLite-backed documentation cache)
+  │   └── Embeddings (no sidecar needed)
+  └── Docs store (in-memory Map, 50-entry LRU)
 
 Brain plugin hooks:
-  - server.start: init SQLite, warm models
-  - message.updated: RAG pipeline
-  - chat.params: inject draft_model
-  - file.watcher.updated: dirty tracking → debounced reindex
+  - server.start: init SQLite, warm LM Studio connection
+  - message.updated: RAG pipeline (classify → search → rerank → inject)
+  - chat.params: skill gap detection / prompt rewriting (NOT speculative decoding)
+  - file.watcher.updated: dirty tracking → debounced reindex (3s)
   - tool.execute.after: collect feedback (success/failure)
   - session.compacting: persist decision tree state
-  - session.archived: save memory graph, cleanup
+  - session.archived: save memory graph, close SQLite, cleanup
 ```
 
 ### Key Design Decisions
 
-| Decision               | Rationale                                                         |
-| ---------------------- | ----------------------------------------------------------------- |
-| Node-native SQLite     | Zero sidecar, zero WSL dependency; faster startup, simpler deploy |
-| LM Studio SDK          | Direct API access; no HTTP proxy needed                           |
-| FTS5 + ONNX hybrid     | Keyword for speed (instant), dense for quality                    |
-| ONNX int8 quantization | 2-4x faster than FP16; ~200ms per query                           |
-| K-means memory graph   | Cross-session concept clustering; incremental updates             |
-| Serial model loading   | ~4GB VRAM (M4400) can't hold all 3 models simultaneously          |
+| Decision                 | Rationale                                                         |
+| ------------------------ | ----------------------------------------------------------------- |
+| Node-native SQLite       | Zero sidecar, zero WSL dependency; faster startup, simpler deploy |
+| LM Studio SDK            | Direct API access; no HTTP proxy needed                           |
+| FTS5 + ONNX hybrid       | Keyword for speed (instant), dense for quality                    |
+| ONNX int8 quantization   | 2-4x faster than FP16; ~200ms per query                           |
+| K-means memory graph     | Periodic full recompute on demand; simple, predictable            |
+| Reranker on CPU via ONNX | Saves VRAM; ~200ms latency acceptable for 'learn' intent only     |
+| Serial model loading     | ~4GB VRAM (M4400) can't hold all models simultaneously            |
+| In-memory docs store     | Simple LRU Map; no persistence needed for transient doc cache     |
+
+> **Hardware Limits:** No VRAM guard is implemented. Speculative decoding is not wired —
+> the `chat.params` hook performs skill gap detection, not `draft_model` injection.
+> Reranker runs on CPU to preserve VRAM. See [Models & LM Studio](#6-models--lm-studio).
 
 ---
 
@@ -73,31 +77,34 @@ Brain plugin hooks:
 
 **Hooks (automatic):**
 
-| Hook                     | What it does                                                       |
-| ------------------------ | ------------------------------------------------------------------ |
-| `server.start`           | Init SQLite DB, warm LM Studio connection, load decision tree      |
-| `message.updated`        | Classify intent → retrieve context → inject into prompt            |
-| `chat.params`            | Inject `draft_model` into LM Studio calls when speculative enabled |
-| `tool.execute.after`     | Track success/failure; update tuner weights                        |
-| `lsp.client.diagnostics` | Store diagnostics; prewarm "debug" intent                          |
-| `file.watcher.updated`   | Mark dirty; batch 5 → 5s debounce → reindex                        |
-| `session.compacting`     | Summarize memory; persist decision tree state                      |
-| `session.archived`       | Save memory graph, close SQLite, cleanup                           |
+| Hook                     | What it does                                                    |
+| ------------------------ | --------------------------------------------------------------- |
+| `server.start`           | Init SQLite DB, warm LM Studio connection, load decision tree   |
+| `message.updated`        | Classify intent → search → rerank (if 'learn') → inject context |
+| `chat.params`            | Detect skill gaps; rewrite prompts with intent context          |
+| `tool.execute.after`     | Track success/failure; update tuner weights                     |
+| `lsp.client.diagnostics` | Store diagnostics; prewarm "debug" intent                       |
+| `file.watcher.updated`   | Mark dirty; batch → 3s debounce → reindex                       |
+| `session.compacting`     | Summarize memory; persist decision tree state                   |
+| `session.archived`       | Save memory graph, close SQLite, cleanup                        |
 
 ### 2.2 Decision Tree — `tree/engine.ts`
 
 7 intent categories. Scored by `weight × log(visits + 2)`:
 
-| Intent           | Triggers                        | Chunks | Prewarm |
-| ---------------- | ------------------------------- | ------ | ------- |
-| `debug`          | error, exception, fail, panic   | 10     | embed   |
-| debug+stacktrace | stack traces                    | 5      | embed   |
-| `refactor`       | refactor, extract, rename       | 20     | embed   |
-| refactor+single  | "this function" + 1 recent file | 8      | embed   |
-| `feature`        | add, implement, create          | 15     | embed   |
-| `test`           | test, spec, jest, pytest        | 12     | embed   |
-| `learn`          | how does, explain, architecture | 25     | embed   |
-| `quick_chat`     | default                         | 0      | none    |
+| Intent           | Triggers                        | Chunks | Rerank |
+| ---------------- | ------------------------------- | ------ | ------ |
+| `debug`          | error, exception, fail, panic   | 10     | false  |
+| debug+stacktrace | stack traces                    | 5      | true   |
+| `refactor`       | refactor, extract, rename       | 20     | true   |
+| refactor+single  | "this function" + 1 recent file | 8      | false  |
+| `feature`        | add, implement, create          | 15     | true   |
+| `test`           | test, spec, jest, pytest        | 12     | false  |
+| `learn`          | how does, explain, architecture | 25     | true   |
+| `quick_chat`     | default                         | 0      | false  |
+
+Note: `rerank` flag is set per-intent in the decision tree. The actual reranker activation
+is gated in the pipeline — only fires for `'learn'` intent with >= 10 results.
 
 ---
 
@@ -109,9 +116,10 @@ Brain plugin hooks:
 server.start:
 1. Open SQLite DB (WAL mode)
 2. Create tables: files, chunks, fts5, memory_graph, decisions
-3. Warm LM Studio connection (health check → /v1/models)
-4. Load decision tree from DB
-5. Start dirty-file watcher
+3. Parse opencode.json for LM Studio baseURL
+4. Warm LM Studio connection
+5. Auto-index project (background via setImmediate)
+6. Start dirty-file watcher
 ```
 
 ### 3.2 Message Flow
@@ -119,14 +127,14 @@ server.start:
 ```
 message.updated:
 1. Classify intent (decision tree)
-2. Prewarm embed model if needed
+2. Skip if 'quick_chat' or low confidence
 3. Run retrieval pipeline:
-   a. Keyword search (FTS5) — instant
-   b. Dense search (ONNX) — ~200ms
-   c. Fusion (weighted combine)
-   d. Rerank (optional, LM Studio)
-4. Compress results (token budget)
-5. Inject into prompt as context block
+   a. FTS5 keyword search
+   b. ONNX dense search
+   c. Merge + sort by score
+   d. Rerank via ONNX cross-encoder (only if intent='learn' && >=10 results)
+4. Inject into prompt as context block
+5. If low context (<3 chunks), fallback to context7 + registry docs
 ```
 
 ### 3.3 File Change → Reindex
@@ -134,8 +142,8 @@ message.updated:
 ```
 file.watcher.updated:
   → add to dirtyFiles Set
-  → if >= 5 dirty && not indexing:
-    → 5s debounce
+  → if not indexing:
+    → 3s debounce
     → parse files, update FTS5, recompute embeddings
     → clear dirtyFiles
 ```
@@ -153,11 +161,9 @@ session.archived:
 
 ## 4. Retrieval Pipeline
 
-The pipeline supports progressive quality: you can stop at any stage.
-
 ### 4.1 Keyword Search (`retrieval/keyword.ts`)
 
-- SQLite FTS5 full-text search
+- SQLite FTS5 full-text search (`unicode61` tokenizer)
 - `.gitignore`-aware file walk
 - Blake3 hash → skip unchanged files
 - Speed: <5ms
@@ -173,21 +179,28 @@ The pipeline supports progressive quality: you can stop at any stage.
 
 - Weighted reciprocal-rank fusion of keyword + dense results
 - Configurable alpha/beta weights per intent
+- Note: currently not wired into the default search pipeline (searcher.ts merges directly)
 
 ### 4.4 Reranker (`retrieval/reranker.ts`)
 
-- Cross-encoder reranking via LM Studio (optional, slow)
-- Activated only for "learn" and high-value queries
-- Top-10 results rescored
+- Cross-encoder reranking via **local ONNX pipeline** (`Qwen/Qwen3-Reranker-0.6B` on CPU)
+- **Not LM Studio** — runs on CPU to save VRAM
+- Intent-gated: only activates for `intent === 'learn'` with >= 10 results
+- Top-20 rescored; remaining chunks appended unmodified
+- Graceful fallback: returns raw fusion results on initialization or execution failure
 
-### 4.5 Orchestrator Loop (`orchestrator/loop.ts`)
+### 4.5 Orchestrator (`orchestrator/loop.ts`)
 
-Agent Delegation Protocol — routes sub-tasks to specialized agents:
+Prompt-based delegation simulation — not real subagent spawning:
 
-- `core-factory` for implementation
-- `explore` for research
-- `qa-guardian` for testing
-- Tracks agent context and results
+- `delegateToAgent(agentName, briefing)` — calls the same LLM with a structured briefing prompt
+- `shouldDelegate(intent, complexity)` — simple boolean, only for `'debug'` intent
+- Agent names: `"debugger" | "architect" | "tester"` (not `core-factory`/`explore`/`qa-guardian`)
+- Uses own `AgentBriefing` interface (unrelated to `PlanState` in plugins/index.ts)
+- **Does not** spawn real subagents or inject PlanState into child contexts
+
+> For real agent delegation, a task-tool-based routing system with proper context serialization
+> is needed. The current implementation is a lightweight prompt-based simulation.
 
 ---
 
@@ -227,21 +240,9 @@ Agent Delegation Protocol — routes sub-tasks to specialized agents:
 
 ### Provider (`provider/lmstudio.ts`)
 
-Full LM Studio SDK integration:
-
-```typescript
-import { LMStudioClient } from "@lmstudio/sdk";
-
-const client = new LMStudioClient({ baseUrl: "http://127.0.0.1:1234" });
-```
-
-Features:
-
-- Model loading/listing (`/v1/models`)
-- Chat completions with optional `draft_model`
-- Embeddings endpoint
-- Automatic model detection and fallback
-- Connection health monitoring
+Full LM Studio SDK integration. Provides chat completions and embeddings.
+**No speculative decoding support** — `draft_model` parameter is accepted by the SDK
+but the `chat.params` hook is used for skill gap detection instead.
 
 ### Models
 
@@ -251,9 +252,9 @@ Features:
 | qwen3-embedding-0.6b | 320MB   | 1024 | ~359ms/4emb | Indexing, search |
 | qwen3-embedding-4b   | 2,458MB | 2560 | ~39s/batch  | Quality only     |
 
-### VRAM Analysis
+### VRAM Analysis (Reference Only — No Guard Implemented)
 
-16GB RAM / M4400 ~4GB VRAM:
+16GB RAM / M4400 ~4GB VRAM — theoretical analysis:
 
 | Model                | Offload   | VRAM        |
 | -------------------- | --------- | ----------- |
@@ -262,91 +263,49 @@ Features:
 | qwen3-0.6b (embed)   | 15 layers | ~0.5 GB     |
 | **Total**            |           | **~5.0 GB** |
 
-All 3 cannot fit simultaneously (~5GB > ~4GB). Strategy:
-
-```
-Normal:      chat (3.0 GB) + 1.0 GB free
-Search:      chat + embed (0.5 GB) = 3.5 GB → unload embed
-Speculative: chat + draft (1.5 GB) = 4.5 GB → reduce draft to 16 layers
-```
-
-### Recommended LM Studio Settings
-
-```
-qwen3.5-4b (chat):
-  GPU Offload: 20, Context: 4096, Flash Attention: ON
-
-qwen3.5-0.8b (draft):
-  GPU Offload: 16 (reduced), Context: 2048
-
-qwen3-embedding-0.6b (embed):
-  GPU Offload: 15, Context: 2048
-```
+No runtime VRAM guard exists. The reranker runs on CPU (`device: "cpu"`) to avoid VRAM pressure.
+Dense embeddings default to CPU as well.
 
 ---
 
-## 7. Speculative Decoding
+## 7. Memory & Learning
 
-### Wiring
-
-The `chat.params` hook in `brain.ts` injects `draft_model` into LM Studio calls:
-
-```typescript
-"chat.params": async (params: any) => {
-  if (!client) return params;
-  const models = await client.models.list();
-  if (models.find(m => m.path?.includes("draft"))) {
-    params.draft_model = "qwen3.5-0.8b";
-  }
-  return params;
-}
-```
-
-### Model Pairs
-
-| Main           | Draft          | Status              |
-| -------------- | -------------- | ------------------- |
-| qwen3.5-4b     | qwen3.5-0.8b   | Test (may mismatch) |
-| gemma-4-e4b-it | gemma-4-e2b-it | 1.23x speedup       |
-
----
-
-## 8. Memory & Learning
-
-### 8.1 Memory Graph (`memory/graph.ts`)
+### 7.1 Memory Graph (`memory/graph.ts`)
 
 - K-means clustering of code chunks by embedding similarity
-- Incremental updates (no full recompute)
-- Cross-session concept discovery
-- SQLite-backed persistence
+- **Periodic full recompute** on `clusterConceptChunks()` call — not incremental
+- Incremental tracking: concept visit counts and relationship strengths update in real-time
+- On-demand: no automatic scheduler, must be triggered explicitly
+- SQLite-backed persistence of concepts and chunk links
 
-### 8.2 Tuner (`learn/tuner.ts`)
+### 7.2 Tuner (`learn/tuner.ts`)
 
-- Adjusts retrieval weights based on feedback
-- Tracks successful vs failed retrievals per intent
-- Learns per-user patterns over time
+- Evaluates context efficiency: `used_chunks / retrieved_chunks`
+- If efficiency < 0.8 across 3 consecutive sessions: reduces `max_context_tokens` by 20%
+- Absorbs scoring formulas from the removed external eval system
+- Tunes context budget, not retrieval weights (weight tuning is in `feedback.ts`)
 
-### 8.3 Feedback (`learn/feedback.ts`)
+### 7.3 Feedback (`learn/feedback.ts`)
 
 - Collects `tool.execute.after` signals
+- `autoTuneRRFParameters()` adjusts fusion weights per intent
 - Marks chunks as helpful/unhelpful
-- Feeds into tuner for weight adjustment
 
-### 8.4 Context Compression (`context/compression.ts`)
+### 7.4 Context Compression (`context/compression.ts`)
 
-- Token budget management for context injection
-- Priority-aware truncation (most relevant chunks first)
-- Configurable max tokens per intent category
+- Intent-aware character thresholds (debug/refactor/feature: 2000 chars; learn/quick_chat: 600 chars)
+- Uses LM Studio to summarize when content exceeds threshold, with fallback to `content.slice(0, threshold)`
+- **Not token-aware** — thresholds are character counts, hardcoded per intent
 
-### 8.5 Breadcrumb (`context/breadcrumb.ts`)
+### 7.5 Breadcrumb (`context/breadcrumb.ts`)
 
-- Lightweight navigation trail across messages
-- Tracks recent files and decisions per session
-- Used by session memory for context recovery
+- Extracts `<thought>...</thought>` tags from assistant messages
+- Summarizes reasoning via LM Studio; injects `[Thought: ...]` summary
+- **Not a navigation trail** — does not track files, decisions, or session recovery
 
 ---
 
-## 9. Session Memory
+## 8. Session Memory
 
 Defined in `plugins/index.ts` as `PlanState` / `planMemory`:
 
@@ -371,25 +330,29 @@ interface PlanState {
 
 ### Follow-up Injection
 
-The `chat.message` hook detects task completion keywords ("done", "completed", "fixed") and appends a follow-up suggestion to continue the multi-step plan.
+The `chat.message` hook detects task completion keywords ("done", "completed", "fixed")
+and appends a follow-up suggestion to continue the multi-step plan.
 
 ---
 
-## 10. Eval Integration
+## 9. Internal Tracing
 
-### Eval Bridge (`eval/bridge.ts`)
+### Tracer (`learn/tracer.ts`)
 
-Connects brain plugin to the eval framework:
+Internal-only analytics aggregator (replaced the external eval bridge):
 
-- `capture(ty, data, opts)` — captures instrument traces
-- Exports trace data for external eval tooling
-- Tracks: function calls, tool executions, model responses
+- `getTraceData()` — returns decision records with intent, strategy, context count
+- `getTraceMetrics()` — aggregates: total decisions, success/failure rates, avg context chunks, intents distribution
+- Reads from session memory and docs store — purely internal, no external dependencies
+- Renamed from `eval/bridge.ts` to remove the "bridge" pattern
 
-For full details, see [Evals Integration Guide](evals-integration-guide.md).
+No external eval system. Scoring formulas for context_efficiency and token_economy
+were absorbed into `learn/tuner.ts`. The separate eval plugin and Python framework
+were removed.
 
 ---
 
-## 11. File Structure
+## 10. File Structure
 
 ```
 brain-plugin/
@@ -399,36 +362,35 @@ brain-plugin/
 ├── provider/
 │   └── lmstudio.ts             # @lmstudio/sdk wrapper
 ├── retrieval/
-│   ├── searcher.ts             # Combined search orchestrator
+│   ├── searcher.ts             # Combined search (FTS5 + dense + rerank)
 │   ├── indexer.ts              # File indexing (FTS5 + embeddings)
 │   ├── dense.ts                # ONNX dense embeddings (xenova)
 │   ├── fusion.ts               # Reciprocal-rank fusion
 │   ├── keyword.ts              # FTS5 keyword search
-│   └── reranker.ts             # Cross-encoder reranking
+│   └── reranker.ts             # ONNX cross-encoder (CPU, 'learn' only)
 ├── orchestrator/
-│   └── loop.ts                 # Agent Delegation Protocol
+│   └── loop.ts                 # Prompt-based delegation simulation
 ├── context/
 │   ├── injector.ts             # Prompt augmentation
-│   ├── breadcrumb.ts           # Navigation trail
-│   └── compression.ts          # Token budget management
+│   ├── breadcrumb.ts           # Thought tag summarizer
+│   └── compression.ts          # Character-based truncation
 ├── store/                      # SQLite storage layer
 ├── memory/
-│   └── graph.ts                # K-means memory graph
+│   └── graph.ts                # K-means memory graph (periodic recompute)
 ├── learn/
-│   ├── tuner.ts                # Weight tuning
+│   ├── tuner.ts                # Context budget auto-tuning
+│   ├── tracer.ts               # Internal session analytics
 │   └── feedback.ts             # Success/failure tracking
-├── eval/
-│   └── bridge.ts               # Eval instrumentation bridge
 ├── state/
 │   └── session.ts              # Session state management
 ├── tree/
 │   └── engine.ts               # Intent decision tree
-└── docs-store.ts               # Documentation cache
+└── docs-store.ts               # In-memory doc cache (50-entry LRU)
 ```
 
 ---
 
-## 12. Usage & Commands
+## 11. Usage & Commands
 
 ### Quick Start
 

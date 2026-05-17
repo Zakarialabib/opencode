@@ -12,7 +12,7 @@ async function getLocalReranker(projectRoot: string): Promise<any> {
 
   try {
     const { pipeline, env } = await import("@xenova/transformers");
-    
+
     // Set explicit cache path inside the project
     const cacheDir = `${projectRoot}/.opencode/models`.replace(/\\/g, "/");
     env.cacheDir = cacheDir;
@@ -25,22 +25,31 @@ async function getLocalReranker(projectRoot: string): Promise<any> {
     return localReranker;
   } catch (error: any) {
     console.warn(`[Brain/Reranker] Local reranker initialization failed: ${error.message}`);
-    console.warn("[Brain/Reranker] Skipping cross-encoder reranker (falling back to pure RRF fusion scores)");
+    console.warn(
+      "[Brain/Reranker] Skipping cross-encoder reranker (falling back to pure RRF fusion scores)"
+    );
     rerankerImportFailed = true;
     return null;
   }
 }
 
 /**
- * Reranks fusion search results using a local Qwen3 Reranker cross-encoder.
+ * Reranks fusion search results using a local Qwen3 Reranker cross-encoder (ONNX CPU).
  * Capped strictly to the top-20 inputs to prevent CPU latency spikes.
+ * Only activates for 'learn' intent with sufficient results to avoid unnecessary latency.
  */
 export async function rerankChunks(
   projectRoot: string,
   query: string,
-  fusedChunks: SearchResultItem[]
+  fusedChunks: SearchResultItem[],
+  intent: string = "unknown"
 ): Promise<SearchResultItem[]> {
   if (fusedChunks.length === 0) return [];
+
+  // Only rerank for 'learn' intent with enough candidates to benefit from cross-encoding
+  if (intent !== "learn" || fusedChunks.length < 10) {
+    return fusedChunks;
+  }
 
   // Cap to top-20 fusion chunks strictly to ensure CPU latency remains sub-second
   const topK = 20;
@@ -57,7 +66,7 @@ export async function rerankChunks(
   try {
     console.log(`[Brain/Reranker] Cross-encoding ${itemsToRerank.length} top RRF chunks...`);
     const startTime = Date.now();
-    
+
     // Run cross-encoder scoring for each query-chunk pair
     const scoredItems = await Promise.all(
       itemsToRerank.map(async (item) => {
@@ -68,7 +77,7 @@ export async function rerankChunks(
         const rerankScore = output[0]?.score ?? 0.0;
         return {
           ...item,
-          score: rerankScore // replace with high-fidelity cross-encoder score
+          score: rerankScore, // replace with high-fidelity cross-encoder score
         };
       })
     );
