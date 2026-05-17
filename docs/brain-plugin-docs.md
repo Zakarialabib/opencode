@@ -179,17 +179,23 @@ session.archived:
 
 - Weighted reciprocal-rank fusion of keyword + dense results
 - Configurable alpha/beta weights per intent
-- Note: currently not wired into the default search pipeline (searcher.ts merges directly)
 
 ### 4.4 Reranker (`retrieval/reranker.ts`)
 
 - Cross-encoder reranking via **local ONNX pipeline** (`Qwen/Qwen3-Reranker-0.6B` on CPU)
-- **Not LM Studio** — runs on CPU to save VRAM
-- Intent-gated: only activates for `intent === 'learn'` with >= 10 results
+- **Not LM Studio** — runs on CPU to preserve VRAM
+- Intent-gated: only activates for `learn`, `refactor`, `feature` intents with >= 10 results
+- Confidence gate: skips reranking if top-3 scores all exceed 0.85
 - Top-20 rescored; remaining chunks appended unmodified
-- Graceful fallback: returns raw fusion results on initialization or execution failure
+- Graceful fallback: returns raw fusion results on failure
 
-### 4.5 Orchestrator (`orchestrator/loop.ts`)
+### 4.5 Sparse Retrieval (`retrieval/sparse.ts`)
+
+- Pseudo-SPLADE: IDF-weighted term scoring over FTS5 candidates
+- Computes document frequency per query term, re-ranks by TF-IDF
+- Complements FTS5 keyword search with learned-sparse-style relevance
+
+### 4.6 Orchestrator (`orchestrator/loop.ts`)
 
 Prompt-based delegation simulation — not real subagent spawning:
 
@@ -279,6 +285,7 @@ Dense embeddings default to CPU as well.
 
 - K-means clustering of code chunks by embedding similarity
 - **Periodic full recompute** on `clusterConceptChunks()` call — not incremental
+- **Mini-batch update** on `miniBatchUpdate()` — incrementally adjusts centroids for recently active concepts
 - Incremental tracking: concept visit counts and relationship strengths update in real-time
 - On-demand: no automatic scheduler, must be triggered explicitly
 - SQLite-backed persistence of concepts and chunk links
@@ -376,12 +383,14 @@ brain-plugin/
 ├── provider/
 │   └── lmstudio.ts             # @lmstudio/sdk wrapper
 ├── retrieval/
-│   ├── searcher.ts             # Combined search (FTS5 + dense + rerank)
-│   ├── indexer.ts              # File indexing (FTS5 + embeddings)
+│   ├── searcher.ts             # Combined search (FTS5 + dense + fusion + rerank)
+│   ├── indexer.ts              # Semantic chunking + FTS5 + embeddings
 │   ├── dense.ts                # ONNX dense embeddings (xenova)
 │   ├── fusion.ts               # Reciprocal-rank fusion
 │   ├── keyword.ts              # FTS5 keyword search
-│   └── reranker.ts             # ONNX cross-encoder (CPU, 'learn' only)
+│   ├── sparse.ts               # Pseudo-SPLADE (IDF-weighted sparse retrieval)
+│   ├── reranker.ts             # ONNX cross-encoder (CPU, 'learn'/'refactor'/'feature')
+│   └── cache.ts                 # LRU embedding cache (500 entries)
 ├── orchestrator/
 │   └── loop.ts                 # Prompt-based delegation simulation
 ├── context/
