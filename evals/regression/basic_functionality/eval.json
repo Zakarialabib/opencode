@@ -1,0 +1,17 @@
+{
+  "id": "reg-basic-001",
+  "category": "basic_functionality",
+  "type": "regression",
+  "description": "Verify basic file operations (read/write/edit) continue to work",
+  "context_budget": 15000,
+  "max_turns": 2,
+  "expected": {
+    "read_works": true,
+    "write_works": true,
+    "edit_works": true
+  },
+  "thresholds": {
+    "tool_optimization": 1.0,
+    "error_resilience": 1.0
+  }
+}
