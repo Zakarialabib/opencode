@@ -24,6 +24,75 @@ function traceHook(name: string, input: any, output: any) {
   });
 }
 
+// ─── Session Plan Memory ────────────────────────────────────────
+// Persists plan context across subagent delegations within a session.
+// Enables "what next?" follow-up prompts after task completion.
+
+interface PlanState {
+  plan: string;
+  completedSteps: string[];
+  remainingSteps: string[];
+  currentStep: number;
+  decisions: string[];
+  failedApproaches: string[];
+  recentFiles: string[];
+  parentAgent: string;
+  lastTaskResult: "pending" | "success" | "failure" | "partial";
+  followUpSuggested: boolean;
+}
+
+const planMemory: Map<string, PlanState> = new Map();
+
+const defaultPlanState = (): PlanState => ({
+  plan: "",
+  completedSteps: [],
+  remainingSteps: [],
+  currentStep: 0,
+  decisions: [],
+  failedApproaches: [],
+  recentFiles: [],
+  parentAgent: "",
+  lastTaskResult: "pending",
+  followUpSuggested: false,
+});
+
+function getPlanState(sessionID: string): PlanState {
+  if (!planMemory.has(sessionID)) {
+    planMemory.set(sessionID, defaultPlanState());
+  }
+  return planMemory.get(sessionID)!;
+}
+
+function buildPlanContext(sessionID: string): string {
+  const state = getPlanState(sessionID);
+  if (!state.plan) return "";
+
+  let ctx = `## Active Plan\n${state.plan}\n\n`;
+  ctx += `**Progress**: Step ${state.currentStep}/${state.currentStep + state.remainingSteps.length}\n`;
+  if (state.completedSteps.length > 0) {
+    ctx += `**Completed**: ${state.completedSteps.join(" \u2192 ")}\n`;
+  }
+  if (state.remainingSteps.length > 0) {
+    ctx += `**Remaining**: ${state.remainingSteps.join(" \u2192 ")}\n`;
+  }
+  if (state.decisions.length > 0) {
+    ctx += `**Decisions**: ${state.decisions.join(", ")}\n`;
+  }
+  return ctx;
+}
+
+// Detect task completion keywords
+const COMPLETION_PATTERNS = [
+  /(?:task|step|story|feature|implementation).*(?:complete|done|finished|ready|resolved)/i,
+  /^(?:done|complete|finished|ready)\b/i,
+  /all (?:tasks|steps|items).*(?:complete|done|finished)/i,
+  /(?:the|this).*(?:task|step|issue).*(?:is|has been).*(?:complete|done|resolved)/i,
+];
+
+function detectTaskCompletion(text: string): boolean {
+  return COMPLETION_PATTERNS.some((p) => p.test(text));
+}
+
 // ─── Ambient LSP Feedback ───────────────────────────────────────
 // Architecture:
 //   edit/write → tool.execute.after → runQuickCheck → inject into tool output (same-turn)
@@ -316,7 +385,7 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
     // Hook: Before each message — LM Studio health check and diagnostic injection
     "chat.message": async (input: any, output: any) => {
       const { sessionID, agent, model, messageID, variant } = input;
-      
+
       // ── Diagnostic injection into messages ──
       const diags = flushDiagnostics(sessionID || "default");
       if (diags.length > 0) {
@@ -330,7 +399,7 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
         input.messages.unshift({
           role: "system",
           name: "lsp-diagnostics",
-          content: `[LSP Diagnostics - ${new Date().toISOString()}]\n${diagText}`
+          content: `[LSP Diagnostics - ${new Date().toISOString()}]\n${diagText}`,
         });
 
         // Also log for observability
@@ -339,8 +408,8 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
             service: "ambient-lsp",
             level: "warn",
             message: `Injected ${diags.length} diagnostics`,
-            extra: { sessionID, files: diags.map(d => d.file) }
-          }
+            extra: { sessionID, files: diags.map((d) => d.file) },
+          },
         });
       }
 
@@ -377,6 +446,50 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
           });
         }
       }
+
+      // ── Follow-up detection: "what next?" after task completion ──
+      const plan = getPlanState(sessionID || "default");
+
+      const messages = input?.messages || [];
+      if (messages.length >= 2) {
+        const lastMsg = messages[messages.length - 1];
+        if (lastMsg?.role === "assistant" && typeof lastMsg?.content === "string") {
+          const content = lastMsg.content;
+
+          if (detectTaskCompletion(content) && !plan.followUpSuggested && plan.plan) {
+            plan.followUpSuggested = true;
+
+            let followUp = `\n\n## \ud83d\udccb Task Status\n`;
+            followUp += `**Step ${plan.currentStep} completed.**\n`;
+            if (plan.remainingSteps.length > 0) {
+              followUp += `\n**Next steps**: ${plan.remainingSteps[0]}\n`;
+              followUp += `\n> \ud83d\udd04 For the next step, type: \`@${plan.parentAgent || "core-factory"} continue with step ${plan.currentStep + 1}: ${plan.remainingSteps[0]}\``;
+            } else {
+              followUp += `\n**All steps complete!** \ud83c\udf89\n`;
+              followUp += `\n> Type \`/plan\` to start a new plan, or describe what you'd like to do next.`;
+            }
+
+            input.messages.push({
+              role: "system",
+              name: "plan-followup",
+              content: followUp,
+            });
+
+            await client.app.log({
+              body: {
+                service: "plan-followup",
+                level: "info",
+                message: `Follow-up injected for session ${sessionID}`,
+                extra: { completedStep: plan.currentStep, remaining: plan.remainingSteps.length },
+              },
+            });
+          }
+
+          if (!detectTaskCompletion(content)) {
+            plan.followUpSuggested = false;
+          }
+        }
+      }
     },
 
     // Hook: Modify chat parameters — race-safe LSP checks and lazy tool loading
@@ -400,13 +513,15 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
       if (output.tools && Array.isArray(output.tools)) {
         const conversation = message || "";
         const lazyTools = filterToolsByKeywords(output.tools, conversation);
-        
+
         if (lazyTools.length !== output.tools.length) {
-          debug(SKILL_CATEGORIES.TOOL_LOAD, `Lazy loading: ${output.tools.length} → ${lazyTools.length} tools`);
+          debug(
+            SKILL_CATEGORIES.TOOL_LOAD,
+            `Lazy loading: ${output.tools.length} → ${lazyTools.length} tools`
+          );
           output.tools = lazyTools;
         }
       }
-
     },
 
     // Hook: After tool execution — same-turn diagnostic injection
@@ -629,8 +744,14 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
         description: "Ask user for clarification before proceeding with ambiguous requirements",
         args: {
           question: tool.schema.string().describe("The clarification question to ask the user"),
-          options: tool.schema.array(tool.schema.string()).optional().describe("Multiple choice options"),
-          blocking: tool.schema.boolean().default(true).describe("Whether to wait for user response"),
+          options: tool.schema
+            .array(tool.schema.string())
+            .optional()
+            .describe("Multiple choice options"),
+          blocking: tool.schema
+            .boolean()
+            .default(true)
+            .describe("Whether to wait for user response"),
         },
         async execute({ question, options, blocking }) {
           // Emit clarification request to user interface
@@ -639,50 +760,106 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
               service: "clarification-gate",
               level: "info",
               message: `Clarification needed: ${question}`,
-              extra: { options, blocking }
-            }
+              extra: { options, blocking },
+            },
           });
 
           // For now, return a message indicating clarification is needed
           // In a full implementation, this would integrate with the chat UI
           let result = `🤔 **Clarification Needed:** ${question}\n\n`;
-          
+
           if (options && options.length > 0) {
             result += `Options:\n`;
             options.forEach((opt, idx) => {
               result += `${idx + 1}. ${opt}\n`;
             });
           }
-          
+
           result += `\nPlease provide more details so I can proceed effectively.`;
-          
+
           if (blocking) {
             result += `\n\n⚠️  Workflow paused until clarification is received.`;
           }
-          
+
           return result;
         },
       }),
 
       // Task delegation tool with briefing inheritance
       task: tool({
-        description: "Delegate a task to another agent with context briefing",
+        description: "Delegate a task to another agent with context briefing and plan tracking",
         args: {
           agent: tool.schema.string().describe("Target agent to delegate to"),
           task: tool.schema.string().describe("Task description"),
-          briefing: tool.schema.object({
-            recentFiles: tool.schema.array(tool.schema.string()).optional().describe("Recently accessed files"),
-            activeDecisions: tool.schema.array(tool.schema.string()).optional().describe("Key architectural decisions"),
-            failedApproaches: tool.schema.array(tool.schema.string()).optional().describe("Approaches that didn't work"),
-            contextWindow: tool.schema.number().optional().describe("Remaining token budget"),
-            parentAgent: tool.schema.string().optional().describe("Delegating agent name"),
-          }).optional().describe("Context briefing for the child agent"),
-          priority: tool.schema.enum(["low", "medium", "high"]).default("medium").describe("Task priority"),
+          sessionID: tool.schema
+            .string()
+            .optional()
+            .default("default")
+            .describe("Session ID for plan tracking"),
+          plan: tool.schema.string().optional().describe("Overall plan this task belongs to"),
+          remainingSteps: tool.schema
+            .array(tool.schema.string())
+            .optional()
+            .describe("Steps remaining after this task"),
+          completedSteps: tool.schema
+            .array(tool.schema.string())
+            .optional()
+            .describe("Steps completed before this task"),
+          currentStep: tool.schema
+            .number()
+            .optional()
+            .describe("Current step number being executed"),
+          briefing: tool.schema
+            .object({
+              recentFiles: tool.schema
+                .array(tool.schema.string())
+                .optional()
+                .describe("Recently accessed files"),
+              activeDecisions: tool.schema
+                .array(tool.schema.string())
+                .optional()
+                .describe("Key architectural decisions"),
+              failedApproaches: tool.schema
+                .array(tool.schema.string())
+                .optional()
+                .describe("Approaches that didn't work"),
+              contextWindow: tool.schema.number().optional().describe("Remaining token budget"),
+              parentAgent: tool.schema.string().optional().describe("Delegating agent name"),
+            })
+            .optional()
+            .describe("Context briefing for the child agent"),
+          priority: tool.schema
+            .enum(["low", "medium", "high"])
+            .default("medium")
+            .describe("Task priority"),
           timeout: tool.schema.number().optional().describe("Timeout in minutes"),
         },
-        async execute({ agent, task, briefing, priority, timeout }) {
+        async execute({
+          agent,
+          task,
+          sessionID,
+          plan,
+          remainingSteps,
+          completedSteps,
+          currentStep,
+          briefing,
+          priority,
+          timeout,
+        }) {
+          const sid = sessionID || "default";
+
+          // Store plan context in session memory for follow-up detection
+          const planState = getPlanState(sid);
+          if (plan) planState.plan = plan;
+          if (remainingSteps) planState.remainingSteps = remainingSteps;
+          if (completedSteps) planState.completedSteps = completedSteps;
+          if (currentStep) planState.currentStep = currentStep;
+          planState.parentAgent = agent;
+          planState.lastTaskResult = "pending";
+          planState.followUpSuggested = false;
+
           // Auto-generate briefing if not provided
-          const finalBriefing = briefing || await generateBriefing();
+          const finalBriefing = briefing || generateBriefing(sid);
 
           // Log the delegation
           await client.app.log({
@@ -690,16 +867,20 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
               service: "task-delegation",
               level: "info",
               message: `Delegating task to ${agent}`,
-              extra: { task, briefing: finalBriefing, priority, timeout }
-            }
+              extra: { task, plan, briefing: finalBriefing, priority, timeout },
+            },
           });
 
-          // In a full implementation, this would trigger agent switching
-          // For now, return delegation summary
           let result = `📋 **Task Delegated to ${agent}**\n\n`;
           result += `**Task:** ${task}\n`;
+
+          if (plan) {
+            result += `**Plan:** ${plan}\n`;
+            result += `**Step:** ${currentStep || 0}/${(currentStep || 0) + (remainingSteps?.length || 0)}\n`;
+          }
+
           result += `**Priority:** ${priority}\n`;
-          
+
           if (timeout) {
             result += `**Timeout:** ${timeout} minutes\n`;
           }
@@ -707,13 +888,13 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
           if (finalBriefing) {
             result += `\n**Context Briefing Provided:**\n`;
             if (finalBriefing.recentFiles?.length) {
-              result += `- Recent files: ${finalBriefing.recentFiles.join(', ')}\n`;
+              result += `- Recent files: ${finalBriefing.recentFiles.join(", ")}\n`;
             }
             if (finalBriefing.activeDecisions?.length) {
-              result += `- Key decisions: ${finalBriefing.activeDecisions.join(', ')}\n`;
+              result += `- Key decisions: ${finalBriefing.activeDecisions.join(", ")}\n`;
             }
             if (finalBriefing.failedApproaches?.length) {
-              result += `- Avoided approaches: ${finalBriefing.failedApproaches.join(', ')}\n`;
+              result += `- Avoided approaches: ${finalBriefing.failedApproaches.join(", ")}\n`;
             }
             if (finalBriefing.contextWindow) {
               result += `- Token budget: ${finalBriefing.contextWindow}\n`;
@@ -721,7 +902,7 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
           }
 
           result += `\n🔄 Switching to agent: ${agent}`;
-          
+
           return result;
         },
       }),
@@ -731,7 +912,10 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
         description: "Create atomic multi-layer snapshot before destructive operations",
         args: {
           name: tool.schema.string().optional().describe("Optional checkpoint name"),
-          layers: tool.schema.array(tool.schema.enum(["git", "db", "memory", "task_state"])).default(["git", "db", "memory", "task_state"]).describe("Layers to checkpoint"),
+          layers: tool.schema
+            .array(tool.schema.enum(["git", "db", "memory", "task_state"]))
+            .default(["git", "db", "memory", "task_state"])
+            .describe("Layers to checkpoint"),
         },
         async execute({ name, layers }) {
           const checkpointId = name || `cp-${Date.now()}`;
@@ -762,7 +946,10 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
           if (layers.includes("memory")) {
             try {
               // Mock memory export - in real implementation, export MCP memory
-              await writeFile(`memory.${checkpointId}.json`, JSON.stringify({ checkpoint: checkpointId }));
+              await writeFile(
+                `memory.${checkpointId}.json`,
+                JSON.stringify({ checkpoint: checkpointId })
+              );
               results.push("✅ Memory state exported");
             } catch (e) {
               results.push("❌ Memory export failed");
@@ -773,7 +960,10 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
           if (layers.includes("task_state")) {
             try {
               // Mock task state export
-              await writeFile(`tasks.${checkpointId}.json`, JSON.stringify({ checkpoint: checkpointId, tasks: [] }));
+              await writeFile(
+                `tasks.${checkpointId}.json`,
+                JSON.stringify({ checkpoint: checkpointId, tasks: [] })
+              );
               results.push("✅ Task state exported");
             } catch (e) {
               results.push("❌ Task state export failed");
@@ -786,11 +976,11 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
               service: "checkpoint",
               level: "info",
               message: `Created checkpoint ${checkpointId}`,
-              extra: { layers, results }
-            }
+              extra: { layers, results },
+            },
           });
 
-          return `📸 **Checkpoint Created: ${checkpointId}**\n\n${results.join('\n')}\n\nUse \`/undo ${checkpointId}\` to rollback.`;
+          return `📸 **Checkpoint Created: ${checkpointId}**\n\n${results.join("\n")}\n\nUse \`/undo ${checkpointId}\` to rollback.`;
         },
       }),
 
@@ -798,11 +988,14 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
       undo: tool({
         description: "Rollback to a previous checkpoint",
         args: {
-          checkpointId: tool.schema.string().optional().describe("Specific checkpoint ID to rollback to, or latest if not specified"),
+          checkpointId: tool.schema
+            .string()
+            .optional()
+            .describe("Specific checkpoint ID to rollback to, or latest if not specified"),
         },
         async execute({ checkpointId }) {
           // Find latest checkpoint if not specified
-          const targetId = checkpointId || await findLatestCheckpoint();
+          const targetId = checkpointId || (await findLatestCheckpoint());
           if (!targetId) {
             return "❌ No checkpoints found to rollback to.";
           }
@@ -847,11 +1040,11 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
               service: "checkpoint",
               level: "warn",
               message: `Rolled back to checkpoint ${targetId}`,
-              extra: { results }
-            }
+              extra: { results },
+            },
           });
 
-          return `↶ **Rolled back to checkpoint: ${targetId}**\n\n${results.join('\n')}`;
+          return `↶ **Rolled back to checkpoint: ${targetId}**\n\n${results.join("\n")}`;
         },
       }),
 
@@ -859,12 +1052,23 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
       browser: tool({
         description: "Automate browser interactions for UI testing and screenshots",
         args: {
-          action: tool.schema.enum(["navigate", "click", "type", "screenshot", "wait"]).describe("Browser action to perform"),
+          action: tool.schema
+            .enum(["navigate", "click", "type", "screenshot", "wait"])
+            .describe("Browser action to perform"),
           url: tool.schema.string().optional().describe("URL to navigate to (for navigate action)"),
-          selector: tool.schema.string().optional().describe("CSS selector for element interaction"),
+          selector: tool.schema
+            .string()
+            .optional()
+            .describe("CSS selector for element interaction"),
           text: tool.schema.string().optional().describe("Text to type (for type action)"),
-          waitFor: tool.schema.string().optional().describe("Selector to wait for (for wait action)"),
-          description: tool.schema.string().optional().describe("Description of the element for screenshot"),
+          waitFor: tool.schema
+            .string()
+            .optional()
+            .describe("Selector to wait for (for wait action)"),
+          description: tool.schema
+            .string()
+            .optional()
+            .describe("Description of the element for screenshot"),
         },
         async execute({ action, url, selector, text, waitFor, description }) {
           // Mock browser automation - in real implementation, use Playwright
@@ -876,26 +1080,26 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
               result += `Navigated to: ${url}\n`;
               // Mock navigation
               break;
-              
+
             case "click":
               if (!selector) return "❌ Selector required for click action";
               result += `Clicked element: ${selector}\n`;
               // Mock click
               break;
-              
+
             case "type":
               if (!selector || !text) return "❌ Selector and text required for type action";
               result += `Typed "${text}" into: ${selector}\n`;
               // Mock typing
               break;
-              
+
             case "screenshot":
               result += `Screenshot taken`;
               if (description) result += `: ${description}`;
               result += `\n📸 [Screenshot would be attached here]\n`;
               // Mock screenshot
               break;
-              
+
             case "wait":
               if (!waitFor) return "❌ Selector required for wait action";
               result += `Waiting for element: ${waitFor}\n`;
@@ -909,8 +1113,8 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
               service: "browser",
               level: "info",
               message: `Browser action: ${action}`,
-              extra: { url, selector, text, waitFor }
-            }
+              extra: { url, selector, text, waitFor },
+            },
           });
 
           return result;
@@ -921,25 +1125,15 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
 };
 
 // Helper function to generate task briefing
-async function generateBriefing() {
-  // Get recent file operations (mock implementation)
-  const recentFiles = ["src/main.ts", "src/components/UserForm.vue", "src/api/user.ts"];
-  
-  // Get active decisions (mock implementation)
-  const activeDecisions = ["Using Vue 3 Composition API", "Laravel 10 with Sanctum auth"];
-  
-  // Get failed approaches (mock implementation)
-  const failedApproaches = ["Class-based components", "JWT tokens"];
-  
-  // Estimate remaining context window (mock)
-  const contextWindow = 100000;
-  
+function generateBriefing(sessionID: string) {
+  const plan = getPlanState(sessionID);
+
   return {
-    recentFiles,
-    activeDecisions,
-    failedApproaches,
-    contextWindow,
-    parentAgent: "lead-strategist"
+    recentFiles: plan.recentFiles.length > 0 ? plan.recentFiles : undefined,
+    activeDecisions: plan.decisions.length > 0 ? plan.decisions : undefined,
+    failedApproaches: plan.failedApproaches.length > 0 ? plan.failedApproaches : undefined,
+    contextWindow: 24000,
+    parentAgent: plan.parentAgent || "core-factory",
   };
 }
 
@@ -949,11 +1143,11 @@ async function findLatestCheckpoint(): Promise<string | null> {
     // Mock implementation - in real system, query checkpoint registry
     const files = await readdir(process.cwd());
     const checkpoints = files
-      .filter(f => f.startsWith('memory.cp-') && f.endsWith('.json'))
-      .map(f => f.replace('memory.cp-', '').replace('.json', ''))
+      .filter((f) => f.startsWith("memory.cp-") && f.endsWith(".json"))
+      .map((f) => f.replace("memory.cp-", "").replace(".json", ""))
       .sort()
       .reverse();
-    
+
     return checkpoints[0] || null;
   } catch {
     return null;
@@ -963,52 +1157,52 @@ async function findLatestCheckpoint(): Promise<string | null> {
 // Helper function for lazy tool loading based on conversation keywords
 function filterToolsByKeywords(tools: any[], conversation: string): any[] {
   const keywords = conversation.toLowerCase();
-  
+
   // Define tool categories and their trigger keywords
   const toolCategories = {
     // Always available core tools
     core: ["clarify", "task", "checkpoint", "undo"],
-    
+
     // File system tools
     filesystem: ["read", "write", "create", "delete", "file", "folder", "directory"],
-    
+
     // Git/version control tools
     git: ["commit", "push", "pull", "merge", "branch", "stash", "diff", "log"],
-    
+
     // Build/test tools
     build: ["build", "compile", "test", "run", "start", "deploy", "package"],
-    
+
     // Database tools
     database: ["query", "insert", "update", "delete", "table", "schema", "migrate"],
-    
+
     // Web/network tools
     web: ["http", "api", "request", "response", "url", "fetch", "browser"],
-    
+
     // Code analysis tools
     analysis: ["lint", "format", "refactor", "optimize", "debug", "trace"],
   };
-  
+
   // Determine which categories to load
   const activeCategories = new Set<string>(["core"]); // Core tools always loaded
-  
+
   for (const [category, triggers] of Object.entries(toolCategories)) {
-    if (triggers.some(trigger => keywords.includes(trigger))) {
+    if (triggers.some((trigger) => keywords.includes(trigger))) {
       activeCategories.add(category);
     }
   }
-  
+
   // Filter tools based on active categories
-  return tools.filter(tool => {
+  return tools.filter((tool) => {
     const toolName = tool.name?.toLowerCase() || "";
-    
+
     // Check if tool belongs to any active category
     for (const category of activeCategories) {
       const categoryTools = toolCategories[category as keyof typeof toolCategories];
-      if (categoryTools.some(trigger => toolName.includes(trigger))) {
+      if (categoryTools.some((trigger) => toolName.includes(trigger))) {
         return true;
       }
     }
-    
+
     return false;
   });
 }
