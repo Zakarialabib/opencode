@@ -73,6 +73,26 @@ enum AppError {
 }
 ```
 
+## Mobile Build Commands
+
+Tauri v2 supports Android/iOS mobile builds:
+
+| Command                     | Purpose                                      |
+| --------------------------- | -------------------------------------------- |
+| `cargo tauri android init`  | Initialize Android project in `gen/android/` |
+| `cargo tauri android dev`   | Run Android dev build on emulator/device     |
+| `cargo tauri android build` | Production Android APK/AAB build             |
+| `cargo tauri ios init`      | Initialize iOS project                       |
+| `cargo tauri ios dev`       | Run iOS dev build                            |
+| `cargo tauri ios build`     | Production iOS build                         |
+
+### Mobile Configuration
+
+- Configure `minSdkVersion`/`targetSdkVersion` in `tauri.conf.json`
+- Add mobile capabilities in `capabilities/mobile.json`
+- The React frontend runs in WebView on mobile — no separate codebase
+- Delegate Kotlin native code to `@android-kotlin` agent
+
 ## When to Use This Stack
 
 - Building desktop app backend logic

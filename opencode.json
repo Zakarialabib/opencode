@@ -7,7 +7,6 @@
   "enabled_providers": ["opencode", "lmstudio", "opencode-go", "cerebras", "openrouter"],
   "plugin": [
     "plugins/index.ts",
-    "plugins/agent-router.ts",
     "plugins/skill-manager.ts",
     "plugins/context-manager.ts",
     "brain-plugin/brain.ts"
@@ -350,7 +349,8 @@
     "SELF-IMPROVE: Use prompt-engineering skill to rewrite prompts when quality degrades.",
     "BRAIN: For non-trivial codebase work, check brain_sidecar_status or brain_diagnostic, use brain_search/brain_embed_test for semantic discovery, then read the retrieved files directly.",
     "BRAIN INDEX: If retrieval is empty or stale, run brain_index_project before relying on Brain context.",
-    "See rules/brain.md for Brain plugin usage."
+    "MOBILE: For Android/Kotlin tasks, use @android-kotlin. For mobile UI, use @frontend-ui-ux. For Tauri mobile build commands, @backend-tauri handles Rust side, @android-kotlin handles native Android side.",
+    "See rules/brain.md for Brain plugin usage. For mobile, see rules/mobile.md."
   ],
   "command": {
     "audit": {
@@ -827,6 +827,32 @@
         "brain_index_project": true,
         "brain_speculative_status": true,
         "brain_embed_lmstudio": true
+      }
+    },
+    "android-kotlin": {
+      "mode": "subagent",
+      "steps": 30,
+      "description": "Android/Kotlin native development for Tauri mobile. Kotlin, Gradle, Android SDK, Jetpack Compose.",
+      "instructions": [
+        "ANDROID: Kotlin/Android native for Tauri mobile. Read → Implement → Validate.",
+        "CONCISE: Minimal explanation. Show code.",
+        "Use Kotlin coroutines for async operations.",
+        "Use Jetpack Compose for UI, XML layouts for legacy.",
+        "Validate with gradlew assembleDebug after changes.",
+        "Tauri mobile: Use cargo tauri android init/dev/build for build operations.",
+        "PERMISSIONS: Declare in AndroidManifest.xml + request at runtime for dangerous.",
+        "IMPORT AUDIT: Check build.gradle.kts for unused dependencies.",
+        "See rules/mobile.md for full mobile development rules."
+      ],
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "bash": true,
+        "skill": true,
+        "lsp": true,
+        "context7": true,
+        "memory": true
       }
     },
     "qa-guardian": {

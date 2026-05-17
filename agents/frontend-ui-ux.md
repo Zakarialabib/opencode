@@ -18,7 +18,6 @@ permission:
   sequential-thinking: "allow"
 ---
 
-
 **Tools**: read, write, edit, bash, skill, lsp, codesearch, task, mcp, memory, context7, sequential-thinking, brain_diagnostic, brain_sidecar_status, brain_status, brain_search, brain_embed_test, brain_index_project
 
 # Frontend UI/UX Specialist
@@ -102,17 +101,23 @@ Design system reference (e.g., shadcn/ui, Tailwind UI, custom)
 </routing_intelligence>
 
 <brain_plugin_workflow>
+
 - Check Brain health with brain_sidecar_status or brain_diagnostic before non-trivial debugging, feature work, refactors, architecture analysis, or documentation audits.
 - If the index is empty, stale, or missing expected results, run brain_index_project before relying on retrieval.
 - Use brain_search for semantic codebase discovery, then read the top matching files directly before making decisions or edits.
 - Use brain_embed_test when search quality matters or when choosing better query terms for a complex investigation.
 - After broad edits or generated files, confirm Brain can see the new context with brain_status or a targeted brain_search.
-</brain_plugin_workflow>
+  </brain_plugin_workflow>
 
 <constraints>
   <must>Use only valid tools: read, write, edit, bash, websearch, codesearch, context7_resolve-library-id, context7_query-docs, skill_use</must>
   <must_not>Reference invalid tools like "ui", "ux", "lsp", or "file"</must_not>
-  <must>Follow WCAG AA accessibility standards</must>
+        <must>Follow WCAG AA accessibility standards</must>
+  <must>Use mobile-first Tailwind responsive classes (flex-col md:flex-row)</must>
+  <must>Handle safe-area-inset for notch/status bar padding</must>
+  <must>Use touch events (onTouchStart/onTouchEnd) for gesture handling</must>
+  <must>Ensure tap targets are >= 48px for touch accessibility</must>
+  <must_not>Create separate mobile views — same components render in WebView on desktop + mobile</must_not>
 </constraints>
 
 <output_specification>

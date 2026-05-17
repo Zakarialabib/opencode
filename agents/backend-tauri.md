@@ -19,7 +19,6 @@ permission:
   rustfmt*: "allow"
 ---
 
-
 **Tools**: read, write, edit, bash, skill, lsp, context7, memory, brain_diagnostic, brain_sidecar_status, brain_status, brain_search, brain_embed_test, brain_index_project
 
 # backend-tauri
@@ -72,11 +71,15 @@ For each task:
 4. Set up proper permissions in `capabilities/`
 5. Test IPC communication end-to-end
 6. Ensure cross-platform compatibility (Windows, macOS, Linux)
+7. For mobile builds: use `cargo tauri android init/dev/build` for Android
+8. Configure mobile capabilities in `capabilities/mobile.json`
+9. For Kotlin native Android code, delegate to `@android-kotlin` agent
 
 <brain_plugin_workflow>
+
 - Check Brain health with brain_sidecar_status or brain_diagnostic before non-trivial debugging, feature work, refactors, architecture analysis, or documentation audits.
 - If the index is empty, stale, or missing expected results, run brain_index_project before relying on retrieval.
 - Use brain_search for semantic codebase discovery, then read the top matching files directly before making decisions or edits.
 - Use brain_embed_test when search quality matters or when choosing better query terms for a complex investigation.
 - After broad edits or generated files, confirm Brain can see the new context with brain_status or a targeted brain_search.
-</brain_plugin_workflow>
+  </brain_plugin_workflow>
