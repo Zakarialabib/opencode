@@ -14,6 +14,7 @@ This skill enables any agent to **dynamically rewrite its own system prompt** ba
 ## Core Capabilities
 
 ### 1. Prompt Generation (`generate`)
+
 Generate an initial prompt template for a given agent role and objective.
 
 ```
@@ -24,6 +25,7 @@ Example:
 ```
 
 Generates a structured prompt with:
+
 - **Identity** — Clear agent persona (e.g., "You are an expert Python security code reviewer...")
 - **Objective** — What "done well" looks like (measurable, specific)
 - **Context Window** — What background info to include (files, docs, prior results)
@@ -32,6 +34,7 @@ Generates a structured prompt with:
 - **Output Spec** — Expected deliverable structure (e.g., JSON, markdown, diff)
 
 ### 2. Prompt Rewriting (`rewrite`)
+
 Rewrite an existing prompt based on quality feedback or failure analysis.
 
 ```
@@ -52,6 +55,7 @@ Example:
 | `simplify` | Remove noise, make instruction more direct and unambiguous |
 
 ### 3. Self-Evaluation (`evaluate`)
+
 After a task completes, evaluate the quality of the prompt that produced it.
 
 ```
@@ -59,6 +63,7 @@ Usage: prompt-engineering evaluate <output> [--expected <expected-output>] [--cr
 ```
 
 **Evaluation Criteria** (scored 0.0–1.0 each):
+
 - **Relevance** — Did the agent stay on topic?
 - **Completeness** — Did it address all aspects of the task?
 - **Accuracy** — Are the outputs factually and technically correct?
@@ -69,6 +74,7 @@ Usage: prompt-engineering evaluate <output> [--expected <expected-output>] [--cr
 Produces a composite **quality score** and identifies **specific weaknesses**.
 
 ### 4. Prompt Versioning & History (`history`)
+
 Track prompt versions alongside quality metrics to build a training signal.
 
 ```
@@ -76,6 +82,7 @@ Usage: prompt-engineering history <agent-role> [--limit 10]
 ```
 
 Tracks:
+
 - Prompt text (full)
 - Quality score at time of generation
 - Feedback/reason for changes
@@ -83,15 +90,17 @@ Tracks:
 - Timestamp and agent that generated it
 
 ### 5. Meta-Audit (`audit`)
+
 A privileged operation where one agent audits another agent's prompt and suggests improvements.
 
 ```
 Usage: prompt-engineering audit <agent-name> [--target-task "description of recent task"]
 ```
 
-This runs a **mini autoresearch loop**:
-1. Fetches the target agent's current prompt from memory
-2. Finds recent outputs produced with that prompt
+This analyzes an agent's prompt effectiveness using available tools:
+
+1. Reads the agent's prompt from opencode.json
+2. Reviews recent outputs from that agent's sessions
 3. Evaluates outputs against quality criteria
 4. Identifies patterns of failure
 5. Proposes 2–3 alternative prompt rewrites
@@ -100,6 +109,7 @@ This runs a **mini autoresearch loop**:
 ## Integration with Autoresearch Loop
 
 ### Phase 1: Setup (before research begins)
+
 ```
 1. Agent loads current prompt from memory MCP
 2. Agent runs /prompt-improve evaluate on last 3 task outputs
@@ -108,6 +118,7 @@ This runs a **mini autoresearch loop**:
 ```
 
 ### Phase 2: During Research
+
 ```
 Every N iterations:
   - Evaluate current output quality
@@ -116,6 +127,7 @@ Every N iterations:
 ```
 
 ### Phase 3: After Research
+
 ```
 1. Final evaluation of all outputs produced
 2. Store quality metrics + prompt version in memory MCP
@@ -186,6 +198,7 @@ function autoSelectStrategy(quality) {
 ## Example Workflow
 
 **Before** (Static prompt):
+
 ```
 User asks: "How do I fix memory leak in my Node.js app?"
 Agent prompt: "You are a Node.js developer. Help with debugging."
@@ -193,6 +206,7 @@ Result: Generic debugging tips, misses memory-specific analysis.
 ```
 
 **After** (Self-improved prompt):
+
 ```
 User asks: "How do I fix memory leak in my Node.js app?"
 Agent prompt: "You are an expert Node.js performance engineer specializing in memory diagnostics.
@@ -214,11 +228,11 @@ Result: Targeted, actionable fix with specific tools and code patterns.
 
 ## Metrics to Track
 
-| Metric | Description | Target |
-|--------|-------------|--------|
-| `prompt_quality_score` | Composite of all evaluation criteria | > 0.80 |
-| `rewrite_improvement_delta` | Score change after rewrite | +0.15 or more |
-| `self_correct_rate` | % of rewrites that improve quality | > 70% |
-| `iterations_to_convergence` | Rewrites before quality stabilizes | < 5 |
-| `token_efficiency` | Output quality per token spent | Improving trend |
-| `failure_pattern_catch_rate` | % of known failure patterns caught by evaluator | > 85% |
+| Metric                       | Description                                     | Target          |
+| ---------------------------- | ----------------------------------------------- | --------------- |
+| `prompt_quality_score`       | Composite of all evaluation criteria            | > 0.80          |
+| `rewrite_improvement_delta`  | Score change after rewrite                      | +0.15 or more   |
+| `self_correct_rate`          | % of rewrites that improve quality              | > 70%           |
+| `iterations_to_convergence`  | Rewrites before quality stabilizes              | < 5             |
+| `token_efficiency`           | Output quality per token spent                  | Improving trend |
+| `failure_pattern_catch_rate` | % of known failure patterns caught by evaluator | > 85%           |

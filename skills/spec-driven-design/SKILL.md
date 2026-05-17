@@ -95,15 +95,15 @@ Reference `ui-ux-pro-max` skill for design tokens
 
 This skill integrates with other skills for specialized domains:
 
-| Domain             | Skill to Load               |
-| ------------------ | --------------------------- |
-| UI/Visual Design   | `ui-ux-pro-max`             |
-| Visual Foundations | `visual-design-foundations` |
-| Charts/Data Viz    | `charts`                    |
-| Database Design    | `database-design`           |
-| API Contracts      | `fullstack-dev`             |
-| Testing Strategy   | `testing-strategy`          |
-| Laravel            | `laravel-feature-scaffold`  |
+| Domain             | Skill to Load                             |
+| ------------------ | ----------------------------------------- |
+| UI/Visual Design   | `ui-ux-pro-max`                           |
+| Visual Foundations | `visual-design-foundations`               |
+| Charts/Data Viz    | `charts`                                  |
+| Database Design    | (skill not available — use fullstack-dev) |
+| API Contracts      | `fullstack-dev`                           |
+| Testing Strategy   | `testing-strategy`                        |
+| Laravel            | `laravel-feature-scaffold`                |
 
 ## Usage
 

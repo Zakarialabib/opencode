@@ -34,6 +34,7 @@ Before starting work on any cross-stack task, verify required context:
 ### Example: Cross-stack Task
 
 "Working on Tauri command that calls Laravel API"
+
 - Load both `rules/tauri.md` and `rules/laravel.md`
 - Pull Tauri IPC docs + Laravel API docs
 - Validate both language servers are active
@@ -43,12 +44,12 @@ Before starting work on any cross-stack task, verify required context:
 
 Before executing, verify:
 
-| Service           | How to Check                          | Fallback                          |
-| ----------------- | ------------------------------------- | --------------------------------- |
-| MCP servers       | `mcp_list` or health-check tool       | Use OpenCode defaults             |
-| Language servers  | LSP status tool                       | Open file of that type to trigger |
-| File patterns     | `glob` to detect stack files          | Ask user for stack context        |
-| Process health    | Check dev servers, background tasks   | Alert user, suggest restart       |
+| Service          | How to Check                            | Fallback                          |
+| ---------------- | --------------------------------------- | --------------------------------- |
+| MCP servers      | Check opencode.json mcp servers section | Use OpenCode defaults             |
+| Language servers | LSP status tool                         | Open file of that type to trigger |
+| File patterns    | `glob` to detect stack files            | Ask user for stack context        |
+| Process health   | Check dev servers, background tasks     | Alert user, suggest restart       |
 
 ## Output Format
 
