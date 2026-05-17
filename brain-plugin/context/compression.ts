@@ -28,13 +28,13 @@ export function getCompressionThreshold(intent: DevIntent | string): number {
     case "debug":
     case "refactor":
     case "feature":
-      return 2000; // Keep high-fidelity trace/source text
+      return 500; // Keep high-fidelity trace/source text
     case "learn":
     case "quick_chat":
     case "review":
     case "test":
     default:
-      return 600; // Compress aggressively for lightweight conversations
+      return 150; // Compress aggressively for lightweight conversations
   }
 }
 
@@ -48,13 +48,13 @@ export async function compressIfNeeded(
 ): Promise<string> {
   const threshold = getCompressionThreshold(intent);
 
-  if (content.length <= threshold) {
+  if (estimateTokens(content) <= threshold) {
     return content;
   }
 
   const estTokens = estimateTokens(content.slice(0, 8000));
   console.log(
-    `[Brain/Compression] Compressing output from '${toolName}' (${content.length} chars, ~${estTokens} tokens) under intent '${intent}' (threshold: ${threshold})`
+    `[Brain/Compression] Compressing output from '${toolName}' (${content.length} chars, ~${estTokens} tokens) under intent '${intent}' (threshold: ${threshold} tokens)`
   );
 
   const messages = [
@@ -85,8 +85,8 @@ export async function compressIfNeeded(
       `[Brain/Compression] Compression failed, falling back to truncation: ${error.message}`
     );
     return (
-      content.slice(0, threshold) +
-      `\n... [ToolResult truncated from ${content.length} chars to save context]`
+      content.slice(0, threshold * 4) +
+      `\n... [ToolResult truncated from ~${estTokens} tokens to save context]`
     );
   }
 }

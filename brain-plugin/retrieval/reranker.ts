@@ -47,7 +47,17 @@ export async function rerankChunks(
   if (fusedChunks.length === 0) return [];
 
   // Only rerank for 'learn' intent with enough candidates to benefit from cross-encoding
-  if (intent !== "learn" || fusedChunks.length < 10) {
+  const rerankIntents = ["learn", "refactor", "feature"];
+  if (!rerankIntents.includes(intent) || fusedChunks.length < 10) {
+    return fusedChunks;
+  }
+
+  // Skip reranker if top-3 scores already indicate high confidence
+  const topScores = fusedChunks
+    .slice(0, 3)
+    .map((c) => c.score)
+    .filter((s) => s !== undefined);
+  if (topScores.length >= 3 && topScores.every((s) => (s as number) > 0.85)) {
     return fusedChunks;
   }
 

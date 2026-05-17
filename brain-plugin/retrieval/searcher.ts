@@ -121,10 +121,32 @@ export async function searchProjectContext(
   // Takes dense + FTS results, computes weighted rank-based scores,
   // deduplicates by chunk_id, returns sorted by combined RRF score.
   // Dense weight: 0.5, Keyword weight: 0.2, Smoothing factor K: 60
-  const ftsResults = ftsSearch(db, query, topK * 2);
-  const denseResults = await denseSearch(db, projectRoot, query, topK * 2);
+  const [ftsResults, denseResults] = await Promise.all([
+    ftsSearch(db, query, topK * 2),
+    denseSearch(db, projectRoot, query, topK * 2),
+  ]);
 
   const fused = reciprocalRankFusion(denseResults, ftsResults);
+
+  // Memory-aware retrieval boost: boost chunks linked to known memory concepts
+  try {
+    const { getConceptRelatedChunks } = await import("../memory/graph");
+    const allConcepts = db
+      .prepare("SELECT id FROM concepts ORDER BY session_count DESC LIMIT 10")
+      .all() as Array<{ id: string }>;
+    for (const concept of allConcepts) {
+      const related = getConceptRelatedChunks(projectRoot, concept.id, 5);
+      const relatedIds = new Set(related.map((r) => r.id));
+      for (const item of fused) {
+        if (relatedIds.has(item.id)) {
+          item.score = (item.score || 0) * 1.15;
+        }
+      }
+    }
+  } catch (e: any) {
+    // Memory graph not available — skip boost silently
+  }
+
   const topFused = fused.slice(0, topK * 2);
 
   const reranked = await rerankChunks(projectRoot, query, topFused, intent);
