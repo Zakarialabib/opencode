@@ -40,7 +40,7 @@ Storage:
   ├── LM Studio SDK (@lmstudio/sdk):
   │   ├── Chat completions
   │   └── Embeddings (no sidecar needed)
-  └── Docs store (in-memory Map, 50-entry LRU)
+  └── Docs store (in-memory Map, 50-entry LRU — no persistence, re-fetches on restart)
 
 Brain plugin hooks:
   - server.start: init SQLite, warm LM Studio connection
@@ -199,8 +199,13 @@ Prompt-based delegation simulation — not real subagent spawning:
 - Uses own `AgentBriefing` interface (unrelated to `PlanState` in plugins/index.ts)
 - **Does not** spawn real subagents or inject PlanState into child contexts
 
-> For real agent delegation, a task-tool-based routing system with proper context serialization
-> is needed. The current implementation is a lightweight prompt-based simulation.
+**Roadmap (Phase 2):**
+Replace prompt simulation with real task-tool routing:
+
+1. Serialize `PlanState` into `tools.task({ agent, briefing })` params
+2. Spawn real subagents via OpenCode's agent system
+3. Propagate session memory between parent and child
+4. Collect results from real tool execution, not simulated chat response
 
 ---
 
@@ -278,6 +283,14 @@ Dense embeddings default to CPU as well.
 - On-demand: no automatic scheduler, must be triggered explicitly
 - SQLite-backed persistence of concepts and chunk links
 
+### Ownership Boundaries
+
+| Module        | Owns                    | Mechanism                                                                                                      |
+| ------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `tuner.ts`    | Context budget tuning   | Monitors `context_efficiency`; reduces `max_context_tokens` if < 0.8. Contains absorbed eval scoring formulas. |
+| `feedback.ts` | Retrieval weight tuning | Adjusts RRF alpha/beta per intent based on `tool.execute.after` signals.                                       |
+| `tracer.ts`   | Internal analytics      | Read-only session metrics aggregator.                                                                          |
+
 ### 7.2 Tuner (`learn/tuner.ts`)
 
 - Evaluates context efficiency: `used_chunks / retrieved_chunks`
@@ -297,11 +310,12 @@ Dense embeddings default to CPU as well.
 - Uses LM Studio to summarize when content exceeds threshold, with fallback to `content.slice(0, threshold)`
 - **Not token-aware** — thresholds are character counts, hardcoded per intent
 
-### 7.5 Breadcrumb (`context/breadcrumb.ts`)
+### 7.5 Reasoning Compressor (`context/reasoning-compressor.ts`)
 
 - Extracts `<thought>...</thought>` tags from assistant messages
 - Summarizes reasoning via LM Studio; injects `[Thought: ...]` summary
-- **Not a navigation trail** — does not track files, decisions, or session recovery
+- Formerly named `breadcrumb.ts` (renamed because it's a thought summarizer, not a navigation trail)
+- Actual navigation tracking (recent files, decisions) lives in `PlanState` / `state/session.ts`
 
 ---
 
@@ -372,8 +386,8 @@ brain-plugin/
 │   └── loop.ts                 # Prompt-based delegation simulation
 ├── context/
 │   ├── injector.ts             # Prompt augmentation
-│   ├── breadcrumb.ts           # Thought tag summarizer
-│   └── compression.ts          # Character-based truncation
+│   ├── reasoning-compressor.ts # Thought tag summarizer (was breadcrumb.ts)
+│   └── compression.ts          # Character-based truncation with token estimation
 ├── store/                      # SQLite storage layer
 ├── memory/
 │   └── graph.ts                # K-means memory graph (periodic recompute)

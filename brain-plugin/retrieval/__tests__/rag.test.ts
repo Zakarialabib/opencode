@@ -173,7 +173,7 @@ describe("Unified RAG v2 Core Tests", () => {
     });
 
     it("should extract and summarize reasoning thoughts into clean inline summaries", async () => {
-      const { summarizeThoughts } = require("../../context/breadcrumb");
+      const { summarizeThoughts } = require("../../context/reasoning-compressor");
       const mockChat = vi.spyOn(defaultProvider, "chat").mockResolvedValue("Decided to compile reasoning modules.");
 
       const rawAssistantContent = "<thought>Checking test pipelines and resolving compiler hooks.</thought>Executing test execution loop.";

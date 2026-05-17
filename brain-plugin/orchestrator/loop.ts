@@ -17,15 +17,23 @@ export interface DelegationResult {
 }
 
 /**
- * Programmatically delegates a complex task to a specialized child agent
- * (e.g. 'debugger', 'architect', 'tester') by preparing and running a serialized state briefing.
+ * Prompt-based delegation simulation (not real subagent spawning).
+ * Calls the same LM Studio provider with a structured briefing prompt.
+ *
+ * ROADMAP: Phase 2 should replace this with proper task-tool routing:
+ *   - Serialize PlanState into tool.task({ agent, briefing }) params
+ *   - Spawn real subagents via OpenCode's agent system
+ *   - Propagate session memory (PlanState) between parent and child
+ *   - Collect results from real tool execution, not simulated chat response
  */
 export async function delegateToAgent(
   agentName: "debugger" | "architect" | "tester",
   briefing: AgentBriefing
 ): Promise<DelegationResult> {
   const delegateId = `agent_${agentName}_${Date.now().toString().slice(-6)}`;
-  console.log(`[Orchestrator/Delegation] Initializing handoff to specialized child agent: ${agentName} (${delegateId})`);
+  console.log(
+    `[Orchestrator/Delegation] Initializing handoff to specialized child agent: ${agentName} (${delegateId})`
+  );
 
   // Serialize the parent's context and operational boundaries into a structured system briefing
   const briefingSystemPrompt = `
@@ -46,33 +54,35 @@ Analyze the delegated context. Formulate a solution and return a highly detailed
   const messages = [
     {
       role: "system",
-      content: briefingSystemPrompt
+      content: briefingSystemPrompt,
     },
     {
       role: "user",
-      content: `Resolve the following task based on your briefing context: ${briefing.originalQuery}`
-    }
+      content: `Resolve the following task based on your briefing context: ${briefing.originalQuery}`,
+    },
   ];
 
   try {
     // Run the specialized child agent execution frame
     const response = await defaultProvider.chat("", messages, {
       temperature: 0.2, // lower temperature for high constraint reasoning compliance
-      maxTokens: 1024
+      maxTokens: 1024,
     });
 
-    console.log(`[Orchestrator/Delegation] Handoff to ${agentName} completed successfully. Aggregating report back to parent.`);
+    console.log(
+      `[Orchestrator/Delegation] Handoff to ${agentName} completed successfully. Aggregating report back to parent.`
+    );
     return {
       delegateId,
       summaryResponse: response,
-      success: true
+      success: true,
     };
   } catch (error: any) {
     console.error(`[Orchestrator/Delegation] Child agent handoff failed: ${error.message}`);
     return {
       delegateId,
       summaryResponse: `[Delegation Error]: Specialized child agent failed to return a response: ${error.message}`,
-      success: false
+      success: false,
     };
   }
 }
@@ -92,8 +102,8 @@ export function shouldDelegate(
   // ROUTER mode rule: Delegate if it is a debug intent under high complexity (errors/failures/files)
   if (intent === "debug") {
     if (
-      complexityMetrics.diagnosticsErrorsCount >= 3 || 
-      complexityMetrics.recentFilesCount >= 3 || 
+      complexityMetrics.diagnosticsErrorsCount >= 3 ||
+      complexityMetrics.recentFilesCount >= 3 ||
       complexityMetrics.failedHopsCount >= 1
     ) {
       return true;

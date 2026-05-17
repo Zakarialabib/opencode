@@ -2,19 +2,12 @@ import { getDatabase } from "../store";
 import { getEmbeddings } from "./dense";
 import { isVectorActive } from "../store/vec";
 import { rerankChunks } from "./reranker";
+import { reciprocalRankFusion } from "./fusion";
 
-export interface SearchResult {
-  id: string;
-  filepath: string;
-  language: string;
-  type: string;
-  name: string;
-  start_line: number;
-  end_line: number;
-  parent_id: string | null;
-  content: string;
-  score: number;
-}
+// Re-exported from fusion.ts; kept as alias for backward compatibility
+// with brain.ts and index.ts imports. Fields: id, filepath, language, type,
+// name, start_line, end_line, parent_id?, content, score?
+export { SearchResultItem as SearchResult } from "./fusion";
 
 function cosineSimilarity(a: number[], b: number[]): number {
   let dot = 0,
@@ -124,28 +117,15 @@ export async function searchProjectContext(
 ): Promise<SearchResult[]> {
   const db = getDatabase(projectRoot);
 
+  // Merge strategy: Reciprocal Rank Fusion (RRF)
+  // Takes dense + FTS results, computes weighted rank-based scores,
+  // deduplicates by chunk_id, returns sorted by combined RRF score.
+  // Dense weight: 0.5, Keyword weight: 0.2, Smoothing factor K: 60
   const ftsResults = ftsSearch(db, query, topK * 2);
   const denseResults = await denseSearch(db, projectRoot, query, topK * 2);
 
-  const seen = new Set<string>();
-  const merged: SearchResult[] = [];
-
-  for (const r of denseResults) {
-    if (!seen.has(r.id)) {
-      seen.add(r.id);
-      merged.push(r);
-    }
-  }
-
-  for (const r of ftsResults) {
-    if (!seen.has(r.id)) {
-      seen.add(r.id);
-      merged.push({ ...r, score: r.score * 0.3 });
-    }
-  }
-
-  merged.sort((a, b) => b.score - a.score);
-  const topFused = merged.slice(0, topK * 2);
+  const fused = reciprocalRankFusion(denseResults, ftsResults);
+  const topFused = fused.slice(0, topK * 2);
 
   const reranked = await rerankChunks(projectRoot, query, topFused, intent);
   return reranked.slice(0, topK);
