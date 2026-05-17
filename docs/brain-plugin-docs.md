@@ -2,7 +2,7 @@
 
 > Cognitive layer for OpenCode: auto-classifies developer intent, retrieves
 > relevant codebase context via local embeddings, and augments LLM prompts
-> with RAG — all running 100% locally through LM Studio and Rust sidecar.
+> with RAG — all running 100% locally through LM Studio and Node-native SQLite.
 
 ---
 
@@ -11,13 +11,15 @@
 1. [Architecture Overview](#1-architecture-overview)
 2. [How the Brain Plugin Works](#2-how-the-brain-plugin-works)
 3. [Lifecycle & Orchestration](#3-lifecycle--orchestration)
-4. [Tool Reference](#4-tool-reference)
-5. [Embedding System](#5-embedding-system)
-6. [Speculative Decoding](#6-speculative-decoding)
-7. [Model Loading Strategy](#7-model-loading-strategy)
-8. [Why & How to Improve](#8-why--how-to-improve)
-9. [File Structure](#9-file-structure)
-10. [Usage & Commands](#10-usage--commands)
+4. [Retrieval Pipeline](#4-retrieval-pipeline)
+5. [Tool Reference](#5-tool-reference)
+6. [Models & LM Studio](#6-models--lm-studio)
+7. [Speculative Decoding](#7-speculative-decoding)
+8. [Memory & Learning](#8-memory--learning)
+9. [Session Memory](#9-session-memory)
+10. [Eval Integration](#10-eval-integration)
+11. [File Structure](#11-file-structure)
+12. [Usage & Commands](#12-usage--commands)
 
 ---
 
@@ -26,37 +28,42 @@
 ```
 User types → message.updated hook
   → Decision Tree (classify intent)
-  → Model Prewarmer (pre-load embed)
-  → Context Searcher (HTTP → Rust sidecar → LM Studio embed → HNSW search)
+  → Retrieval Pipeline (SQLite FTS5 + ONNX dense)
+  → Fusion + Rerank (optional)
   → Context Injector (prepend chunks to prompt)
   → Augmented prompt sent to LLM
 
-Rust sidecar (:7878):
-  ├── /health /metrics /config /models /gpu
-  ├── /index (Tree-sitter chunk → embed → HNSW store)
-  ├── /search (vector + BM25 hybrid)
-  ├── /chat (speculative decoding)
-  ├── /cache/stats /cache/invalidate
-  └── /prewarm
+Storage:
+  ├── SQLite (better-sqlite3):
+  │   ├── FTS5 keyword index (instant)
+  │   ├── ONNX dense embeddings (xenova/transformers)
+  │   └── Memory graph (K-means clusters)
+  ├── LM Studio SDK (@lmstudio/sdk):
+  │   ├── Chat completions
+  │   ├── Embeddings (no sidecar needed)
+  │   └── Speculative decoding (draft_model param)
+  └── Docs store (SQLite-backed documentation cache)
 
 Brain plugin hooks:
-  - server.start: spawn sidecar, health check, auto-index
+  - server.start: init SQLite, warm models
   - message.updated: RAG pipeline
   - chat.params: inject draft_model
   - file.watcher.updated: dirty tracking → debounced reindex
-  - session.archived: kill sidecar
+  - tool.execute.after: collect feedback (success/failure)
+  - session.compacting: persist decision tree state
+  - session.archived: save memory graph, cleanup
 ```
 
 ### Key Design Decisions
 
-| Decision              | Rationale                                                        |
-| --------------------- | ---------------------------------------------------------------- |
-| Rust sidecar not JS   | Faster vector ops, Tree-sitter parsing; no Node.js memory limits |
-| HTTP API separation   | Independent scaling, testing, deployment                         |
-| HNSW vector storage   | Fast approximate nearest neighbor; in-memory with persistence    |
-| Tree-sitter chunking  | AST-aware code splits; preserves semantics                       |
-| LM Studio integration | 100% local; no cloud dependencies                                |
-| Serial model loading  | ~4GB VRAM (M4400) can't hold all 3 models simultaneously         |
+| Decision               | Rationale                                                         |
+| ---------------------- | ----------------------------------------------------------------- |
+| Node-native SQLite     | Zero sidecar, zero WSL dependency; faster startup, simpler deploy |
+| LM Studio SDK          | Direct API access; no HTTP proxy needed                           |
+| FTS5 + ONNX hybrid     | Keyword for speed (instant), dense for quality                    |
+| ONNX int8 quantization | 2-4x faster than FP16; ~200ms per query                           |
+| K-means memory graph   | Cross-session concept clustering; incremental updates             |
+| Serial model loading   | ~4GB VRAM (M4400) can't hold all 3 models simultaneously          |
 
 ---
 
@@ -66,16 +73,16 @@ Brain plugin hooks:
 
 **Hooks (automatic):**
 
-| Hook                     | What it does                                                            |
-| ------------------------ | ----------------------------------------------------------------------- |
-| `server.start`           | Spawn Rust sidecar (WSL), 30s health-check, sync config, auto-index     |
-| `message.updated`        | Classify intent → prewarm embed → retrieve context → inject into prompt |
-| `chat.params`            | Inject `draft_model` into LM Studio calls when speculative enabled      |
-| `tool.execute.after`     | Track success/failure                                                   |
-| `lsp.client.diagnostics` | Store diagnostics; prewarm "debug" intent                               |
-| `file.watcher.updated`   | Mark dirty; batch 5 → 5s debounce → reindex                             |
-| `session.compacting`     | Summarize memory; persist decision tree                                 |
-| `session.archived`       | Kill sidecar                                                            |
+| Hook                     | What it does                                                       |
+| ------------------------ | ------------------------------------------------------------------ |
+| `server.start`           | Init SQLite DB, warm LM Studio connection, load decision tree      |
+| `message.updated`        | Classify intent → retrieve context → inject into prompt            |
+| `chat.params`            | Inject `draft_model` into LM Studio calls when speculative enabled |
+| `tool.execute.after`     | Track success/failure; update tuner weights                        |
+| `lsp.client.diagnostics` | Store diagnostics; prewarm "debug" intent                          |
+| `file.watcher.updated`   | Mark dirty; batch 5 → 5s debounce → reindex                        |
+| `session.compacting`     | Summarize memory; persist decision tree state                      |
+| `session.archived`       | Save memory graph, close SQLite, cleanup                           |
 
 ### 2.2 Decision Tree — `tree/engine.ts`
 
@@ -92,24 +99,6 @@ Brain plugin hooks:
 | `learn`          | how does, explain, architecture | 25     | embed   |
 | `quick_chat`     | default                         | 0      | none    |
 
-### 2.3 Rust Sidecar Endpoints
-
-| Endpoint            | Method   | Purpose                                |
-| ------------------- | -------- | -------------------------------------- |
-| `/health`           | GET      | Version, uptime, loaded models, GPU    |
-| `/metrics`          | GET      | Searches, cache stats, prewarm count   |
-| `/config`           | GET/POST | Full configuration                     |
-| `/models`           | GET      | LM Studio model list                   |
-| `/gpu`              | GET      | GPU memory info                        |
-| `/index`            | POST     | Tree-sitter chunk → embed → HNSW store |
-| `/search`           | POST     | Vector + BM25 hybrid search            |
-| `/embed`            | POST     | Raw embeddings                         |
-| `/chat`             | POST     | Chat with speculative decoding         |
-| `/cache/stats`      | GET      | Cache hit/miss rates                   |
-| `/cache/invalidate` | POST     | Clear cache                            |
-| `/feedback`         | POST     | Token attribution                      |
-| `/prewarm`          | POST     | Pre-warm embed model                   |
-
 ---
 
 ## 3. Lifecycle & Orchestration
@@ -118,73 +107,141 @@ Brain plugin hooks:
 
 ```
 server.start:
-1. Load decision tree
-2. Check /health (already running?)
-3. If not: spawn wsl.exe → brain-embed
-4. Poll /health every 1s (max 30s)
-5. POST /config (sync models)
-6. POST /index (auto-index current directory)
+1. Open SQLite DB (WAL mode)
+2. Create tables: files, chunks, fts5, memory_graph, decisions
+3. Warm LM Studio connection (health check → /v1/models)
+4. Load decision tree from DB
+5. Start dirty-file watcher
 ```
 
-### 3.2 File Change → Reindex
+### 3.2 Message Flow
+
+```
+message.updated:
+1. Classify intent (decision tree)
+2. Prewarm embed model if needed
+3. Run retrieval pipeline:
+   a. Keyword search (FTS5) — instant
+   b. Dense search (ONNX) — ~200ms
+   c. Fusion (weighted combine)
+   d. Rerank (optional, LM Studio)
+4. Compress results (token budget)
+5. Inject into prompt as context block
+```
+
+### 3.3 File Change → Reindex
 
 ```
 file.watcher.updated:
   → add to dirtyFiles Set
-  → if ≥5 dirty && not indexing:
+  → if >= 5 dirty && not indexing:
     → 5s debounce
-    → POST /index force
+    → parse files, update FTS5, recompute embeddings
     → clear dirtyFiles
 ```
 
-### 3.3 Session Teardown
+### 3.4 Session Teardown
 
 ```
 session.archived:
-  → SIGTERM sidecar
-  → save decision tree
-  → clear memory
+  → save memory graph clusters
+  → persist decision tree weights
+  → close SQLite
 ```
 
 ---
 
-## 4. Tool Reference
+## 4. Retrieval Pipeline
 
-### Diagnostic & Status
+The pipeline supports progressive quality: you can stop at any stage.
 
-| Tool                       | Purpose                                                   |
-| -------------------------- | --------------------------------------------------------- |
-| `brain_diagnostic`         | Full pipeline: health → cache → search test → config      |
-| `brain_status`             | Sidecar health, GPU, models, cache, decision tree, memory |
-| `brain_metrics`            | Prometheus metrics: searches, hit rate, prewarm count     |
-| `brain_sidecar_status`     | Detailed health: version, uptime, GPU, all 3 models       |
-| `brain_speculative_status` | Speculative decoding config                               |
+### 4.1 Keyword Search (`retrieval/keyword.ts`)
 
-### RAG & Search
+- SQLite FTS5 full-text search
+- `.gitignore`-aware file walk
+- Blake3 hash → skip unchanged files
+- Speed: <5ms
 
-| Tool                  | Purpose                                   |
-| --------------------- | ----------------------------------------- |
-| `brain_search`        | Semantic search (Rust /search)            |
-| `brain_embed_test`    | Test query → top-K chunks with scores     |
-| `brain_index_project` | Index/re-index (Rust /index, Tree-sitter) |
+### 4.2 Dense Search (`retrieval/dense.ts`)
 
-### Model Management
+- ONNX runtime via `@xenova/transformers`
+- int8 quantized embeddings (~200ms/query)
+- Cooldown recovery with automatic reset
+- Fallback to keyword-only on failure
 
-| Tool                 | Purpose                              |
-| -------------------- | ------------------------------------ |
-| `brain_model_load`   | Prewarm a model (chat, embed, draft) |
-| `brain_model_unload` | Free VRAM by unloading               |
+### 4.3 Fusion (`retrieval/fusion.ts`)
 
-### Lifecycle
+- Weighted reciprocal-rank fusion of keyword + dense results
+- Configurable alpha/beta weights per intent
 
-| Tool                    | Purpose                              |
-| ----------------------- | ------------------------------------ |
-| `brain_sidecar_restart` | Kill and restart sidecar             |
-| `brain_reset`           | Clear memory and reset decision tree |
+### 4.4 Reranker (`retrieval/reranker.ts`)
+
+- Cross-encoder reranking via LM Studio (optional, slow)
+- Activated only for "learn" and high-value queries
+- Top-10 results rescored
+
+### 4.5 Orchestrator Loop (`orchestrator/loop.ts`)
+
+Agent Delegation Protocol — routes sub-tasks to specialized agents:
+
+- `core-factory` for implementation
+- `explore` for research
+- `qa-guardian` for testing
+- Tracks agent context and results
 
 ---
 
-## 5. Embedding System
+## 5. Tool Reference
+
+### Diagnostic & Status
+
+| Tool                   | Purpose                                                  |
+| ---------------------- | -------------------------------------------------------- |
+| `brain_diagnostic`     | Full pipeline: health → cache → search test → config     |
+| `brain_status`         | Backend health, index stats, memory graph, decision tree |
+| `brain_sidecar_status` | LM Studio health: models loaded, VRAM usage              |
+
+### RAG & Search
+
+| Tool                  | Purpose                                  |
+| --------------------- | ---------------------------------------- |
+| `brain_search`        | Hybrid semantic search (keyword + dense) |
+| `brain_embed_test`    | Test query → top-K chunks with scores    |
+| `brain_index_project` | Index/re-index current project           |
+
+### Model Management
+
+| Tool               | Purpose                       |
+| ------------------ | ----------------------------- |
+| `brain_model_load` | Prewarm a model (chat, embed) |
+
+### Lifecycle
+
+| Tool          | Purpose                             |
+| ------------- | ----------------------------------- |
+| `brain_reset` | Clear index and reset decision tree |
+
+---
+
+## 6. Models & LM Studio
+
+### Provider (`provider/lmstudio.ts`)
+
+Full LM Studio SDK integration:
+
+```typescript
+import { LMStudioClient } from "@lmstudio/sdk";
+
+const client = new LMStudioClient({ baseUrl: "http://127.0.0.1:1234" });
+```
+
+Features:
+
+- Model loading/listing (`/v1/models`)
+- Chat completions with optional `draft_model`
+- Embeddings endpoint
+- Automatic model detection and fallback
+- Connection health monitoring
 
 ### Models
 
@@ -193,49 +250,6 @@ session.archived:
 | nomic-embed-v1.5     | 84MB    | 768  | ~1s/batch   | Indexing, search |
 | qwen3-embedding-0.6b | 320MB   | 1024 | ~359ms/4emb | Indexing, search |
 | qwen3-embedding-4b   | 2,458MB | 2560 | ~39s/batch  | Quality only     |
-
-### Indexing
-
-1. `.gitignore`-aware file walk
-2. Tree-sitter AST chunking (8 languages)
-3. Blake3 hash → skip unchanged files
-4. Batch embed via LM Studio (batch 32)
-5. Store in HNSW index (binary, cosine similarity)
-
-### Search
-
-- Embed query → HNSW top-K → BM25 fusion (optional) → LRU cache
-- Speed: <1ms per query
-
----
-
-## 6. Speculative Decoding
-
-### Wiring
-
-The `chat.params` hook in `brain.ts` injects `draft_model` into LM Studio calls:
-
-```typescript
-"chat.params": async (params: any) => {
-  if (!sidecar.healthy) return params;
-  const cfg = await fetchConfig();
-  if (cfg?.speculative_enabled && cfg?.draft_model) {
-    params.draft_model = cfg.draft_model;
-  }
-  return params;
-}
-```
-
-### Model Pairs
-
-| Main           | Draft          | Status              |
-| -------------- | -------------- | ------------------- |
-| qwen3.5-4b     | qwen3.5-0.8b   | Test (may mismatch) |
-| gemma-4-e4b-it | gemma-4-e2b-it | 1.23x speedup       |
-
----
-
-## 7. Model Loading Strategy
 
 ### VRAM Analysis
 
@@ -271,85 +285,155 @@ qwen3-embedding-0.6b (embed):
 
 ---
 
-## 8. Why & How to Improve
+## 7. Speculative Decoding
 
-### Status
+### Wiring
 
-| Bottleneck        | Status                       |
-| ----------------- | ---------------------------- |
-| Incremental index | ✅ Hash-based, seconds       |
-| Embedding batch   | ✅ 32                        |
-| Search            | ✅ HNSW O(log n)             |
-| VRAM              | ⚠️ Serial loading (hardware) |
-| Speculative       | ⚠️ Draft pair compatibility  |
+The `chat.params` hook in `brain.ts` injects `draft_model` into LM Studio calls:
 
-### Roadmap
+```typescript
+"chat.params": async (params: any) => {
+  if (!client) return params;
+  const models = await client.models.list();
+  if (models.find(m => m.path?.includes("draft"))) {
+    params.draft_model = "qwen3.5-0.8b";
+  }
+  return params;
+}
+```
 
-| Pri | Feature               | Impact              |
-| --- | --------------------- | ------------------- |
-| P0  | ONNX int8 embedding   | 2-4x faster         |
-| P1  | Compatible draft pair | 1.2-1.5x faster     |
-| P1  | Vector quantization   | 2x memory reduction |
+### Model Pairs
+
+| Main           | Draft          | Status              |
+| -------------- | -------------- | ------------------- |
+| qwen3.5-4b     | qwen3.5-0.8b   | Test (may mismatch) |
+| gemma-4-e4b-it | gemma-4-e2b-it | 1.23x speedup       |
 
 ---
 
-## 9. File Structure
+## 8. Memory & Learning
+
+### 8.1 Memory Graph (`memory/graph.ts`)
+
+- K-means clustering of code chunks by embedding similarity
+- Incremental updates (no full recompute)
+- Cross-session concept discovery
+- SQLite-backed persistence
+
+### 8.2 Tuner (`learn/tuner.ts`)
+
+- Adjusts retrieval weights based on feedback
+- Tracks successful vs failed retrievals per intent
+- Learns per-user patterns over time
+
+### 8.3 Feedback (`learn/feedback.ts`)
+
+- Collects `tool.execute.after` signals
+- Marks chunks as helpful/unhelpful
+- Feeds into tuner for weight adjustment
+
+### 8.4 Context Compression (`context/compression.ts`)
+
+- Token budget management for context injection
+- Priority-aware truncation (most relevant chunks first)
+- Configurable max tokens per intent category
+
+### 8.5 Breadcrumb (`context/breadcrumb.ts`)
+
+- Lightweight navigation trail across messages
+- Tracks recent files and decisions per session
+- Used by session memory for context recovery
+
+---
+
+## 9. Session Memory
+
+Defined in `plugins/index.ts` as `PlanState` / `planMemory`:
+
+### PlanState Interface
+
+```typescript
+interface PlanState {
+  recentFiles: string[];
+  decisions: string[];
+  failedApproaches: string[];
+  parentAgent: string;
+}
+```
+
+### Key Functions
+
+| Function                 | Purpose                                          |
+| ------------------------ | ------------------------------------------------ |
+| `getPlanState(id)`       | Retrieve plan state for a session                |
+| `buildPlanContext(id)`   | Build context string from plan state             |
+| `detectTaskCompletion()` | Check if current step is done; suggest follow-up |
+
+### Follow-up Injection
+
+The `chat.message` hook detects task completion keywords ("done", "completed", "fixed") and appends a follow-up suggestion to continue the multi-step plan.
+
+---
+
+## 10. Eval Integration
+
+### Eval Bridge (`eval/bridge.ts`)
+
+Connects brain plugin to the eval framework:
+
+- `capture(ty, data, opts)` — captures instrument traces
+- Exports trace data for external eval tooling
+- Tracks: function calls, tool executions, model responses
+
+For full details, see [Evals Integration Guide](evals-integration-guide.md).
+
+---
+
+## 11. File Structure
 
 ```
 brain-plugin/
-├── index.ts              # Plugin entry
-├── brain.ts              # Hooks + tools + lifecycle
+├── index.ts                    # Plugin re-exports
+├── brain.ts                    # Hooks + tools + lifecycle
 ├── package.json
-├── provider/lmstudio.ts  # LM Studio wrapper
+├── provider/
+│   └── lmstudio.ts             # @lmstudio/sdk wrapper
 ├── retrieval/
-│   ├── searcher.ts       # HTTP /search client
-│   ├── indexer.ts        # HTTP /index client
-│   └── lancadb.ts        # [DEPRECATED]
-├── context/injector.ts   # Prompt augmentation
-├── state/session.ts      # Session memory
-└── tree/engine.ts        # Decision tree
-
-brain-plugin/rust/
-├── Cargo.toml
-└── src/
-    ├── main.rs           # Server (15 endpoints)
-    ├── lmstudio.rs       # LM Studio client
-    ├── chunk.rs          # Tree-sitter chunking
-    ├── indexer.rs        # File indexing
-    ├── store_hnsw.rs     # HNSV vectors
-    ├── bm25.rs           # BM25 search
-    ├── cache.rs          # LRU cache
-    ├── state.rs          # Index state
-    ├── config.rs         # App config
-    ├── orchestrator.rs   # Intent prediction
-    ├── multihop.rs       # Import-following retrieval
-    ├── feedback.rs       # Token attribution
-    └── project_memory.rs # Cross-session memory
+│   ├── searcher.ts             # Combined search orchestrator
+│   ├── indexer.ts              # File indexing (FTS5 + embeddings)
+│   ├── dense.ts                # ONNX dense embeddings (xenova)
+│   ├── fusion.ts               # Reciprocal-rank fusion
+│   ├── keyword.ts              # FTS5 keyword search
+│   └── reranker.ts             # Cross-encoder reranking
+├── orchestrator/
+│   └── loop.ts                 # Agent Delegation Protocol
+├── context/
+│   ├── injector.ts             # Prompt augmentation
+│   ├── breadcrumb.ts           # Navigation trail
+│   └── compression.ts          # Token budget management
+├── store/                      # SQLite storage layer
+├── memory/
+│   └── graph.ts                # K-means memory graph
+├── learn/
+│   ├── tuner.ts                # Weight tuning
+│   └── feedback.ts             # Success/failure tracking
+├── eval/
+│   └── bridge.ts               # Eval instrumentation bridge
+├── state/
+│   └── session.ts              # Session state management
+├── tree/
+│   └── engine.ts               # Intent decision tree
+└── docs-store.ts               # Documentation cache
 ```
 
 ---
 
-## 10. Usage & Commands
-
-### Build
-
-```bash
-wsl -d Ubuntu bash -c ". /root/.cargo/env && cd /mnt/c/rust-brain-sidecar && cargo build --release"
-```
-
-### Run
-
-Auto-started by brain plugin. Manual:
-
-```bash
-wsl -d Ubuntu bash -c "RUST_LOG=info /mnt/c/rust-brain-sidecar/target/release/brain-embed"
-```
+## 12. Usage & Commands
 
 ### Quick Start
 
-- [ ] LM Studio running at `http://192.168.1.12:1234`
-- [ ] 3 models loaded: qwen3.5-4b, qwen3.5-0.8b, qwen3-0.6b-embed
-- [ ] Rust sidecar built in WSL
+- [ ] LM Studio running at `http://127.0.0.1:1234`
+- [ ] Models loaded: qwen3.5-4b (chat), qwen3-0.6b-embed (embed)
 - [ ] `"brain-plugin/brain.ts"` in opencode.json plugin array
 - [ ] Run `brain_diagnostic` to verify
 - [ ] Run `brain_index_project` to index
