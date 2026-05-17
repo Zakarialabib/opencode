@@ -104,7 +104,7 @@
     "memory": {
       "type": "local",
       "command": ["npx", "-y", "@modelcontextprotocol/server-memory"],
-      "enabled": false,
+      "enabled": true,
       "timeout": 30000
     },
     "git": {
@@ -257,7 +257,8 @@
     "brain_embed_test": "allow",
     "brain_index_project": "allow",
     "brain_speculative_status": "allow",
-    "brain_embed_lmstudio": "allow"
+    "brain_embed_lmstudio": "allow",
+    "brain_docs_cache": "allow"
   },
   "tools": {
     "read": true,
@@ -291,7 +292,8 @@
     "brain_embed_test": true,
     "brain_index_project": true,
     "brain_speculative_status": true,
-    "brain_embed_lmstudio": true
+    "brain_embed_lmstudio": true,
+    "brain_docs_cache": true
   },
   "lsp": {
     "typescript": {
@@ -413,16 +415,6 @@
       "description": "Backup database",
       "agent": "devops-engineer"
     },
-    "autoresearch": {
-      "template": "node scripts/autoresearch.js $TASK --max-iterations=5 --budget=300",
-      "description": "Run autonomous research loop - optimize code, benchmarks, or metrics iteratively",
-      "agent": "lead-strategist"
-    },
-    "autoresearch:run": {
-      "template": "node scripts/autoresearch.js",
-      "description": "Run autoresearch with default task from program.md",
-      "agent": "lead-strategist"
-    },
     "collect-conventions": {
       "template": "node scripts/extract-conventions.js",
       "description": "Scan codebase and extract project conventions into memory MCP",
@@ -543,7 +535,7 @@
     "core-factory": {
       "mode": "subagent",
       "steps": 40,
-      "description": "Core implementation and direct file editing (merged builder/planner/opencoder). Self-evolving with autoresearch.",
+      "description": "Core implementation and direct file editing (merged builder/planner/opencoder). Self-evolving.",
       "instructions": [
         "CORE: Fast implementation. Read → Analyze → Write → Validate.",
         "STRICT: No speculation. Only state what you know or can verify.",
@@ -553,8 +545,6 @@
         "No unnecessary comments. Reference lines as file_path:line_number.",
         "PROJECT STACK: Tauri (Rust), React (TypeScript), Laravel (PHP).",
         "Auto-format after edits per rules/auto-format.md.",
-        "SELF-EVOLUTION: After completing complex tasks, use skill:autoresearch to benchmark and optimize your implementation patterns.",
-        "REFACTORING: When refactoring, first use skill:self-improver to analyze the codebase, then use skill:autoresearch to validate improvements.",
         "INTEGRATION: Always check for redundant imports, unused code, and naming convention violations before and after edits.",
         "See rules/brain.md for Brain plugin usage."
       ],
@@ -607,7 +597,6 @@
         "CONCISE: State decision, not reasoning. Avoid long explanations.",
         "When delegating: Name target agent + specific task. No agent delegation descriptions.",
         "Use task tool for parallel execution when independent.",
-        "Use skill:autoresearch for autonomous optimization loops on code, benchmarks, or metrics.",
         "Use skill:self-improver to analyze and improve project configuration.",
         "REALITY CHECK: Always assess feasibility against actual codebase state before proposing changes.",
         "GAP ANALYSIS: Identify gaps between current implementation and target architecture.",
@@ -657,7 +646,6 @@
         "Use spec-driven-design skill before implementation.",
         "Use sequential-thinking for trade-offs when needed.",
         "Use task tool for parallel execution when independent.",
-        "Use skill:autoresearch for autonomous optimization loops.",
         "Use skill:self-improver to analyze and improve project configuration.",
         "NORMING: Check all proposed patterns against existing codebase conventions before recommending.",
         "See rules/brain.md for Brain plugin usage."
@@ -852,7 +840,17 @@
         "skill": true,
         "lsp": true,
         "context7": true,
-        "memory": true
+        "memory": true,
+        "brain_diagnostic": true,
+        "brain_sidecar_status": true,
+        "brain_status": true,
+        "brain_metrics": true,
+        "brain_search": true,
+        "brain_embed_test": true,
+        "brain_index_project": true,
+        "brain_speculative_status": true,
+        "brain_embed_lmstudio": true,
+        "brain_docs_cache": true
       }
     },
     "qa-guardian": {
@@ -925,7 +923,6 @@
         "CONCISE: Brief content. No verbose explanations.",
         "Use spec-driven-design skill for structured specs.",
         "Format with biome/prettier after edits.",
-        "Use skill:autoresearch for autonomous research loops.",
         "Use skill:self-improver for system evolution.",
         "REALITY CHECK: Verify docs match actual codebase before writing.",
         "See rules/brain.md for Brain plugin usage."

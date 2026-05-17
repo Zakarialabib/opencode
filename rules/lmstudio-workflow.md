@@ -121,24 +121,29 @@ The Brain plugin (`brain-plugin/provider/lmstudio.ts`) wraps `@lmstudio/sdk` and
 
 ## Sub-Agent Design
 
-### Agent: `lmstudio-model-manager`
+> Note: The following agents are aspirational/planned and not yet implemented.
+> Currently, model management and context optimization are handled directly
+> by the brain plugin (brain.ts) and LM Studio SDK provider.
+
+### Planned: `lmstudio-model-manager`
 
 - **Purpose**: Manage model lifecycle
 - **Commands**: `lms load`, `lms unload`, `lms ps`
 - **Trigger**: On session start, before heavy inference, on VRAM pressure
 - **Logic**: Load embed model first (small), load chat model with GPU, optionally load draft
 
-### Agent: `context-engineer`
+### Planned: `context-engineer`
 
 - **Purpose**: Optimize what context is injected and when
 - **Works with**: Brain DecisionTree, docs-store, context7
 - **Logic**: Check remaining context window, prioritize relevant chunks, cache docs
 
-### Agent: `brain-evaluator`
+### Replaced: `brain-evaluator`
 
-- **Purpose**: Measure context quality and agent efficiency
-- **Works with**: Eval framework, `brain_eval_data` tool
-- **Logic**: Export decisions, calculate context relevance ratio, detect waste patterns
+- The eval system has been removed. Its functions are now handled by:
+  - `learn/tracer.ts` — session analytics (was `eval/bridge.ts`)
+  - `learn/tuner.ts` — context budget auto-tuning (absorbed eval formulas)
+  - `learn/feedback.ts` — retrieval weight tuning via blame attribution
 
 ## Efficiency Principles
 
