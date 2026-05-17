@@ -1,174 +1,133 @@
 import { tool, type Plugin } from "@opencode-ai/plugin";
 import { DecisionTree } from "./tree/engine";
-import { LMStudioProvider, DEFAULT_EMBED_MODEL } from "./provider/lmstudio";
-import { searchContext, searchContextLMStudio } from "./retrieval/searcher";
-import { indexProject, IndexProgress } from "./retrieval/indexer";
+import { LMStudioProvider, defaultProvider } from "./provider/lmstudio";
+import { searchProjectContext } from "./retrieval/searcher";
+import { indexProject } from "./retrieval/indexer";
 import { contextInjector } from "./context/injector";
 import { sessionMemory } from "./state/session";
+import { docsStore, DocEntry } from "./docs-store";
+import { getDatabase, closeDatabase } from "./store";
+import { isVectorActive } from "./store/vec";
+import { resetDenseFailedFlag } from "./retrieval/dense";
 import type { SignalBundle } from "./tree/engine";
 
-const LM_STUDIO_URL = process.env.BRAIN_LMSTUDIO_URL || "http://192.168.1.12:1234/v1";
-const BRAIN_EMBED_URL = process.env.BRAIN_EMBED_URL || "http://127.0.0.1:7878";
+const FETCH_TIMEOUT = 10000;
 
-interface SidecarState {
-  process: any | null;
-  healthy: boolean;
-  startedAt: number | null;
-  lastHealthCheck: number;
+function detectRegistry(query: string): {
+  registry: "npm" | "crates.io" | "packagist" | null;
+  packageName: string | null;
+} {
+  const npmMatch = query.match(/(?:npm install|npm i|import\s+.*\s+from\s+['"])(@?[a-z0-9_./-]+)/i);
+  if (npmMatch) return { registry: "npm", packageName: npmMatch[1] };
+
+  const cargoMatch = query.match(/(?:cargo add|cargo.toml|use\s+)([a-z][a-z0-9_]*)(?:::|;|\s)/i);
+  if (cargoMatch) return { registry: "crates.io", packageName: cargoMatch[1] };
+
+  const composerMatch = query.match(
+    /(?:composer require|composer\.json|use\s+)([A-Z][a-zA-Z0-9_]+(?:\/[A-Z][a-zA-Z0-9_]+)?)/
+  );
+  if (composerMatch) return { registry: "packagist", packageName: composerMatch[1] };
+
+  return { registry: null, packageName: null };
 }
 
-const sidecar: SidecarState = {
-  process: null,
-  healthy: false,
-  startedAt: null,
-  lastHealthCheck: 0,
-};
+async function fetchDocFromRegistry(
+  registry: "npm" | "crates.io" | "packagist",
+  packageName: string
+): Promise<DocEntry | null> {
+  const cached = docsStore.get(registry, packageName);
+  if (cached) return cached;
 
-function toWslPath(windowsPath: string): string {
-  return windowsPath
-    .replace(/^([A-Z]):\\/i, (_: string, d: string) => `/mnt/${d.toLowerCase()}/`)
-    .replace(/\\/g, "/");
-}
-
-async function checkSidecarHealth(): Promise<boolean> {
-  const now = Date.now();
-  if (now - sidecar.lastHealthCheck < 5000) return sidecar.healthy;
-  sidecar.lastHealthCheck = now;
   try {
-    const res = await fetch(`${BRAIN_EMBED_URL}/health`, { signal: AbortSignal.timeout(2000) });
-    sidecar.healthy = res.ok;
-    if (res.ok) {
-      const data = await res.json();
-      console.log(
-        `[Brain] Sidecar healthy | uptime: ${data.uptime_seconds}s | models: ${data.loaded_models?.length || 0}`
-      );
+    let url: string;
+    switch (registry) {
+      case "npm":
+        url = `https://registry.npmjs.org/${encodeURIComponent(packageName)}`;
+        break;
+      case "crates.io":
+        url = `https://crates.io/api/v1/crates/${encodeURIComponent(packageName)}`;
+        break;
+      case "packagist":
+        url = `https://repo.packagist.org/p2/${packageName.replace("/", "/")}.json`;
+        break;
     }
-    return sidecar.healthy;
-  } catch {
-    sidecar.healthy = false;
-    return false;
-  }
-}
+    const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT) });
+    if (!res.ok) return null;
+    const data: any = await res.json();
+    let description = "";
+    let version = "";
+    let docsUrl = "";
 
-async function startSidecar(): Promise<boolean> {
-  if (await checkSidecarHealth()) {
-    console.log("[Brain] Rust sidecar already running");
-    return true;
-  }
-  console.log("[Brain] Starting Rust sidecar...");
-  try {
-    const { spawn } = await import("child_process");
-    const isWindows = typeof process !== "undefined" && process.platform === "win32";
-    const nativeBinary = isWindows
-      ? `${directory}\\rust-brain-sidecar\\target\\release\\brain-embed.exe`
-      : `${directory}/rust-brain-sidecar/target/release/brain-embed`;
-    const nativeArgs: string[] = [];
-    const wslArgs = [
-      "-d",
-      "Ubuntu",
-      "--",
-      "bash",
-      "-c",
-      `RUST_LOG=info ${toWslPath(directory)}/rust-brain-sidecar/target/release/brain-embed`,
-    ];
-    const proc = isWindows
-      ? spawn(nativeBinary, nativeArgs, {
-          detached: true,
-          stdio: "pipe",
-          cwd: `${directory}\\rust-brain-sidecar`,
-        })
-      : spawn(nativeBinary, nativeArgs, {
-          detached: true,
-          stdio: "pipe",
-          cwd: `${directory}/rust-brain-sidecar`,
-        });
-    proc.stdout?.on("data", (d: Buffer) => {
-      const msg = d.toString().trim();
-      if (msg) console.log(`[brain-embed] ${msg}`);
-    });
-    proc.stderr?.on("data", (d: Buffer) => {
-      const msg = d.toString().trim();
-      if (msg) console.log(`[brain-embed:err] ${msg}`);
-    });
-    proc.on("exit", (code: number) => {
-      console.log(`[Brain] Sidecar exited (code ${code})`);
-      sidecar.process = null;
-      sidecar.healthy = false;
-    });
-    sidecar.process = proc;
-    proc.unref();
-    for (let i = 0; i < 30; i++) {
-      await new Promise((r) => setTimeout(r, 1000));
-      if (await checkSidecarHealth()) {
-        console.log(`[Brain] Sidecar ready after ${i + 1}s`);
-        return true;
-      }
+    switch (registry) {
+      case "npm":
+        description = data.description || "";
+        version = data["dist-tags"]?.latest || "";
+        docsUrl = data.homepage || `https://www.npmjs.com/package/${packageName}`;
+        break;
+      case "crates.io":
+        description = data.crate?.description || "";
+        version = data.crate?.max_version || "";
+        docsUrl = data.crate?.documentation || `https://docs.rs/${packageName}`;
+        break;
+      case "packagist":
+        const pkg = data.packages?.[packageName]?.[0];
+        description = pkg?.description || "";
+        version = pkg?.version || "";
+        docsUrl = `https://packagist.org/packages/${packageName}`;
+        break;
     }
-    if (isWindows) {
-      console.warn("[Brain] Native sidecar did not become healthy; trying WSL fallback...");
-      try {
-        const wslProc = spawn("wsl.exe", wslArgs, { detached: true, stdio: "pipe" });
-        sidecar.process = wslProc;
-        wslProc.unref();
-        for (let i = 0; i < 30; i++) {
-          await new Promise((r) => setTimeout(r, 1000));
-          if (await checkSidecarHealth()) {
-            console.log(`[Brain] WSL sidecar ready after ${i + 1}s`);
-            return true;
-          }
-        }
-      } catch (fallbackErr) {
-        console.error("[Brain] WSL sidecar fallback failed:", fallbackErr);
-      }
-    }
-    console.error("[Brain] Sidecar failed to start within 30s");
-    return false;
+
+    const entry: DocEntry = {
+      source: registry,
+      packageName,
+      description,
+      version,
+      docsUrl,
+      raw: JSON.stringify(data).slice(0, 2000),
+      fetchedAt: Date.now(),
+      usedCount: 1,
+    };
+    docsStore.add(entry);
+    return entry;
   } catch (err) {
-    console.error("[Brain] Sidecar start error:", err);
-    return false;
+    console.error(`[Brain] Doc fetch failed for ${registry}:${packageName}:`, err);
+    return null;
   }
 }
 
-function stopSidecar(): void {
-  if (sidecar.process) {
-    try {
-      sidecar.process.kill("SIGTERM");
-    } catch {}
-    sidecar.process = null;
-  }
-  sidecar.healthy = false;
-}
-
-async function syncConfigToSidecar(provider: LMStudioProvider): Promise<void> {
+async function queryContext7(query: string): Promise<string | null> {
   try {
-    const res = await fetch(`${BRAIN_EMBED_URL}/config`, {
+    const res = await fetch("http://localhost:11435/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        embed_model: provider.defaultEmbedModel,
-        chat_model: provider.defaultChatModel,
-        draft_model: provider.defaultDraftModel,
-        speculative_enabled: true,
-        context_length: 4096,
-        temperature: 0.7,
-        max_tokens: 4096,
+        model: "context7",
+        messages: [{ role: "user", content: `Find documentation for: ${query}` }],
+        stream: false,
       }),
+      signal: AbortSignal.timeout(8000),
     });
-    if (res.ok) console.log("[Brain] Config synced to sidecar");
-  } catch (err) {
-    console.error("[Brain] Config sync failed:", err);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.message?.content || null;
+  } catch {
+    return null;
   }
 }
 
-async function sidecarPrewarm(modelType: string): Promise<void> {
-  try {
-    await fetch(`${BRAIN_EMBED_URL}/prewarm`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ model_type: modelType }),
-    });
-    console.log(`[Brain] Prewarmed ${modelType} model`);
-  } catch {}
+function detectSkillGap(query: string, instructions: string[]): boolean {
+  const hasInstruction = instructions.some((i) => {
+    const keywords: string[] = i.toLowerCase().match(/\b(\w+)\b/g) || [];
+    const queryWords: string[] = query.toLowerCase().match(/\b(\w{3,})\b/g) || [];
+    return queryWords.some((w) => keywords.includes(w));
+  });
+  return !hasInstruction;
+}
+
+function rewritePrompt(query: string, intent: string, contextSummary: string): string {
+  const prefix = `[Brain: classified as "${intent}" intent. ${contextSummary}]\n\n`;
+  const clarification = `I need to understand this better. Could you rephrase or provide more context?\n\nOriginal: `;
+  return `${prefix}${clarification}${query}`;
 }
 
 const BrainPlugin: Plugin = async ({ directory }) => {
@@ -180,42 +139,96 @@ const BrainPlugin: Plugin = async ({ directory }) => {
 
   try {
     tree = await DecisionTree.load();
-    provider = new LMStudioProvider(LM_STUDIO_URL);
+    provider = defaultProvider;
     console.log("[Brain] Decision tree loaded successfully");
   } catch (error) {
     console.error("[Brain] Failed to initialize:", error);
     tree = new DecisionTree();
-    provider = new LMStudioProvider(LM_STUDIO_URL);
+    provider = defaultProvider;
   }
 
   return {
     "server.start": async () => {
-      console.log("[Brain] Plugin loaded - Cognitive layer for OpenCode");
-      console.log(`[Brain] LM Studio: ${LM_STUDIO_URL}`);
-      console.log(`[Brain] Decision tree: ${tree.getStats().totalNodes} nodes`);
+      console.log("[Brain] Plugin loaded - Cognitive v2 layer for OpenCode (Node-native)");
+      console.log(`[Brain] LM Studio SDK: active`);
 
-      const started = await startSidecar();
-      if (started) {
-        await syncConfigToSidecar(provider);
-        console.log(`[Brain] Auto-indexing project: ${directory}`);
+      try {
+        const fs = await import("fs");
+        const path = await import("path");
+        const configPath = path.join(directory, "opencode.json");
+        if (fs.existsSync(configPath)) {
+          const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+          const baseURL =
+            config?.provider?.lmstudio?.options?.baseURL ||
+            config?.lmstudio?.baseURL ||
+            "http://localhost:1234";
+          provider.setBaseURL(baseURL);
+        } else {
+          provider.setBaseURL("http://localhost:1234");
+        }
+      } catch (err: any) {
+        console.warn("[Brain] Failed to parse opencode.json for LM Studio baseURL:", err.message);
+        provider.setBaseURL("http://localhost:1234");
+      }
+
+      let db: ReturnType<typeof getDatabase> | undefined = undefined;
+      try {
+        db = getDatabase(directory);
+      } catch (err: any) {
+        console.error("[Brain] Database connection failed:", err.message);
+      }
+
+      let forceReindex = false;
+      if (db) {
+        try {
+          const row = db.prepare("SELECT value FROM config WHERE key = 'needs_reindex'").get() as
+            | { value: string }
+            | undefined;
+          if (row?.value === "true") {
+            forceReindex = true;
+            db.prepare(
+              "INSERT OR REPLACE INTO config (key, value, updated_at) VALUES ('needs_reindex', 'false', ?)"
+            ).run(Date.now());
+          }
+        } catch (e: any) {
+          console.warn("[Brain] Failed to check needs_reindex flag:", e.message);
+        }
+      }
+
+      console.log(`[Brain] Auto-indexing project in background: ${directory}`);
+      setImmediate(() => {
         indexingInProgress = true;
         try {
-          const result = await indexProject(directory);
+          const startTime = Date.now();
+          if (forceReindex && db) {
+            console.log("[Brain] Schema migration triggered a full clean re-indexing...");
+            db.transaction(() => {
+              db.prepare("DELETE FROM chunks").run();
+              db.prepare("DELETE FROM files").run();
+              db.prepare("DELETE FROM fts_chunks").run();
+              try {
+                db.prepare("DELETE FROM chunk_embeddings").run();
+                db.prepare("DELETE FROM chunk_embeddings_nomic").run();
+              } catch {}
+            })();
+          }
+          const result = indexProject(directory);
+          const duration = Date.now() - startTime;
           console.log(
-            `[Brain] Indexed ${result.chunks} chunks from ${result.files_indexed} files (${result.duration_ms}ms)`
+            `[Brain] Background auto-index completed in ${duration}ms (processed ${result.length} chunks)`
           );
-        } catch (err) {
-          console.error("[Brain] Auto-index failed:", err);
+        } catch (err: any) {
+          console.error("[Brain] Background auto-index failed:", err.message);
+        } finally {
+          indexingInProgress = false;
         }
-        indexingInProgress = false;
-      } else {
-        console.warn("[Brain] Sidecar not available - RAG disabled");
-      }
+      });
     },
 
     "session.archived": async () => {
-      stopSidecar();
-      console.log("[Brain] Sidecar stopped");
+      closeDatabase();
+      console.log("[Brain] Unified SQLite connection closed");
+      console.log("[Brain] Cached docs:", docsStore.getSummary());
     },
 
     "message.updated": async (input: any, output: any) => {
@@ -242,58 +255,110 @@ const BrainPlugin: Plugin = async ({ directory }) => {
         return;
       }
 
-      if (["debug", "refactor", "feature", "learn"].includes(scenario.intent)) {
-        sidecarPrewarm("embed");
-      }
-
       try {
-        let context;
-        if (sidecar.healthy) {
-          context = await searchContext(
-            msg.content,
+        console.log(
+          `[Brain] Executing search for intent: "${scenario.intent}" (strategy: ${strategy.name})...`
+        );
+        const limit = strategy.maxChunks ?? 10;
+        const results = await searchProjectContext(directory, msg.content, limit);
+
+        const mappedChunks = results.map((r) => ({
+          id: r.id,
+          filepath: r.filepath,
+          language: r.language,
+          type: r.type,
+          name: r.name,
+          start_line: r.start_line,
+          end_line: r.end_line,
+          parent_id: r.parent_id,
+          content: r.content,
+          lines: r.end_line - r.start_line + 1,
+        }));
+
+        const context = {
+          chunks: mappedChunks,
+          totalChunks: mappedChunks.length,
+        };
+
+        let docContext = "";
+
+        if (context.chunks.length < 3) {
+          console.log("[Brain] Low code context, trying context7...");
+          const context7Result = await queryContext7(msg.content);
+          if (context7Result) {
+            docContext = `\n## Library Documentation (context7)\n${context7Result.slice(0, 1500)}\n`;
+            console.log("[Brain] context7 returned docs");
+          }
+
+          const { registry, packageName } = detectRegistry(msg.content);
+          if (registry && packageName) {
+            console.log(`[Brain] Detected ${registry} package: ${packageName}`);
+            const docEntry = await fetchDocFromRegistry(registry, packageName);
+            if (docEntry) {
+              docContext += `\n## Package Info (${docEntry.source}: ${docEntry.packageName})\n`;
+              docContext += `Description: ${docEntry.description}\n`;
+              docContext += `Version: ${docEntry.version || "unknown"}\n`;
+              if (docEntry.docsUrl) docContext += `Docs: ${docEntry.docsUrl}\n`;
+              console.log(`[Brain] Fetched docs for ${packageName} from ${registry}`);
+            }
+          }
+        }
+
+        if (context.chunks.length > 0 || docContext) {
+          sessionMemory.markContextUsed(context.chunks as any);
+          const augmentedMessage = contextInjector.inject(
+            docContext ? `${msg.content}\n\n${docContext}` : msg.content,
+            context,
             {
-              strategy: strategy.name,
-              depth: strategy.depth,
-              maxChunks: strategy.maxChunks,
-              rerank: strategy.rerank,
-            },
-            directory
+              intent: scenario.intent,
+              sessionSummary: sessionMemory.getSummary(),
+              recentFiles: signals.recentFiles,
+              diagnostics: signals.diagnostics.map((d: any) => `${d.file}:${d.message}`),
+            }
           );
-        } else {
-          console.log("[Brain] Sidecar unavailable, falling back to LM Studio embedding");
-          context = await searchContextLMStudio(
-            msg.content,
-            {
-              strategy: strategy.name,
-              depth: strategy.depth,
-              maxChunks: strategy.maxChunks,
-              rerank: strategy.rerank,
-            },
-            directory,
-            provider
+          output.message.content = augmentedMessage;
+          const sources = [];
+          if (context.chunks.length > 0) sources.push(`${context.chunks.length} code chunks`);
+          if (docContext.includes("context7")) sources.push("context7 docs");
+          if (docContext.includes("Package Info")) sources.push("registry docs");
+          console.log(
+            `[Brain] +${sources.join(", ")} | backend: unified-sqlite | intent: ${scenario.intent}`
           );
         }
 
-        if (context.chunks.length > 0) {
-          sessionMemory.markContextUsed(context.chunks);
-          const augmentedMessage = contextInjector.inject(msg.content, context, {
-            intent: scenario.intent,
-            sessionSummary: sessionMemory.getSummary(),
-            recentFiles: signals.recentFiles,
-            diagnostics: signals.diagnostics.map((d) => `${d.file}:${d.message}`),
-          });
-          output.message.content = augmentedMessage;
-          console.log(`[Brain] +${context.chunks.length} chunks | backend: ${sidecar.healthy ? "sidecar" : "lmstudio"} | intent: ${scenario.intent}`);
-        }
         sessionMemory.recordDecision({
           timestamp: Date.now(),
           intent: scenario.intent,
           strategy: strategy.name,
-          contextCount: context.chunks.length,
+          contextCount: context.chunks.length + (docContext ? 1 : 0),
           query: msg.content,
+          success: context.chunks.length > 0 || !!docContext,
         });
       } catch (error) {
         console.error("[Brain] Retrieval error:", error);
+      }
+    },
+
+    "chat.params": async (input: any, output: any) => {
+      const msg = input.message || "";
+      const instructions = output.instructions || [];
+
+      if (detectSkillGap(msg, instructions)) {
+        const signals: SignalBundle = {
+          message: msg,
+          recentFiles: sessionMemory.getMemory().recentFiles,
+          diagnostics: [],
+        };
+        const { node: scenario, score } = tree.classify(msg, signals);
+        const docsSummary = docsStore.getSummary();
+        const rewritten = rewritePrompt(msg, scenario.intent, docsSummary);
+
+        if (output.instructions && !instructions.includes(rewritten)) {
+          output.instructions.push(rewritten);
+          console.log(
+            `[Brain] Prompt fallback applied (intent: ${scenario.intent}, confidence: ${score.toFixed(2)})`
+          );
+        }
       }
     },
 
@@ -317,7 +382,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
     "file.watcher.updated": async (input: any) => {
       sessionMemory.markFileDirty(input.path);
       dirtyFiles.add(input.path);
-      if (!indexingInProgress && sidecar.healthy && dirtyFiles.size >= 5) {
+      if (!indexingInProgress) {
         clearTimeout(reindexTimer);
         reindexTimer = setTimeout(async () => {
           if (dirtyFiles.size === 0) return;
@@ -325,13 +390,16 @@ const BrainPlugin: Plugin = async ({ directory }) => {
           const files = Array.from(dirtyFiles);
           dirtyFiles.clear();
           try {
-            const result = await indexProject(directory, { force: true });
-            console.log(`[Brain] Re-indexed ${result.chunks} chunks (${files.length} dirty files)`);
-          } catch (err) {
-            console.error("[Brain] Re-index failed:", err);
+            console.log(`[Brain] Triggering background re-index for modified files...`);
+            const result = indexProject(directory);
+            console.log(
+              `[Brain] Background incremental re-index complete: parsed ${result.length} new chunks`
+            );
+          } catch (err: any) {
+            console.error("[Brain] Re-index failed:", err.message);
           }
           indexingInProgress = false;
-        }, 5000);
+        }, 3000);
       }
     },
 
@@ -343,30 +411,20 @@ const BrainPlugin: Plugin = async ({ directory }) => {
       await tree.save();
     },
 
-    "chat.params": async (params: any) => {
-      if (!sidecar.healthy) return params;
-      const cfg = await (await fetch(`${BRAIN_EMBED_URL}/config`)).json().catch(() => null);
-      if (cfg?.speculative_enabled && cfg?.draft_model) {
-        params.draft_model = cfg.draft_model;
-        console.log(`[Brain] Speculative: ${cfg.chat_model} + ${cfg.draft_model}`);
-      }
-      return params;
-    },
-
     tool: {
       brain_index_project: tool({
         description: "Index the current project for semantic code search",
         args: {
           path: tool.schema.string().optional().describe("Directory path to index"),
-          force: tool.schema.boolean().optional().describe("Force re-index"),
         },
         async execute(args: any) {
-          if (!sidecar.healthy) return "Sidecar not running. Use brain_sidecar_status to check.";
           const root = args.path ?? directory;
           indexingInProgress = true;
           try {
-            const result = await indexProject(root, { force: args.force });
-            return `Indexed ${result.chunks} chunks from ${result.files_indexed} files (${result.duration_ms}ms)`;
+            const startTime = Date.now();
+            const result = indexProject(root);
+            const duration = Date.now() - startTime;
+            return `Project indexed successfully. Parsed ${result.length} modified/new chunks in ${duration}ms.`;
           } catch (err: any) {
             return `Index failed: ${err.message}`;
           } finally {
@@ -376,51 +434,82 @@ const BrainPlugin: Plugin = async ({ directory }) => {
       }),
 
       brain_search: tool({
-        description: "Search the codebase for relevant context",
+        description: "Search the codebase for relevant context using unified hybrid dense + FTS5",
         args: {
           query: tool.schema.string().describe("Search query"),
           top_k: tool.schema.number().optional().describe("Number of results (default: 5)"),
         },
         async execute(args: any) {
-          if (!sidecar.healthy) return "Sidecar not running.";
-          const context = await searchContext(
-            args.query,
-            { strategy: "manual", depth: "broad", maxChunks: args.top_k ?? 5, rerank: true },
-            directory
-          );
+          const results = await searchProjectContext(directory, args.query, args.top_k ?? 5);
+
+          const mappedChunks = results.map((r) => ({
+            id: r.id,
+            filepath: r.filepath,
+            language: r.language,
+            type: r.type,
+            name: r.name,
+            start_line: r.start_line,
+            end_line: r.end_line,
+            parent_id: r.parent_id,
+            content: r.content,
+            lines: r.end_line - r.start_line + 1,
+          }));
+
+          const context = {
+            chunks: mappedChunks,
+            totalChunks: mappedChunks.length,
+          };
+
           return contextInjector.formatResults(context);
         },
       }),
 
       brain_status: tool({
-        description: "Get the brain's current state: sidecar health, indexed projects, cache stats",
+        description:
+          "Get the brain's current state: vector store counts, decision tree, cache stats",
         args: {},
         async execute() {
           const stats = tree.getStats();
           const memory = sessionMemory.getMemory();
-          let sidecarInfo = "Sidecar: not running";
-          let metricsInfo = "";
-          if (sidecar.healthy) {
-            try {
-              const h = await (await fetch(`${BRAIN_EMBED_URL}/health`)).json();
-              const m = await (await fetch(`${BRAIN_EMBED_URL}/metrics`)).json();
-              sidecarInfo = [
-                `Sidecar: ✅ running (uptime ${h.uptime_seconds}s)`,
-                `GPU: ${h.gpu ? `${h.gpu.usage_percent.toFixed(1)}% used (${h.gpu.free_gb.toFixed(1)}G free / ${h.gpu.total_gb.toFixed(1)}G total)` : "N/A"}`,
-                `Models: embed=${h.config.embed_model} | chat=${h.config.chat_model} | draft=${h.config.draft_model || "none"}`,
-              ].join("\n");
-              metricsInfo = [
-                `Cache: ${m.cache_hit_rate > 0 ? (m.cache_hit_rate * 100).toFixed(0) : 0}% hit rate (${m.cache_hits} hits, ${m.cache_misses} misses)`,
-                `Searches: ${m.searches_total} | Index chunks: ${m.index_chunks} | Prewarms: ${m.orchestrator_prewarm_count}`,
-              ].join("\n");
-            } catch {}
+          const db = getDatabase(directory);
+
+          let dbStats = "Database: connected\n";
+          try {
+            const fileCount =
+              (
+                db.prepare("SELECT COUNT(*) as count FROM files").get() as
+                  | { count: number }
+                  | undefined
+              )?.count ?? 0;
+            const chunkCount =
+              (
+                db.prepare("SELECT COUNT(*) as count FROM chunks").get() as
+                  | { count: number }
+                  | undefined
+              )?.count ?? 0;
+            const ftsCount =
+              (
+                db.prepare("SELECT COUNT(*) as count FROM fts_chunks").get() as
+                  | { count: number }
+                  | undefined
+              )?.count ?? 0;
+            const vectorActiveFlag = isVectorActive(db);
+
+            dbStats = [
+              `Database: \u2705 isolated SQLite active`,
+              `- Files tracked: ${fileCount}`,
+              `- Code chunks: ${chunkCount}`,
+              `- Lexical index records: ${ftsCount}`,
+              `- Vector extensions loaded: ${vectorActiveFlag ? "\u2705 active (sqlite-vec)" : "\u274c deactivated (keyword degraded mode)"}`,
+            ].join("\n");
+          } catch (e: any) {
+            dbStats = `Database: \u274c stats query failed (${e.message})`;
           }
+
           return [
-            `## Brain Status`,
+            `## Brain Status (Node-native v2)`,
             ``,
-            sidecarInfo,
-            ``,
-            metricsInfo,
+            dbStats,
             ``,
             `### Decision Tree`,
             `- Total nodes: ${stats.totalNodes}`,
@@ -438,258 +527,132 @@ const BrainPlugin: Plugin = async ({ directory }) => {
             `- Failures: ${memory.failures.length}`,
             `- Recent files: ${memory.recentFiles.length}`,
             `- Context used: ${memory.contextUsed.length} chunks`,
+            ``,
+            `### Docs Cache`,
+            docsStore.getSummary(),
           ].join("\n");
         },
       }),
 
-      brain_metrics: tool({
-        description: "Get Prometheus-style metrics from the Rust sidecar",
-        args: {},
-        async execute() {
-          if (!sidecar.healthy) return "Sidecar not running.";
-          try {
-            const m = await (await fetch(`${BRAIN_EMBED_URL}/metrics`)).json();
-            return [
-              `## Brain Metrics`,
-              ``,
-              `| Metric | Value |`,
-              `|--------|-------|`,
-              `| Decisions total | ${m.decisions_total} |`,
-              `| Searches total | ${m.searches_total} |`,
-              `| Index chunks | ${m.index_chunks} |`,
-              `| Cache hits | ${m.cache_hits} |`,
-              `| Cache misses | ${m.cache_misses} |`,
-              `| Cache hit rate | ${(m.cache_hit_rate * 100).toFixed(1)}% |`,
-              `| Prewarm count | ${m.orchestrator_prewarm_count} |`,
-            ].join("\n");
-          } catch {
-            return "Failed to fetch metrics.";
-          }
-        },
-      }),
-
-      brain_embed_test: tool({
-        description: "Test embedding search - show what context would be retrieved for a query",
-        args: {
-          query: tool.schema.string().describe("Test query"),
-          top_k: tool.schema.number().optional().describe("Number of results (default: 5)"),
-        },
-        async execute(args: any) {
-          if (!sidecar.healthy) return "Sidecar not running.";
-          const context = await searchContext(
-            args.query,
-            { strategy: "test", depth: "broad", maxChunks: args.top_k ?? 5, rerank: true },
-            directory
-          );
-          if (context.chunks.length === 0)
-            return "No relevant context found. Try indexing first with brain_index_project.";
-          return contextInjector.formatResults(context);
-        },
-      }),
-
-      brain_sidecar_status: tool({
-        description: "Check if the Rust sidecar is running and healthy",
-        args: {},
-        async execute() {
-          const healthy = await checkSidecarHealth();
-          if (!healthy)
-            return "❌ Sidecar not running. It will start automatically on next session.";
-          try {
-            const h = await (await fetch(`${BRAIN_EMBED_URL}/health`)).json();
-            return [
-              `✅ Sidecar running`,
-              `- Version: ${h.version}`,
-              `- Uptime: ${h.uptime_seconds}s`,
-              `- GPU: ${h.gpu ? `${h.gpu.usage_percent.toFixed(1)}% used (${h.gpu.free_gb.toFixed(1)}G free)` : "N/A"}`,
-              `- Embed model: ${h.config.embed_model}`,
-              `- Chat model: ${h.config.chat_model}`,
-              `- Draft model: ${h.config.draft_model || "none"}`,
-              `- Speculative: ${h.config.speculative ? "enabled" : "disabled"}`,
-            ].join("\n");
-          } catch {
-            return "✅ Sidecar responding but failed to parse health data.";
-          }
-        },
-      }),
-
-      brain_sidecar_restart: tool({
-        description: "Restart the Rust sidecar",
-        args: {},
-        async execute() {
-          stopSidecar();
-          await new Promise((r) => setTimeout(r, 1000));
-          const started = await startSidecar();
-          if (started) {
-            await syncConfigToSidecar(provider);
-            return "Sidecar restarted successfully.";
-          }
-          return "Failed to restart sidecar.";
-        },
-      }),
-
       brain_reset: tool({
-        description: "Reset the brain's session memory and decision tree",
+        description: "Reset the brain's session memory, SQLite index, and decision tree",
         args: {},
         async execute() {
           sessionMemory.reset();
+          docsStore.clear();
           tree = new DecisionTree();
           await tree.save();
-          return "Brain reset successfully.";
-        },
-      }),
 
-      brain_model_load: tool({
-        description: "Load a model into LM Studio (chat, embed, or draft)",
-        args: {
-          model_type: tool.schema.string().describe("Model type: chat, embed, draft"),
-        },
-        async execute(args: any) {
           try {
-            const cfg = await (await fetch(`${BRAIN_EMBED_URL}/config`)).json();
-            const model =
-              args.model_type === "embed"
-                ? cfg.embed_model
-                : args.model_type === "draft"
-                  ? cfg.draft_model
-                  : cfg.chat_model;
-            if (!model) return `No ${args.model_type} model configured.`;
-            const res = await fetch(`${BRAIN_EMBED_URL}/prewarm`, { method: "POST" });
-            return `Loading ${args.model_type} model: ${model}`;
-          } catch {
-            return "Failed to load model.";
-          }
-        },
-      }),
+            resetDenseFailedFlag();
+          } catch {}
 
-      brain_model_unload: tool({
-        description: "Unload models from LM Studio GPU memory to free VRAM",
-        args: {
-          all: tool.schema.boolean().optional().describe("Unload all non-essential models"),
-        },
-        async execute(args: any) {
           try {
-            const before = await (await fetch(`${BRAIN_EMBED_URL}/gpu`)).json();
-            const res = await fetch(`${BRAIN_EMBED_URL}/cache/invalidate`, { method: "POST" });
-            const after = await (await fetch(`${BRAIN_EMBED_URL}/gpu`)).json();
-            return `Models unloaded. GPU before: ${before.used_gb?.toFixed(1) || "?"}G used → after: ${after.used_gb?.toFixed(1) || "?"}G used`;
-          } catch {
-            return "Failed to unload models.";
+            const db = getDatabase(directory);
+            db.transaction(() => {
+              db.prepare("DELETE FROM chunks").run();
+              db.prepare("DELETE FROM files").run();
+              db.prepare("DELETE FROM fts_chunks").run();
+              try {
+                db.prepare("DELETE FROM chunk_embeddings").run();
+                db.prepare("DELETE FROM chunk_embeddings_nomic").run();
+              } catch {}
+            })();
+            return "Brain completely reset successfully (indexes, memory, docs cache, and decision tree wiped).";
+          } catch (err: any) {
+            return `Brain memory reset, but index database wipe failed: ${err.message}`;
           }
         },
       }),
 
       brain_diagnostic: tool({
-        description:
-          "Run full pipeline diagnostic: sidecar health, index status, search, config sync",
+        description: "Run full plugin diagnostic check over the SQLite and LM Studio pipelines",
         args: {},
         async execute() {
-          const results: string[] = ["## Brain Diagnostic\n"];
+          const results: string[] = ["## Brain Diagnostic (Node-native v2)\n"];
 
-          // 1. Sidecar health
           try {
-            const h = await (await fetch(`${BRAIN_EMBED_URL}/health`)).json();
-            results.push(`✅ Sidecar: v${h.version} (uptime ${h.uptime_seconds}s)`);
-            results.push(`   Chat: ${h.config.chat_model}`);
-            results.push(`   Embed: ${h.config.embed_model}`);
-            results.push(`   Draft: ${h.config.draft_model || "none"}`);
-            results.push(`   Speculative: ${h.config.speculative ? "enabled" : "disabled"}`);
-            if (h.gpu)
-              results.push(
-                `   GPU: ${h.gpu.usage_percent.toFixed(1)}% used (${h.gpu.free_gb.toFixed(1)}G free)`
-              );
-            else results.push(`   GPU: N/A (WSL may not expose nvidia-smi)`);
-            results.push(`   Loaded models: ${h.loaded_models?.join(", ") || "none"}`);
-          } catch {
-            results.push("❌ Sidecar: NOT RUNNING — RAG disabled");
-            return results.join("\n");
-          }
+            const db = getDatabase(directory);
+            results.push("\u2705 SQLite store initialized successfully");
 
-          // 2. Metrics / cache
-          try {
-            const m = await (await fetch(`${BRAIN_EMBED_URL}/metrics`)).json();
+            const fileCount =
+              (
+                db.prepare("SELECT COUNT(*) as count FROM files").get() as
+                  | { count: number }
+                  | undefined
+              )?.count ?? 0;
+            results.push(`   - Tracks ${fileCount} files`);
+
+            const vectorActiveFlag = isVectorActive(db);
             results.push(
-              `\n📊 Cache: ${m.cache_hits} hits / ${m.cache_misses} misses (${(m.cache_hit_rate * 100).toFixed(0)}%)`
+              `   - sqlite-vec vector engine: ${vectorActiveFlag ? "\u2705 active" : "\u274c inactive"}`
             );
-            results.push(`   Indexed chunks: ${m.index_chunks}`);
-            results.push(`   Searches performed: ${m.searches_total}`);
-          } catch {}
 
-          // 3. Config sync
+            const rrfK = (
+              db.prepare("SELECT value FROM config WHERE key = 'rrf_k'").get() as
+                | { value: string }
+                | undefined
+            )?.value;
+            results.push(`   - Configuration settings: rrf_k=${rrfK ?? "not set"}`);
+          } catch (err: any) {
+            results.push(`\u274c SQLite store: initialization failed (${err.message})`);
+          }
+
           try {
-            const cfg = await (await fetch(`${BRAIN_EMBED_URL}/config`)).json();
+            const loaded = await provider.getLoadedModels();
             results.push(
-              `\n⚙️ Config: context=${cfg.context_length} | concurrency=${cfg.max_concurrency} | batch=${cfg.batch_size}`
+              `\n\ud83d\udce6 LM Studio SDK: connected, loaded models: [${loaded.join(", ")}]`
             );
-          } catch {}
-
-          // 4. Quick search test (uses directory-derived project_id)
-          try {
-            const ctx = await searchContext(
-              "diagnostic test query",
-              { strategy: "diagnostic", depth: "shallow", maxChunks: 1, rerank: false },
-              directory
-            );
-            if (ctx.chunks.length > 0) {
-              results.push(`\n🔍 Search: ✅ working (${ctx.chunks.length} results)`);
-            } else {
-              results.push(`\n🔍 Search: ⚠️ 0 results — try brain_index_project first`);
-            }
-          } catch (e: any) {
-            results.push(`\n🔍 Search: ❌ ${e.message}`);
-          }
-
-          // 5. LM Studio embedding fallback check
-          try {
-            const testEmbed = await provider.embed(provider.defaultEmbedModel, ["test"]);
-            results.push(`\n🧠 LM Studio Embedding: ✅ working (${testEmbed[0].length}-dim)`);
           } catch {
-            results.push(`\n🧠 LM Studio Embedding: ❌ not available`);
+            results.push(
+              `\n\ud83d\udce6 LM Studio SDK: not connected (LM Studio process must run on port 1234)`
+            );
           }
 
-          results.push(`\n📁 Project: ${directory}`);
+          results.push(`\n\ud83d\udcda Docs Cache: ${docsStore.getAll().length} entries`);
+          const docsSummary = docsStore.getSummary();
+          if (docsSummary !== "No docs cached.") {
+            results.push(docsSummary);
+          }
+
+          results.push(`\n\ud83d\udcc1 Project: ${directory}`);
           return results.join("\n");
         },
       }),
 
-      brain_embed_lmstudio: tool({
-        description: "Use LM Studio HTTP endpoint directly for embedding search (bypasses sidecar)",
-        args: {
-          query: tool.schema.string().describe("Search query"),
-          top_k: tool.schema.number().optional().describe("Number of results (default: 5)"),
-        },
-        async execute(args: any) {
-          try {
-            const context = await searchContextLMStudio(
-              args.query,
-              { strategy: "manual", depth: "broad", maxChunks: args.top_k ?? 5, rerank: true },
-              directory,
-              provider
-            );
-            if (context.chunks.length === 0) return "No relevant context found.";
-            return contextInjector.formatResults(context);
-          } catch (err: any) {
-            return `LM Studio embedding failed: ${err.message}`;
-          }
+      brain_docs_cache: tool({
+        description: "View cached documentation entries",
+        args: {},
+        async execute() {
+          const entries = docsStore.getAll();
+          if (entries.length === 0) return "No docs cached.";
+          return entries
+            .map(
+              (e, i) =>
+                `${i + 1}. [${e.source}] ${e.packageName} v${e.version || "?"}\n   ${e.description.slice(0, 200)}\n   Docs: ${e.docsUrl || "N/A"}`
+            )
+            .join("\n\n");
         },
       }),
 
-      brain_speculative_status: tool({
-        description: "Show speculative decoding status",
-        args: {},
-        async execute() {
-          if (!sidecar.healthy) return "Sidecar not running.";
-          try {
-            const cfg = await (await fetch(`${BRAIN_EMBED_URL}/config`)).json();
-            return [
-              `## Speculative Decoding`,
-              `- Enabled: ${cfg.speculative_enabled}`,
-              `- Draft model: ${cfg.draft_model || "none"}`,
-              `- Chat model: ${cfg.chat_model}`,
-              `- Context length: ${cfg.context_length}`,
-            ].join("\n");
-          } catch {
-            return "Failed to fetch config.";
-          }
+      brain_docs_fetch: tool({
+        description: "Manually fetch package documentation from registry API",
+        args: {
+          registry: tool.schema
+            .enum(["npm", "crates.io", "packagist"])
+            .describe("Package registry"),
+          package: tool.schema.string().describe("Package name"),
+        },
+        async execute(args: any) {
+          const entry = await fetchDocFromRegistry(args.registry, args.package);
+          if (!entry) return `Failed to fetch docs for ${args.registry}:${args.package}`;
+          return [
+            `## ${entry.packageName}`,
+            `- Source: ${entry.source}`,
+            `- Version: ${entry.version || "unknown"}`,
+            `- Description: ${entry.description}`,
+            `- Docs URL: ${entry.docsUrl || "N/A"}`,
+          ].join("\n");
         },
       }),
     },

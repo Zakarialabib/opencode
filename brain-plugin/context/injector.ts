@@ -1,4 +1,10 @@
-import type { Chunk } from "../retrieval/indexer";
+export interface Chunk {
+  text: string;
+  path: string;
+  startLine: number;
+  endLine: number;
+  mtime: number;
+}
 
 export interface RetrievalResult {
   chunks: Chunk[];
@@ -14,11 +20,7 @@ export interface InjectOptions {
 }
 
 export class ContextInjector {
-  inject(
-    userMessage: string,
-    context: RetrievalResult,
-    opts?: InjectOptions
-  ): string {
+  inject(userMessage: string, context: RetrievalResult, opts?: InjectOptions): string {
     if (context.chunks.length === 0 && !opts?.sessionSummary) {
       return userMessage;
     }

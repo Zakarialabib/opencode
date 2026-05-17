@@ -1,8 +1,8 @@
-export const LM_STUDIO_API = "http://192.168.1.12:1234/api/v1";
-export const LM_STUDIO_V1 = "http://192.168.1.12:1234/v1";
-export const DEFAULT_EMBED_MODEL = "text-embedding-nomic-embed-text-v1.5";
-export const DEFAULT_CHAT_MODEL = "qwen3.5-4b-claude-4.6-opus-reasoning-distilled-v2";
-export const DEFAULT_DRAFT_MODEL = "qwen3.5-0.8b-claude-4.6-opus-reasoning-distilled";
+import { LMStudioClient } from "@lmstudio/sdk";
+
+export const DEFAULT_EMBED_MODEL = "nomic-embed-text-v1.5";
+export const DEFAULT_CHAT_MODEL = "qwen/qwen3-4b-2507";
+export const DEFAULT_DRAFT_MODEL = "qwen/qwen3-0.8b-2507";
 
 export interface LoadOptions {
   contextLength?: number;
@@ -32,124 +32,97 @@ export interface ModelHandle {
 export interface CustomProvider {
   name: string;
   baseURL: string;
-
   load(modelId: string, opts?: LoadOptions): Promise<ModelHandle>;
   unload(handle: ModelHandle): Promise<void>;
-
   embed(modelId: string, texts: string[]): Promise<number[][]>;
   chat(modelId: string, messages: any[], opts?: ChatOptions): Promise<string>;
-  chatWithSpeculative(modelId: string, draftModelId: string, messages: any[], opts?: ChatOptions): Promise<{ content: string; usage?: any }>;
+  chatWithSpeculative(
+    modelId: string,
+    draftModelId: string,
+    messages: any[],
+    opts?: ChatOptions
+  ): Promise<{ content: string; usage?: any }>;
 }
 
 export class LMStudioProvider implements CustomProvider {
   name = "lmstudio";
-  baseURL = LM_STUDIO_V1;
-  apiURL = LM_STUDIO_API;
+  baseURL = "";
   defaultEmbedModel = DEFAULT_EMBED_MODEL;
   defaultChatModel = DEFAULT_CHAT_MODEL;
   defaultDraftModel = DEFAULT_DRAFT_MODEL;
+  private client: LMStudioClient;
+  private embedModelHandle: any = null;
+  private llmHandle: any = null;
+
+  constructor() {
+    this.client = new LMStudioClient();
+  }
+
+  setBaseURL(url: string): void {
+    this.baseURL = url.replace(/\/v1\/?$/, "");
+    console.log(`[LMStudio] Dynamically configuring client SDK target baseURL: "${this.baseURL}"`);
+    this.client = new LMStudioClient({ baseUrl: this.baseURL });
+  }
 
   async load(modelId: string, opts?: LoadOptions): Promise<ModelHandle> {
     const isEmbedding = modelId.includes("embedding") || modelId.includes("embed");
-
-    const body: any = {
-      model: modelId,
-      context_length: opts?.contextLength ?? 2048,
-      echo_load_config: true,
-    };
-
-    if (!isEmbedding) {
-      body.flash_attention = opts?.flashAttention ?? true;
-      body.offload_kv_cache_to_gpu = opts?.offloadKVCache ?? true;
-      if (opts?.contextLength) body.context_length = opts.contextLength;
-    }
-
     try {
-      const res = await fetch(`${this.apiURL}/models/load`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) {
-        throw new Error(`Failed to load model: ${res.statusText}`);
+      if (isEmbedding) {
+        this.embedModelHandle = await this.client.embedding.model(modelId);
+      } else {
+        this.llmHandle = await this.client.llm.model(modelId);
       }
-
-      const data = await res.json();
-      return {
-        id: crypto.randomUUID(),
-        instanceId: data.instance_id,
-        modelId,
-        loadedAt: Date.now(),
-        config: data.load_config,
-      };
+      return { id: crypto.randomUUID(), modelId, loadedAt: Date.now() };
     } catch (error) {
-      console.error(`[LMStudioProvider] Failed to load ${modelId}:`, error);
-      return {
-        id: crypto.randomUUID(),
-        modelId,
-        loadedAt: Date.now(),
-      };
+      console.error(`[LMStudio] Failed to load ${modelId}:`, error);
+      return { id: crypto.randomUUID(), modelId, loadedAt: Date.now() };
     }
   }
 
   async unload(handle: ModelHandle): Promise<void> {
-    if (!handle.instanceId) return;
-
     try {
-      await fetch(`${this.apiURL}/models/unload`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ instance_id: handle.instanceId }),
-      });
+      if (this.embedModelHandle && handle.modelId.includes("embed")) {
+        await this.embedModelHandle.unload();
+        this.embedModelHandle = null;
+      } else if (this.llmHandle) {
+        await this.llmHandle.unload();
+        this.llmHandle = null;
+      }
     } catch (error) {
-      console.error(`[LMStudioProvider] Failed to unload ${handle.modelId}:`, error);
+      console.error(`[LMStudio] Failed to unload ${handle.modelId}:`, error);
     }
   }
 
   async embed(modelId: string, texts: string[]): Promise<number[][]> {
-    const res = await fetch(`${this.baseURL}/embeddings`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: modelId || DEFAULT_EMBED_MODEL,
-        input: texts.map((t) => t.replace(/\n/g, " ")),
-      }),
-    });
-
-    if (!res.ok) {
-      throw new Error(`Embedding failed: ${res.statusText}`);
+    try {
+      if (!this.embedModelHandle) {
+        this.embedModelHandle = await this.client.embedding.model(modelId || DEFAULT_EMBED_MODEL);
+      }
+      const results =
+        texts.length === 1
+          ? [await this.embedModelHandle.embed(texts[0])]
+          : await this.embedModelHandle.embed(texts);
+      return results.map((r: any) => r.embedding);
+    } catch (error) {
+      console.error(`[LMStudio] Embedding failed:`, error);
+      throw error;
     }
-
-    const data = await res.json();
-    return data.data.map((d: any) => d.embedding);
   }
 
   async chat(modelId: string, messages: any[], opts?: ChatOptions): Promise<string> {
-    const chatOptions: any = {
-      model: modelId,
-      messages,
-      max_tokens: opts?.maxTokens ?? 4096,
-      temperature: opts?.temperature ?? 0.7,
-    };
-
-    if (opts?.topP !== undefined) chatOptions.top_p = opts.topP;
-    if (opts?.topK !== undefined) chatOptions.top_k = opts.topK;
-    if (opts?.repeatPenalty !== undefined) chatOptions.repeat_penalty = opts.repeatPenalty;
-    if (opts?.seed !== undefined) chatOptions.seed = opts.seed;
-
-    const res = await fetch(`${this.baseURL}/chat/completions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(chatOptions),
-    });
-
-    if (!res.ok) {
-      throw new Error(`Chat failed: ${res.statusText}`);
+    try {
+      if (!this.llmHandle) {
+        this.llmHandle = await this.client.llm.model(modelId || DEFAULT_CHAT_MODEL);
+      }
+      const result = await this.llmHandle.respond(messages, {
+        maxTokens: opts?.maxTokens ?? 4096,
+        temperature: opts?.temperature ?? 0.7,
+      });
+      return result.content;
+    } catch (error) {
+      console.error(`[LMStudio] Chat failed:`, error);
+      throw error;
     }
-
-    const data = await res.json();
-    return data.choices?.[0]?.message?.content || "";
   }
 
   async chatWithSpeculative(
@@ -158,29 +131,58 @@ export class LMStudioProvider implements CustomProvider {
     messages: any[],
     opts?: ChatOptions
   ): Promise<{ content: string; usage?: any }> {
-    const chatOptions: any = {
-      model: modelId,
-      messages,
-      max_tokens: opts?.maxTokens ?? 4096,
-      temperature: opts?.temperature ?? 0.7,
-      draft_model: draftModelId,
-    };
-
-    const res = await fetch(`${this.baseURL}/chat/completions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(chatOptions),
-    });
-
-    if (!res.ok) {
-      throw new Error(`Speculative chat failed: ${res.statusText}`);
+    try {
+      if (!this.llmHandle) {
+        this.llmHandle = await this.client.llm.model(modelId || DEFAULT_CHAT_MODEL);
+      }
+      const result = await this.llmHandle.respond(messages, {
+        maxTokens: opts?.maxTokens ?? 4096,
+        temperature: opts?.temperature ?? 0.7,
+        draftModel: draftModelId || DEFAULT_DRAFT_MODEL,
+      });
+      return { content: result.content, usage: result.stats };
+    } catch (error) {
+      console.error(`[LMStudio] Speculative chat failed:`, error);
+      return { content: "" };
     }
+  }
 
-    const data = await res.json();
-    return {
-      content: data.choices?.[0]?.message?.content || "",
-      usage: data.usage,
-    };
+  async getLoadedModels(): Promise<string[]> {
+    try {
+      const models = await this.client.llm.listLoaded();
+      return models.map((m: any) => m.modelKey);
+    } catch {
+      try {
+        const downloaded = await this.client.system.listDownloadedModels("llm");
+        return downloaded.map((m: any) => m.modelKey || m.path);
+      } catch {
+        return [];
+      }
+    }
+  }
+
+  async getContextLength(): Promise<number> {
+    try {
+      if (!this.llmHandle) return 4096;
+      return typeof this.llmHandle.getContextLength === "function"
+        ? await this.llmHandle.getContextLength()
+        : 4096;
+    } catch {
+      return 4096;
+    }
+  }
+
+  async getEmbeddingModelInfo(): Promise<{ maxContextLength: number; evalBatchSize: number }> {
+    try {
+      if (!this.embedModelHandle) return { maxContextLength: 4096, evalBatchSize: 64 };
+      const [ctxLen, batchSize] = await Promise.all([
+        this.embedModelHandle.getContextLength(),
+        this.embedModelHandle.getEvalBatchSize(),
+      ]);
+      return { maxContextLength: ctxLen, evalBatchSize: batchSize };
+    } catch {
+      return { maxContextLength: 4096, evalBatchSize: 64 };
+    }
   }
 }
 
