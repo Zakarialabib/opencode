@@ -1,0 +1,18 @@
+{
+  "name": "my-opencode-project",
+  "plugins": [
+    ".opencode/plugins/meta-harness/meta-harness.ts"
+  ],
+  "models": {
+    "default": {
+      "provider": "lmstudio",
+      "model": "qwen3.5-4b-claude-4.6-opus-reasoning-distilled-v2"
+    }
+  },
+  "env": {
+    "LM_STUDIO_URL": "http://127.0.0.1:1234",
+    "LM_STUDIO_CHAT_MODEL": "qwen3.5-4b-claude-4.6-opus-reasoning-distilled-v2",
+    "LM_STUDIO_EMBED_MODEL": "text-embedding-qwen3-embedding-0.6b",
+    "LM_STUDIO_RERANKER_MODEL": "qwen3-reranker-0.6b"
+  }
+}

@@ -39,16 +39,15 @@ async function getLocalPipeline(projectRoot: string): Promise<any> {
       const cpus = os.cpus();
       // Set to physical cores (typically logical cpus / 2) capped between 1 and 8 threads
       const cpuThreads = Math.max(1, Math.min(8, Math.floor(cpus.length / 2)));
-      env.onnx.numThreads = cpuThreads;
-      console.log(`[Brain/Dense] Adaptive Tuning: configuring local ONNX runtime thread pool count to ${cpuThreads}`);
+      // env.onnx is not available in newer transformers.js - skip thread tuning
+      console.log(`[Brain/Dense] Adaptive Tuning: ${cpuThreads} CPU threads available for embedding`);
     } catch (threadError: any) {
       console.warn(`[Brain/Dense] Could not dynamically tune CPU threads: ${threadError.message}`);
     }
 
     console.log(`[Brain/Dense] Loading Qwen3-Embedding-0.6B from Hugging Face on CPU...`);
-    localPipeline = await pipeline("feature-extraction", "Qwen/Qwen3-Embedding-0.6B", {
-      device: "cpu", // Force CPU to save VRAM
-    });
+    // Note: device option was removed from PretrainedOptions in transformers.js v2 - CPU is default
+    localPipeline = await pipeline("feature-extraction", "Qwen/Qwen3-Embedding-0.6B");
     console.log("[Brain/Dense] Qwen3 ONNX Embedding model loaded successfully");
     return localPipeline;
   } catch (error: any) {

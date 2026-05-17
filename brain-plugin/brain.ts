@@ -670,6 +670,141 @@ const BrainPlugin: Plugin = async ({ directory }) => {
           ].join("\n");
         },
       }),
+
+      brain_embed_test: tool({
+        description: "Test embedding retrieval - returns raw chunks with scores for debugging",
+        args: {
+          query: tool.schema.string().describe("Test query string"),
+          topK: tool.schema.number().optional().describe("Number of chunks (default: 5)"),
+        },
+        async execute(args: any) {
+          const results = await searchProjectContext(
+            directory,
+            args.query,
+            args.topK ?? 5,
+            "learn"
+          );
+
+          return {
+            query: args.query,
+            intent: "learn",
+            chunks: results.map((r) => ({
+              id: r.id,
+              filepath: r.filepath,
+              name: r.name,
+              start_line: r.start_line,
+              end_line: r.end_line,
+              score: r.score,
+              content_preview: r.content.slice(0, 200),
+            })),
+            totalReturned: results.length,
+          };
+        },
+      }),
+
+      brain_embed_lmstudio: tool({
+        description: "Embed text using LM Studio's embedding model",
+        args: {
+          texts: tool.schema.array(tool.schema.string()).describe("Array of texts to embed"),
+          model: tool.schema.string().optional().describe("Embedding model ID"),
+        },
+        async execute(args: any) {
+          const modelId = args.model || provider.defaultEmbedModel;
+          try {
+            const embeddings = await provider.embed(modelId, args.texts);
+            return {
+              success: true,
+              model: modelId,
+              count: embeddings.length,
+              dimensions: embeddings[0]?.length || 0,
+              embeddings: embeddings.map((e) => ({
+                embedding: e.slice(0, 5).concat(["..."]),
+                dimensions: e.length,
+              })),
+            };
+          } catch (err: any) {
+            return { success: false, error: err.message };
+          }
+        },
+      }),
+
+      brain_metrics: tool({
+        description: "Get detailed RAG pipeline metrics and performance data",
+        args: {},
+        async execute() {
+          const db = getDatabase(directory);
+          const stats = tree.getStats();
+          const memory = sessionMemory.getMemory();
+
+          let metrics: any = {
+            decisionTree: stats,
+            sessionMemory: {
+              decisions: memory.decisions.length,
+              successes: memory.successCount,
+              failures: memory.failures.length,
+              recentFiles: memory.recentFiles.length,
+              contextUsed: memory.contextUsed.length,
+            },
+          };
+
+          try {
+            const sessionRows = db
+              .prepare("SELECT COUNT(*) as count FROM sessions")
+              .get() as { count: number };
+            const avgLatency =
+              (
+                db
+                  .prepare("SELECT AVG(latency_ms) as avg FROM sessions")
+                  .get() as { avg: number | null }
+              )?.avg || 0;
+
+            metrics.sessions = {
+              total: sessionRows.count,
+              avgLatencyMs: Math.round(avgLatency),
+            };
+          } catch {}
+
+          try {
+            const chunkRows = db
+              .prepare("SELECT COUNT(*) as count FROM chunks")
+              .get() as { count: number };
+            const vectorRows = db
+              .prepare("SELECT COUNT(*) as count FROM chunk_embeddings")
+              .get() as { count: number };
+            const ftsRows = db
+              .prepare("SELECT COUNT(*) as count FROM fts_chunks")
+              .get() as { count: number };
+
+            metrics.index = {
+              chunks: chunkRows.count,
+              vectors: vectorRows.count,
+              ftsRecords: ftsRows.count,
+              vectorActive: isVectorActive(db),
+            };
+          } catch {}
+
+          return metrics;
+        },
+      }),
+
+      brain_speculative_status: tool({
+        description: "Check speculative decoding status and draft model availability",
+        args: {},
+        async execute() {
+          const loaded = await provider.getLoadedModels();
+          const contextLength = await provider.getContextLength();
+          const vramUsage = provider.getCurrentVRAMUsage();
+
+          return {
+            speculativeDecoding: "not_configured",
+            loadedModels: loaded,
+            contextLength,
+            vramUsageGB: vramUsage,
+            maxVRAMGB: 5.5,
+            provider: provider.baseURL || "http://localhost:1234",
+          };
+        },
+      }),
     },
   };
 };

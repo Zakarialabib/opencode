@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import Database from "better-sqlite3";
-import sqliteVec from "sqlite-vec";
+import { getLoadablePath } from "sqlite-vec";
 import { initializeVectorTables, isVectorActive } from "../../store/vec";
 import { initializeFTSTables, upsertChunkFTS, searchKeywordFTS } from "../../store/fts";
 import { chunkFile } from "../indexer";
@@ -14,7 +14,7 @@ describe("Unified RAG v2 Core Tests", () => {
   beforeEach(() => {
     db = new Database(":memory:");
     try {
-      const loadablePath = sqliteVec.getLoadablePath();
+      const loadablePath = getLoadablePath();
       db.loadExtension(loadablePath);
     } catch {
       // safe fall through

@@ -33,6 +33,63 @@ export interface Diagnostic {
   line?: number;
 }
 
+// --- Harness-configurable state for DecisionTree ---
+let _intentThresholds: Record<string, number> = {
+  debug: 0.7,
+  "debug+stacktrace": 0.75,
+  refactor: 0.6,
+  "refactor+single": 0.65,
+  feature: 0.6,
+  test: 0.65,
+  learn: 0.5,
+  quick_chat: 0.3,
+};
+
+let _chunkCounts: Record<string, number> = {
+  debug: 10,
+  "debug+stacktrace": 5,
+  refactor: 20,
+  "refactor+single": 8,
+  feature: 15,
+  test: 12,
+  learn: 25,
+  quick_chat: 0,
+};
+
+/**
+ * Set intent thresholds for Meta-Harness optimization.
+ */
+export function setIntentThresholds(thresholds: Record<string, number>): void {
+  _intentThresholds = { ...thresholds };
+  console.log(
+    `[Tree/Engine] Intent thresholds updated: ${Object.entries(_intentThresholds)
+      .map(([k, v]) => `${k}=${v.toFixed(2)}`)
+      .join(", ")}`
+  );
+}
+
+/**
+ * Set chunk counts per intent for Meta-Harness optimization.
+ */
+export function setChunkCounts(counts: Record<string, number>): void {
+  _chunkCounts = { ...counts };
+  console.log(
+    `[Tree/Engine] Chunk counts updated: ${Object.entries(_chunkCounts)
+      .map(([k, v]) => `${k}=${v}`)
+      .join(", ")}`
+  );
+}
+
+/**
+ * Get current thresholds and chunk counts.
+ */
+export function getTreeConfig(): {
+  intentThresholds: Record<string, number>;
+  chunkCounts: Record<string, number>;
+} {
+  return { intentThresholds: { ..._intentThresholds }, chunkCounts: { ..._chunkCounts } };
+}
+
 export interface Symbol {
   name: string;
   kind: string;
@@ -66,12 +123,14 @@ function buildCondition(pattern: RegExp): (signals: SignalBundle) => boolean {
 }
 
 function buildStackTraceCondition(): (signals: SignalBundle) => boolean {
-  return (signals: SignalBundle) => /at\s+\S+\.\w+:\d+|stack trace|^\s*File "/m.test(signals.message);
+  return (signals: SignalBundle) =>
+    /at\s+\S+\.\w+:\d+|stack trace|^\s*File "/m.test(signals.message);
 }
 
 function buildSingleFileCondition(): (signals: SignalBundle) => boolean {
   return (signals: SignalBundle) =>
-    /this function|this method|this class/i.test(signals.message) && signals.recentFiles.length === 1;
+    /this function|this method|this class/i.test(signals.message) &&
+    signals.recentFiles.length === 1;
 }
 
 export class DecisionTree {
@@ -89,7 +148,10 @@ export class DecisionTree {
     return scores.sort((a, b) => b.score - a.score)[0];
   }
 
-  private scoreNodes(node: ScenarioNode, signals: SignalBundle): Array<{ node: ScenarioNode; score: number }> {
+  private scoreNodes(
+    node: ScenarioNode,
+    signals: SignalBundle
+  ): Array<{ node: ScenarioNode; score: number }> {
     const matches: Array<{ node: ScenarioNode; score: number }> = [];
 
     const baseScore = node.condition(signals) ? 1.0 : 0.0;
@@ -105,10 +167,15 @@ export class DecisionTree {
   }
 
   selectStrategy(node: ScenarioNode): ContextStrategy {
-    if (node.weight < 0.4 && node.parent) {
-      return node.parent.strategy;
-    }
-    return node.strategy;
+    const base = node.weight < 0.4 && node.parent ? node.parent.strategy : node.strategy;
+
+    // Override maxChunks from harness config if available (meta-harness optimization)
+    const effectiveMaxChunks = _chunkCounts[node.intent] ?? base.maxChunks;
+
+    return {
+      ...base,
+      maxChunks: effectiveMaxChunks,
+    };
   }
 
   grow(decision: DecisionRecord, success: boolean): void {
@@ -178,7 +245,10 @@ export class DecisionTree {
     try {
       const fs = await import("fs");
       const path = await import("path");
-      const expandPath = this.statePath.replace(/^~/, process.env.HOME || process.env.USERPROFILE || "");
+      const expandPath = this.statePath.replace(
+        /^~/,
+        process.env.HOME || process.env.USERPROFILE || ""
+      );
       const dir = path.dirname(expandPath);
 
       if (!fs.existsSync(dir)) {
@@ -258,7 +328,10 @@ export class DecisionTree {
     };
   }
 
-  private countNodes(node: ScenarioNode, intents: Record<DevIntent, { weight: number; visits: number }>): void {
+  private countNodes(
+    node: ScenarioNode,
+    intents: Record<DevIntent, { weight: number; visits: number }>
+  ): void {
     intents[node.intent].weight = node.weight;
     intents[node.intent].visits += node.visits;
     for (const child of node.children) {

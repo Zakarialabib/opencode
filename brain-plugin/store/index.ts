@@ -1,5 +1,5 @@
 import Database from "better-sqlite3";
-import sqliteVec from "sqlite-vec";
+import { getLoadablePath } from "sqlite-vec";
 import * as path from "path";
 import * as fs from "fs";
 import { initializeVectorTables } from "./vec";
@@ -27,7 +27,7 @@ export function getDatabase(projectRoot: string): Database.Database {
 
   // Load the sqlite-vec extension for vector queries
   try {
-    const loadablePath = sqliteVec.getLoadablePath();
+    const loadablePath = getLoadablePath();
     db.loadExtension(loadablePath);
     console.log("[Brain/Store] Loaded sqlite-vec extension successfully");
   } catch (error: any) {

@@ -3,6 +3,62 @@ import { SearchResultItem } from "./fusion";
 let localReranker: any = null;
 let rerankerImportFailed = false;
 
+// --- Harness-configurable state ---
+let _confidenceGate = 0.85; // skip rerank if top-3 scores > this
+let _rerankMinResults = 10; // only rerank if >= N results
+let _rerankIntents = ["learn", "refactor", "feature"]; // intents that trigger reranking
+let _rerankerMaxChunks = 20; // max chunks to rerank (CPU latency control)
+
+/**
+ * Set reranker confidence gate for Meta-Harness optimization.
+ * Reranking is skipped if top-3 scores already exceed this threshold.
+ */
+export function setRerankerConfidenceGate(gate: number): void {
+  _confidenceGate = Math.max(0.5, Math.min(0.99, gate));
+  console.log(`[Reranker] Confidence gate set: ${_confidenceGate.toFixed(2)}`);
+}
+
+/**
+ * Set minimum results required before triggering reranking.
+ */
+export function setRerankMinResults(minResults: number): void {
+  _rerankMinResults = Math.max(3, Math.min(100, minResults));
+  console.log(`[Reranker] Min results set: ${_rerankMinResults}`);
+}
+
+/**
+ * Set which intents trigger reranking.
+ */
+export function setRerankIntents(intents: string[]): void {
+  _rerankIntents = intents.filter((i) => typeof i === "string");
+  console.log(`[Reranker] Intents set: ${_rerankIntents.join(", ")}`);
+}
+
+/**
+ * Set maximum chunks to rerank (CPU latency control).
+ */
+export function setRerankerMaxChunks(maxChunks: number): void {
+  _rerankerMaxChunks = Math.max(5, Math.min(100, maxChunks));
+  console.log(`[Reranker] Max chunks set: ${_rerankerMaxChunks}`);
+}
+
+/**
+ * Get current reranker configuration.
+ */
+export function getRerankerConfig(): {
+  confidenceGate: number;
+  rerankMinResults: number;
+  rerankIntents: string[];
+  maxChunks: number;
+} {
+  return {
+    confidenceGate: _confidenceGate,
+    rerankMinResults: _rerankMinResults,
+    rerankIntents: [..._rerankIntents],
+    maxChunks: _rerankerMaxChunks,
+  };
+}
+
 /**
  * Initializes the Qwen3 Reranker pipeline on CPU.
  */
@@ -18,9 +74,8 @@ async function getLocalReranker(projectRoot: string): Promise<any> {
     env.cacheDir = cacheDir;
 
     console.log(`[Brain/Reranker] Loading Qwen3-Reranker-0.6B from Hugging Face on CPU...`);
-    localReranker = await pipeline("text-classification", "Qwen/Qwen3-Reranker-0.6B", {
-      device: "cpu", // Save VRAM
-    });
+    // Note: device option was removed from PretrainedOptions in transformers.js v2 - CPU is default
+    localReranker = await pipeline("text-classification", "Qwen/Qwen3-Reranker-0.6B");
     console.log("[Brain/Reranker] Qwen3 ONNX Reranker loaded successfully");
     return localReranker;
   } catch (error: any) {
@@ -46,23 +101,22 @@ export async function rerankChunks(
 ): Promise<SearchResultItem[]> {
   if (fusedChunks.length === 0) return [];
 
-  // Only rerank for 'learn' intent with enough candidates to benefit from cross-encoding
-  const rerankIntents = ["learn", "refactor", "feature"];
-  if (!rerankIntents.includes(intent) || fusedChunks.length < 10) {
+  // Only rerank for configured intents with enough candidates to benefit from cross-encoding
+  if (!_rerankIntents.includes(intent) || fusedChunks.length < _rerankMinResults) {
     return fusedChunks;
   }
 
-  // Skip reranker if top-3 scores already indicate high confidence
+  // Skip reranker if top-3 scores already indicate high confidence (confidence gate)
   const topScores = fusedChunks
     .slice(0, 3)
     .map((c) => c.score)
     .filter((s) => s !== undefined);
-  if (topScores.length >= 3 && topScores.every((s) => (s as number) > 0.85)) {
+  if (topScores.length >= 3 && topScores.every((s) => (s as number) > _confidenceGate)) {
     return fusedChunks;
   }
 
-  // Cap to top-20 fusion chunks strictly to ensure CPU latency remains sub-second
-  const topK = 20;
+  // Cap to harness-configured max chunks to ensure CPU latency remains sub-second
+  const topK = _rerankerMaxChunks;
   const itemsToRerank = fusedChunks.slice(0, topK);
   const remainingChunks = fusedChunks.slice(topK);
 

@@ -303,7 +303,7 @@ function deleteFileRecord(relPath: string, db: ReturnType<typeof getDatabase>) {
   })();
 }
 
-export function indexProject(rootDir: string): ChunkResult[] {
+export async function indexProject(rootDir: string): Promise<ChunkResult[]> {
   const db = getDatabase(rootDir);
   const allNewChunks: ChunkResult[] = [];
 
@@ -324,7 +324,7 @@ export function indexProject(rootDir: string): ChunkResult[] {
       let embeddings: number[][] = [];
       let modelType: "qwen" | "nomic" = "qwen";
       try {
-        const result = awaitEmbeddings(rootDir, textChunks);
+        const result = await awaitEmbeddings(rootDir, textChunks);
         embeddings = result.vectors;
         modelType = result.modelType;
       } catch (e: any) {

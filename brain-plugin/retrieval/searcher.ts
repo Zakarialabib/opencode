@@ -2,12 +2,13 @@ import { getDatabase } from "../store";
 import { getEmbeddings } from "./dense";
 import { isVectorActive } from "../store/vec";
 import { rerankChunks } from "./reranker";
-import { reciprocalRankFusion } from "./fusion";
+import { reciprocalRankFusion, SearchResultItem } from "./fusion";
 
 // Re-exported from fusion.ts; kept as alias for backward compatibility
 // with brain.ts and index.ts imports. Fields: id, filepath, language, type,
 // name, start_line, end_line, parent_id?, content, score?
 export { SearchResultItem as SearchResult } from "./fusion";
+type SearchResult = SearchResultItem;
 
 function cosineSimilarity(a: number[], b: number[]): number {
   let dot = 0,
@@ -101,7 +102,7 @@ async function denseSearch(
       });
     }
 
-    scored.sort((a, b) => b.score - a.score);
+    scored.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
     return scored.slice(0, topK);
   } catch (e: any) {
     console.warn(`[Brain/Searcher] Dense search failed: ${e.message}`);
