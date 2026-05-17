@@ -257,12 +257,20 @@ const BrainPlugin: Plugin = async ({ directory }) => {
         return;
       }
 
+      // Adaptive chunk count: scale by confidence (high confidence = fewer chunks)
+      // score 0.9 → 0.6x, score 0.5 → 1.0x, score 0.3 → 1.2x
+      const adaptiveLimit = Math.max(3, Math.round((strategy.maxChunks ?? 10) * (1.5 - score)));
+
       try {
         console.log(
-          `[Brain] Executing search for intent: "${scenario.intent}" (strategy: ${strategy.name})...`
+          `[Brain] Executing search for intent: "${scenario.intent}" (strategy: ${strategy.name}, chunks: ${adaptiveLimit})...`
         );
-        const limit = strategy.maxChunks ?? 10;
-        const results = await searchProjectContext(directory, msg.content, limit, scenario.intent);
+        const results = await searchProjectContext(
+          directory,
+          msg.content,
+          adaptiveLimit,
+          scenario.intent
+        );
 
         const mappedChunks = results.map((r) => ({
           id: r.id,
