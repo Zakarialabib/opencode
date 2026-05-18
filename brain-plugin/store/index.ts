@@ -2,8 +2,8 @@ import Database from "better-sqlite3";
 import { getLoadablePath } from "sqlite-vec";
 import * as path from "path";
 import * as fs from "fs";
-import { initializeVectorTables } from "./vec";
-import { initializeFTSTables } from "./fts";
+import { initializeVectorTables } from "./vec.js";
+import { initializeFTSTables } from "./fts.js";
 
 let dbInstance: Database.Database | null = null;
 let dbPathResolve = "";

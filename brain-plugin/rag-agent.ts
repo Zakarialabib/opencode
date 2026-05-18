@@ -11,13 +11,13 @@
 
 import { existsSync, mkdirSync, writeFileSync, readFileSync } from "fs";
 import { join } from "path";
-import { defaultProvider, GPU_AWARE_MODELS } from "./provider/lmstudio";
-import { getDatabase } from "./store";
-import { searchProjectContext } from "./retrieval/searcher";
-import { setFusionWeights, getFusionWeights } from "./retrieval/fusion";
-import { setRerankerConfidenceGate, getRerankerConfig } from "./retrieval/reranker";
-import { setIntentThresholds, setChunkCounts, getTreeConfig } from "./tree/engine";
-import { fileLog } from "../meta-harness/utils/logger";
+import { defaultProvider, GPU_AWARE_MODELS } from "./provider/lmstudio.js";
+import { getDatabase } from "./store/index.js";
+import { searchProjectContext } from "./retrieval/searcher.js";
+import { setFusionWeights, getFusionWeights } from "./retrieval/fusion.js";
+import { setRerankerConfidenceGate, getRerankerConfig } from "./retrieval/reranker.js";
+import { setIntentThresholds, setChunkCounts, getTreeConfig } from "./tree/engine.js";
+import { brainLog as fileLog } from "./utils/logger.js";
 
 const OUTPUT_DIR = join(process.cwd(), ".opencode", "meta-harness-logs");
 

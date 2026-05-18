@@ -6,8 +6,8 @@ export {
   META_HARNESS_MODELS,
   GPU_AWARE_MODELS,
 } from "./provider/lmstudio";
-export { indexer } from "./retrieval/indexer";
-export { searcher } from "./retrieval/searcher";
+export { indexProject } from "./retrieval/indexer";
+export { searchProjectContext } from "./retrieval/searcher";
 export { contextInjector } from "./context/injector";
 export { sessionMemory } from "./state/session";
 

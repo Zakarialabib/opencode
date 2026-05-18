@@ -1,8 +1,8 @@
-import { getDatabase } from "../store";
-import { getEmbeddings } from "./dense";
-import { isVectorActive } from "../store/vec";
-import { rerankChunks } from "./reranker";
-import { reciprocalRankFusion, SearchResultItem } from "./fusion";
+import { getDatabase } from "../store/index.js";
+import { getEmbeddings } from "./dense.js";
+import { isVectorActive } from "../store/vec.js";
+import { rerankChunks } from "./reranker.js";
+import { reciprocalRankFusion, SearchResultItem } from "./fusion.js";
 
 // Re-exported from fusion.ts; kept as alias for backward compatibility
 // with brain.ts and index.ts imports. Fields: id, filepath, language, type,

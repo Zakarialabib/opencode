@@ -225,8 +225,42 @@
         "core-factory"
       ],
       "category": "utility"
+    },
+    {
+      "path": "skills/android-clean-architecture/SKILL.md",
+      "name": "android-clean-architecture",
+      "description": "Android development with Clean Architecture patterns (affaan-m)",
+      "agents": [
+        "android-kotlin"
+      ],
+      "category": "mobile",
+      "source": "affaan-m/everything-claude-code",
+      "installs": 4100
+    },
+    {
+      "path": "skills/kotlin-specialist/SKILL.md",
+      "name": "kotlin-specialist",
+      "description": "Kotlin development best practices and patterns (jeffallan)",
+      "agents": [
+        "android-kotlin",
+        "backend-tauri"
+      ],
+      "category": "mobile",
+      "source": "jeffallan/claude-skills",
+      "installs": 2700
+    },
+    {
+      "path": "skills/android-kotlin-bootstrap/SKILL.md",
+      "name": "android-kotlin-bootstrap",
+      "description": "Android/Kotlin bootstrap and setup patterns (alinaqi)",
+      "agents": [
+        "android-kotlin"
+      ],
+      "category": "mobile",
+      "source": "alinaqi/claude-bootstrap",
+      "installs": 2100
     }
   ],
-  "lastUpdated": "2026-05-13T11:24:41.054Z",
-  "totalSkills": 23
+  "lastUpdated": "2026-05-18T00:00:00.000Z",
+  "totalSkills": 26
 }

@@ -1,5 +1,5 @@
-import { getDatabase } from "../store";
-import { searchKeywordFTS } from "../store/fts";
+import { getDatabase } from "../store/index.js";
+import { searchKeywordFTS } from "../store/fts.js";
 
 export interface KeywordSearchResult {
   id: string;

@@ -1,4 +1,4 @@
-import type { DecisionRecord, Diagnostic } from "../tree/engine";
+import type { DecisionRecord, Diagnostic } from "../tree/engine.js";
 
 export interface SessionMemory {
   recentFiles: string[];

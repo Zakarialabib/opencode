@@ -1,6 +1,6 @@
-import { getDatabase } from "../store";
-import { linkConceptToChunk, dampenConceptChunkLink } from "../memory/graph";
-import { evaluateContextEfficiencyAndTune } from "./tuner";
+import { getDatabase } from "../store/index.js";
+import { linkConceptToChunk, dampenConceptChunkLink } from "../memory/graph.js";
+import { evaluateContextEfficiencyAndTune } from "./tuner.js";
 
 export interface SessionRating {
   sessionId: string;

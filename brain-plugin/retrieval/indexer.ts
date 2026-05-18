@@ -1,9 +1,9 @@
 import { readFileSync, readdirSync, statSync } from "fs";
 import { join, extname, relative } from "path";
 import { createHash } from "crypto";
-import { getDatabase } from "../store";
-import { getEmbeddings } from "./dense";
-import { isVectorActive } from "../store/vec";
+import { getDatabase } from "../store/index.js";
+import { getEmbeddings } from "./dense.js";
+import { isVectorActive } from "../store/vec.js";
 
 const IGNORE_DIRS = new Set([
   "node_modules",
