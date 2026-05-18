@@ -165,44 +165,26 @@ export const MetaHarnessPlugin: Plugin = async (ctx) => {
       }
     },
 
-    // Session lifecycle: Persist harness state
-    event: async ({ event }) => {
-      if (event.type === "session.compacted") {
-        logger("Session compacting - persisting harness state")
-        try {
-          const fs = await import("fs")
-          const path = await import("path")
-          const statePath = path.join(ctx.directory, ".opencode", "meta-harness-state.json")
+    "experimental.session.compacting": async (input: any, output: any) => {
+      logger("Session compacting - persisting harness state")
+      try {
+        const fs = await import("fs")
+        const path = await import("path")
+        const statePath = path.join(ctx.directory, ".opencode", "meta-harness-state.json")
 
-          fs.mkdirSync(path.dirname(statePath), { recursive: true })
-          fs.writeFileSync(statePath, JSON.stringify({
-            bestConfig: state.bestConfig,
-            history: state.history.slice(-50), // Keep last 50
-            lastUpdated: Date.now(),
-          }, null, 2))
-        } catch (err) {
-          logger(`Failed to persist state: ${err}`, "error")
-        }
+        fs.mkdirSync(path.dirname(statePath), { recursive: true })
+        fs.writeFileSync(statePath, JSON.stringify({
+          bestConfig: state.bestConfig,
+          history: state.history.slice(-50),
+          lastUpdated: Date.now(),
+        }, null, 2))
+      } catch (err) {
+        logger(`Failed to persist state: ${err}`, "error")
       }
+    },
 
-      if (event.type === "session.created") {
-        // Attempt to restore previous best config
-        try {
-          const fs = await import("fs")
-          const path = await import("path")
-          const statePath = path.join(ctx.directory, ".opencode", "meta-harness-state.json")
-
-          if (fs.existsSync(statePath)) {
-            const saved = JSON.parse(fs.readFileSync(statePath, "utf-8"))
-            if (saved.bestConfig) {
-              state.bestConfig = saved.bestConfig
-              logger("Restored previous best harness config")
-            }
-          }
-        } catch (err) {
-          logger(`Failed to restore state: ${err}`, "warn")
-        }
-      }
+    "session.archived": async () => {
+      logger("Session archived - cleanup complete")
     },
   }
 }

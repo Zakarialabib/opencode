@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import Database from "better-sqlite3";
 import { getLoadablePath } from "sqlite-vec";
-import { initializeVectorTables, isVectorActive } from "../../store/vec";
-import { initializeFTSTables, upsertChunkFTS, searchKeywordFTS } from "../../store/fts";
-import { chunkFile } from "../indexer";
-import { reciprocalRankFusion } from "../fusion";
-import { getEmbeddings, resetDenseFailedFlag } from "../dense";
-import { defaultProvider } from "../../provider/lmstudio";
+import { initializeVectorTables, isVectorActive } from "../../store/vec.js";
+import { initializeFTSTables, upsertChunkFTS, searchKeywordFTS } from "../../store/fts.js";
+import { chunkFile } from "../indexer.js";
+import { reciprocalRankFusion } from "../fusion.js";
+import { getEmbeddings, resetDenseFailedFlag } from "../dense.js";
+import { defaultProvider } from "../../provider/lmstudio.js";
 
 describe("Unified RAG v2 Core Tests", () => {
   let db: Database.Database;

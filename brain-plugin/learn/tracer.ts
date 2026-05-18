@@ -1,6 +1,6 @@
-import type { DecisionRecord, DevIntent } from "../tree/engine";
-import { sessionMemory } from "../state/session";
-import { docsStore } from "../docs-store";
+import type { DecisionRecord, DevIntent } from "../tree/engine.js";
+import { sessionMemory } from "../state/session.js";
+import { docsStore } from "../docs-store.js";
 
 /**
  * Internal tracer — lightweight session analytics for brain plugin.

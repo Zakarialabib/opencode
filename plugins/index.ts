@@ -384,143 +384,151 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
   return {
     // Hook: Before each message — LM Studio health check and diagnostic injection
     "chat.message": async (input: any, output: any) => {
-      const { sessionID, agent, model, messageID, variant } = input;
+      try {
+        const { sessionID, model } = input || {};
 
-      // ── Diagnostic injection into messages ──
-      const diags = flushDiagnostics(sessionID || "default");
-      if (diags.length > 0) {
-        debug(
-          SKILL_CATEGORIES.LSP_CONTEXT,
-          `Injecting ${diags.length} LSP diagnostics into messages`
-        );
-        const diagText = diags.map((d) => `⚠️ ${d.file}: ${d.errors.slice(0, 250)}`).join("\n");
+        // ── Diagnostic injection into messages ──
+        const sid = sessionID || "default";
+        const diags = flushDiagnostics(sid);
+        if (diags.length > 0 && input?.messages) {
+          debug(
+            SKILL_CATEGORIES.LSP_CONTEXT,
+            `Injecting ${diags.length} LSP diagnostics into messages`
+          );
+          const diagText = diags.map((d) => `⚠️ ${d.file}: ${d.errors.slice(0, 250)}`).join("\n");
 
-        // Inject as system message so model sees it
-        input.messages.unshift({
-          role: "system",
-          name: "lsp-diagnostics",
-          content: `[LSP Diagnostics - ${new Date().toISOString()}]\n${diagText}`,
-        });
+          input.messages.unshift({
+            role: "system",
+            name: "lsp-diagnostics",
+            content: `[LSP Diagnostics - ${new Date().toISOString()}]\n${diagText}`,
+          });
 
-        // Also log for observability
-        await client.app.log({
-          body: {
-            service: "ambient-lsp",
-            level: "warn",
-            message: `Injected ${diags.length} diagnostics`,
-            extra: { sessionID, files: diags.map((d) => d.file) },
-          },
-        });
-      }
+          await client.app.log({
+            body: {
+              service: "ambient-lsp",
+              level: "warn",
+              message: `Injected ${diags.length} diagnostics`,
+              extra: { sessionID: sid, files: diags.map((d) => d.file) },
+            },
+          });
+        }
 
-      await ensureUrls();
-      // Health check
-      const health = await healthCheckLmStudio(nativeUrl!);
-      if (!health.healthy) {
-        // Emit warning but continue (maybe fallback to another provider?)
-        await client.app.log({
-          body: {
-            service: "lmstudio",
-            level: "warn",
-            message: `LM Studio health check failed: ${health.error}`,
-            extra: { nativeUrl },
-          },
-        });
-        // Optionally, we could modify the system message to inform the user
-        // For now, just log
-      }
-
-      // Auto-load model if needed (only if health is okay)
-      if (health.healthy && model?.modelID) {
-        // We could check if model is already loaded via /api/v1/model endpoint
-        // For simplicity, we attempt to load it (LM Studio will ignore if already loaded)
-        const loadResult = await loadModel(nativeUrl!, model.modelID);
-        if (!loadResult.success) {
+        await ensureUrls();
+        const health = await healthCheckLmStudio(nativeUrl!);
+        if (!health.healthy) {
           await client.app.log({
             body: {
               service: "lmstudio",
               level: "warn",
-              message: `Failed to load model ${model.modelID}: ${loadResult.error}`,
-              extra: { nativeUrl, modelID: model.modelID },
+              message: `LM Studio health check failed: ${health.error}`,
+              extra: { nativeUrl },
             },
           });
         }
-      }
 
-      // ── Follow-up detection: "what next?" after task completion ──
-      const plan = getPlanState(sessionID || "default");
-
-      const messages = input?.messages || [];
-      if (messages.length >= 2) {
-        const lastMsg = messages[messages.length - 1];
-        if (lastMsg?.role === "assistant" && typeof lastMsg?.content === "string") {
-          const content = lastMsg.content;
-
-          if (detectTaskCompletion(content) && !plan.followUpSuggested && plan.plan) {
-            plan.followUpSuggested = true;
-
-            let followUp = `\n\n## \ud83d\udccb Task Status\n`;
-            followUp += `**Step ${plan.currentStep} completed.**\n`;
-            if (plan.remainingSteps.length > 0) {
-              followUp += `\n**Next steps**: ${plan.remainingSteps[0]}\n`;
-              followUp += `\n> \ud83d\udd04 For the next step, type: \`@${plan.parentAgent || "core-factory"} continue with step ${plan.currentStep + 1}: ${plan.remainingSteps[0]}\``;
-            } else {
-              followUp += `\n**All steps complete!** \ud83c\udf89\n`;
-              followUp += `\n> Type \`/plan\` to start a new plan, or describe what you'd like to do next.`;
-            }
-
-            input.messages.push({
-              role: "system",
-              name: "plan-followup",
-              content: followUp,
-            });
-
+        if (health.healthy && model?.modelID) {
+          const loadResult = await loadModel(nativeUrl!, model.modelID);
+          if (!loadResult.success) {
             await client.app.log({
               body: {
-                service: "plan-followup",
-                level: "info",
-                message: `Follow-up injected for session ${sessionID}`,
-                extra: { completedStep: plan.currentStep, remaining: plan.remainingSteps.length },
+                service: "lmstudio",
+                level: "warn",
+                message: `Failed to load model ${model.modelID}: ${loadResult.error}`,
               },
             });
           }
+        }
 
-          if (!detectTaskCompletion(content)) {
-            plan.followUpSuggested = false;
+        // ── Follow-up detection ──
+        const plan = getPlanState(sid);
+        const messages = input?.messages || [];
+        if (messages.length >= 2) {
+          const lastMsg = messages[messages.length - 1];
+          if (lastMsg?.role === "assistant" && typeof lastMsg?.content === "string") {
+            const content = lastMsg.content;
+
+            if (detectTaskCompletion(content) && !plan.followUpSuggested && plan.plan) {
+              plan.followUpSuggested = true;
+
+              let followUp = `\n\n## \ud83d\udccb Task Status\n`;
+              followUp += `**Step ${plan.currentStep} completed.**\n`;
+              if (plan.remainingSteps.length > 0) {
+                followUp += `\n**Next steps**: ${plan.remainingSteps[0]}\n`;
+                followUp += `\n> \ud83d\udd04 For the next step, type: \`@${plan.parentAgent || "core-factory"} continue with step ${plan.currentStep + 1}: ${plan.remainingSteps[0]}\``;
+              } else {
+                followUp += `\n**All steps complete!** \ud83c\udf89\n`;
+                followUp += `\n> Type \`/plan\` to start a new plan, or describe what you'd like to do next.`;
+              }
+
+              input.messages.push({
+                role: "system",
+                name: "plan-followup",
+                content: followUp,
+              });
+
+              await client.app.log({
+                body: {
+                  service: "plan-followup",
+                  level: "info",
+                  message: `Follow-up injected for session ${sid}`,
+                },
+              });
+            }
+
+            if (!detectTaskCompletion(content)) {
+              plan.followUpSuggested = false;
+            }
           }
         }
+      } catch (err: any) {
+        await client.app.log({
+          body: {
+            service: "chat-message-hook",
+            level: "error",
+            message: `Error in chat.message hook: ${err.message}`,
+          },
+        });
       }
     },
 
     // Hook: Modify chat parameters — race-safe LSP checks and lazy tool loading
     "chat.params": async ({ sessionID, agent, model, provider, message }: any, output: any) => {
-      // Debug trace hook invocation
-      traceHook("chat.params", { sessionID, agent, messageLength: message?.length }, output);
+      try {
+        traceHook("chat.params", { sessionID, agent, messageLength: message?.length }, output);
 
-      // ── Race-safe: await any pending async checks from prior tool executions ──
-      const pending = pendingChecks.get(sessionID || "default");
-      if (pending) {
-        try {
-          await pending;
-          debug(SKILL_CATEGORIES.LSP_CONTEXT, "Awaited pending LSP checks");
-        } catch {
-          warn(SKILL_CATEGORIES.LSP_ERROR, "Error awaiting pending LSP checks");
+        const sid = sessionID || "default";
+
+        const pending = pendingChecks.get(sid);
+        if (pending) {
+          try {
+            await pending;
+            debug(SKILL_CATEGORIES.LSP_CONTEXT, "Awaited pending LSP checks");
+          } catch {
+            warn(SKILL_CATEGORIES.LSP_ERROR, "Error awaiting pending LSP checks");
+          }
+          pendingChecks.delete(sid);
         }
-        pendingChecks.delete(sessionID || "default");
-      }
 
-      // ── Lazy tool loading: filter tools based on conversation keywords ──
-      if (output.tools && Array.isArray(output.tools)) {
-        const conversation = message || "";
-        const lazyTools = filterToolsByKeywords(output.tools, conversation);
+        if (output.tools && Array.isArray(output.tools)) {
+          const conversation = message || "";
+          const lazyTools = filterToolsByKeywords(output.tools, conversation);
 
-        if (lazyTools.length !== output.tools.length) {
-          debug(
-            SKILL_CATEGORIES.TOOL_LOAD,
-            `Lazy loading: ${output.tools.length} → ${lazyTools.length} tools`
-          );
-          output.tools = lazyTools;
+          if (lazyTools.length !== output.tools.length) {
+            debug(
+              SKILL_CATEGORIES.TOOL_LOAD,
+              `Lazy loading: ${output.tools.length} → ${lazyTools.length} tools`
+            );
+            output.tools = lazyTools;
+          }
         }
+      } catch (err: any) {
+        await client.app.log({
+          body: {
+            service: "chat-params-hook",
+            level: "error",
+            message: `Error in chat.params hook: ${err.message}`,
+          },
+        });
       }
     },
 

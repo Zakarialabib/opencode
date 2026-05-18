@@ -11,21 +11,21 @@
 
 import { appendFileSync, existsSync, mkdirSync, writeFileSync } from "fs";
 import { join } from "path";
-import { fileLog } from "./utils/logger";
-import { DEFAULT_HARNESS_CONFIG, applyHarnessConfig, validateConfig } from "./harness-space";
-import { LMStudioClient } from "./lmstudio-client";
-import type { BrainHarnessConfig, BenchmarkTask, TaskResult } from "./types";
+import { fileLog } from "./utils/logger.js";
+import { DEFAULT_HARNESS_CONFIG, applyHarnessConfig, validateConfig } from "./harness-space.js";
+import { LMStudioClient } from "./lmstudio-client.js";
+import type { BrainHarnessConfig, BenchmarkTask, TaskResult } from "./types.js";
 
 // Import brain plugin modules for live testing
-import { searchProjectContext } from "../brain-plugin/retrieval/searcher";
-import { contextInjector } from "../brain-plugin/context/injector";
-import { setFusionWeights, setMemoryBoost } from "../brain-plugin/retrieval/fusion";
+import { searchProjectContext } from "../brain-plugin/retrieval/searcher.js";
+import { contextInjector } from "../brain-plugin/context/injector.js";
+import { setFusionWeights, setMemoryBoost } from "../brain-plugin/retrieval/fusion.js";
 import {
   setRerankerConfidenceGate,
   setRerankMinResults,
   setRerankerMaxChunks,
-} from "../brain-plugin/retrieval/reranker";
-import { setIntentThresholds, setChunkCounts } from "../brain-plugin/tree/engine";
+} from "../brain-plugin/retrieval/reranker.js";
+import { setIntentThresholds, setChunkCounts } from "../brain-plugin/tree/engine.js";
 
 export type BenchmarkMode = "live" | "simulated";
 

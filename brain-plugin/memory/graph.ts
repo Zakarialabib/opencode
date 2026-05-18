@@ -1,4 +1,4 @@
-import { getDatabase } from "../store";
+import { getDatabase } from "../store/index.js";
 
 export interface Concept {
   id: string;

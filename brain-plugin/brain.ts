@@ -1,15 +1,15 @@
 import { tool, type Plugin } from "@opencode-ai/plugin";
-import { DecisionTree } from "./tree/engine";
-import { LMStudioProvider, defaultProvider } from "./provider/lmstudio";
-import { searchProjectContext } from "./retrieval/searcher";
-import { indexProject } from "./retrieval/indexer";
-import { contextInjector } from "./context/injector";
-import { sessionMemory } from "./state/session";
-import { docsStore, DocEntry } from "./docs-store";
-import { getDatabase, closeDatabase } from "./store";
-import { isVectorActive } from "./store/vec";
-import { resetDenseFailedFlag } from "./retrieval/dense";
-import type { SignalBundle } from "./tree/engine";
+import { DecisionTree } from "./tree/engine.js";
+import { LMStudioProvider, defaultProvider } from "./provider/lmstudio.js";
+import { searchProjectContext } from "./retrieval/searcher.js";
+import { indexProject } from "./retrieval/indexer.js";
+import { contextInjector } from "./context/injector.js";
+import { sessionMemory } from "./state/session.js";
+import { docsStore, DocEntry } from "./docs-store.js";
+import { getDatabase, closeDatabase } from "./store/index.js";
+import { isVectorActive } from "./store/vec.js";
+import { resetDenseFailedFlag } from "./retrieval/dense.js";
+import type { SignalBundle } from "./tree/engine.js";
 
 const FETCH_TIMEOUT = 10000;
 
@@ -413,7 +413,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
       }
     },
 
-    "session.compacting": async (input: any, output: any) => {
+    "experimental.session.compacting": async (input: any, output: any) => {
       const summary = sessionMemory.getSummary();
       if (output.context) {
         output.context.push(summary);

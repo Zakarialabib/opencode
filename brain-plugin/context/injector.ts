@@ -27,12 +27,10 @@ export class ContextInjector {
 
     const parts: string[] = [];
 
-    // Session summary injection
     if (opts?.sessionSummary) {
       parts.push(`## Session Context\n${opts.sessionSummary}\n`);
     }
 
-    // Code context injection
     if (context.chunks.length > 0) {
       const shownFiles = new Set<string>();
       const targetedChunks = context.chunks.filter((c) => {
@@ -53,7 +51,6 @@ export class ContextInjector {
       parts.push(`## Retrieved Code Context\n${chunksText}\n`);
     }
 
-    // Diagnostics context (for debug intent)
     if (opts?.intent === "debug" && opts?.diagnostics && opts.diagnostics.length > 0) {
       parts.push(`## Active Diagnostics\n${opts.diagnostics.join("\n")}\n`);
     }

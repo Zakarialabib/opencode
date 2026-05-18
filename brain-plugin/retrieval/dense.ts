@@ -1,4 +1,4 @@
-import { defaultProvider } from "../provider/lmstudio";
+import { defaultProvider } from "../provider/lmstudio.js";
 import * as crypto from "crypto";
 import * as os from "os";
 

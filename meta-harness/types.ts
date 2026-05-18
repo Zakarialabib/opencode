@@ -116,31 +116,4 @@ export interface LMStudioModel {
   capabilities?: { vision: boolean; trained_for_tool_use: boolean }
 }
 
-export class LMStudioClient {
-  config: {
-    baseUrl: string
-    chatModel: string
-    embedModel: string
-    rerankerModel: string
-  }
-  
-  constructor(config: { baseUrl: string; chatModel: string; embedModel: string; rerankerModel: string }) {
-    this.config = config
-  }
-  
-  async listModels(): Promise<LMStudioModel[]> {
-    return []
-  }
-  
-  async chatCompletion(messages: any[], options?: any): Promise<any> {
-    return {}
-  }
-  
-  async getEmbeddings(texts: string[]): Promise<number[][]> {
-    return texts.map(() => [])
-  }
-  
-  async rerank(query: string, documents: string[]): Promise<{ index: number; score: number }[]> {
-    return []
-  }
-}
+export { LMStudioClient } from "./lmstudio-client"

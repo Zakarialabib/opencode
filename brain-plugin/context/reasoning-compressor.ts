@@ -1,4 +1,4 @@
-import { defaultProvider } from "../provider/lmstudio";
+import { defaultProvider } from "../provider/lmstudio.js";
 
 /**
  * Extracts all <thought>...</thought> tags from an assistant message, summaries them,

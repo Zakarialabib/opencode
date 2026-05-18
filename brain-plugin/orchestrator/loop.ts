@@ -1,5 +1,5 @@
-import { defaultProvider } from "../provider/lmstudio";
-import type { DevIntent } from "../tree/engine";
+import { defaultProvider } from "../provider/lmstudio.js";
+import type { DevIntent } from "../tree/engine.js";
 
 export interface AgentBriefing {
   parentSessionId: string;
