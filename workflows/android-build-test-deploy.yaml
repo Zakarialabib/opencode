@@ -1,0 +1,150 @@
+name: Android Build-Test-Deploy
+description: Full Android build, test, and deploy pipeline using Gradle, Mobile, and Emulator MCP servers
+version: 2.0.0
+trigger: manual
+
+# Global MCP servers available to all phases
+mcp_servers:
+  - gradle
+  - mobile
+  - android-emulator
+  - memory
+  - git
+  - filesystem
+
+# Global environment variables
+env:
+  ANDROID_HOME: "${ANDROID_HOME:-$HOME/Android/Sdk}"
+  GRADLE_OPTS: "-Dorg.gradle.parallel=true -Dorg.gradle.caching=true"
+
+phases:
+  - name: Build
+    description: Assemble APK, run lint, and verify build artifacts
+    agents: [android-kotlin]
+    tasks:
+      - assemble_debug_or_release
+      - run_lint_checks
+      - verify_apk_exists
+      - check_dependencies
+    artifacts:
+      - app/build/outputs/apk/
+      - app/build/reports/lint-results.html
+    mcp_tools:
+      gradle: [list_tasks, run_task]
+      mobile: [install_app, launch_app, screenshot]
+    parallel_groups:
+      - [assemble_debug_or_release, run_lint_checks]
+    exit_criteria:
+      - APK exists at app/build/outputs/apk/debug/
+      - Lint report has no errors
+      - Build time within SLA
+
+  - name: Test
+    description: Run unit tests, instrumented tests, and UI smoke tests
+    agents: [mobile-qa, android-kotlin]
+    tasks:
+      - run_unit_tests
+      - run_instrumented_tests
+      - install_apk_on_device
+      - launch_and_screenshot
+      - run_ui_smoke_test_flow
+    artifacts:
+      - app/build/reports/tests/
+      - app/build/reports/androidTests/
+      - screenshots/
+      - mobile-qa-report.md
+    dependencies: [Build]
+    mcp_tools:
+      gradle: [run_task]
+      mobile: [install_app, launch_app, screenshot, tap, type, capture_ui_hierarchy]
+      android-emulator: [start_emulator, wait_for_boot]
+    parallel_groups:
+      - [run_unit_tests, run_instrumented_tests]
+      - [install_apk_on_device, launch_and_screenshot]
+    exit_criteria:
+      - All unit tests pass
+      - All instrumented tests pass
+      - Screenshots captured for all key screens
+      - No crashes or ANRs detected
+
+  - name: Deploy
+    description: Build release artifact, sign, and prepare for distribution
+    agents: [android-kotlin, devops-engineer]
+    condition: branch == "main" && tests_pass
+    tasks:
+      - assemble_release_bundle
+      - verify_signing_config
+      - generate_release_notes
+      - tag_release_in_git
+    artifacts:
+      - app/build/outputs/bundle/release/
+      - release-notes.md
+    dependencies: [Test]
+    mcp_tools:
+      gradle: [run_task]
+      git: [add, commit, tag, push]
+    exit_criteria:
+      - Release AAB exists
+      - Bundle is correctly signed
+      - Release tagged in git
+
+# Workflow-level success criteria
+success_criteria:
+  - All phase exit criteria met
+  - APK/AAB verified on at least one device/emulator
+  - All tests pass
+  - Lint clean
+  - Release artifact signed and tagged
+
+# Notification hooks
+notifications:
+  on_start:
+    - notify: [android-kotlin, mobile-qa]
+    - channel: slack
+    - template: mobile-build-started.md
+  on_phase_complete:
+    - notify: [android-kotlin]
+    - log_to: memory MCP
+  on_complete:
+    - generate: mobile-release-summary.md
+    - notify: [team]
+  on_failure:
+    - alert: [android-kotlin, mobile-qa]
+    - escalate_to: lead-strategist
+    - create: mobile-build-incident.md
+
+# Error handling and recovery
+error_handling:
+  strategy: continue-on-non-critical
+  max_retries_per_task: 2
+  fallback_agent: android-kotlin
+  rollback_on_critical: true
+  log_errors_to: memory MCP
+  critical_errors:
+    - build_failure
+    - test_regression
+    - signing_failure
+
+# MCP integration
+mcp_integration:
+  gradle:
+    purpose: Android build system and dependency management
+    phases: [Build, Test, Deploy]
+    cache_results: true
+    cache_build_artifacts: true
+  mobile:
+    purpose: Device control, APK installation, UI testing
+    phases: [Build, Test]
+    screenshot_archive: screenshots/
+  android-emulator:
+    purpose: Emulator lifecycle for testing
+    phases: [Test]
+    auto_shutdown: true
+  memory:
+    purpose: Persistent build and test state across phases
+    phases: [Build, Test, Deploy]
+    persist_workflow_state: true
+  git:
+    purpose: Version control for releases
+    phases: [Deploy]
+    auto_commit: true

@@ -15,7 +15,8 @@
     "plugins/skill-manager.ts",
     "plugins/context-manager.ts",
     "brain-plugin/brain.ts",
-    "meta-harness/meta-harness.ts"
+    "meta-harness/meta-harness.ts",
+    "plugins/mobile-tool-router.ts"
   ],
   "provider": {
     "opencode": {
@@ -99,8 +100,7 @@
     "hostname": "127.0.0.1",
     "mdns": false,
     "cors": [
-      "http://127.0.0.1:8080",
-      "http://"
+      "http://127.0.0.1:8080"
     ]
   },
   "mcp": {
@@ -207,7 +207,7 @@
       "command": [
         "bunx",
         "@modelcontextprotocol/server-filesystem",
-        "c:/opencode"
+        "."
       ],
       "enabled": true,
       "timeout": 45000
@@ -221,6 +221,36 @@
       ],
       "enabled": false,
       "timeout": 30000
+    },
+    "gradle": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "gradle-mcp-server"
+      ],
+      "enabled": true,
+      "timeout": 120000
+    },
+    "mobile": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "mobile-mcp"
+      ],
+      "enabled": true,
+      "timeout": 60000
+    },
+    "android-emulator": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "mcp-android-emulator"
+      ],
+      "enabled": true,
+      "timeout": 60000
     }
   },
   "permission": {
@@ -299,6 +329,9 @@
     "language-server": "allow",
     "type-inject": "allow",
     "sqlite": "allow",
+    "gradle": "allow",
+    "mobile": "allow",
+    "android-emulator": "allow",
     "external_directory": {
       ".\\**": "allow",
       "~\\**": "ask"
@@ -346,6 +379,9 @@
     "sequential-thinking": true,
     "language-server": true,
     "type-inject": true,
+    "gradle": true,
+    "mobile": true,
+    "android-emulator": true,
     "brain_diagnostic": true,
     "brain_status": true,
     "brain_metrics": true,
@@ -492,7 +528,7 @@
     "Token-based compression (not char-based) with estimateTokens function.",
     "BRAIN INDEX: If retrieval is empty or stale (>1hr), run brain_index_project before relying on Brain context.",
     "RERANKING: Cross-encoder reranking is triggered for learn/refactor/feature intents when results >= 10.",
-    "MOBILE: For Android/Kotlin tasks, use @android-kotlin. For mobile UI, use @frontend-ui-ux. For Tauri mobile build commands, @backend-tauri handles Rust side, @android-kotlin handles native Android side.",
+    "MOBILE: For Android/Kotlin tasks, use @android-kotlin. For mobile QA/testing, use @mobile-qa. For Tauri mobile build commands, @backend-tauri handles Rust side, @android-kotlin handles native Android side. Available Android skills: android, android/compose, android/gradle, android/testing, android/debugging, android/deployment. MCP servers: gradle (builds), mobile (device control), android-emulator (emulator).",
     "See rules/brain.md for Brain plugin usage. For mobile, see rules/mobile.md."
   ],
   "command": {
@@ -502,7 +538,7 @@
       "agent": "qa-guardian"
     },
     "doctor": {
-      "template": "skill:self-improver",
+      "template": "skill:self-reflection",
       "description": "Audit and repair OpenCode configuration",
       "agent": "lead-strategist"
     },
@@ -527,7 +563,7 @@
       "agent": "qa-guardian"
     },
     "improve": {
-      "template": "skill:self-improver",
+      "template": "skill:self-reflection",
       "description": "Analyze and enhance project configuration using self-improvement patterns",
       "agent": "core-factory"
     },
@@ -672,7 +708,16 @@
         "brain_embed_test": true,
         "brain_index_project": true,
         "brain_speculative_status": true,
-        "brain_embed_lmstudio": true
+        "brain_embed_lmstudio": true,
+        "brain_docs_cache": true,
+        "brain_diagnose": true,
+        "brain_query": true,
+        "brain_index": true,
+        "brain_config": true,
+        "brain_improve": true,
+        "brain_optimize_harness": true,
+        "brain_harness_status": true,
+        "brain_apply_harness": true
       },
       "permission": {
         "file": {
@@ -695,7 +740,7 @@
       "mode": "subagent",
       "steps": 30,
       "description": "Strategic orchestrator, architect, and product lead. Delegates to specialized agents.",
-      "prompt": "LEAD: Orchestration and architecture. No code unless requested.\nSTRICT: Only read/analyze for planning. Delegate implementation.\nCONCISE: State decision, not reasoning. Avoid long explanations.\nWhen delegating: Name target agent + specific task. No agent delegation descriptions.\nUse task tool for parallel execution when independent.\nUse skill:self-improver to analyze and improve project configuration.\nREALITY CHECK: Always assess feasibility against actual codebase state before proposing changes.\nGAP ANALYSIS: Identify gaps between current implementation and target architecture.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor/feature) for semantic discovery.",
+      "prompt": "LEAD: Orchestration and architecture. No code unless requested.\nSTRICT: Only read/analyze for planning. Delegate implementation.\nCONCISE: State decision, not reasoning. Avoid long explanations.\nWhen delegating: Name target agent + specific task. No agent delegation descriptions.\nUse task tool for parallel execution when independent.\nUse skill:self-reflection to analyze and improve project configuration.\nREALITY CHECK: Always assess feasibility against actual codebase state before proposing changes.\nGAP ANALYSIS: Identify gaps between current implementation and target architecture.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor/feature) for semantic discovery.",
       "tools": {
         "skill": true,
         "bash": true,
@@ -727,7 +772,7 @@
       "mode": "subagent",
       "steps": 30,
       "description": "Technical vision and long-term structural integrity. Pure analysis, delegates to core-factory.",
-      "prompt": "ARCHITECT: Technical vision and structure. Read → Analyze only.\nNo implementation code. Delegate to core-factory or build.\nCONCISE: Brief analysis, state decisions.\nUse spec-driven-design skill before implementation.\nUse sequential-thinking for trade-offs when needed.\nUse task tool for parallel execution when independent.\nUse skill:self-improver to analyze and improve project configuration.\nNORMING: Check all proposed patterns against existing codebase conventions.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor/feature) for semantic discovery.",
+      "prompt": "ARCHITECT: Technical vision and structure. Read → Analyze only.\nNo implementation code. Delegate to core-factory or build.\nCONCISE: Brief analysis, state decisions.\nUse spec-driven-design skill before implementation.\nUse sequential-thinking for trade-offs when needed.\nUse task tool for parallel execution when independent.\nUse skill:self-reflection to analyze and improve project configuration.\nNORMING: Check all proposed patterns against existing codebase conventions.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor/feature) for semantic discovery.",
       "tools": {
         "read": true,
         "lsp": true,
@@ -820,7 +865,7 @@
       "mode": "subagent",
       "steps": 30,
       "description": "Android/Kotlin native development for Tauri mobile. Kotlin, Gradle, Android SDK, Jetpack Compose.",
-      "prompt": "ANDROID/KOTLIN: Native Android development with Clean Architecture.\nRead → Implement → Validate.\nSKILLS: Use android-clean-architecture, kotlin-specialist, android-kotlin-bootstrap skills.\nCONCISE: Minimal explanation. Show code.\nKOTLIN: Kotlin coroutines for async, sealed classes, extension functions.\nUI: Jetpack Compose preferred, XML layouts for legacy.\nVALIDATION: Run gradlew assembleDebug after changes.\nTAURI MOBILE: cargo tauri android init/dev/build for build operations.\nPERMISSIONS: Declare in AndroidManifest.xml + request at runtime for dangerous.\nSee rules/mobile.md for full mobile development rules.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (debug/learn) for semantic discovery.",
+      "prompt": "ANDROID/KOTLIN: Native Android development with Clean Architecture.\nRead → Implement → Validate.\n\nSKILLS (use via skill tool):\n- android: Core Android development patterns\n- android/compose: Jetpack Compose UI patterns\n- android/gradle: Gradle build configuration\n- android/testing: Android testing strategies\n- android/debugging: ADB and device debugging\n- android/deployment: Play Store and CI deployment\n\nCONCISE: Minimal explanation. Show code.\nKOTLIN: Kotlin coroutines for async, sealed classes, extension functions.\nUI: Jetpack Compose preferred, XML layouts for legacy.\n\nMCP TOOLS AVAILABLE:\n- gradle: Build projects, list tasks, run lint, check dependencies\n- mobile: Install APKs, control devices, capture screenshots, inspect UI hierarchy\n- android-emulator: Start/stop emulators, manage AVDs\n\nWORKFLOWS:\n1. Build: gradle -> run_task (assembleDebug), verify APK exists\n2. Test: gradle -> run_task (test), mobile -> install/launch/screenshot\n3. Debug: mobile -> screenshot/capture_ui_hierarchy, bash -> adb logcat\n4. Deploy: gradle -> run_task (assembleRelease/bundleRelease)\n\nTAURI MOBILE: cargo tauri android init/dev/build for build operations.\nPERMISSIONS: Declare in AndroidManifest.xml + request at runtime for dangerous.\nSee rules/mobile.md for full mobile development rules.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (debug/learn) for semantic discovery.",
       "tools": {
         "read": true,
         "write": true,
@@ -828,6 +873,9 @@
         "bash": true,
         "skill": true,
         "lsp": true,
+        "gradle": true,
+        "mobile": true,
+        "android-emulator": true,
         "context7": true,
         "memory": true,
         "brain_diagnostic": true,
@@ -844,6 +892,9 @@
         "bash": true,
         "skill": true,
         "lsp": true,
+        "gradle": true,
+        "mobile": true,
+        "android-emulator": true,
         "context7": true,
         "memory": true,
         "brain_diagnostic": true,
@@ -861,6 +912,9 @@
         "edit": true,
         "bash": true,
         "skill": true,
+        "gradle": true,
+        "mobile": true,
+        "android-emulator": true,
         "context7": true,
         "memory": true,
         "brain_diagnostic": true,
@@ -871,7 +925,7 @@
       "mode": "subagent",
       "steps": 30,
       "description": "Documentation, self-improvement, and system evolution.",
-      "prompt": "DOCS: Documentation and content. Read → Write → Format.\nCONCISE: Brief content. No verbose explanations.\nUse spec-driven-design skill for structured specs.\nFormat with biome/prettier after edits.\nUse skill:self-improver for system evolution.\nREALITY CHECK: Verify docs match actual codebase before writing.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn) for semantic discovery.",
+      "prompt": "DOCS: Documentation and content. Read → Write → Format.\nCONCISE: Brief content. No verbose explanations.\nUse spec-driven-design skill for structured specs.\nFormat with biome/prettier after edits.\nUse skill:self-reflection for system evolution.\nREALITY CHECK: Verify docs match actual codebase before writing.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn) for semantic discovery.",
       "tools": {
         "read": true,
         "write": true,

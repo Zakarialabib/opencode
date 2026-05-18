@@ -42,9 +42,9 @@ Before formatting, check if LSP can format:
 
 If LSP available, use it. Fall back to CLI formatter.
 
-## Self-Improver Integration
+## Self-Reflection Integration
 
-The `self-improver` skill monitors:
+The `self-reflection` skill monitors:
 
 1. New files → auto-format on first save
 2. Language detection → suggest formatter config
