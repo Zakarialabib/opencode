@@ -9,6 +9,7 @@ import { docsStore, DocEntry } from "./docs-store.js";
 import { getDatabase, closeDatabase } from "./store/index.js";
 import { isVectorActive } from "./store/vec.js";
 import { resetDenseFailedFlag } from "./retrieval/dense.js";
+import { formatSearchResults } from "./tools/formatter";
 import type { SignalBundle } from "./tree/engine.js";
 
 const FETCH_TIMEOUT = 10000;
@@ -450,6 +451,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
           top_k: tool.schema.number().optional().describe("Number of results (default: 5)"),
         },
         async execute(args: any) {
+          const startTime = Date.now();
           const results = await searchProjectContext(
             directory,
             args.query,
@@ -460,22 +462,14 @@ const BrainPlugin: Plugin = async ({ directory }) => {
           const mappedChunks = results.map((r) => ({
             id: r.id,
             filepath: r.filepath,
-            language: r.language,
-            type: r.type,
-            name: r.name,
             start_line: r.start_line,
             end_line: r.end_line,
-            parent_id: r.parent_id,
             content: r.content,
-            lines: r.end_line - r.start_line + 1,
+            score: r.score ?? 0.5,
           }));
 
-          const context = {
-            chunks: mappedChunks,
-            totalChunks: mappedChunks.length,
-          };
-
-          return contextInjector.formatResults(context);
+          const timing = Date.now() - startTime;
+          return formatSearchResults(mappedChunks, args.query, timing);
         },
       }),
 
@@ -588,49 +582,83 @@ const BrainPlugin: Plugin = async ({ directory }) => {
 
           try {
             const db = getDatabase(directory);
-            results.push("\u2705 SQLite store initialized successfully");
+            results.push("✅ SQLite store initialized successfully");
 
             const fileCount =
               (
-                db.prepare("SELECT COUNT(*) as count FROM files").get() as
-                  | { count: number }
+                db.prepare("SELECT COUNT(*) as c FROM files").get() as
+                  | { c: number }
                   | undefined
-              )?.count ?? 0;
-            results.push(`   - Tracks ${fileCount} files`);
+              )?.c ?? 0;
+            const chunkCount =
+              (
+                db.prepare("SELECT COUNT(*) as c FROM chunks").get() as
+                  | { c: number }
+                  | undefined
+              )?.c ?? 0;
+            const vectorCount =
+              (
+                db.prepare("SELECT COUNT(*) as c FROM chunk_embeddings").get() as
+                  | { c: number }
+                  | undefined
+              )?.c ?? 0;
+            const conceptCount =
+              (
+                db.prepare("SELECT COUNT(*) as c FROM concepts").get() as
+                  | { c: number }
+                  | undefined
+              )?.c ?? 0;
+            const sessionCount =
+              (
+                db.prepare("SELECT COUNT(*) as c FROM sessions").get() as
+                  | { c: number }
+                  | undefined
+              )?.c ?? 0;
+            const ftsCount =
+              (
+                db.prepare("SELECT COUNT(*) as c FROM fts_chunks").get() as
+                  | { c: number }
+                  | undefined
+              )?.c ?? 0;
+
+            results.push("\n### Storage");
+            results.push(`- Files: ${fileCount}`);
+            results.push(`- Chunks: ${chunkCount}`);
+            results.push(`- Vectors: ${vectorCount}`);
+            results.push(`- Concepts: ${conceptCount}`);
+            results.push(`- Sessions: ${sessionCount}`);
+            results.push(`- FTS Records: ${ftsCount}`);
 
             const vectorActiveFlag = isVectorActive(db);
-            results.push(
-              `   - sqlite-vec vector engine: ${vectorActiveFlag ? "\u2705 active" : "\u274c inactive"}`
-            );
+            results.push(`\n### Vector Store: ${vectorActiveFlag ? "✅ Active" : "❌ Inactive"}`);
 
             const rrfK = (
               db.prepare("SELECT value FROM config WHERE key = 'rrf_k'").get() as
                 | { value: string }
                 | undefined
             )?.value;
-            results.push(`   - Configuration settings: rrf_k=${rrfK ?? "not set"}`);
+            if (rrfK) {
+              results.push(`   Configuration: rrf_k=${rrfK}`);
+            }
           } catch (err: any) {
-            results.push(`\u274c SQLite store: initialization failed (${err.message})`);
+            results.push(`❌ SQLite store: initialization failed (${err.message})`);
           }
 
           try {
             const loaded = await provider.getLoadedModels();
-            results.push(
-              `\n\ud83d\udce6 LM Studio SDK: connected, loaded models: [${loaded.join(", ")}]`
-            );
+            results.push(`\n### LM Studio: ✅ Connected`);
+            results.push(`Models: ${loaded.join(", ") || "none"}`);
           } catch {
-            results.push(
-              `\n\ud83d\udce6 LM Studio SDK: not connected (LM Studio process must run on port 1234)`
-            );
+            results.push(`\n### LM Studio: ❌ Not connected`);
           }
 
-          results.push(`\n\ud83d\udcda Docs Cache: ${docsStore.getAll().length} entries`);
+          results.push(`\n### Docs Cache: ${docsStore.getAll().length} entries`);
           const docsSummary = docsStore.getSummary();
           if (docsSummary !== "No docs cached.") {
             results.push(docsSummary);
           }
 
-          results.push(`\n\ud83d\udcc1 Project: ${directory}`);
+          results.push(`\n### Project: ${directory}`);
           return results.join("\n");
         },
       }),
@@ -784,6 +812,37 @@ const BrainPlugin: Plugin = async ({ directory }) => {
           } catch {}
 
           return metrics;
+        },
+      }),
+
+      brain_benchmark: tool({
+        description: "Run quick benchmark suite to test retrieval quality",
+        args: {
+          suite: tool.schema.enum(["smoke", "full"]).optional().describe("Benchmark suite (smoke=5 tasks, full=21 tasks)"),
+        },
+        async execute(args: any) {
+          const { runQuickBenchmark } = await import("../meta-harness/evaluator");
+          const suite = args.suite ?? "smoke";
+          
+          const result = await runQuickBenchmark(directory, suite);
+          
+          const lines: string[] = [
+            "## Brain Benchmark Results",
+            "",
+            `**Overall Score:** ${(result.score * 100).toFixed(1)}%`,
+            `**Tasks Run:** ${result.tasksRun}`,
+            `**Avg Latency:** ${result.avgLatencyMs.toFixed(0)}ms`,
+            "",
+            "### Per-Intent Scores",
+            "",
+          ];
+          
+          for (const [intent, score] of Object.entries(result.metrics)) {
+            const bar = "█".repeat(Math.round(score * 10)) + "░".repeat(10 - Math.round(score * 10));
+            lines.push(`${intent}: [${bar}] ${(score * 100).toFixed(0)}%`);
+          }
+          
+          return lines.join("\n");
         },
       }),
 
