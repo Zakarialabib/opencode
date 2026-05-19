@@ -9,7 +9,10 @@ import { docsStore, DocEntry } from "./docs-store.js";
 import { getDatabase, closeDatabase } from "./store/index.js";
 import { isVectorActive } from "./store/vec.js";
 import { resetDenseFailedFlag } from "./retrieval/dense.js";
+import { formatSearchResults } from "./tools/formatter";
+import { TokenBudgetMonitor, ContextPruner, initializeFromConfig } from "./context/token-budget.js";
 import type { SignalBundle } from "./tree/engine.js";
+import { setRerankingConfig, getRerankingConfig, RERANKING_STRATEGIES } from "./retrieval/reranking-trigger";
 
 const FETCH_TIMEOUT = 10000;
 
@@ -154,12 +157,13 @@ const BrainPlugin: Plugin = async ({ directory }) => {
       // No VRAM guard implemented. Reranker and dense embeddings run on CPU to preserve VRAM.
       // Speculative decoding (draft_model) is not wired. The chat.params hook handles skill gaps instead.
 
+      let config: any = {};
       try {
         const fs = await import("fs");
         const path = await import("path");
         const configPath = path.join(directory, "opencode.json");
         if (fs.existsSync(configPath)) {
-          const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+          config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
           const baseURL =
             config?.provider?.lmstudio?.options?.baseURL ||
             config?.lmstudio?.baseURL ||
@@ -172,6 +176,17 @@ const BrainPlugin: Plugin = async ({ directory }) => {
         console.warn("[Brain] Failed to parse opencode.json for LM Studio baseURL:", err.message);
         provider.setBaseURL("http://localhost:1234");
       }
+
+      const budgetMonitor = TokenBudgetMonitor.getInstance();
+      if (config.compaction) {
+        budgetMonitor.setBudget(config.compaction.budget || 24000);
+        budgetMonitor.setReserved(config.compaction.reserved || 8192);
+        console.log(
+          `[Brain] Token budget configured: ${budgetMonitor.getBudgetStatus().total} total, ` +
+          `${budgetMonitor.getBudgetStatus().reserved} reserved`
+        );
+      }
+      contextInjector.initializeFromConfig(config);
 
       let db: ReturnType<typeof getDatabase> | undefined = undefined;
       try {
@@ -257,13 +272,16 @@ const BrainPlugin: Plugin = async ({ directory }) => {
         return;
       }
 
-      // Adaptive chunk count: scale by confidence (high confidence = fewer chunks)
-      // score 0.9 → 0.6x, score 0.5 → 1.0x, score 0.3 → 1.2x
-      const adaptiveLimit = Math.max(3, Math.round((strategy.maxChunks ?? 10) * (1.5 - score)));
+      const complexity = adaptiveChunker.estimateComplexity(msg.content);
+      const adaptiveLimit = adaptiveChunker.calculateChunkLimit(
+        scenario.intent,
+        score,
+        complexity
+      );
 
       try {
         console.log(
-          `[Brain] Executing search for intent: "${scenario.intent}" (strategy: ${strategy.name}, chunks: ${adaptiveLimit})...`
+          `[Brain] Executing search for intent: "${scenario.intent}" (strategy: ${strategy.name}, complexity: ${complexity}, chunks: ${adaptiveLimit})...`
         );
         const results = await searchProjectContext(
           directory,
@@ -289,6 +307,9 @@ const BrainPlugin: Plugin = async ({ directory }) => {
           chunks: mappedChunks,
           totalChunks: mappedChunks.length,
         };
+
+        const budgetMonitor = TokenBudgetMonitor.getInstance();
+        budgetMonitor.startOperation('brain_search');
 
         let docContext = "";
 
@@ -316,24 +337,45 @@ const BrainPlugin: Plugin = async ({ directory }) => {
 
         if (context.chunks.length > 0 || docContext) {
           sessionMemory.markContextUsed(context.chunks as any);
+          
+          const workingContext = { ...context, docContext };
+          
+          if (!budgetMonitor.checkBudget(500)) {
+            console.log("[Brain] Budget low, triggering aggressive pruning...");
+            const pruned = ContextPruner.aggressivePrune(workingContext);
+            workingContext.chunks = pruned.chunks;
+            workingContext.totalChunks = pruned.chunks.length;
+            console.log(
+              `[Brain] Aggressive pruning: removed ${pruned.removedChunks || 0} chunks, ` +
+              `reduced to ${pruned.tokens || 0} tokens`
+            );
+          }
+          
           const augmentedMessage = contextInjector.inject(
             docContext ? `${msg.content}\n\n${docContext}` : msg.content,
-            context,
+            workingContext,
             {
               intent: scenario.intent,
               sessionSummary: sessionMemory.getSummary(),
               recentFiles: signals.recentFiles,
               diagnostics: signals.diagnostics.map((d: any) => `${d.file}:${d.message}`),
+              enableBudgetCheck: true,
             }
           );
+          
+          const contextTokens = contextInjector.getBudgetStatus().used;
+          budgetMonitor.endOperation('brain_search', contextTokens);
+          
           output.message.content = augmentedMessage;
           const sources = [];
-          if (context.chunks.length > 0) sources.push(`${context.chunks.length} code chunks`);
+          if (workingContext.chunks.length > 0) sources.push(`${workingContext.chunks.length} code chunks`);
           if (docContext.includes("context7")) sources.push("context7 docs");
           if (docContext.includes("Package Info")) sources.push("registry docs");
           console.log(
             `[Brain] +${sources.join(", ")} | backend: unified-sqlite | intent: ${scenario.intent}`
           );
+        } else {
+          budgetMonitor.endOperation('brain_search', 0);
         }
 
         sessionMemory.recordDecision({
@@ -487,6 +529,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
           const stats = tree.getStats();
           const memory = sessionMemory.getMemory();
           const db = getDatabase(directory);
+          const budgetStatus = contextInjector.getBudgetStatus();
 
           let dbStats = "Database: connected\n";
           try {
@@ -526,6 +569,12 @@ const BrainPlugin: Plugin = async ({ directory }) => {
             ``,
             dbStats,
             ``,
+            `### Token Budget`,
+            `- Total: ${budgetStatus.total} tokens`,
+            `- Used: ${budgetStatus.used} tokens (${budgetStatus.percent.toFixed(1)}%)`,
+            `- Reserved: ${budgetStatus.reserved} tokens`,
+            `- Available for context: ${budgetStatus.availableForContext} tokens`,
+            ``,
             `### Decision Tree`,
             `- Total nodes: ${stats.totalNodes}`,
             `- Pending mutations: ${stats.pendingMutations}`,
@@ -555,6 +604,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
         async execute() {
           sessionMemory.reset();
           docsStore.clear();
+          contextInjector.resetBudget();
           tree = new DecisionTree();
           await tree.save();
 
@@ -573,10 +623,48 @@ const BrainPlugin: Plugin = async ({ directory }) => {
                 db.prepare("DELETE FROM chunk_embeddings_nomic").run();
               } catch {}
             })();
-            return "Brain completely reset successfully (indexes, memory, docs cache, and decision tree wiped).";
+            return "Brain completely reset successfully (indexes, memory, docs cache, decision tree, and token budget wiped).";
           } catch (err: any) {
             return `Brain memory reset, but index database wipe failed: ${err.message}`;
           }
+        },
+      }),
+
+      brain_budget: tool({
+        description: "Get current token budget status and usage",
+        args: {},
+        async execute() {
+          const status = contextInjector.getBudgetStatus();
+          return {
+            budget: {
+              total: status.total,
+              used: status.used,
+              remaining: status.remaining,
+              percent: status.percent.toFixed(2),
+              reserved: status.reserved,
+              availableForContext: status.availableForContext,
+            },
+            message: `Token Budget: ${status.used}/${status.total} tokens used (${status.percent.toFixed(1)}%), ` +
+              `${status.availableForContext} available for new context`,
+          };
+        },
+      }),
+
+      brain_budget_reset: tool({
+        description: "Reset the token budget counter for the current session",
+        args: {},
+        async execute() {
+          contextInjector.resetBudget();
+          const status = contextInjector.getBudgetStatus();
+          return {
+            success: true,
+            message: "Token budget reset successfully",
+            newStatus: {
+              total: status.total,
+              used: status.used,
+              availableForContext: status.availableForContext,
+            },
+          };
         },
       }),
 
@@ -784,6 +872,85 @@ const BrainPlugin: Plugin = async ({ directory }) => {
           } catch {}
 
           return metrics;
+        },
+      }),
+
+      brain_benchmark: tool({
+        description: "Run quick benchmark suite to test retrieval quality",
+        args: {
+          suite: tool.schema.enum(["smoke", "full"]).optional().describe("Benchmark suite (smoke=5 tasks, full=21 tasks)"),
+        },
+        async execute(args: any) {
+          const { runQuickBenchmark } = await import("../meta-harness/evaluator");
+          const suite = args.suite ?? "smoke";
+          
+          const result = await runQuickBenchmark(directory, suite);
+          
+          const lines: string[] = [
+            "## Brain Benchmark Results",
+            "",
+            `**Overall Score:** ${(result.score * 100).toFixed(1)}%`,
+            `**Tasks Run:** ${result.tasksRun}`,
+            `**Avg Latency:** ${result.avgLatencyMs.toFixed(0)}ms`,
+            "",
+            "### Per-Intent Scores",
+            "",
+          ];
+          
+          for (const [intent, score] of Object.entries(result.metrics)) {
+            const bar = "█".repeat(Math.round(score * 10)) + "░".repeat(10 - Math.round(score * 10));
+            lines.push(`${intent}: [${bar}] ${(score * 100).toFixed(0)}%`);
+          }
+          
+          return lines.join("\n");
+        },
+      }),
+
+      brain_config: tool({
+        description: "Get or update Brain plugin configuration including reranking settings",
+        args: {
+          reranking: tool.schema.object({
+            enabled: tool.schema.boolean().optional().describe("Enable/disable reranking"),
+            minResults: tool.schema.number().optional().describe("Minimum results to trigger reranking"),
+            intents: tool.schema.array(tool.schema.string()).optional().describe("Intents that trigger reranking"),
+            confidenceThreshold: tool.schema.number().optional().describe("Minimum confidence to trigger reranking"),
+            adaptiveLimit: tool.schema.boolean().optional().describe("Use adaptive chunk limits based on confidence"),
+          }).optional().describe("Reranking configuration updates"),
+        },
+        async execute(args: any) {
+          if (args.reranking) {
+            const updates: any = {};
+            if (typeof args.reranking.enabled === "boolean") updates.enabled = args.reranking.enabled;
+            if (typeof args.reranking.minResults === "number") updates.minResults = args.reranking.minResults;
+            if (Array.isArray(args.reranking.intents)) updates.intentsRequiringRerank = args.reranking.intents;
+            if (typeof args.reranking.confidenceThreshold === "number") updates.confidenceThreshold = args.reranking.confidenceThreshold;
+            if (typeof args.reranking.adaptiveLimit === "boolean") updates.adaptiveLimit = args.reranking.adaptiveLimit;
+            setRerankingConfig(updates);
+          }
+
+          const config = getRerankingConfig();
+          const lines: string[] = [
+            "## Brain Configuration",
+            "",
+            "### Reranking Settings",
+            `- Enabled: ${config.enabled ? "✅" : "❌"}`,
+            `- Min Results: ${config.minResults}`,
+            `- Confidence Threshold: ${config.confidenceThreshold}`,
+            `- Max Chunks: ${config.maxChunksBeforeRerank}`,
+            `- Adaptive Limit: ${config.adaptiveLimit ? "✅" : "❌"}`,
+            `- Intents: [${config.intentsRequiringRerank.join(", ")}]`,
+            "",
+            "### Reranking Strategies",
+          ];
+
+          for (const [intent, strategy] of Object.entries(RERANKING_STRATEGIES)) {
+            lines.push(`**${intent}**`);
+            lines.push(`- Prioritize: [${strategy.prioritize.join(", ")}]`);
+            lines.push(`- Weights: ${JSON.stringify(strategy.weights)}`);
+            lines.push("");
+          }
+
+          return lines.join("\n");
         },
       }),
 

@@ -4,7 +4,7 @@ const path = require("path");
 
 class ConfigValidator {
   constructor(schemaPath) {
-    this.ajv = new Ajv({ allErrors: true });
+    this.ajv = new Ajv({ allErrors: true, strict: false, validateSchema: false });
     this.schema = null;
     this.compiledValidate = null;
     if (schemaPath) {

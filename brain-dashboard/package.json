@@ -1,0 +1,13 @@
+{
+  "name": "opencode-brain-dashboard",
+  "version": "2.0.0",
+  "description": "Brain RAG Dashboard - Bun native with LM Studio integration",
+  "type": "module",
+  "scripts": {
+    "start": "bun run server.js",
+    "dev": "bun --watch run server.js"
+  },
+  "dependencies": {
+    "@lmstudio/sdk": "^1.5.0"
+  }
+}

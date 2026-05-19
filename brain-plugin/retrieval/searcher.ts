@@ -3,6 +3,7 @@ import { getEmbeddings } from "./dense.js";
 import { isVectorActive } from "../store/vec.js";
 import { rerankChunks } from "./reranker.js";
 import { reciprocalRankFusion, SearchResultItem } from "./fusion.js";
+import { RerankingTrigger, getRerankingTrigger } from "./reranking-trigger.js";
 
 // Re-exported from fusion.ts; kept as alias for backward compatibility
 // with brain.ts and index.ts imports. Fields: id, filepath, language, type,
@@ -114,22 +115,25 @@ export async function searchProjectContext(
   projectRoot: string,
   query: string,
   topK: number = 5,
-  intent: string = "unknown"
+  intent: string = "unknown",
+  confidence: number = 0.7
 ): Promise<SearchResult[]> {
   const db = getDatabase(projectRoot);
+  const rerankingTrigger = getRerankingTrigger();
 
-  // Merge strategy: Reciprocal Rank Fusion (RRF)
-  // Takes dense + FTS results, computes weighted rank-based scores,
-  // deduplicates by chunk_id, returns sorted by combined RRF score.
-  // Dense weight: 0.5, Keyword weight: 0.2, Smoothing factor K: 60
+  const cacheKey = rerankingTrigger.getCacheKey(query, intent);
+  const cachedResults = rerankingTrigger.getCachedReranked(cacheKey);
+  if (cachedResults) {
+    return cachedResults.slice(0, topK);
+  }
+
   const [ftsResults, denseResults] = await Promise.all([
-    ftsSearch(db, query, topK * 2),
-    denseSearch(db, projectRoot, query, topK * 2),
+    ftsSearch(db, query, topK * 3),
+    denseSearch(db, projectRoot, query, topK * 3),
   ]);
 
   const fused = reciprocalRankFusion(denseResults, ftsResults);
 
-  // Memory-aware retrieval boost: boost chunks linked to known memory concepts
   try {
     const { getConceptRelatedChunks } = await import("../memory/graph");
     const allConcepts = db
@@ -150,6 +154,17 @@ export async function searchProjectContext(
 
   const topFused = fused.slice(0, topK * 2);
 
-  const reranked = await rerankChunks(projectRoot, query, topFused, intent);
-  return reranked.slice(0, topK);
+  if (rerankingTrigger.shouldRerank(intent, topFused.length, confidence)) {
+    const rerankLimit = rerankingTrigger.getRerankLimit(intent, topFused.length, confidence);
+    const itemsToRerank = topFused.slice(0, rerankLimit);
+    const remainingChunks = topFused.slice(rerankLimit);
+
+    const reranked = await rerankChunks(projectRoot, query, itemsToRerank, intent);
+    const finalResults = [...reranked, ...remainingChunks].slice(0, topK);
+
+    rerankingTrigger.cacheReranked(cacheKey, finalResults);
+    return finalResults;
+  }
+
+  return topFused.slice(0, topK);
 }

@@ -1,6 +1,7 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "default_agent": "core-factory",
+  "model": "qwen-3-235b-a22b-instruct-2507",
   "autoupdate": true,
   "share": "manual",
   "enabled_providers": [
@@ -30,18 +31,7 @@
         "baseURL": "https://api.cerebras.ai/v1",
         "apiKey": "${CEREBRAS_API_KEY}"
       },
-      "models": {
-        "qwen-3-235b-a22b-instruct-2507": {
-          "name": "Qwen 3 235B-A22B",
-          "tool_call": true,
-          "reasoning": true
-        },
-        "zai-glm-4.7": {
-          "name": "ZAI GLM 4.7",
-          "tool_call": false,
-          "reasoning": true
-        }
-      }
+      "models": {}
     },
     "lmstudio": {
       "npm": "@ai-sdk/openai-compatible",
@@ -80,18 +70,7 @@
       "options": {
         "baseURL": "https://openrouter.ai/api/v1"
       },
-      "models": {
-        "inclusionai/ring-2.6-1t:free": {
-          "name": "Ring 2.6-1t (free)",
-          "tool_call": true,
-          "reasoning": true
-        },
-        "poolside/laguna-m.1:free": {
-          "name": "Laguna M.1 (free)",
-          "tool_call": true,
-          "reasoning": true
-        }
-      }
+      "models": {}
     }
   },
   "server": {
@@ -495,6 +474,7 @@
     "MOBILE: For Android/Kotlin tasks, use @android-kotlin. For mobile UI, use @frontend-ui-ux. For Tauri mobile build commands, @backend-tauri handles Rust side, @android-kotlin handles native Android side.",
     "See rules/brain.md for Brain plugin usage. For mobile, see rules/mobile.md."
   ],
+  
   "command": {
     "audit": {
       "template": "npm run lint && npm test",
@@ -566,8 +546,8 @@
     "build": {
       "mode": "primary",
       "steps": 50,
-      "description": "Primary build agent — fast implementation, direct file editing, all tools enabled.",
-      "prompt": "CORE: Fast implementation. Read → Analyze → Write → Validate.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor/feature/debug/test) for semantic discovery.\nMemory-aware retrieval boosts known concepts by 15% using adaptive RRF weights.\nAdaptive chunk count scales with decision tree confidence score.\nToken-based compression (not char-based) with estimateTokens.\nSTRICT: No speculation. Only state what you know or can verify.\nCONCISE: Use minimal words. Long descriptions waste tokens.\nWORKFLOW: Read file → Use edit tool (oldString→newString) → Validate.\nIf edit fails: re-read file, add context to oldString.\nNo unnecessary comments. Reference lines as file_path:line_number.\nPROJECT STACK: Tauri (Rust), React (TypeScript), Laravel (PHP).\nAuto-format after edits per rules/auto-format.md.",
+      "description": "Primary build orchestrator — strategic delegation, context synthesis, multi-agent coordination.",
+      "prompt": "ORCHESTRATION: You are the primary build orchestrator. Your role is to:\n1. Analyze user requirements and decompose into sub-tasks\n2. Delegate complex tasks to specialized agents (core-factory, frontend-ui-ux, etc.)\n3. Generate optimal context summaries for each delegation\n4. Synthesize and validate results from all agents\n5. Maintain session continuity through orchestratorSession\n\nTASK ANALYSIS:\n- For simple tasks: Implement directly with fast execution\n- For complex tasks: Delegate to specialized agent with briefing\n- For ambiguous tasks: Use clarify tool to get clarity\n\nDELEGATION PROTOCOL:\nWhen delegating, you MUST:\n1. Generate context summary using orchestratorSession\n2. Create task briefing with: [specific task] + [context summary] + [constraints] + [quality gates]\n3. Track delegation in session state\n4. Wait for result before proceeding\n\nSESSION TRACKING:\nUse orchestratorSession to:\n- Track all architectural decisions\n- Monitor token budget (reserve 8192 tokens)\n- Record modified files for continuity\n- Maintain task decomposition logic\n\nVALIDATION:\nBefore synthesizing results, verify:\n- All delegated tasks completed successfully\n- No conflicts between agent outputs\n- Consistent with architectural constraints\n- Token budget not exceeded\n\nCORE: Fast implementation. Read → Analyze → Write → Validate.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor/feature/debug/test) for semantic discovery.\nMemory-aware retrieval boosts known concepts by 15% using adaptive RRF weights.\nAdaptive chunk count scales with decision tree confidence score.\nToken-based compression (not char-based) with estimateTokens.\nSTRICT: No speculation. Only state what you know or can verify.\nCONCISE: Use minimal words. Long descriptions waste tokens.\nWORKFLOW: Read file → Use edit tool (oldString→newString) → Validate.\nIf edit fails: re-read file, add context to oldString.\nNo unnecessary comments. Reference lines as file_path:line_number.\nPROJECT STACK: Tauri (Rust), React (TypeScript), Laravel (PHP).\nAuto-format after edits per rules/auto-format.md.",
       "permission": {
         "file": {
           "src/**": "allow",
@@ -585,10 +565,14 @@
         }
       },
       "tools": {
+        "task": true,
         "brain_diagnostic": true,
         "brain_status": true,
         "brain_metrics": true,
         "brain_search": true,
+        "brain_query": true,
+        "brain_config": true,
+        "brain_improve": true,
         "brain_embed_test": true,
         "brain_index_project": true,
         "brain_speculative_status": true,
@@ -744,7 +728,7 @@
       "mode": "subagent",
       "steps": 30,
       "description": "Premium UI/UX implementation for React + TypeScript + Tailwind + shadcn/ui.",
-      "prompt": "UI/UX: Premium interfaces. Read → Generate → Validate.\nSTRICT: No speculation on user intent. Ask if unclear.\nCONCISE: Minimal explanation. Show code.\nUse ui-ux-pro-max skill for design tokens.\nUse parallel execution for independent components.\nValidate accessibility (WCAG AA) after implementation.\nREUSABILITY: Check for existing components before creating new ones.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor/feature) for semantic discovery.",
+      "prompt": "UI/UX: Premium interfaces. Read → Generate → Validate.\nSTRICT: No speculation on user intent. Ask if unclear.\nCONCISE: Minimal explanation. Show code.\nUse ui-ux-pro-max skill for design tokens.\nUse parallel execution for independent components.\nValidate accessibility (WCAG AA) after implementation.\nREUSABILITY: Check for existing components before creating new ones.\nDELEGATION: See rules/agent-delegation-templates.md for optimized task delegation patterns.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor/feature) for semantic discovery.",
       "tools": {
         "read": true,
         "write": true,
@@ -759,61 +743,76 @@
         "memory": true,
         "sequential-thinking": true,
         "brain_diagnostic": true,
-        "brain_search": true
+        "brain_status": true,
+        "brain_search": true,
+        "brain_embed_test": true,
+        "brain_index_project": true
       }
     },
     "backend-api": {
       "mode": "subagent",
       "steps": 30,
       "description": "API implementation — Node/Express or Laravel. Type-safe, validated.",
-      "prompt": "API: Node/Express or Laravel. Read → Implement → Validate.\nCONCISE: Brief code. No long explanations.\nUse stack-context skill for web patterns.\nValidate with LSP after changes.\nNO REDUNDANCY: Check for existing endpoints/services before implementing.\nIMPORT AUDIT: Only add external imports when necessary. Prefer stdlib.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor) for semantic discovery.",
+      "prompt": "API: Node/Express or Laravel. Read → Implement → Validate.\nCONCISE: Brief code. No long explanations.\nUse stack-context skill for web patterns.\nValidate with LSP after changes.\nNO REDUNDANCY: Check for existing endpoints/services before implementing.\nIMPORT AUDIT: Only add external imports when necessary. Prefer stdlib.\nDELEGATION: See rules/agent-delegation-templates.md for optimized task delegation patterns.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor) for semantic discovery.",
       "tools": {
         "read": true,
         "write": true,
         "edit": true,
         "bash": true,
         "skill": true,
+        "task": true,
         "lsp": true,
         "context7": true,
         "memory": true,
         "brain_diagnostic": true,
-        "brain_search": true
+        "brain_status": true,
+        "brain_search": true,
+        "brain_embed_test": true,
+        "brain_index_project": true
       }
     },
     "backend-laravel": {
       "mode": "subagent",
       "steps": 30,
       "description": "Specialized Laravel 13 and Livewire 4 development.",
-      "prompt": "LARAVEL: PHP/Laravel 13 + Livewire 4. Read → Implement → Validate.\nCONCISE: Brief patterns. No lengthy explanations.\nUse laravel-feature-scaffold for new features.\nUse pest-testing for tests.\nRun php artisan pint after edits.\nIMPORT AUDIT: Check for unused imports after every file change.\nNAMING: Follow Laravel conventions strictly (PascalCase models, snake_case tables).\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor) for semantic discovery.",
+      "prompt": "LARAVEL: PHP/Laravel 13 + Livewire 4. Read → Implement → Validate.\nCONCISE: Brief patterns. No lengthy explanations.\nUse laravel-feature-scaffold for new features.\nUse pest-testing for tests.\nRun php artisan pint after edits.\nIMPORT AUDIT: Check for unused imports after every file change.\nNAMING: Follow Laravel conventions strictly (PascalCase models, snake_case tables).\nDELEGATION: See rules/agent-delegation-templates.md for optimized task delegation patterns.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor) for semantic discovery.",
       "tools": {
         "read": true,
         "write": true,
         "edit": true,
         "bash": true,
         "skill": true,
+        "task": true,
         "lsp": true,
         "context7": true,
         "memory": true,
         "brain_diagnostic": true,
-        "brain_search": true
+        "brain_status": true,
+        "brain_search": true,
+        "brain_embed_test": true,
+        "brain_index_project": true
       }
     },
     "backend-tauri": {
       "mode": "subagent",
       "steps": 30,
       "description": "Tauri desktop application development (Rust).",
-      "prompt": "Rust/Tauri developer. Follow rules/tauri.md.\nUse cargo check frequently; never commit without passing.\nTAURI IPC: Use invoke only from the frontend; keep commands in src-tauri/src/main.rs or separate modules.\nState management: Use tauri::State for shared resources, wrap with Mutex or RwLock.\nError handling: Return Result<T, String> for commands; map errors to user-friendly messages.\nEvents: Emit events with app_handle.emit_all; listen in React via listen('event-name', ...).\nPerformance: Avoid blocking the main thread; use async commands and tauri::async_runtime::spawn.\nAlways run rust-analyzer diagnostics before final edits.\nFor React-Tauri bridging: use @tauri-apps/api packages, never direct DOM manipulation.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (debug/learn) for semantic discovery.",
+      "prompt": "Rust/Tauri developer. Follow rules/tauri.md.\nUse cargo check frequently; never commit without passing.\nTAURI IPC: Use invoke only from the frontend; keep commands in src-tauri/src/main.rs or separate modules.\nState management: Use tauri::State for shared resources, wrap with Mutex or RwLock.\nError handling: Return Result<T, String> for commands; map errors to user-friendly messages.\nEvents: Emit events with app_handle.emit_all; listen in React via listen('event-name', ...).\nPerformance: Avoid blocking the main thread; use async commands and tauri::async_runtime::spawn.\nAlways run rust-analyzer diagnostics before final edits.\nFor React-Tauri bridging: use @tauri-apps/api packages, never direct DOM manipulation.\nDELEGATION: See rules/agent-delegation-templates.md for optimized task delegation patterns.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (debug/learn) for semantic discovery.",
       "tools": {
         "read": true,
         "write": true,
         "edit": true,
         "bash": true,
         "skill": true,
+        "task": true,
         "lsp": true,
         "context7": true,
         "memory": true,
         "brain_diagnostic": true,
-        "brain_search": true
+        "brain_status": true,
+        "brain_search": true,
+        "brain_embed_test": true,
+        "brain_index_project": true
       }
     },
     "android-kotlin": {
@@ -838,33 +837,41 @@
       "mode": "subagent",
       "steps": 20,
       "description": "Unified QA: review, testing, security, and debugging.",
-      "prompt": "QA: Review, test, debug. No implementation unless asked.\nSTRICT: Verify not speculate. Test outputs must pass.\nCONCISE: Brief issues found. No lengthy reports.\nRun lint/test commands to validate changes.\nNever expose secrets in code.\nREDUNDANCY CHECK: Flag duplicate code, unused imports, dead code paths.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (debug/test) for semantic discovery.",
+      "prompt": "QA: Review, test, debug. No implementation unless asked.\nSTRICT: Verify not speculate. Test outputs must pass.\nCONCISE: Brief issues found. No lengthy reports.\nRun lint/test commands to validate changes.\nNever expose secrets in code.\nREDUNDANCY CHECK: Flag duplicate code, unused imports, dead code paths.\nDELEGATION: See rules/agent-delegation-templates.md for optimized task delegation patterns.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (debug/test) for semantic discovery.",
       "tools": {
         "read": true,
         "bash": true,
         "skill": true,
+        "task": true,
         "lsp": true,
         "context7": true,
         "memory": true,
         "brain_diagnostic": true,
-        "brain_search": true
+        "brain_status": true,
+        "brain_search": true,
+        "brain_embed_test": true,
+        "brain_index_project": true
       }
     },
     "devops-engineer": {
       "mode": "subagent",
       "steps": 20,
       "description": "Operational tasks, MCP integration, and infrastructure.",
-      "prompt": "DEVOPS: Terminal, MCP, system tasks.\nCONCISE: Brief execution. No explanation unless asked.\nUse bash with safety checks.\nHandle db:init, clean, process:check.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn) for semantic discovery.",
+      "prompt": "DEVOPS: Terminal, MCP, system tasks.\nCONCISE: Brief execution. No explanation unless asked.\nUse bash with safety checks.\nHandle db:init, clean, process:check.\nDELEGATION: See rules/agent-delegation-templates.md for optimized task delegation patterns.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn) for semantic discovery.",
       "tools": {
         "read": true,
         "write": true,
         "edit": true,
         "bash": true,
         "skill": true,
+        "task": true,
         "context7": true,
         "memory": true,
         "brain_diagnostic": true,
-        "brain_search": true
+        "brain_status": true,
+        "brain_search": true,
+        "brain_embed_test": true,
+        "brain_index_project": true
       }
     },
     "docs-curator": {
