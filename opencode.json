@@ -129,7 +129,7 @@
         "--db-path",
         "${OPENCODE_HOME:-./database.sqlite}"
       ],
-      "enabled": true,
+      "enabled": false,
       "timeout": 30000
     },
     "sequential-thinking": {
@@ -272,7 +272,6 @@
     "codesearch": "allow",
     "todoread": "allow",
     "todowrite": "allow",
-    "memory": "allow",
     "context7": "allow",
     "sequential-thinking": "allow",
     "language-server": "allow",
@@ -319,7 +318,6 @@
     "codesearch": true,
     "mcp": true,
     "context7": true,
-    "memory": true,
     "filesystem": true,
     "sqlite": true,
     "sequential-thinking": true,
@@ -351,7 +349,8 @@
         ".tsx",
         ".js",
         ".jsx"
-      ]
+      ],
+      "timeout": 30000
     },
     "php": {
       "command": [
@@ -650,7 +649,7 @@
         "glob": true,
         "todowrite": true,
         "context7": true,
-        "memory": true,
+
         "sequential-thinking": true,
         "brain_diagnostic": true,
         "brain_status": true,
@@ -691,7 +690,7 @@
         "codesearch": true,
         "todowrite": true,
         "task": true,
-        "memory": true,
+
         "context7": true,
         "sequential-thinking": true,
         "brain_diagnostic": true,
@@ -721,7 +720,7 @@
         "codesearch": true,
         "task": true,
         "context7": true,
-        "memory": true,
+
         "sequential-thinking": true,
         "brain_diagnostic": true,
         "brain_search": true
@@ -743,7 +742,7 @@
         "task": true,
         "mcp": true,
         "context7": true,
-        "memory": true,
+
         "sequential-thinking": true,
         "brain_diagnostic": true,
         "brain_status": true,
@@ -766,7 +765,7 @@
         "task": true,
         "lsp": true,
         "context7": true,
-        "memory": true,
+
         "brain_diagnostic": true,
         "brain_status": true,
         "brain_search": true,
@@ -788,7 +787,7 @@
         "task": true,
         "lsp": true,
         "context7": true,
-        "memory": true,
+
         "brain_diagnostic": true,
         "brain_status": true,
         "brain_search": true,
@@ -810,7 +809,7 @@
         "task": true,
         "lsp": true,
         "context7": true,
-        "memory": true,
+
         "brain_diagnostic": true,
         "brain_status": true,
         "brain_search": true,
@@ -831,7 +830,7 @@
         "skill": true,
         "lsp": true,
         "context7": true,
-        "memory": true,
+
         "brain_diagnostic": true,
         "brain_search": true
       }
@@ -848,7 +847,7 @@
         "task": true,
         "lsp": true,
         "context7": true,
-        "memory": true,
+
         "brain_diagnostic": true,
         "brain_status": true,
         "brain_search": true,
@@ -869,7 +868,7 @@
         "skill": true,
         "task": true,
         "context7": true,
-        "memory": true,
+
         "brain_diagnostic": true,
         "brain_status": true,
         "brain_search": true,
@@ -893,7 +892,7 @@
         "websearch": true,
         "webfetch": true,
         "todowrite": true,
-        "memory": true,
+
         "context7": true,
         "sequential-thinking": true,
         "brain_diagnostic": true,
