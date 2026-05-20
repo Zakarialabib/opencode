@@ -100,7 +100,7 @@
         "-y",
         "@modelcontextprotocol/server-memory"
       ],
-      "enabled": true,
+      "enabled": false,
       "timeout": 30000
     },
     "git": {
@@ -475,7 +475,7 @@
     "MOBILE: For Android/Kotlin tasks, use @android-kotlin. For mobile UI, use @frontend-ui-ux. For Tauri mobile build commands, @backend-tauri handles Rust side, @android-kotlin handles native Android side.",
     "See rules/brain.md for Brain plugin usage. For mobile, see rules/mobile.md.",
     "FALLBACK MODEL: When primary model fails or times out, fall back to LM Studio local model (qwen3.5-4b-claude-4.6-opus-reasoning-distilled-v2) for simple operations (file edits, bash commands, quick lookups).",
-    "MEMORY MCP acts as the persistent knowledge store - use it for project-conventions, agent_config_v2, and code-patterns. It replaces brain plugin for context persistence."
+    "BRAIN PLUGIN replaces memory MCP for all persistence - use brain plugin tools (brain_index_project, brain_search, brain_status, brain_diagnostic) for code context, project knowledge, and session memory."
   ],
   
   "command": {
