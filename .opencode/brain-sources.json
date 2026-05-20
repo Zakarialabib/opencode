@@ -1,0 +1,19 @@
+{
+  "folders": [],
+  "urls": [
+    {
+      "id": "1779191532544",
+      "type": "url",
+      "url": "https://opencode.ai/docs/",
+      "enabled": true,
+      "patterns": [],
+      "ignorePatterns": [
+        "**/node_modules/**",
+        "**/.git/**",
+        "**/dist/**"
+      ],
+      "lastIndexed": 1779194708403,
+      "itemCount": 189
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "lmStudio": {
+    "baseURL": "http://localhost:1234",
+    "preferredEmbedding": "text-embedding-qwen3-embedding-0.6b",
+    "preferredReranker": "qwen3-reranker-0.6b",
+    "preferredChat": ""
+  },
+  "rag": {
+    "denseWeight": 0.4,
+    "keywordWeight": 0.4,
+    "rrfK": 60,
+    "memoryBoost": 0.15,
+    "rerankMinResults": 10,
+    "confidenceGate": 0.85,
+    "rerankIntents": [
+      "learn",
+      "refactor",
+      "feature"
+    ]
+  },
+  "search": {
+    "defaultLimit": 10,
+    "defaultIntent": "learn",
+    "maxChunksBeforeRerank": 20
+  },
+  "indexing": {
+    "defaultPatterns": [
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.md",
+      "**/*.py",
+      "**/*.rs",
+      "**/*.go",
+      "**/*.java"
+    ],
+    "chunkSize": 500,
+    "chunkOverlap": 50
+  },
+  "sources": {
+    "folders": [
+      "C:\\opencode"
+    ],
+    "urls": [
+      "https://opencode.ai/docs",
+      "https://tauri.app/reference/cli/"
+    ]
+  },
+  "ui": {
+    "autoRefresh": true,
+    "refreshInterval": 30000
+  }
+}

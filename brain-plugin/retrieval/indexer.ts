@@ -263,6 +263,88 @@ function chunkFile(filePath: string, content: string): ChunkResult[] {
   return chunks;
 }
 
+function chunkMarkdownByHeadings(
+  filepath: string,
+  content: string,
+  titleFallback: string
+): ChunkResult[] {
+  const lines = content.split("\n");
+  const chunks: ChunkResult[] = [];
+
+  let h1 = "";
+  let h2 = "";
+  let h3 = "";
+
+  let currentStart = 0;
+  let currentName = `doc:${titleFallback}`;
+
+  const flush = (end: number) => {
+    if (end <= currentStart) return;
+    const chunkContent = lines.slice(currentStart, end).join("\n");
+    if (!chunkContent.trim()) return;
+
+    const startLine = currentStart + 1;
+    const endLine = end;
+    const id = computeHash(
+      `${filepath}:${startLine}:${endLine}:${currentName}:${chunkContent.slice(0, 100)}`
+    );
+
+    chunks.push({
+      id,
+      filepath,
+      language: "markdown",
+      type: "doc",
+      name: currentName,
+      start_line: startLine,
+      end_line: endLine,
+      content: chunkContent,
+    });
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const match = /^(#{1,3})\s+(.*)$/.exec(lines[i]);
+    if (!match) continue;
+
+    if (i > currentStart) flush(i);
+
+    const level = match[1].length;
+    const text = match[2].trim();
+
+    if (level === 1) {
+      h1 = text;
+      h2 = "";
+      h3 = "";
+    } else if (level === 2) {
+      h2 = text;
+      h3 = "";
+    } else {
+      h3 = text;
+    }
+
+    currentStart = i;
+    const parts = [h1, h2, h3].filter(Boolean);
+    currentName = `doc:${parts.length ? parts.join(" / ") : titleFallback}`;
+  }
+
+  flush(lines.length);
+
+  if (chunks.length === 0 && content.trim()) {
+    const id = computeHash(`${filepath}:1:${lines.length}:doc:${titleFallback}`);
+    chunks.push({
+      id,
+      filepath,
+      language: "markdown",
+      type: "doc",
+      name: `doc:${titleFallback}`,
+      start_line: 1,
+      end_line: lines.length,
+      content,
+    });
+  }
+
+  return chunks;
+}
+
 function updateFileRecord(
   relPath: string,
   mtime: number,
@@ -317,6 +399,7 @@ export async function indexProject(rootDir: string): Promise<ChunkResult[]> {
       const contentHash = computeHash(content);
 
       deleteFileRecord(relPath, db);
+      updateFileRecord(relPath, stat.mtimeMs, stat.size, contentHash, 0, db);
 
       const chunks = semanticChunkFile(filePath, content);
       const textChunks = chunks.map((c) => c.content);
@@ -387,4 +470,173 @@ function awaitEmbeddings(
   texts: string[]
 ): Promise<{ vectors: number[][]; modelType: "qwen" | "nomic" }> {
   return getEmbeddings(projectRoot, texts);
+}
+
+export async function indexDocs(
+  projectRoot: string,
+  docs: Array<{ docId: string; title?: string; content: string; sourceUrl?: string }>
+): Promise<ChunkResult[]> {
+  const db = getDatabase(projectRoot);
+  const allNewChunks: ChunkResult[] = [];
+
+  for (const doc of docs) {
+    const relPath = `docs/${doc.docId}`.replace(/\\/g, "/");
+    const now = Date.now();
+    const contentHash = computeHash(doc.content);
+    const size = Buffer.byteLength(doc.content, "utf8");
+
+    deleteFileRecord(relPath, db);
+    updateFileRecord(relPath, now, size, contentHash, 0, db);
+
+    const chunks = chunkMarkdownByHeadings(relPath, doc.content, doc.title || doc.docId);
+    const textChunks = chunks.map((c) => c.content);
+
+    let embeddings: number[][] = [];
+    let modelType: "qwen" | "nomic" = "qwen";
+    try {
+      const result = await awaitEmbeddings(projectRoot, textChunks);
+      embeddings = result.vectors;
+      modelType = result.modelType;
+    } catch (e: any) {
+      console.warn(
+        `[Brain/Indexer] Embedding failed for ${relPath}, indexing without vectors: ${e.message}`
+      );
+    }
+
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      db.prepare(`
+        INSERT OR REPLACE INTO chunks (id, filepath, language, type, name, start_line, end_line, content, content_hash, indexed_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        chunk.id,
+        relPath,
+        chunk.language,
+        chunk.type,
+        chunk.name,
+        chunk.start_line,
+        chunk.end_line,
+        chunk.content,
+        contentHash,
+        now
+      );
+
+      db.prepare(`
+        INSERT OR REPLACE INTO fts_chunks (rowid, filepath, content)
+        VALUES ((SELECT rowid FROM chunks WHERE id = ?), ?, ?)
+      `).run(chunk.id, relPath, chunk.content);
+
+      if (embeddings[i]) {
+        const tableName = modelType === "qwen" ? "chunk_embeddings" : "chunk_embeddings_nomic";
+        if (isVectorActive(db)) {
+          try {
+            db.prepare(
+              `INSERT OR REPLACE INTO ${tableName}(rowid, embedding) VALUES ((SELECT rowid FROM chunks WHERE id = ?), ?)`
+            ).run(chunk.id, new Float32Array(embeddings[i]));
+          } catch (e: any) {
+            console.warn(`[Brain/Indexer] Vector insert failed for chunk ${chunk.id}: ${e.message}`);
+          }
+        }
+      }
+    }
+
+    updateFileRecord(relPath, now, size, contentHash, chunks.length, db);
+    allNewChunks.push(...chunks);
+  }
+
+  return allNewChunks;
+}
+
+export async function indexChatTurn(
+  projectRoot: string,
+  sessionId: string,
+  userText: string,
+  assistantText: string
+): Promise<ChunkResult[]> {
+  const db = getDatabase(projectRoot);
+  const relPath = `chat/${sessionId}`.replace(/\\/g, "/");
+  const now = Date.now();
+  const combined = `${userText}\n\n${assistantText}`;
+  const contentHash = computeHash(combined);
+  const size = Buffer.byteLength(combined, "utf8");
+
+  deleteFileRecord(relPath, db);
+  updateFileRecord(relPath, now, size, contentHash, 0, db);
+
+  const chunks: ChunkResult[] = [
+    {
+      id: computeHash(`${relPath}:turn:user:${userText.slice(0, 100)}`),
+      filepath: relPath,
+      language: "text",
+      type: "chat",
+      name: "turn:user",
+      start_line: 1,
+      end_line: 1,
+      content: userText,
+    },
+    {
+      id: computeHash(`${relPath}:turn:assistant:${assistantText.slice(0, 100)}`),
+      filepath: relPath,
+      language: "text",
+      type: "chat",
+      name: "turn:assistant",
+      start_line: 2,
+      end_line: 2,
+      content: assistantText,
+    },
+  ];
+
+  const textChunks = chunks.map((c) => c.content);
+
+  let embeddings: number[][] = [];
+  let modelType: "qwen" | "nomic" = "qwen";
+  try {
+    const result = await awaitEmbeddings(projectRoot, textChunks);
+    embeddings = result.vectors;
+    modelType = result.modelType;
+  } catch (e: any) {
+    console.warn(
+      `[Brain/Indexer] Embedding failed for ${relPath}, indexing without vectors: ${e.message}`
+    );
+  }
+
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i];
+    db.prepare(`
+      INSERT OR REPLACE INTO chunks (id, filepath, language, type, name, start_line, end_line, content, content_hash, indexed_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      chunk.id,
+      relPath,
+      chunk.language,
+      chunk.type,
+      chunk.name,
+      chunk.start_line,
+      chunk.end_line,
+      chunk.content,
+      contentHash,
+      now
+    );
+
+    db.prepare(`
+      INSERT OR REPLACE INTO fts_chunks (rowid, filepath, content)
+      VALUES ((SELECT rowid FROM chunks WHERE id = ?), ?, ?)
+    `).run(chunk.id, relPath, chunk.content);
+
+    if (embeddings[i]) {
+      const tableName = modelType === "qwen" ? "chunk_embeddings" : "chunk_embeddings_nomic";
+      if (isVectorActive(db)) {
+        try {
+          db.prepare(
+            `INSERT OR REPLACE INTO ${tableName}(rowid, embedding) VALUES ((SELECT rowid FROM chunks WHERE id = ?), ?)`
+          ).run(chunk.id, new Float32Array(embeddings[i]));
+        } catch (e: any) {
+          console.warn(`[Brain/Indexer] Vector insert failed for chunk ${chunk.id}: ${e.message}`);
+        }
+      }
+    }
+  }
+
+  updateFileRecord(relPath, now, size, contentHash, chunks.length, db);
+  return chunks;
 }
