@@ -1,5 +1,5 @@
-import type { LMStudioModel } from "./types"
-import { fileLog } from "./utils/logger"
+import type { LMStudioModel } from "./types.js"
+import { fileLog } from "./utils/logger.js"
 
 /**
  * LM Studio SDK Client wrapper for Meta-Harness.

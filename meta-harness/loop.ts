@@ -10,16 +10,16 @@
 
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
-import { evaluateHarness } from "./evaluator";
-import { proposeHarness } from "./proposer";
-import { DEFAULT_HARNESS_CONFIG, validateConfig } from "./harness-space";
+import { evaluateHarness } from "./evaluator.js";
+import { proposeHarness } from "./proposer.js";
+import { DEFAULT_HARNESS_CONFIG, validateConfig } from "./harness-space.js";
 import type {
   BrainHarnessConfig,
   EvalResult,
   HarnessPopulationMember,
   MetaHarnessOptions,
   PluginState,
-} from "./types";
+} from "./types.js";
 
 /**
  * Run the Meta-Harness optimization loop.
@@ -49,6 +49,8 @@ export async function MetaHarnessLoop(
   const { loadTasks } = await import("./benchmark/tasks");
   const tasks = loadTasks(suite);
   logger(`Loaded ${tasks.length} benchmark tasks (suite: ${suite})`);
+
+  let previousBestScore = 0;
 
   // Main optimization loop
   for (let iter = 0; iter < iterations; iter++) {
@@ -112,13 +114,13 @@ export async function MetaHarnessLoop(
 
     // Check for convergence
     if (iter > 0) {
-      const prevBest = evaluatedPopulation[0].score;
       const currBest = topConfigs[0].score;
-      if (Math.abs(currBest - prevBest) < 0.001) {
+      if (Math.abs(currBest - previousBestScore) < 0.001) {
         logger(`Converged at iteration ${iter + 1}`);
         break;
       }
     }
+    previousBestScore = topConfigs[0].score;
 
     // If more iterations remaining, propose new configs
     if (iter < iterations - 1) {
@@ -226,9 +228,11 @@ function randomMutateConfig(config: BrainHarnessConfig): BrainHarnessConfig {
 
   // Normalize fusion weights
   const sum = mutated.fusionAlpha + mutated.fusionBeta + mutated.fusionGamma;
-  mutated.fusionAlpha /= sum;
-  mutated.fusionBeta /= sum;
-  mutated.fusionGamma /= sum;
+  if (sum > 0) {
+    mutated.fusionAlpha /= sum;
+    mutated.fusionBeta /= sum;
+    mutated.fusionGamma /= sum;
+  }
 
   return mutated;
 }

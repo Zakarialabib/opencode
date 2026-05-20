@@ -282,7 +282,8 @@ export async function smokeTest(): Promise<boolean> {
 }
 
 // CLI entry point
-if (require.main === module) {
+const isCliEntry = process.argv[1] && import.meta.url.endsWith(process.argv[1]);
+if (isCliEntry) {
   const args = process.argv.slice(2);
   const mode = args.includes("--live") ? "live" : "simulated";
   const iterations = parseInt(

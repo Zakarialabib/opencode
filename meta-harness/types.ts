@@ -116,4 +116,4 @@ export interface LMStudioModel {
   capabilities?: { vision: boolean; trained_for_tool_use: boolean }
 }
 
-export { LMStudioClient } from "./lmstudio-client"
+export { LMStudioClient } from "./lmstudio-client.js"

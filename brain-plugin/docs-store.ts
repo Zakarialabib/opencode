@@ -7,6 +7,7 @@ export interface DocEntry {
   raw: string;
   fetchedAt: number;
   usedCount: number;
+  lastAccessed: number;
 }
 
 export class DocsStore {
@@ -19,10 +20,19 @@ export class DocsStore {
 
   add(entry: DocEntry): void {
     const key = this.getKey(entry.source, entry.packageName);
+    entry.lastAccessed = Date.now();
     this.entries.set(key, entry);
     if (this.entries.size > this.maxEntries) {
-      const oldest = this.entries.entries().next().value;
-      if (oldest) this.entries.delete(oldest[0]);
+      // Evict least recently used entry
+      let lruKey: string | null = null;
+      let lruTime = Infinity;
+      for (const [k, v] of this.entries) {
+        if (v.lastAccessed < lruTime) {
+          lruTime = v.lastAccessed;
+          lruKey = k;
+        }
+      }
+      if (lruKey) this.entries.delete(lruKey);
     }
   }
 
@@ -31,6 +41,7 @@ export class DocsStore {
     const entry = this.entries.get(key);
     if (entry) {
       entry.usedCount++;
+      entry.lastAccessed = Date.now();
     }
     return entry;
   }

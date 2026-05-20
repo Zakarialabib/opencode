@@ -1,4 +1,4 @@
-import { SearchResultItem } from "./fusion";
+import { SearchResultItem } from "./fusion.js";
 
 let localReranker: any = null;
 let rerankerImportFailed = false;

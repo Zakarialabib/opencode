@@ -1,3 +1,4 @@
+import * as crypto from "crypto";
 import { getDatabase } from "../store/index.js";
 
 export interface Concept {
@@ -194,7 +195,6 @@ export function archiveToolOutput(
   content: string
 ): string {
   const db = getDatabase(projectRoot);
-  const crypto = require("crypto");
   const refId = `mem_chunk_${crypto.randomUUID().slice(0, 8)}`;
   const now = Date.now();
 

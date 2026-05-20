@@ -1,6 +1,6 @@
-import type { BrainHarnessConfig, ProposerResult, LMStudioClient } from "./types"
-import { DEFAULT_HARNESS_CONFIG, PARAMETER_BOUNDS } from "./harness-space"
-import { fileLog } from "./utils/logger"
+import type { BrainHarnessConfig, ProposerResult, LMStudioClient } from "./types.js"
+import { DEFAULT_HARNESS_CONFIG, PARAMETER_BOUNDS } from "./harness-space.js"
+import { fileLog } from "./utils/logger.js"
 
 /**
  * Meta-Harness Proposer using LM Studio.
@@ -157,9 +157,11 @@ function clampConfig(proposed: any): BrainHarnessConfig {
 
   // Normalize fusion weights
   const sum = config.fusionAlpha + config.fusionBeta + config.fusionGamma
-  config.fusionAlpha /= sum
-  config.fusionBeta /= sum
-  config.fusionGamma /= sum
+  if (sum > 0) {
+    config.fusionAlpha /= sum
+    config.fusionBeta /= sum
+    config.fusionGamma /= sum
+  }
 
   return config
 }

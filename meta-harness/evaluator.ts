@@ -5,7 +5,7 @@
  * aggregate scores across retrieval, generation, efficiency, and token economy.
  */
 
-import { fileLog } from "./utils/logger";
+import { fileLog } from "./utils/logger.js";
 import type {
   BrainHarnessConfig,
   BenchmarkTask,
@@ -201,4 +201,42 @@ export async function smokeTest(): Promise<boolean> {
     console.error("Smoke test failed:", err);
     return false;
   }
+}
+
+export async function runQuickBenchmark(
+  projectRoot: string,
+  suite: "smoke" = "smoke"
+): Promise<{ score: number; tasksRun: number; avgLatencyMs: number; metrics: Record<string, number> }> {
+  const { loadTasks } = await import("./benchmark/tasks");
+  const tasks = loadTasks(suite);
+  
+  const results: any[] = [];
+  let totalLatency = 0;
+  
+  for (const task of tasks) {
+    const startTime = Date.now();
+    try {
+      const result = await task.run(DEFAULT_HARNESS_CONFIG);
+      const latency = Date.now() - startTime;
+      totalLatency += latency;
+      results.push({ name: task.name, intent: task.intent, score: result.llmOutput.length > 0 ? 0.7 : 0.3, latency });
+    } catch {
+      results.push({ name: task.name, score: 0, latency: 0 });
+    }
+  }
+  
+  const avgLatency = totalLatency / results.length;
+  const avgScore = results.reduce((s, r) => s + r.score, 0) / results.length;
+  
+  const metrics: Record<string, number> = {};
+  const byIntent: Record<string, number[]> = {};
+  for (const r of results) {
+    if (!byIntent[r.intent]) byIntent[r.intent] = [];
+    byIntent[r.intent].push(r.score);
+  }
+  for (const [intent, scores] of Object.entries(byIntent)) {
+    metrics[intent] = scores.reduce((s, v) => s + v, 0) / scores.length;
+  }
+  
+  return { score: avgScore, tasksRun: results.length, avgLatencyMs: avgLatency, metrics };
 }

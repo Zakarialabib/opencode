@@ -3,12 +3,11 @@ import { getEmbeddings } from "./dense.js";
 import { isVectorActive } from "../store/vec.js";
 import { rerankChunks } from "./reranker.js";
 import { reciprocalRankFusion, SearchResultItem } from "./fusion.js";
-import { RerankingTrigger, getRerankingTrigger } from "./reranking-trigger.js";
 
 // Re-exported from fusion.ts; kept as alias for backward compatibility
 // with brain.ts and index.ts imports. Fields: id, filepath, language, type,
 // name, start_line, end_line, parent_id?, content, score?
-export { SearchResultItem as SearchResult } from "./fusion";
+export { SearchResultItem as SearchResult } from "./fusion.js";
 type SearchResult = SearchResultItem;
 
 function cosineSimilarity(a: number[], b: number[]): number {
@@ -115,25 +114,22 @@ export async function searchProjectContext(
   projectRoot: string,
   query: string,
   topK: number = 5,
-  intent: string = "unknown",
-  confidence: number = 0.7
+  intent: string = "unknown"
 ): Promise<SearchResult[]> {
   const db = getDatabase(projectRoot);
-  const rerankingTrigger = getRerankingTrigger();
 
-  const cacheKey = rerankingTrigger.getCacheKey(query, intent);
-  const cachedResults = rerankingTrigger.getCachedReranked(cacheKey);
-  if (cachedResults) {
-    return cachedResults.slice(0, topK);
-  }
-
+  // Merge strategy: Reciprocal Rank Fusion (RRF)
+  // Takes dense + FTS results, computes weighted rank-based scores,
+  // deduplicates by chunk_id, returns sorted by combined RRF score.
+  // Dense weight: 0.5, Keyword weight: 0.2, Smoothing factor K: 60
   const [ftsResults, denseResults] = await Promise.all([
-    ftsSearch(db, query, topK * 3),
-    denseSearch(db, projectRoot, query, topK * 3),
+    ftsSearch(db, query, topK * 2),
+    denseSearch(db, projectRoot, query, topK * 2),
   ]);
 
   const fused = reciprocalRankFusion(denseResults, ftsResults);
 
+  // Memory-aware retrieval boost: boost chunks linked to known memory concepts
   try {
     const { getConceptRelatedChunks } = await import("../memory/graph");
     const allConcepts = db
@@ -154,17 +150,6 @@ export async function searchProjectContext(
 
   const topFused = fused.slice(0, topK * 2);
 
-  if (rerankingTrigger.shouldRerank(intent, topFused.length, confidence)) {
-    const rerankLimit = rerankingTrigger.getRerankLimit(intent, topFused.length, confidence);
-    const itemsToRerank = topFused.slice(0, rerankLimit);
-    const remainingChunks = topFused.slice(rerankLimit);
-
-    const reranked = await rerankChunks(projectRoot, query, itemsToRerank, intent);
-    const finalResults = [...reranked, ...remainingChunks].slice(0, topK);
-
-    rerankingTrigger.cacheReranked(cacheKey, finalResults);
-    return finalResults;
-  }
-
-  return topFused.slice(0, topK);
+  const reranked = await rerankChunks(projectRoot, query, topFused, intent);
+  return reranked.slice(0, topK);
 }

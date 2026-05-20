@@ -1,4 +1,4 @@
-import type { BenchmarkTask } from "../types"
+import type { BenchmarkTask } from "../types.js"
 
 /**
  * Benchmark Task Suite for Meta-Harness Brain Plugin.
