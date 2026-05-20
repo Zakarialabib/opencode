@@ -89,6 +89,7 @@ async function fetchDocFromRegistry(
       raw: JSON.stringify(data).slice(0, 2000),
       fetchedAt: Date.now(),
       usedCount: 1,
+      lastAccessed: Date.now(),
     };
     docsStore.add(entry);
     return entry;
@@ -214,7 +215,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
       }
 
       console.log(`[Brain] Auto-indexing project in background: ${directory}`);
-      setImmediate(() => {
+      setImmediate(async () => {
         indexingInProgress = true;
         try {
           const startTime = Date.now();
@@ -230,7 +231,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
               } catch {}
             })();
           }
-          const result = indexProject(directory);
+          const result = await indexProject(directory);
           const duration = Date.now() - startTime;
           console.log(
             `[Brain] Background auto-index completed in ${duration}ms (processed ${result.length} chunks)`
@@ -273,16 +274,11 @@ const BrainPlugin: Plugin = async ({ directory }) => {
         return;
       }
 
-      const complexity = adaptiveChunker.estimateComplexity(msg.content);
-      const adaptiveLimit = adaptiveChunker.calculateChunkLimit(
-        scenario.intent,
-        score,
-        complexity
-      );
+      const adaptiveLimit = 20; // default fallback until adaptiveChunker is implemented
 
       try {
         console.log(
-          `[Brain] Executing search for intent: "${scenario.intent}" (strategy: ${strategy.name}, complexity: ${complexity}, chunks: ${adaptiveLimit})...`
+          `[Brain] Executing search for intent: "${scenario.intent}" (strategy: ${strategy.name}, chunks: ${adaptiveLimit})...`
         );
         const results = await searchProjectContext(
           directory,
@@ -293,6 +289,11 @@ const BrainPlugin: Plugin = async ({ directory }) => {
 
         const mappedChunks = results.map((r) => ({
           id: r.id,
+          text: r.content,
+          path: r.filepath,
+          startLine: r.start_line,
+          endLine: r.end_line,
+          mtime: 0,
           filepath: r.filepath,
           language: r.language,
           type: r.type,
@@ -444,7 +445,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
           dirtyFiles.clear();
           try {
             console.log(`[Brain] Triggering background re-index for modified files...`);
-            const result = indexProject(directory);
+            const result = await indexProject(directory);
             console.log(
               `[Brain] Background incremental re-index complete: parsed ${result.length} new chunks`
             );
@@ -475,7 +476,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
           indexingInProgress = true;
           try {
             const startTime = Date.now();
-            const result = indexProject(root);
+            const result = await indexProject(root);
             const duration = Date.now() - startTime;
             return `Project indexed successfully. Parsed ${result.length} modified/new chunks in ${duration}ms.`;
           } catch (err: any) {
@@ -639,7 +640,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
         args: {},
         async execute() {
           const status = contextInjector.getBudgetStatus();
-          return {
+          return JSON.stringify({
             budget: {
               total: status.total,
               used: status.used,
@@ -650,7 +651,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
             },
             message: `Token Budget: ${status.used}/${status.total} tokens used (${status.percent.toFixed(1)}%), ` +
               `${status.availableForContext} available for new context`,
-          };
+          });
         },
       }),
 
@@ -660,7 +661,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
         async execute() {
           contextInjector.resetBudget();
           const status = contextInjector.getBudgetStatus();
-          return {
+          return JSON.stringify({
             success: true,
             message: "Token budget reset successfully",
             newStatus: {
@@ -668,7 +669,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
               used: status.used,
               availableForContext: status.availableForContext,
             },
-          };
+          });
         },
       }),
 
@@ -818,7 +819,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
             "learn"
           );
 
-          return {
+          return JSON.stringify({
             query: args.query,
             intent: "learn",
             chunks: results.map((r) => ({
@@ -831,7 +832,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
               content_preview: r.content.slice(0, 200),
             })),
             totalReturned: results.length,
-          };
+          });
         },
       }),
 
@@ -845,18 +846,18 @@ const BrainPlugin: Plugin = async ({ directory }) => {
           const modelId = args.model || provider.defaultEmbedModel;
           try {
             const embeddings = await provider.embed(modelId, args.texts);
-            return {
+            return JSON.stringify({
               success: true,
               model: modelId,
               count: embeddings.length,
               dimensions: embeddings[0]?.length || 0,
               embeddings: embeddings.map((e) => ({
-                embedding: e.slice(0, 5).concat(["..."]),
+                embedding: e.slice(0, 5),
                 dimensions: e.length,
               })),
-            };
+            });
           } catch (err: any) {
-            return { success: false, error: err.message };
+            return JSON.stringify({ success: false, error: err.message });
           }
         },
       }),
@@ -963,8 +964,9 @@ const BrainPlugin: Plugin = async ({ directory }) => {
           ];
           
           for (const [intent, score] of Object.entries(result.metrics)) {
-            const bar = "█".repeat(Math.round(score * 10)) + "░".repeat(10 - Math.round(score * 10));
-            lines.push(`${intent}: [${bar}] ${(score * 100).toFixed(0)}%`);
+            const s = score as number;
+            const bar = "█".repeat(Math.round(s * 10)) + "░".repeat(10 - Math.round(s * 10));
+            lines.push(`${intent}: [${bar}] ${(s * 100).toFixed(0)}%`);
           }
           
           return lines.join("\n");
@@ -1027,14 +1029,14 @@ const BrainPlugin: Plugin = async ({ directory }) => {
           const contextLength = await provider.getContextLength();
           const vramUsage = provider.getCurrentVRAMUsage();
 
-          return {
+          return JSON.stringify({
             speculativeDecoding: "not_configured",
             loadedModels: loaded,
             contextLength,
             vramUsageGB: vramUsage,
             maxVRAMGB: 5.5,
             provider: provider.baseURL || "http://localhost:1234",
-          };
+          });
         },
       }),
     },
