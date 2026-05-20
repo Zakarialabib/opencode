@@ -14,9 +14,11 @@ import { evaluateHarness } from "./evaluator.js";
 import { proposeHarness } from "./proposer.js";
 import { DEFAULT_HARNESS_CONFIG, validateConfig } from "./harness-space.js";
 import type {
+  BenchmarkTask,
   BrainHarnessConfig,
   EvalResult,
   HarnessPopulationMember,
+  LMStudioClient,
   MetaHarnessOptions,
   PluginState,
 } from "./types.js";
@@ -51,6 +53,7 @@ export async function MetaHarnessLoop(
   logger(`Loaded ${tasks.length} benchmark tasks (suite: ${suite})`);
 
   let previousBestScore = 0;
+  let allTimeBestScore = 0;
 
   // Main optimization loop
   for (let iter = 0; iter < iterations; iter++) {
@@ -67,7 +70,7 @@ export async function MetaHarnessLoop(
         `Evaluating config (alpha=${validatedConfig.fusionAlpha.toFixed(2)}, gate=${validatedConfig.confidenceGate.toFixed(2)})...`
       );
 
-      const result = await evaluateHarness(validatedConfig, tasks, lmStudio, logger);
+      const result = await evaluateWithRetry(validatedConfig, tasks, lmStudio, logger);
 
       evaluatedPopulation.push({
         config: validatedConfig,
@@ -106,8 +109,9 @@ export async function MetaHarnessLoop(
     // Persist iteration results
     persistIterationResults(outputDir, iter, topConfigs);
 
-    // Update state best if improved
-    if (best.score > (state.history.find((h) => h.config === state.bestConfig)?.score ?? 0)) {
+    // Update state best if improved (compare scores, not config references)
+    if (best.score > allTimeBestScore) {
+      allTimeBestScore = best.score;
       state.bestConfig = best.config;
       persistBestConfig(outputDir, best.config, best.score);
     }
@@ -141,7 +145,7 @@ export async function MetaHarnessLoop(
           logger(`  Proposal ${i + 1}: ${reasoning.slice(0, 100)}...`);
 
           // Evaluate proposal
-          const proposalResult = await evaluateHarness(proposedConfig, tasks, lmStudio, logger);
+          const proposalResult = await evaluateWithRetry(proposedConfig, tasks, lmStudio, logger);
 
           newPopulation.push({
             config: proposedConfig,
@@ -156,7 +160,7 @@ export async function MetaHarnessLoop(
       // Also add random mutations for diversity
       for (let i = 0; i < 2; i++) {
         const randomConfig = randomMutateConfig(topConfigs[0].config);
-        const randomResult = await evaluateHarness(randomConfig, tasks, lmStudio, logger);
+        const randomResult = await evaluateWithRetry(randomConfig, tasks, lmStudio, logger);
         newPopulation.push({
           config: randomConfig,
           score: randomResult.score,
@@ -235,6 +239,51 @@ function randomMutateConfig(config: BrainHarnessConfig): BrainHarnessConfig {
   }
 
   return mutated;
+}
+
+/**
+ * Evaluate a harness config with retry logic and 60s timeout.
+ * Retries up to MAX_RETRIES times, logs warnings on timeout/failure, never crashes.
+ */
+async function evaluateWithRetry(
+  config: BrainHarnessConfig,
+  tasks: BenchmarkTask[],
+  lmStudio: LMStudioClient,
+  logger: (msg: string, level?: "info" | "warn" | "error") => void
+): Promise<EvalResult> {
+  const TIMEOUT_MS = 60_000;
+  const MAX_RETRIES = 3;
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const result = await Promise.race([
+        evaluateHarness(config, tasks, lmStudio, logger),
+        new Promise<EvalResult>((_, reject) =>
+          setTimeout(() => reject(new Error(`Timed out after ${TIMEOUT_MS}ms`)), TIMEOUT_MS)
+        ),
+      ]);
+      return result;
+    } catch (err) {
+      logger(`Evaluate attempt ${attempt}/${MAX_RETRIES} failed: ${err}`, "warn");
+      if (attempt < MAX_RETRIES) {
+        await new Promise((r) => setTimeout(r, 1000));
+      }
+    }
+  }
+
+  logger(`All ${MAX_RETRIES} evaluate attempts failed, returning zero result`, "error");
+  return {
+    score: 0,
+    metrics: {
+      retrievalAccuracy: 0,
+      contextEfficiency: 0,
+      tokenEconomy: 0,
+      taskSuccessRate: 0,
+      latencyMs: TIMEOUT_MS,
+      intentPrecision: {},
+    },
+    raw: [],
+  };
 }
 
 function persistIterationResults(

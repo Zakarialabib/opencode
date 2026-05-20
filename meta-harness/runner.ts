@@ -10,7 +10,8 @@
  */
 
 import { appendFileSync, existsSync, mkdirSync, writeFileSync } from "fs";
-import { join } from "path";
+import { join, resolve } from "path";
+import { fileURLToPath } from "url";
 import { fileLog } from "./utils/logger.js";
 import { DEFAULT_HARNESS_CONFIG, applyHarnessConfig, validateConfig } from "./harness-space.js";
 import { LMStudioClient } from "./lmstudio-client.js";
@@ -282,7 +283,7 @@ export async function smokeTest(): Promise<boolean> {
 }
 
 // CLI entry point
-const isCliEntry = process.argv[1] && import.meta.url.endsWith(process.argv[1]);
+const isCliEntry = process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1]);
 if (isCliEntry) {
   const args = process.argv.slice(2);
   const mode = args.includes("--live") ? "live" : "simulated";

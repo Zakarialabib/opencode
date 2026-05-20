@@ -12,7 +12,11 @@ export interface DocEntry {
 
 export class DocsStore {
   private entries: Map<string, DocEntry> = new Map();
-  private maxEntries = 50;
+  private maxEntries: number;
+
+  constructor(maxEntries = 50) {
+    this.maxEntries = maxEntries;
+  }
 
   getKey(source: string, packageName: string): string {
     return `${source}:${packageName}`;
