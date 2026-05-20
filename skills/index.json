@@ -259,8 +259,71 @@
       "category": "mobile",
       "source": "alinaqi/claude-bootstrap",
       "installs": 2100
+    },
+    {
+      "path": "skills/android/SKILL.md",
+      "name": "android",
+      "description": "Android development core — architecture, patterns, and Tauri mobile integration",
+      "agents": [
+        "android-kotlin",
+        "mobile-qa",
+        "devops-engineer"
+      ],
+      "category": "mobile"
+    },
+    {
+      "path": "skills/android/compose/SKILL.md",
+      "name": "android-compose",
+      "description": "Jetpack Compose UI patterns — Material 3, state management, theming",
+      "agents": [
+        "android-kotlin",
+        "mobile-qa"
+      ],
+      "category": "mobile"
+    },
+    {
+      "path": "skills/android/gradle/SKILL.md",
+      "name": "android-gradle",
+      "description": "Gradle build system — Kotlin DSL, version catalogs, build variants",
+      "agents": [
+        "android-kotlin",
+        "mobile-qa",
+        "devops-engineer"
+      ],
+      "category": "mobile"
+    },
+    {
+      "path": "skills/android/testing/SKILL.md",
+      "name": "android-testing",
+      "description": "Android testing — JUnit 5, MockK, Compose UI Test, instrumented tests",
+      "agents": [
+        "android-kotlin",
+        "mobile-qa"
+      ],
+      "category": "mobile"
+    },
+    {
+      "path": "skills/android/debugging/SKILL.md",
+      "name": "android-debugging",
+      "description": "Android debug & inspect — ADB, logcat, crash analysis, UI hierarchy inspection",
+      "agents": [
+        "android-kotlin",
+        "mobile-qa",
+        "devops-engineer"
+      ],
+      "category": "mobile"
+    },
+    {
+      "path": "skills/android/deployment/SKILL.md",
+      "name": "android-deployment",
+      "description": "Android deployment — Play Store releases, code signing, CI/CD, Tauri mobile distribution",
+      "agents": [
+        "android-kotlin",
+        "devops-engineer"
+      ],
+      "category": "mobile"
     }
   ],
-  "lastUpdated": "2026-05-18T00:00:00.000Z",
-  "totalSkills": 26
+  "lastUpdated": "2026-05-18T12:54:00.000Z",
+  "totalSkills": 32
 }

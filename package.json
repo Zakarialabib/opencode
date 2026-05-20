@@ -55,6 +55,10 @@
     "config:validate": "node -e \"const fs = require('fs'); try { JSON.parse(fs.readFileSync('opencode.json', 'utf8')); console.log('✅ opencode.json is valid JSON') } catch (e) { console.error('❌ Invalid opencode.json:', e.message); process.exit(1) }\"",
     "mcp:validate": "node -e \"const fs = require('fs'); const path = require('path'); const config = JSON.parse(fs.readFileSync('opencode.json', 'utf8')); const mcpPath = path.join(config.project?.root || '.', 'opencode.json'); try { JSON.parse(fs.readFileSync(mcpPath, 'utf8')); console.log('✅ MCP config is valid') } catch (e) { console.error('❌ Invalid MCP config:', e.message); process.exit(1) }\"",
     "autoresearch:test": "echo 'Running autoresearch dry run...' && node -e \"console.log('✅ /autoresearch feature ready (use /autoresearch in OpenCode CLI)')\"",
-    "lsp:check": "npx tsx tools/project-health-check.ts --lsp"
+    "lsp:check": "npx tsx tools/project-health-check.ts --lsp",
+    "brain:status": "tsx brain-plugin/scripts/status.ts",
+    "brain:index": "tsx brain-plugin/scripts/index.ts",
+    "brain:benchmark": "tsx brain-plugin/scripts/benchmark.ts",
+    "brain:benchmark:full": "tsx brain-plugin/scripts/benchmark.ts --full"
   }
 }
