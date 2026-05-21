@@ -436,15 +436,29 @@ async function checkLMConnection() {
   const data = await fetchLMStudio("/api/v1/models");
   if (data && data.models) {
     lmState.connected = true;
-    lmState.models = data.models.map(m => m.key);
+    lmState.models = data.models.map(m => m.key).filter(Boolean);
     lmState.loadedInstances = [];
     
+    const categories = { embedding: [], reranker: [], chat: [], draft: [] };
     for (const model of data.models) {
+      const key = model.key;
+      if (!key) continue;
+      
+      if (model.type === "embedding" || key.includes("embed") || key.includes("nomic")) {
+        categories.embedding.push(key);
+      } else if (key.includes("rerank")) {
+        categories.reranker.push(key);
+      } else if (key.includes("draft")) {
+        categories.draft.push(key);
+      } else {
+        categories.chat.push(key);
+      }
+      
       if (model.loaded_instances && model.loaded_instances.length > 0) {
         for (const instance of model.loaded_instances) {
           lmState.loadedInstances.push({
             id: instance.id,
-            modelKey: model.key,
+            modelKey: key,
             type: model.type,
             config: instance.config,
           });
@@ -452,6 +466,7 @@ async function checkLMConnection() {
       }
     }
     
+    lmState.categories = categories;
     return true;
   }
   lmState.connected = false;
@@ -529,7 +544,9 @@ const server = Bun.serve({
 
 async function handleAPI(path, method, body) {
   const json = (data) => new Response(JSON.stringify(data), { headers: { "Content-Type": "application/json" } });
+  const error = (msg) => new Response(JSON.stringify({ success: false, error: msg }), { status: 500, headers: { "Content-Type": "application/json" } });
 
+  try {
   if (path === "/config") {
     if (method === "GET") return json({ success: true, data: appConfig });
     appConfig = { ...appConfig, ...body };
@@ -544,18 +561,7 @@ async function handleAPI(path, method, body) {
   if (path === "/lmstudio/status") {
     await checkLMConnection();
     
-    const categories = { embedding: [], reranker: [], chat: [], draft: [] };
-    for (const model of lmState.models) {
-      if (model.type === "embedding") {
-        categories.embedding.push(model.key);
-      } else if (model.key.includes("rerank")) {
-        categories.reranker.push(model.key);
-      } else if (model.key.includes("draft")) {
-        categories.draft.push(model.key);
-      } else {
-        categories.chat.push(model.key);
-      }
-    }
+    const categories = lmState.categories || { embedding: [], reranker: [], chat: [], draft: [] };
 
     const loadedModelKeys = lmState.loadedInstances.map(i => i.modelKey || i.id);
     
@@ -563,7 +569,7 @@ async function handleAPI(path, method, body) {
       success: true,
       data: {
         connected: lmState.connected,
-        available: lmState.models.map(m => m.key),
+        available: lmState.models,
         loaded: loadedModelKeys,
         loadedInstances: lmState.loadedInstances,
         categories,
@@ -1142,6 +1148,10 @@ async function handleAPI(path, method, body) {
   }
 
   return json({ success: false, error: "Unknown endpoint" });
+  } catch (err) {
+    console.log("[API] Error:", err.message, err.stack);
+    return error(err.message);
+  }
 }
 
 async function main() {
