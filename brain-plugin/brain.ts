@@ -8,7 +8,8 @@ import { sessionMemory } from "./state/session.js";
 import { docsStore, DocEntry } from "./docs-store.js";
 import { getDatabase, closeDatabase } from "./store/index.js";
 import { isVectorActive } from "./store/vec.js";
-import { resetDenseFailedFlag } from "./retrieval/dense.js";
+import { resetDenseFailedFlag, getDenseModelStatus, unloadDensePipeline, forceLMStudioFallback } from "./retrieval/dense.js";
+import { getRerankerStatus, unloadReranker, forceRerankerOff } from "./retrieval/reranker.js";
 import { formatSearchResults } from "./tools/formatter";
 import { TokenBudgetMonitor, ContextPruner, initializeFromConfig } from "./context/token-budget.js";
 import type { SignalBundle } from "./tree/engine.js";
@@ -1037,6 +1038,85 @@ const BrainPlugin: Plugin = async ({ directory }) => {
             maxVRAMGB: 5.5,
             provider: provider.baseURL || "http://localhost:1234",
           });
+        },
+      }),
+
+      brain_model_status: tool({
+        description: "Get model subsystem status: dense embedder, reranker, and provider",
+        args: {},
+        async execute() {
+          const denseStatus = getDenseModelStatus();
+          const rerankerStatus = getRerankerStatus();
+          const loadedModels = await provider.getLoadedModels();
+          const vramUsage = provider.getCurrentVRAMUsage();
+          const loadStatusMap = await provider.getModelLoadStatus();
+
+          return JSON.stringify({
+            dense: denseStatus,
+            reranker: rerankerStatus,
+            provider: {
+              name: provider.name,
+              baseURL: provider.baseURL || "http://localhost:1234",
+              connected: loadedModels.length > 0,
+            },
+            loadedModels,
+            loadStatus: Object.fromEntries(loadStatusMap),
+            vramUsageGB: vramUsage,
+            maxVRAMGB: 5.5,
+          }, null, 2);
+        },
+      }),
+
+      brain_model_unload: tool({
+        description: "Unload a model subsystem (dense | reranker | all). Keeps LM Studio connection intact.",
+        args: {
+          target: tool.schema.enum(["dense", "reranker", "all"]).describe("Subsystem to unload"),
+        },
+        async execute(args: any) {
+          const target = args.target || "all";
+          const results: string[] = [];
+
+          if (target === "dense" || target === "all") {
+            unloadDensePipeline();
+            results.push("dense: unloaded");
+          }
+          if (target === "reranker" || target === "all") {
+            unloadReranker();
+            results.push("reranker: unloaded");
+          }
+
+          return `Model state: ${results.join(", ")}. LM Studio provider unaffected.`;
+        },
+      }),
+
+      brain_model_provider: tool({
+        description: "Switch model provider mode (onnx_local | lmstudio | download_only). Controls whether ONNX pipelines attempt to load.",
+        args: {
+          mode: tool.schema.enum(["onnx_local", "lmstudio", "download_only"]).describe("Provider mode"),
+        },
+        async execute(args: any) {
+          const mode = args.mode || "lmstudio";
+          const results: string[] = [];
+
+          switch (mode) {
+            case "download_only":
+              unloadDensePipeline();
+              unloadReranker();
+              forceLMStudioFallback();
+              forceRerankerOff();
+              results.push("ONNX pipelines blocked, LM Studio only");
+              break;
+            case "onnx_local":
+              resetDenseFailedFlag();
+              results.push("ONNX dense enabled; reranker will auto-init on next call");
+              break;
+            case "lmstudio":
+              resetDenseFailedFlag();
+              results.push("ONNX auto-init on demand, LM Studio fallback available");
+              break;
+          }
+
+          return JSON.stringify({ mode, changes: results, dense: getDenseModelStatus(), reranker: getRerankerStatus() }, null, 2);
         },
       }),
     },

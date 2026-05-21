@@ -270,3 +270,53 @@ export function resetDenseFailedFlag(): void {
   localPipeline = null;
   console.log("[Brain/Dense] Reset sticky embedding fail flag. ONNX will be retried.");
 }
+
+// ─── Dense Model Status ─────────────────────────────────────────────────────────
+export interface DenseModelStatus {
+  pipelineLoaded: boolean;
+  importFailed: boolean;
+  lastErrorTime: number;
+  cooldownActive: boolean;
+  cooldownRemainingMs: number;
+  activeModel: string;
+}
+
+/**
+ * Get current status of the dense embedding pipeline for dashboard/observability.
+ */
+export function getDenseModelStatus(): DenseModelStatus {
+  const now = Date.now();
+  const cooldownMs = 5 * 60 * 1000;
+  const elapsed = now - lastErrorTime;
+  return {
+    pipelineLoaded: localPipeline !== null,
+    importFailed: transformersImportFailed,
+    lastErrorTime,
+    cooldownActive: transformersImportFailed && elapsed < cooldownMs,
+    cooldownRemainingMs: transformersImportFailed ? Math.max(0, cooldownMs - elapsed) : 0,
+    activeModel: transformersImportFailed ? "nomic (LM Studio fallback)" : "qwen (ONNX local)",
+  };
+}
+
+/**
+ * Unload the dense embedding pipeline (download-only mode, no loaded model in memory).
+ * Resets to allow fresh loading on next use.
+ */
+export function unloadDensePipeline(): void {
+  localPipeline = null;
+  transformersImportFailed = false;
+  lastErrorTime = 0;
+  console.log("[Brain/Dense] Dense pipeline unloaded. Will re-init on next embed request.");
+}
+
+/**
+ * Force-use LM Studio fallback for embeddings (download-only mode).
+ */
+export function forceLMStudioFallback(): void {
+  if (!transformersImportFailed) {
+    transformersImportFailed = true;
+    lastErrorTime = Date.now();
+    localPipeline = null;
+    console.log("[Brain/Dense] Forced LM Studio fallback mode. ONNX pipeline will not load.");
+  }
+}

@@ -159,3 +159,48 @@ export async function rerankChunks(
     return fusedChunks;
   }
 }
+
+// ─── Reranker Status & Unload ───────────────────────────────────────────────────
+export interface RerankerStatus {
+  pipelineLoaded: boolean;
+  importFailed: boolean;
+  confidenceGate: number;
+  rerankMinResults: number;
+  rerankIntents: string[];
+  maxChunks: number;
+}
+
+/**
+ * Get current status of the reranker pipeline for dashboard/observability.
+ */
+export function getRerankerStatus(): RerankerStatus {
+  return {
+    pipelineLoaded: localReranker !== null,
+    importFailed: rerankerImportFailed,
+    confidenceGate: _confidenceGate,
+    rerankMinResults: _rerankMinResults,
+    rerankIntents: [..._rerankIntents],
+    maxChunks: _rerankerMaxChunks,
+  };
+}
+
+/**
+ * Unload the reranker pipeline (download-only mode, no loaded model in memory).
+ * Resets to allow fresh loading on next use.
+ */
+export function unloadReranker(): void {
+  localReranker = null;
+  rerankerImportFailed = false;
+  console.log("[Brain/Reranker] Reranker pipeline unloaded. Will re-init on next rerank request.");
+}
+
+/**
+ * Force-skip reranker (download-only mode, always fall back to RRF fusion).
+ */
+export function forceRerankerOff(): void {
+  if (!rerankerImportFailed) {
+    rerankerImportFailed = true;
+    localReranker = null;
+    console.log("[Brain/Reranker] Forced reranker off. Fusion-only mode.");
+  }
+}

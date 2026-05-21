@@ -123,9 +123,46 @@
     .vram-bar { height: 4px; background: var(--bg-tertiary); border-radius: 2px; margin-top: 8px; overflow: hidden; }
     .vram-fill { height: 100%; background: var(--accent); transition: width 0.3s; }
     
+    .model-catalog-container { display: flex; flex-direction: column; gap: 8px; }
+    .model-catalog-item { display: grid; grid-template-columns: 1fr 80px 80px 100px; gap: 10px; align-items: center; padding: 10px; background: var(--bg-tertiary); border-radius: 6px; }
+    .model-catalog-item .name { font-size: 11px; font-weight: 500; }
+    .model-catalog-item .type { font-size: 9px; color: var(--text-secondary); text-transform: uppercase; }
+    .model-catalog-item .size { font-size: 10px; color: var(--text-secondary); text-align: right; }
+    .model-catalog-item .actions { display: flex; gap: 4px; justify-content: flex-end; }
+    
+    .model-status-container { display: flex; flex-direction: column; gap: 6px; }
+    .model-status-item { display: grid; grid-template-columns: 1fr 100px 80px; gap: 10px; align-items: center; padding: 8px 10px; background: var(--bg-tertiary); border-radius: 4px; }
+    .model-status-item .name { font-size: 10px; }
+    .model-status-item .readiness { font-size: 9px; text-align: center; }
+    .model-status-item .actions { display: flex; gap: 4px; justify-content: flex-end; }
+    
+    .jobs-container { display: flex; flex-direction: column; gap: 6px; }
+    .job-item { display: grid; grid-template-columns: 1fr 80px 100px; gap: 10px; align-items: center; padding: 8px 10px; background: var(--bg-tertiary); border-radius: 4px; }
+    .job-item .model-name { font-size: 10px; }
+    .job-item .status { font-size: 9px; text-align: center; }
+    .job-item .progress { font-size: 9px; color: var(--text-secondary); text-align: right; }
+    .job-progress-bar { height: 3px; background: var(--bg-primary); border-radius: 2px; margin-top: 4px; overflow: hidden; }
+    .job-progress-fill { height: 100%; background: var(--accent); transition: width 0.3s; }
+    
+    .readiness-loaded { color: var(--success); }
+    .readiness-ready { color: var(--blue); }
+    .readiness-missing { color: var(--error); }
+    .readiness-downloading { color: var(--warning); }
+    .readiness-failed { color: var(--error); }
+    
+    .status-badge { font-size: 9px; padding: 2px 6px; border-radius: 3px; }
+    .status-badge.loaded { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+    .status-badge.ready { background: rgba(96, 165, 250, 0.15); color: var(--blue); }
+    .status-badge.missing { background: rgba(239, 68, 68, 0.15); color: var(--error); }
+    .status-badge.downloading { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .status-badge.failed { background: rgba(239, 68, 68, 0.2); color: var(--error); }
+    
     @media (max-width: 900px) {
       .grid-2, .metrics, .config-grid { grid-template-columns: 1fr; }
       .model-control { grid-template-columns: 1fr; }
+      .model-catalog-item { grid-template-columns: 1fr; }
+      .model-status-item { grid-template-columns: 1fr; }
+      .job-item { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -278,8 +315,9 @@
     <div class="tabs">
       <button class="tab active" onclick="switchTab('tab-search')">Search</button>
       <button class="tab" onclick="switchTab('tab-benchmark')">Benchmark</button>
+      <button class="tab" onclick="switchTab('tab-models')">Models</button>
       <button class="tab" onclick="switchTab('tab-index')">Indexing</button>
-      <button class="tab" onclick="switchTab('tab-config')">Config</button>
+      <button class="tab" onclick="switchTab('tab-settings')">Settings</button>
       <button class="tab" onclick="switchTab('tab-logs')">Logs</button>
     </div>
 
@@ -303,6 +341,27 @@
         </div>
         <div id="benchmark-results">
           <div class="empty-state">Click "Run" to benchmark</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-models" class="tab-content">
+      <div class="card" style="margin-bottom: 16px;">
+        <div class="card-header">
+          <span class="card-title">Model Catalog</span>
+          <button class="btn" onclick="loadModelState()">Refresh</button>
+        </div>
+        <div id="model-catalog" class="model-catalog-container">
+          <div class="empty-state">Loading model catalog...</div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Download Jobs</span>
+        </div>
+        <div id="download-jobs" class="jobs-container">
+          <div class="empty-state">No active downloads</div>
         </div>
       </div>
     </div>
@@ -340,25 +399,78 @@
       </div>
     </div>
 
-    <div id="tab-config" class="tab-content">
-      <div class="grid grid-2">
+    <div id="tab-settings" class="tab-content">
+      <div class="grid grid-2" style="margin-bottom: 16px;">
         <div class="card">
-          <div class="card-header"><span class="card-title">RAG Config</span></div>
-          <div class="config-grid">
-            <div class="config-item"><span class="config-label">Dense Weight</span><span class="config-value" id="cfg-dense">0.4</span></div>
-            <div class="config-item"><span class="config-label">Keyword Weight</span><span class="config-value" id="cfg-keyword">0.4</span></div>
-            <div class="config-item"><span class="config-label">RRF K</span><span class="config-value" id="cfg-rrf-k">60</span></div>
-            <div class="config-item"><span class="config-label">Memory Boost</span><span class="config-value" id="cfg-memory-boost">15%</span></div>
-            <div class="config-item"><span class="config-label">Rerank Min</span><span class="config-value" id="cfg-rerank-min">10</span></div>
-            <div class="config-item"><span class="config-label">Confidence</span><span class="config-value" id="cfg-confidence">0.85</span></div>
+          <div class="card-header">
+            <span class="card-title">Provider Settings</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div>
+              <label style="font-size: 9px; color: var(--text-secondary); text-transform: uppercase;">Provider</label>
+              <select class="select" id="settings-provider">
+                <option value="lmstudio">LM Studio</option>
+                <option value="ollama">Ollama (planned)</option>
+                <option value="onnx">ONNX Runtime (planned)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 9px; color: var(--text-secondary); text-transform: uppercase;">Base URL</label>
+              <input type="text" class="input" id="settings-baseurl" placeholder="localhost:1234">
+            </div>
+            <button class="btn primary" onclick="saveProviderSettings()">Save Provider</button>
           </div>
         </div>
+        
         <div class="card">
-          <div class="card-header"><span class="card-title">Search Config</span></div>
-          <div class="config-grid">
-            <div class="config-item"><span class="config-label">Default Limit</span><span class="config-value" id="cfg-search-limit">10</span></div>
-            <div class="config-item"><span class="config-label">Default Intent</span><span class="config-value" id="cfg-search-intent">learn</span></div>
+          <div class="card-header">
+            <span class="card-title">Model Selection</span>
           </div>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div>
+              <label style="font-size: 9px; color: var(--purple); text-transform: uppercase;">Embedding Model</label>
+              <select class="select" id="settings-embed-model">
+                <option value="">Select embedding model...</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 9px; color: var(--yellow); text-transform: uppercase;">Reranker Model</label>
+              <select class="select" id="settings-rerank-model">
+                <option value="">Select reranker model...</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 9px; color: var(--blue); text-transform: uppercase;">Chat Model</label>
+              <select class="select" id="settings-chat-model">
+                <option value="">Select chat model...</option>
+              </select>
+            </div>
+            <button class="btn primary" onclick="saveModelSelection()">Save Selection</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Model Status Overview</span>
+          <button class="btn" onclick="loadModelState()">Refresh Status</button>
+        </div>
+        <div id="model-status-overview" class="model-status-container">
+          <div class="empty-state">Loading model status...</div>
+        </div>
+      </div>
+      
+      <div class="card" style="margin-top: 16px;">
+        <div class="card-header">
+          <span class="card-title">RAG Configuration</span>
+        </div>
+        <div class="config-grid">
+          <div class="config-item"><span class="config-label">Dense Weight</span><span class="config-value" id="cfg-dense">0.4</span></div>
+          <div class="config-item"><span class="config-label">Keyword Weight</span><span class="config-value" id="cfg-keyword">0.4</span></div>
+          <div class="config-item"><span class="config-label">RRF K</span><span class="config-value" id="cfg-rrf-k">60</span></div>
+          <div class="config-item"><span class="config-label">Memory Boost</span><span class="config-value" id="cfg-memory-boost">15%</span></div>
+          <div class="config-item"><span class="config-label">Rerank Min</span><span class="config-value" id="cfg-rerank-min">10</span></div>
+          <div class="config-item"><span class="config-label">Confidence</span><span class="config-value" id="cfg-confidence">0.85</span></div>
         </div>
       </div>
     </div>
@@ -727,6 +839,7 @@
       await checkLMStudio();
       await checkBrainStatus();
       await loadSources();
+      await loadModelState();
       log('Refresh complete', 'success');
     }
 
@@ -741,6 +854,242 @@
       
       log(`LM Studio URL updated: ${newURL}`, 'success');
       await checkLMStudio();
+    }
+
+    // ─── Model State & Catalog ─────────────────────────────────────────────────
+    let modelState = null;
+    let activeJobPollTimer = null;
+
+    async function loadModelState() {
+      const result = await apiCall('/model/state');
+      if (result.success && result.data) {
+        modelState = result.data;
+        renderModelCatalog();
+        renderModelStatusOverview();
+        populateSettingsModelSelects();
+        loadDownloadJobs();
+        // Update baseURL from runtime
+        if (modelState.effectiveRuntime?.baseURL) {
+          document.getElementById('settings-baseurl').value = modelState.effectiveRuntime.baseURL;
+        }
+      }
+    }
+
+    function renderModelCatalog() {
+      const container = document.getElementById('model-catalog');
+      if (!modelState || !modelState.available) {
+        container.innerHTML = '<div class="empty-state">No models available</div>';
+        return;
+      }
+
+      container.innerHTML = modelState.available.map(m => {
+        const readiness = modelState.readiness?.find(r => r.id === m.id);
+        const status = readiness?.readiness || 'missing';
+        const isLoaded = readiness?.isLoaded || false;
+
+        let actions = '';
+        if (status === 'missing') {
+          actions = `<button class="btn primary sm" onclick="downloadModel('${m.id}')">Download</button>`;
+        } else if (status === 'ready' && !isLoaded) {
+          actions = `<button class="btn success sm" onclick="prewarmModel('${m.id}')">Prewarm</button>`;
+        } else if (isLoaded) {
+          actions = `<span class="badge loaded">Loaded</span>`;
+        } else if (status === 'downloading') {
+          actions = `<span class="badge warning">Downloading...</span>`;
+        }
+
+        return `
+          <div class="model-catalog-item">
+            <div>
+              <div class="name">${m.name}</div>
+              <div class="type">${m.type}${m.dimensions ? ` • ${m.dimensions}d` : ''}</div>
+            </div>
+            <div class="size">${m.sizeGB} GB</div>
+            <div><span class="status-badge ${status}">${status}</span></div>
+            <div class="actions">${actions}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderModelStatusOverview() {
+      const container = document.getElementById('model-status-overview');
+      if (!modelState || !modelState.readiness) {
+        container.innerHTML = '<div class="empty-state">No model status available</div>';
+        return;
+      }
+
+      container.innerHTML = modelState.readiness.map(m => {
+        let actions = '';
+        if (m.readiness === 'missing') {
+          actions = `<button class="btn primary sm" onclick="downloadModel('${m.id}')">Download</button>`;
+        } else if (m.readiness === 'ready' && !m.isLoaded) {
+          actions = `<button class="btn success sm" onclick="prewarmModel('${m.id}')">Prewarm</button>`;
+        } else if (m.isLoaded) {
+          actions = `<span class="badge loaded">In Memory</span>`;
+        }
+
+        return `
+          <div class="model-status-item">
+            <div class="name">${m.name || m.id}</div>
+            <div class="readiness readiness-${m.readiness}">${m.readiness.toUpperCase()}</div>
+            <div class="actions">${actions}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function populateSettingsModelSelects() {
+      if (!modelState) return;
+
+      const embedSelect = document.getElementById('settings-embed-model');
+      const rerankSelect = document.getElementById('settings-rerank-model');
+      const chatSelect = document.getElementById('settings-chat-model');
+
+      // Only show models that are cached or loaded (not missing)
+      const availableModels = modelState.readiness?.filter(m => m.readiness !== 'missing') || [];
+
+      embedSelect.innerHTML = '<option value="">Select embedding model...</option>';
+      rerankSelect.innerHTML = '<option value="">Select reranker model...</option>';
+      chatSelect.innerHTML = '<option value="">Select chat model...</option>';
+
+      availableModels.forEach(m => {
+        const option = `<option value="${m.id}" ${m.isLoaded ? 'data-loaded="true"' : ''}>${m.name || m.id}${m.isLoaded ? ' ✓' : ''}${m.readiness === 'ready' ? ' (cached)' : ''}</option>`;
+        if (m.type === 'embedding') embedSelect.innerHTML += option;
+        if (m.type === 'reranker') rerankSelect.innerHTML += option;
+        if (m.type === 'chat') chatSelect.innerHTML += option;
+      });
+
+      // Load current selections
+      if (modelState.selected) {
+        if (modelState.selected.embedding) embedSelect.value = modelState.selected.embedding;
+        if (modelState.selected.reranker) rerankSelect.value = modelState.selected.reranker;
+        if (modelState.selected.chat) chatSelect.value = modelState.selected.chat;
+      }
+    }
+
+    async function downloadModel(modelId) {
+      log(`Starting download: ${modelId}...`);
+      const result = await apiCall('/model/download', 'POST', { modelId });
+      
+      if (result.success) {
+        if (result.cached) {
+          log(`Model already cached: ${modelId}`, 'success');
+        } else {
+          log(`Download queued: ${modelId} (Job: ${result.jobId})`, 'success');
+        }
+        await loadModelState();
+        startJobPolling();
+      } else {
+        log(`Download failed: ${result.error}`, 'error');
+      }
+    }
+
+    async function prewarmModel(modelId) {
+      log(`Prewarming model: ${modelId}...`);
+      const result = await apiCall('/model/prewarm', 'POST', { modelId });
+      
+      if (result.success) {
+        log(`Model prewarmed: ${modelId}`, 'success');
+        await loadModelState();
+        await checkLMStudio();
+      } else {
+        log(`Prewarm failed: ${result.error}`, 'error');
+      }
+    }
+
+    async function loadDownloadJobs() {
+      const result = await apiCall('/model/jobs');
+      const container = document.getElementById('download-jobs');
+      
+      if (result.success && result.data && result.data.length > 0) {
+        const activeJobs = result.data.filter(j => j.status === 'downloading' || j.status === 'pending');
+        const recentJobs = result.data.filter(j => j.status === 'complete' || j.status === 'failed').slice(0, 5);
+
+        let html = '';
+        if (activeJobs.length > 0) {
+          html += '<div style="font-size: 9px; color: var(--text-secondary); margin-bottom: 6px;">Active Downloads</div>';
+          html += activeJobs.map(j => `
+            <div class="job-item">
+              <div class="model-name">${j.modelId}</div>
+              <div class="status"><span class="status-badge ${j.status}">${j.status}</span></div>
+              <div class="progress">${Math.round(j.progress)}%</div>
+            </div>
+            <div class="job-progress-bar"><div class="job-progress-fill" style="width: ${j.progress}%"></div></div>
+          `).join('');
+        }
+
+        if (recentJobs.length > 0) {
+          html += '<div style="font-size: 9px; color: var(--text-secondary); margin: 10px 0 6px;">Recent</div>';
+          html += recentJobs.map(j => `
+            <div class="job-item">
+              <div class="model-name">${j.modelId}</div>
+              <div class="status"><span class="status-badge ${j.status}">${j.status}</span></div>
+              <div class="progress">${j.error ? 'Failed: ' + j.error : 'Complete ✓'}</div>
+            </div>
+          `).join('');
+        }
+
+        container.innerHTML = html || '<div class="empty-state">No active downloads</div>';
+        
+        // Stop polling if no active jobs
+        if (activeJobs.length === 0 && activeJobPollTimer) {
+          stopJobPolling();
+        }
+      } else {
+        container.innerHTML = '<div class="empty-state">No active downloads</div>';
+        stopJobPolling();
+      }
+    }
+
+    function startJobPolling() {
+      if (activeJobPollTimer) return;
+      activeJobPollTimer = setInterval(async () => {
+        await loadModelState();
+      }, 3000);
+    }
+
+    function stopJobPolling() {
+      if (activeJobPollTimer) {
+        clearInterval(activeJobPollTimer);
+        activeJobPollTimer = null;
+      }
+    }
+
+    async function saveProviderSettings() {
+      const baseURL = document.getElementById('settings-baseurl').value.trim();
+      if (!baseURL) {
+        log('Base URL is required', 'warning');
+        return;
+      }
+
+      await apiCall('/settings', 'POST', { key: 'lmStudio_baseURL', value: baseURL });
+      
+      // Also update appConfig
+      appConfig = appConfig || {};
+      appConfig.lmStudio = appConfig.lmStudio || {};
+      appConfig.lmStudio.baseURL = baseURL;
+      await apiCall('/config', 'POST', appConfig);
+
+      log(`Provider settings saved: ${baseURL}`, 'success');
+      await checkLMStudio();
+    }
+
+    async function saveModelSelection() {
+      const embedding = document.getElementById('settings-embed-model').value;
+      const reranker = document.getElementById('settings-rerank-model').value;
+      const chat = document.getElementById('settings-chat-model').value;
+
+      await apiCall('/model/state', 'POST', {
+        selected: { embedding, reranker, chat }
+      });
+
+      // Persist to settings
+      if (embedding) await apiCall('/settings', 'POST', { key: 'lmStudio_preferredEmbedding', value: embedding });
+      if (reranker) await apiCall('/settings', 'POST', { key: 'lmStudio_preferredReranker', value: reranker });
+      if (chat) await apiCall('/settings', 'POST', { key: 'lmStudio_chatModel', value: chat });
+
+      log('Model selection saved', 'success');
     }
 
     function log(message, type = '') {
@@ -778,6 +1127,27 @@
       await checkLMStudio();
       await checkBrainStatus();
       await loadSources();
+      await loadModelState();
+      await loadSettings();
+      
+      // Clean up polling on page unload
+      window.addEventListener('beforeunload', () => {
+        stopJobPolling();
+      });
+    }
+
+    async function loadSettings() {
+      const result = await apiCall('/settings');
+      if (result.success && result.data) {
+        const settings = result.data;
+        if (settings.lmStudio_baseURL) {
+          document.getElementById('settings-baseurl').value = settings.lmStudio_baseURL;
+        }
+        // Provider setting
+        if (settings.provider) {
+          document.getElementById('settings-provider').value = settings.provider;
+        }
+      }
     }
 
     init();

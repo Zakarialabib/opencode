@@ -1,12 +1,303 @@
 import { Database } from "bun:sqlite";
-import { readFileSync, existsSync, statSync, writeFileSync } from "fs";
-import { join, dirname } from "path";
+import { readFileSync, existsSync, statSync, writeFileSync, mkdirSync, readdirSync, createWriteStream } from "fs";
+import { join, dirname, basename } from "path";
 import { fileURLToPath } from "url";
+import { createHash } from "crypto";
+import https from "https";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const BRAIN_DB_PATH = join(__dirname, "..", ".opencode", "brain.db");
 const CONFIG_PATH = join(__dirname, "brain-dashboard-config.json");
+const MODELS_CACHE_DIR = join(__dirname, "..", ".opencode", "models");
 const PORT = 3456;
+
+// ─── Model Catalog (HuggingFace) ───────────────────────────────────────────────
+const MODEL_CATALOG = [
+  {
+    id: "qwen3-embedding-0.6b",
+    name: "Qwen/Qwen3-Embedding-0.6B",
+    type: "embedding",
+    sizeGB: 0.32,
+    dimensions: 1024,
+    description: "Lightweight embedding model for semantic search",
+    hfRepo: "Qwen/Qwen3-Embedding-0.6B",
+  },
+  {
+    id: "nomic-embed-text-v1.5",
+    name: "nomic-ai/nomic-embed-text-v1.5",
+    type: "embedding",
+    sizeGB: 0.08,
+    dimensions: 768,
+    description: "Ultra-light embedding model, 84MB",
+    hfRepo: "nomic-ai/nomic-embed-text-v1.5",
+  },
+  {
+    id: "qwen3-reranker-0.6b",
+    name: "Qwen/Qwen3-Reranker-0.6B",
+    type: "reranker",
+    sizeGB: 0.32,
+    dimensions: null,
+    description: "Cross-encoder reranker for RAG pipeline",
+    hfRepo: "Qwen/Qwen3-Reranker-0.6B",
+  },
+  {
+    id: "qwen3.5-4b",
+    name: "Qwen/Qwen3.5-4B",
+    type: "chat",
+    sizeGB: 2.4,
+    dimensions: null,
+    description: "Main chat model for code assistance",
+    hfRepo: "Qwen/Qwen3.5-4B",
+  },
+  {
+    id: "qwen3.5-0.8b",
+    name: "Qwen/Qwen3.5-0.8B",
+    type: "chat",
+    sizeGB: 0.8,
+    dimensions: null,
+    description: "Light chat model for constrained hardware",
+    hfRepo: "Qwen/Qwen3.5-0.8B",
+  },
+];
+
+// ─── Job Tracking ──────────────────────────────────────────────────────────────
+const downloadJobs = new Map(); // jobId -> { id, modelId, status, progress, error, startedAt }
+
+function createJob(modelId) {
+  const jobId = `job_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  downloadJobs.set(jobId, {
+    id: jobId,
+    modelId,
+    status: "pending",
+    progress: 0,
+    error: null,
+    startedAt: Date.now(),
+  });
+  return jobId;
+}
+
+function updateJob(jobId, updates) {
+  const job = downloadJobs.get(jobId);
+  if (job) {
+    Object.assign(job, updates);
+  }
+  return job;
+}
+
+// ─── HuggingFace File Download ─────────────────────────────────────────────────
+const HF_BASE = "https://huggingface.co";
+
+function getModelFilesForDownload(catalogEntry) {
+  // Common files needed for transformers.js ONNX models
+  const files = ["config.json", "tokenizer.json", "tokenizer_config.json"];
+  
+  // Add ONNX model files based on type
+  if (catalogEntry.type === "embedding") {
+    files.push("onnx/model.onnx");
+    files.push("onnx/model.onnx_data");
+  } else if (catalogEntry.type === "reranker") {
+    files.push("model.onnx");
+    files.push("model.onnx_data");
+  } else {
+    // Chat models use safetensors or gguf, download config only for now
+    files.push("model.safetensors.index.json");
+  }
+  return files;
+}
+
+function downloadHFModelFiles(jobId, modelId, catalogEntry) {
+  return new Promise(async (resolve, reject) => {
+    const cacheDir = join(MODELS_CACHE_DIR, modelId);
+    mkdirSync(cacheDir, { recursive: true });
+    
+    const files = getModelFilesForDownload(catalogEntry);
+    let completedFiles = 0;
+    let totalFiles = files.length;
+    
+    updateJob(jobId, { status: "downloading", progress: 0 });
+    
+    // Try each file, skip 404s gracefully
+    for (const filePath of files) {
+      const url = `${HF_BASE}/${catalogEntry.hfRepo}/resolve/main/${filePath}`;
+      const destPath = join(cacheDir, basename(filePath));
+      const destDir = join(cacheDir, filePath.includes("/") ? filePath.substring(0, filePath.lastIndexOf("/")) : "");
+      
+      if (destDir && destDir !== cacheDir) {
+        mkdirSync(destDir, { recursive: true });
+      }
+      
+      try {
+        await new Promise((resolveFile, rejectFile) => {
+          https.get(url, (res) => {
+            if (res.statusCode === 302 || res.statusCode === 301) {
+              // Follow redirect
+              https.get(res.headers.location, (res2) => {
+                if (res2.statusCode === 200) {
+                  const totalBytes = parseInt(res2.headers["content-length"] || "0", 10);
+                  let downloadedBytes = 0;
+                  const fileStream = createWriteStream(destPath);
+                  
+                  res2.on("data", (chunk) => {
+                    downloadedBytes += chunk.length;
+                    fileStream.write(chunk);
+                    // Update progress using file fraction
+                    const fileProgress = ((completedFiles + (downloadedBytes / (totalBytes || 1))) / totalFiles) * 100;
+                    updateJob(jobId, { progress: Math.min(99, Math.round(fileProgress)) });
+                  });
+                  
+                  res2.on("end", () => {
+                    fileStream.end();
+                    completedFiles++;
+                    resolveFile();
+                  });
+                  
+                  res2.on("error", (err) => {
+                    fileStream.end();
+                    // Don't fail the whole download for a single file
+                    completedFiles++;
+                    resolveFile();
+                  });
+                } else {
+                  // File not found, skip
+                  completedFiles++;
+                  resolveFile();
+                }
+              }).on("error", () => {
+                completedFiles++;
+                resolveFile();
+              });
+            } else if (res.statusCode === 200) {
+              const totalBytes = parseInt(res.headers["content-length"] || "0", 10);
+              let downloadedBytes = 0;
+              const fileStream = createWriteStream(destPath);
+              
+              res.on("data", (chunk) => {
+                downloadedBytes += chunk.length;
+                fileStream.write(chunk);
+                const fileProgress = ((completedFiles + (downloadedBytes / (totalBytes || 1))) / totalFiles) * 100;
+                updateJob(jobId, { progress: Math.min(99, Math.round(fileProgress)) });
+              });
+              
+              res.on("end", () => {
+                fileStream.end();
+                completedFiles++;
+                resolveFile();
+              });
+              
+              res.on("error", () => {
+                fileStream.end();
+                completedFiles++;
+                resolveFile();
+              });
+            } else {
+              completedFiles++;
+              resolveFile();
+            }
+          }).on("error", () => {
+            completedFiles++;
+            resolveFile();
+          });
+        });
+      } catch {
+        completedFiles++;
+      }
+    }
+    
+    // Create marker file
+    writeFileSync(join(cacheDir, ".downloaded"), JSON.stringify({
+      modelId,
+      downloadedAt: Date.now(),
+      source: catalogEntry.hfRepo,
+      filesAttempted: totalFiles,
+      filesCompleted: completedFiles,
+    }));
+    
+    resolve();
+  });
+}
+
+// ─── Local Model Cache Detection ───────────────────────────────────────────────
+function getLocalCacheStatus() {
+  const cached = [];
+  try {
+    if (existsSync(MODELS_CACHE_DIR)) {
+      const entries = readdirSync(MODELS_CACHE_DIR, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          const modelPath = join(MODELS_CACHE_DIR, entry.name);
+          const stat = statSync(modelPath);
+          cached.push({
+            id: entry.name,
+            path: modelPath,
+            sizeBytes: stat.size,
+            cachedAt: stat.mtimeMs,
+          });
+        }
+      }
+    }
+  } catch {}
+  return cached;
+}
+
+function isModelCached(modelId) {
+  const markerFile = join(MODELS_CACHE_DIR, modelId, ".downloaded");
+  return existsSync(markerFile);
+}
+
+// ─── Settings Persistence ──────────────────────────────────────────────────────
+function saveSetting(key, value) {
+  try {
+    const database = getDB();
+    if (!database) return false;
+    database.run(
+      "INSERT OR REPLACE INTO config (key, value, updated_at) VALUES (?, ?, ?)",
+      key,
+      JSON.stringify(value),
+      Date.now()
+    );
+    return true;
+  } catch (e) {
+    console.log("[Settings] Failed to save:", e.message);
+    return false;
+  }
+}
+
+function loadSetting(key, defaultValue = null) {
+  try {
+    const database = getDB();
+    if (!database) return defaultValue;
+    const row = database.query("SELECT value FROM config WHERE key = ?").get(key);
+    if (row?.value) {
+      try {
+        return JSON.parse(row.value);
+      } catch {
+        return row.value;
+      }
+    }
+    return defaultValue;
+  } catch {
+    return defaultValue;
+  }
+}
+
+function loadAllSettings() {
+  try {
+    const database = getDB();
+    if (!database) return {};
+    const rows = database.query("SELECT key, value FROM config").all();
+    const settings = {};
+    for (const row of rows) {
+      try {
+        settings[row.key] = JSON.parse(row.value);
+      } catch {
+        settings[row.key] = row.value;
+      }
+    }
+    return settings;
+  } catch {
+    return {};
+  }
+}
 
 let appConfig = {};
 let currentLogs = [];
@@ -654,14 +945,226 @@ async function handleAPI(path, method, body) {
     }
   }
 
+  // ─── Unified Model State API ─────────────────────────────────────────────────
+  if (path === "/model/state") {
+    await checkLMConnection();
+    const localCache = getLocalCacheStatus();
+    const cachedModelIds = new Set(localCache.map(c => c.id));
+    const loadedModelKeys = new Set(lmState.loadedInstances.map(i => i.modelKey || i.id));
+
+    // Build per-model readiness
+    const modelReadiness = MODEL_CATALOG.map(m => {
+      const isLoaded = loadedModelKeys.has(m.id) || lmState.models.some(lm => lm.key?.includes(m.id) || lm.includes(m.id));
+      const isCached = cachedModelIds.has(m.id);
+      const isActiveJob = [...downloadJobs.values()].some(j => j.modelId === m.id && j.status === "downloading");
+
+      let readiness = "missing";
+      if (isLoaded) readiness = "loaded";
+      else if (isActiveJob) readiness = "downloading";
+      else if (isCached) readiness = "ready";
+
+      return {
+        id: m.id,
+        name: m.name,
+        type: m.type,
+        readiness,
+        isLoaded,
+        isCached,
+        sizeGB: m.sizeGB,
+        dimensions: m.dimensions,
+      };
+    });
+
+    // Also include LM Studio models not in catalog
+    const lmModelsNotInCatalog = lmState.models
+      .filter(m => !MODEL_CATALOG.some(c => m.key?.includes(c.id) || m.includes(c.id)))
+      .map(m => ({
+        id: m.key || m,
+        name: m.key || m,
+        type: m.type || "unknown",
+        readiness: loadedModelKeys.has(m.key || m) ? "loaded" : "ready",
+        isLoaded: loadedModelKeys.has(m.key || m),
+        isCached: true,
+        sizeGB: null,
+        dimensions: null,
+      }));
+
+    const selected = {
+      chat: loadSetting("selected_chat_model", appConfig.lmStudio?.chatModel || ""),
+      embedding: loadSetting("selected_embedding_model", appConfig.lmStudio?.preferredEmbedding || ""),
+      reranker: loadSetting("selected_reranker_model", appConfig.lmStudio?.preferredReranker || ""),
+    };
+
+    return json({
+      success: true,
+      data: {
+        selected,
+        available: MODEL_CATALOG,
+        loaded: lmState.loadedInstances,
+        readiness: [...modelReadiness, ...lmModelsNotInCatalog],
+        localCache,
+        effectiveRuntime: {
+          provider: "lmstudio",
+          baseURL: appConfig.lmStudio?.baseURL || "localhost:1234",
+          vramBudget: MAX_VRAM_GB,
+          vramUsed: parseFloat(getLoadedVRAM().toFixed(1)),
+        },
+      },
+    });
+  }
+
+  if (path === "/model/state" && method === "POST") {
+    const { selected } = body || {};
+    if (selected) {
+      if (selected.chat !== undefined) saveSetting("selected_chat_model", selected.chat);
+      if (selected.embedding !== undefined) saveSetting("selected_embedding_model", selected.embedding);
+      if (selected.reranker !== undefined) saveSetting("selected_reranker_model", selected.reranker);
+    }
+    return json({ success: true, message: "Model selection updated" });
+  }
+
+  // ─── Model Catalog ───────────────────────────────────────────────────────────
+  if (path === "/model/catalog") {
+    const localCache = getLocalCacheStatus();
+    const cachedModelIds = new Set(localCache.map(c => c.id));
+    const catalogWithStatus = MODEL_CATALOG.map(m => ({
+      ...m,
+      cached: cachedModelIds.has(m.id),
+      loaded: lmState.loadedInstances.some(i => (i.modelKey || i.id)?.includes(m.id)),
+    }));
+    return json({ success: true, data: catalogWithStatus });
+  }
+
+  // ─── Model Download ──────────────────────────────────────────────────────────
+  if (path === "/model/download" && method === "POST") {
+    const { modelId } = body || {};
+    if (!modelId) return json({ success: false, error: "modelId is required" });
+
+    const catalogEntry = MODEL_CATALOG.find(m => m.id === modelId);
+    if (!catalogEntry) return json({ success: false, error: `Unknown model: ${modelId}` });
+
+    if (isModelCached(modelId)) {
+      return json({ success: true, message: "Model already cached", jobId: null, cached: true });
+    }
+
+    const jobId = createJob(modelId);
+    logActivity(`Download started: ${catalogEntry.name}`, "info");
+
+    // Async download via HuggingFace
+    (async () => {
+      try {
+        await downloadHFModelFiles(jobId, modelId, catalogEntry);
+        updateJob(jobId, { status: "complete", progress: 100 });
+        logActivity(`Download complete: ${catalogEntry.name}`, "success");
+      } catch (error) {
+        updateJob(jobId, { status: "failed", error: error.message });
+        logActivity(`Download failed: ${catalogEntry.name} - ${error.message}`, "error");
+      }
+    })();
+
+    return json({ success: true, message: "Download queued", jobId });
+  }
+
+  // ─── Model Job Status ────────────────────────────────────────────────────────
+  if (path.startsWith("/model/jobs/") && method === "GET") {
+    const jobId = path.replace("/model/jobs/", "");
+    const job = downloadJobs.get(jobId);
+    if (!job) return json({ success: false, error: "Job not found" });
+    return json({ success: true, data: job });
+  }
+
+  if (path === "/model/jobs" && method === "GET") {
+    const jobs = [...downloadJobs.values()].sort((a, b) => b.startedAt - a.startedAt);
+    return json({ success: true, data: jobs });
+  }
+
+  // ─── Model Prewarm (Load into LM Studio) ─────────────────────────────────────
+  if (path === "/model/prewarm" && method === "POST") {
+    const { modelId, type } = body || {};
+    if (!modelId) return json({ success: false, error: "modelId is required" });
+
+    if (!lmState.connected) {
+      await checkLMConnection();
+    }
+    if (!lmState.connected) {
+      return json({ success: false, error: "LM Studio not connected. Start LM Studio first." });
+    }
+
+    try {
+      logActivity(`Prewarming model: ${modelId}`);
+      const result = await fetchLMStudio("/api/v1/models/load", {
+        method: "POST",
+        body: JSON.stringify({ model: modelId }),
+      });
+
+      if (result && (result.status === "loaded" || result.loaded)) {
+        await checkLMConnection();
+        logActivity(`Model prewarmed: ${modelId}`, "success");
+        return json({
+          success: true,
+          data: {
+            modelId,
+            loadedInstances: lmState.loadedInstances,
+            vram: { used: getLoadedVRAM().toFixed(1), max: MAX_VRAM_GB },
+          },
+        });
+      }
+
+      return json({ success: false, error: result?.error || "Failed to prewarm model" });
+    } catch (error) {
+      logActivity(`Prewarm failed: ${modelId} - ${error.message}`, "error");
+      return json({ success: false, error: error.message });
+    }
+  }
+
+  // ─── Settings CRUD ───────────────────────────────────────────────────────────
+  if (path === "/settings") {
+    if (method === "GET") {
+      const settings = loadAllSettings();
+      return json({ success: true, data: settings });
+    }
+    if (method === "POST") {
+      const { key, value } = body || {};
+      if (!key) return json({ success: false, error: "key is required" });
+      const saved = saveSetting(key, value);
+      if (saved) {
+        logActivity(`Setting saved: ${key}`, "success");
+        return json({ success: true, message: `Setting ${key} saved` });
+      }
+      return json({ success: false, error: "Failed to save setting" });
+    }
+  }
+
+  if (path.startsWith("/settings/") && method === "GET") {
+    const key = path.replace("/settings/", "");
+    const value = loadSetting(key);
+    return json({ success: true, data: { key, value } });
+  }
+
   return json({ success: false, error: "Unknown endpoint" });
 }
 
 async function main() {
   appConfig = loadConfig();
   
+  // Load persisted settings from brain.db
+  const persistedSettings = loadAllSettings();
+  if (persistedSettings.lmStudio_baseURL) {
+    appConfig.lmStudio = appConfig.lmStudio || {};
+    appConfig.lmStudio.baseURL = persistedSettings.lmStudio_baseURL;
+  }
+  if (persistedSettings.lmStudio_preferredEmbedding) {
+    appConfig.lmStudio = appConfig.lmStudio || {};
+    appConfig.lmStudio.preferredEmbedding = persistedSettings.lmStudio_preferredEmbedding;
+  }
+  if (persistedSettings.lmStudio_preferredReranker) {
+    appConfig.lmStudio = appConfig.lmStudio || {};
+    appConfig.lmStudio.preferredReranker = persistedSettings.lmStudio_preferredReranker;
+  }
+  
   let connected = false;
   let stats = getDBStats();
+  const localCache = getLocalCacheStatus();
   
   try {
     connected = await checkLMConnection();
@@ -679,6 +1182,7 @@ async function main() {
    DB Stats:  ${stats.fileCount} files | ${stats.chunkCount} chunks
    Vectors:   ${stats.vecCount} (${stats.vectorActive ? "active" : "inactive"})
    DB Size:   ${(stats.dbSize / 1024).toFixed(1)} KB
+   Cached:    ${localCache.length} models
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   `);
 
