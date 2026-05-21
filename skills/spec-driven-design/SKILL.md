@@ -1,122 +1,121 @@
 ---
-name: Spec-Driven Design
-description: Formal specification and design-first development workflow. Use when building features, APIs, or UI components that require structured requirements before implementation.
-allowed-tools: Read,Write,Edit,Glob,Grep,Bash,Skill
+name: spec-driven-design
+description: "Agency delivery methodology: spec-first → architect → build → verify. Use on every client feature, API, or UI component."
+license: MIT
+compatibility: opencode
+metadata:
+  audience: all-agents
+  workflow: delivery
 ---
 
-# Spec-Driven Design Skill
+# Spec-Driven Design — Agency Delivery Methodology
 
-Use this skill when the user requests:
+> **Principle:** Every client deliverable starts with a spec. No code without an approved specification.
 
-- "Design a feature" or "Create a spec"
-- "Define the API contract"
-- "Write specifications for..."
-- "What are the requirements for..."
-- "Build according to spec"
-- Any work that starts with planning before coding
+## When to Use
+
+- Any feature, API, UI component, or integration for a client project
+- Before delegating to `core-factory` or `backend-*` agents
+- When estimating effort or defining scope
+- When the requirements are ambiguous or incomplete
 
 ## Workflow
 
-### Phase 1: Analysis
+### Phase 1: Discovery & Analysis
 
-1. Clarify the problem statement and scope
-2. Identify stakeholders and use cases
-3. Determine constraints (tech stack, performance, security)
+1. Clarify the **problem statement** and business goal
+2. Identify **users, roles, and workflows**
+3. Document **constraints**: stack, performance, security, budget
+4. Research existing solutions or patterns using `deep-research` / `web-search`
+5. Produce a **one-pager** (100-200 words max) summarizing the scope
 
 ### Phase 2: Specification
 
-1. Generate SPEC.md using the structure below
-2. For UI/UX: Use `ui-ux-pro-max` skill for design tokens and patterns
-3. For API: Define contracts with clear input/output schemas
-4. Include acceptance criteria upfront
+1. Generate a structured `SPEC.md` in `<project-root>/docs/specs/<feature-name>.md`
+2. Include:
+   - **Overview**: What and why
+   - **Requirements**: Functional + non-functional
+   - **Architecture**: Components, data flow, stack decisions
+   - **API Contracts**: Request/response schemas (if applicable)
+   - **UI Specs**: Reference `ui-ux-pro-max` for design tokens
+   - **Database Changes**: Reference `database-design` for migrations
+   - **Acceptance Criteria**: Checklist format, testable
+   - **Open Questions**: Anything unresolved
+3. For UI features: Load `ui-ux-pro-max` skill for design tokens and component specs
+4. For API features: Define contracts with explicit TypeScript/PHP types
 
-### Phase 3: Review
+### Phase 3: Review & Lock
 
-1. Present spec to user for approval
-2. Iterate based on feedback
-3. Lock spec before implementation
+1. Present spec to **lead-architect** or **lead-strategist** for sign-off
+2. Iterate on feedback — spec is a living doc until locked
+3. Once locked: create implementation tickets for each sub-task
+4. Delegate sub-tasks to specialized agents via `task` tool
 
-### Phase 4: Implementation
+### Phase 4: Implementation & Verification
 
-1. Build according to locked spec
-2. Verify each acceptance criterion
-3. Document any deviations
+1. Build each sub-task according to locked spec
+2. Verify each acceptance criterion — automated tests preferred
+3. Document any deviations in an `ADR` (Architecture Decision Record)
+4. Update `project-memory` with new patterns learned
 
-## Spec Structure
+## Spec Template
 
 ```markdown
-# Feature Name
+# Feature: [Name]
 
 ## Problem
+[What business problem does this solve?]
 
-What problem does this solve?
+## Requirements
+- [ ] [Functional requirement 1]
+- [ ] [Functional requirement 2]
+- [ ] [Non-functional: performance, security, accessibility]
 
-## Scope
+## Architecture
+[High-level diagram or component breakdown]
 
-- In: [what's included]
-- Out: [what's excluded]
+## API Contracts (if applicable)
+```typescript
+// Request
+interface CreateFooRequest { ... }
+// Response
+interface FooResponse { ... }
+```
 
-## Use Cases
+## Database Changes
+[Tables, columns, migrations needed]
 
-1. [primary use case]
-2. [secondary]
-
-## Technical Design
-
-### Data Model
-
-\`\`\`typescript
-// schema
-\`\`\`
-
-### API Contract
-
-\`\`\`
-POST /endpoint
-Input: { ... }
-Output: { ... }
-\`\`\`
-
-### UI Specification (if applicable)
-
-Reference `ui-ux-pro-max` skill for design tokens
+## UI Specs
+[Component tree, states (loading/empty/error/edge), responsive breakpoints]
 
 ## Acceptance Criteria
+- [ ] [Criterion 1]
+- [ ] [Criterion 2]
 
-- [ ] Criterion 1
-- [ ] Criterion 2
-
-## Risks
-
-- [Risk]: [Mitigation]
+## Open Questions
+- [ ] [Unresolved item]
 ```
 
-## Integration
+## Quality Gates
 
-This skill integrates with other skills for specialized domains:
+Before marking a spec as "ready for implementation":
 
-| Domain             | Skill to Load                             |
-| ------------------ | ----------------------------------------- |
-| UI/Visual Design   | `ui-ux-pro-max`                           |
-| Visual Foundations | `visual-design-foundations`               |
-| Charts/Data Viz    | `charts`                                  |
-| Database Design    | (skill not available — use fullstack-dev) |
-| API Contracts      | `fullstack-dev`                           |
-| Testing Strategy   | `testing-strategy`                        |
-| Laravel            | `laravel-feature-scaffold`                |
+| Gate | Check |
+|------|-------|
+| Requirements | Every requirement is testable (not vague) |
+| Architecture | Stack-appropriate, follows existing patterns |
+| API | Request/response fully typed |
+| UI | States defined: loading, empty, error, edge cases |
+| DB | Migrations are reversible |
+| Security | No auth bypass, input sanitized |
+| Effort | Implementation effort estimated (hours/days) |
 
-## Usage
+## Agent Handoff
 
-```bash
-# Start a spec-driven feature
-/spec-driven-design
-Design a user authentication flow with OAuth
-
-# Design an API
-/spec-driven-design
-Create API spec for a billing service
-
-# UI component spec
-/spec-driven-design
-Design a dashboard component with charts
-```
+| Phase | Lead Agent | Supporting Skills |
+|-------|-----------|-------------------|
+| Discovery | lead-strategist | deep-research, web-search |
+| Specification | lead-architect | database-design, ui-ux-pro-max |
+| Review | lead-strategist | — |
+| Implementation | core-factory | coding-agent, laravel-feature-scaffold, pest-testing |
+| Verification | qa-guardian | testing-strategy, agent-browser, security-review |

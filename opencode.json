@@ -1,4 +1,4 @@
-{
+﻿{
   "$schema": "https://opencode.ai/config.json",
   "default_agent": "build",
   "model": "lmstudio/gemma-4-e4b-it",
@@ -143,7 +143,7 @@
         "--db-path",
         "./database.sqlite"
       ],
-      "enabled": true,
+      "enabled": false,
       "timeout": 30000
     },
     "sequential-thinking": {
@@ -279,6 +279,18 @@
     "todoread": "allow",
     "todowrite": "allow",
     "mcp": "allow",
+    "context7": "allow",
+    "sequential-thinking": "allow",
+    "language-server": "allow",
+    "type-inject": "allow",
+    "sqlite": "allow",
+    "gradle": "allow",
+    "mobile": "allow",
+    "android-emulator": "allow",
+    "external_directory": {
+      ".\\**": "allow",
+      "~\\**": "ask"
+    },
     "doom_loop": "deny",
     "brain_diagnostic": "allow",
     "brain_status": "allow",
@@ -316,7 +328,6 @@
     "codesearch": true,
     "mcp": true,
     "context7": true,
-    "memory": true,
     "filesystem": true,
     "sqlite": true,
     "sequential-thinking": true,
@@ -350,7 +361,8 @@
         ".tsx",
         ".js",
         ".jsx"
-      ]
+      ],
+      "timeout": 30000
     },
     "php": {
       "command": [
@@ -465,8 +477,10 @@
     "NAMING: Match existing conventions exactly. Check 3 nearby files before coining a new name.",
     "RECOVERY: If a tool fails, try one alternative approach. If that also fails, report the failure with both error messages — do not silently retry.",
     "BRAIN: Use brain_diagnostic at session start to verify plugin health. Use brain_search(intent) for semantic code discovery. Use brain_index_project if search returns empty or stale results. Brain replaces memory MCP for all persistence.",
-    "MOBILE: Android/Kotlin native → @android-kotlin. Mobile UI → @frontend-ui-ux. Tauri mobile Rust side → @backend-tauri. Android native side → @android-kotlin. See rules/mobile.md.",
-    "FALLBACK: If the primary model times out or errors, fall back to lmstudio/qwen3.5-4b-claude-4.6-opus-reasoning-distilled-v2 for simple file edits, bash commands, and lookups."
+    "MOBILE: For Android/Kotlin tasks, use @android-kotlin. For mobile QA/testing, use @mobile-qa. For Tauri mobile build commands, @backend-tauri handles Rust side, @android-kotlin handles native Android side. Available Android skills: android, android/compose, android/gradle, android/testing, android/debugging, android/deployment. MCP servers: gradle (builds), mobile (device control), android-emulator (emulator).",
+    "See rules/brain.md for Brain plugin usage. For mobile, see rules/mobile.md.",
+    "FALLBACK MODEL: When primary model fails or times out, fall back to LM Studio local model (qwen3.5-4b-claude-4.6-opus-reasoning-distilled-v2) for simple operations (file edits, bash commands, quick lookups).",
+    "BRAIN PLUGIN replaces memory MCP for all persistence - use brain plugin tools (brain_index_project, brain_search, brain_status, brain_diagnostic) for code context, project knowledge, and session memory."
   ],
   "command": {
     "audit": {
@@ -539,8 +553,8 @@
     "build": {
       "mode": "primary",
       "steps": 50,
-      "description": "Primary orchestrator — decomposes requests, delegates to specialists, synthesizes results.",
-      "prompt": "You are a senior build orchestrator. You receive all user requests first and decide what happens next.\n\nDECISION TREE — evaluate in this order:\n1. Is the request ambiguous? → Ask for clarification. Do not guess intent.\n2. Is it trivial (single file, obvious change)? → Implement it yourself using the core-factory workflow below.\n3. Is it non-trivial (multi-file, cross-concern, or requires domain expertise)? → Delegate to the best-fit specialist.\n4. Is it a mix? → Decompose into independent sub-tasks, delegate each, then synthesize.\n\nWHEN DELEGATING — you MUST:\n- Compress context to: [what to do] + [relevant files] + [constraints] + [quality gates]\n- Name the target agent and specific task — no descriptions of the agent's role\n- Use the task tool for independent sub-tasks in parallel\n- After all delegates return: verify no file conflicts, then synthesize a coherent result\n\nWHEN IMPLEMENTING DIRECTLY — follow core-factory protocol:\n- Read the target file completely before writing\n- edit(oldString → newString), not full file rewrites\n- Verify: LSP clean, imports used, no regressions\n\nCONSTRAINTS:\n- Reserve 8192 tokens for final synthesis. Track your budget.\n- Track every modified file for session continuity.\n- If a delegate fails: attempt one fix yourself, then report to user if still failing.\n- Every claim must reference a file you have actually read — never assume file contents.\n- Use brain_search(intent) before delegating to gather context. Use brain_diagnostic once per session to verify plugin health.",
+      "description": "Primary build orchestrator - strategic delegation, context synthesis, multi-agent coordination.",
+      "prompt": "ORCHESTRATION: You are the primary build orchestrator. Your role is to:\n1. Analyze user requirements and decompose into sub-tasks\n2. Delegate complex tasks to specialized agents (core-factory, frontend-ui-ux, etc.)\n3. Generate optimal context summaries for each delegation\n4. Synthesize and validate results from all agents\n5. Maintain session continuity through orchestratorSession\n\nTASK ANALYSIS:\n- For simple tasks: Implement directly with fast execution\n- For complex tasks: Delegate to specialized agent with briefing\n- For ambiguous tasks: Use clarify tool to get clarity\n\nDELEGATION PROTOCOL:\nWhen delegating, you MUST:\n1. Generate context summary using orchestratorSession\n2. Create task briefing with: [specific task] + [context summary] + [constraints] + [quality gates]\n3. Track delegation in session state\n4. Wait for result before proceeding\n\nSESSION TRACKING:\nUse orchestratorSession to:\n- Track all architectural decisions\n- Monitor token budget (reserve 8192 tokens)\n- Record modified files for continuity\n- Maintain task decomposition logic\n\nVALIDATION:\nBefore synthesizing results, verify:\n- All delegated tasks completed successfully\n- No conflicts between agent outputs\n- Consistent with architectural constraints\n- Token budget not exceeded\n\nCORE: Fast implementation. Read -> Analyze -> Write -> Validate.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor/feature/debug/test) for semantic discovery.\nMemory-aware retrieval boosts known concepts by 15% using adaptive RRF weights.\nAdaptive chunk count scales with decision tree confidence score.\nToken-based compression (not char-based) with estimateTokens.\nSTRICT: No speculation. Only state what you know or can verify.\nCONCISE: Use minimal words. Long descriptions waste tokens.\nWORKFLOW: Read file -> Use edit tool (oldString->newString) -> Validate.\nIf edit fails: re-read file, add context to oldString.\nNo unnecessary comments. Reference lines as file_path:line_number.\nPROJECT STACK: Tauri (Rust), React (TypeScript), Laravel (PHP).\nAuto-format after edits per rules/auto-format.md.",
       "permission": {
         "read": "allow",
         "edit": "allow",
@@ -813,7 +827,7 @@
     "backend-laravel": {
       "mode": "subagent",
       "steps": 30,
-      "description": "Laravel 13 + Livewire 4 specialist — convention-strict, pest-tested.",
+      "description": "PHP specialist + Laravel Latest + Livewire 4 specialist — convention-strict, pest-tested.",
       "prompt": "You are a Laravel 13 + Livewire 4 specialist.\n\nNON-NEGOTIABLE CONVENTIONS:\n- PascalCase models, snake_case database columns/tables, camelCase methods\n- Form Requests for ALL validation — never validate in controllers\n- Resource classes for API responses — never return raw arrays\n- PHP 8.2+: readonly properties, enums, match expressions, named arguments, fiber-safe code\n- Pest PHP for tests — describe/it blocks, not PHPUnit's verbose syntax\n\nBEFORE CHANGING ANYTHING:\n1. Read the existing model, migration, and relations\n2. Check routes/web.php or routes/api.php for the current route definition\n3. Read the existing controller to match its pattern\n\nWORKFLOW:\n1. Implement the change\n2. Run 'php artisan pint' on every edited .php file — no exceptions\n3. Run 'php artisan test' for the relevant test file\n4. Remove unused imports\n\nLIVEWIRE 4 RULES:\n- Use Livewire 3→4 syntax: #[Computed], #[Locked], new event dispatching\n- Component properties: use public properties with typed casts, not mount() for everything\n- Actions: use #[Action] attribute for methods called from views\n- Avoid storing large datasets in component state — use database queries in computed properties",
       "permission": {
         "read": "allow",
@@ -940,6 +954,10 @@
         "skill": true,
         "lsp": true,
         "mcp": true,
+        "gradle": true,
+        "mobile": true,
+        "android-emulator": true,
+        "context7": true,
         "brain_diagnostic": true,
         "brain_status": true,
         "brain_search": true,
@@ -976,6 +994,10 @@
         "task": true,
         "skill": true,
         "mcp": true,
+        "gradle": true,
+        "mobile": true,
+        "android-emulator": true,
+        "context7": true,
         "brain_diagnostic": true,
         "brain_status": true,
         "brain_search": true,
@@ -1012,6 +1034,8 @@
         "webfetch": true,
         "todowrite": true,
         "mcp": true,
+        "context7": true,
+        "sequential-thinking": true,
         "brain_diagnostic": true,
         "brain_search": true
       }

@@ -38,6 +38,8 @@ tools:
   - brain_index_project
 ---
 
+**Tools**: read, write, edit, bash, skill, lsp, codesearch, task, mcp, memory, context7, sequential-thinking, brain_diagnostic, brain_metrics, brain_model_status, brain_model_provider, brain_model_download, brain_budget, brain_status, brain_search, brain_embed_test, brain_index_project
+
 # Frontend UI/UX Specialist
 
 <context>
@@ -82,6 +84,31 @@ tools:
 <process>Run consistency checks, accessibility review, and optimize for performance.</process>
 </step_4>
 </process_flow>
+
+<routing_intelligence>
+<route to="@ui-ux-pattern-matcher" when="design consistency check needed">
+<context_level>Level 2</context_level>
+<pass_data>component_path, design_system</pass_data>
+<expected_return>Consistency report with fix recommendations</expected_return>
+<integration>Incorporate fixes into final implementation</integration>
+</route>
+
+  <route to="@react-reuse-audit" when="checking component reuse opportunities">
+    <context_level>Level 1</context_level>
+    <pass_data>project_path, component_list</pass_data>
+    <expected_return>Reuse report with existing component matches</expected_return>
+    <integration>Prioritize existing components over new builds</integration>
+  </route>
+</routing_intelligence>
+
+<brain_plugin_workflow>
+
+- Check Brain health with brain_diagnostic or brain_model_status before non-trivial debugging, feature work, refactors, architecture analysis, or documentation audits.
+- If the index is empty, stale, or missing expected results, run brain_index_project before relying on retrieval.
+- Use brain_search for semantic codebase discovery, then read the top matching files directly before making decisions or edits.
+- Use brain_embed_test when search quality matters or when choosing better query terms for a complex investigation.
+- After broad edits or generated files, confirm Brain can see the new context with brain_status or a targeted brain_search.
+  </brain_plugin_workflow>
 
 <constraints>
 - Use valid tools only: read, write, edit, bash, websearch, codesearch, context7, skill.

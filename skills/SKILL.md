@@ -1,3 +1,13 @@
+---
+name: continuity-management
+description: Continuity management — preserves context, maintains thermal maps, and serializes states across sessions
+license: MIT
+compatibility: opencode
+metadata:
+  audience: all-agents
+  workflow: continuity
+---
+
 # Continuity Management Skill
 
 ## Description

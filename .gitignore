@@ -64,41 +64,7 @@ workflows/auto/*.yaml
 # Index caches (large, not needed in repo)
 .indexes/
 /experiments
-.opencode/brain.db-shm
-.opencode/brain.db-wal
-.opencode/commands/brain-config.md
-.opencode/commands/brain-diagnose.md
-.opencode/commands/brain-index.md
-.opencode/commands/brain-query.md
-.opencode/meta-harness-logs/benchmark_1779038705522.json
-.opencode/meta-harness-logs/benchmark_1779038725861.json
-.opencode/meta-harness-logs/benchmark_history.jsonl
-.opencode/meta-harness-logs/gpu-test-rag.json
-.opencode/meta-harness-logs/orchestration-metrics.json
-.opencode/meta-harness-logs/test-report-full.json
-.opencode/meta-harness-logs/test-report.json
-.opencode/tools/brain-config.ts
-.opencode/tools/brain-diagnose.ts
-.opencode/tools/brain-improve.ts
-.opencode/tools/brain-index.ts
-.opencode/tools/brain-query.ts
-<<<<<<< Updated upstream
+.opencode/*
 opencode.exe
+.opencode/brain-sources.json
 /.opencode
-=======
-.opencode/brain-sources.json
-.opencode/meta-harness-logs/benchmark_1779304264801.json
-.opencode/meta-harness-logs/benchmark_1779304438293.json
-.opencode/meta-harness-logs/benchmark_1779304442656.json
-.opencode/meta-harness-logs/benchmark_1779305023213.json
-.opencode/meta-harness-logs/benchmark_1779307946991.json
-.opencode/models/Qwen/Qwen3-Embedding-0.6B/config.json
-.opencode/models/Qwen/Qwen3-Embedding-0.6B/tokenizer_config.json
-.opencode/models/Qwen/Qwen3-Embedding-0.6B/tokenizer.json
-.opencode/models/Qwen/Qwen3-Reranker-0.6B/config.json
-.opencode/models/Qwen/Qwen3-Reranker-0.6B/tokenizer_config.json
-.opencode/models/Qwen/Qwen3-Reranker-0.6B/tokenizer.json
-.opencode/models/Xenova/bge-reranker-base/config.json
-.opencode/models/Xenova/bge-reranker-base/tokenizer_config.json
-.opencode/brain-sources.json
->>>>>>> Stashed changes

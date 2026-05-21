@@ -1,3 +1,13 @@
+---
+name: database-design
+description: Database schema design, SQL optimization, and ORM architecture patterns
+license: MIT
+compatibility: opencode
+metadata:
+  audience: backend
+  workflow: database
+---
+
 # Database & Architecture Design Skill
 
 ## Description

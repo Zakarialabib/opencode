@@ -1,3 +1,13 @@
+---
+name: pest-testing
+description: Pest testing patterns for Laravel/PHP — writing and running tests using Pest 4.x
+license: MIT
+compatibility: opencode
+metadata:
+  audience: backend
+  workflow: testing
+---
+
 # Pest Testing Skill
 
 Specialized skill for writing and running tests using Pest 4.x.
