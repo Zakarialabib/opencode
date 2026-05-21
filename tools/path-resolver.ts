@@ -1,5 +1,4 @@
-import path from "path";
-import os from "os";
+import path from "node:path";
 
 export function getOpenCodeHome(): string {
   return process.env.OPENCODE_HOME || process.cwd();

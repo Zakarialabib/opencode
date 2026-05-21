@@ -10,6 +10,8 @@ A visual dashboard for testing, monitoring, and benchmarking the OpenCode Brain 
 
 - **LM Studio Integration** - Check connection status, view loaded models, configure endpoints
 - **Real-time Brain Status** - Monitor brain health, indexed files, and database size
+- **Observability (Telemetry)** - View tool/skill/RAG/harness runs and recent events stored in `brain.db`
+- **RAG Sessions** - Browse query sessions, inspect retrieved/used chunks, and submit feedback
 - **Source Management** - Add/remove folders and URLs for indexing
 - **Progress Tracking** - Visual progress bar for indexing operations
 - **Semantic Search Testing** - Test brain_search with different intents (learn, refactor, feature, debug, test)
@@ -41,6 +43,14 @@ npm start
 ```
 
 The dashboard will be available at: http://localhost:3456
+
+### OpenCode Server Integration (optional)
+
+By default the dashboard expects an OpenCode server at `http://127.0.0.1:4096`. Override with:
+
+```bash
+OPENCODE_SERVER_BASE_URL=http://127.0.0.1:4096 npm start
+```
 
 ### Connect to LM Studio
 

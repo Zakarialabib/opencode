@@ -1,10 +1,10 @@
-import Database from "better-sqlite3";
+import type { BrainDatabase } from "./driver.js";
 
 /**
  * Initializes the FTS5 full-text search virtual table.
  * Storing chunk_id and filepath as UNINDEXED columns optimizes performance.
  */
-export function initializeFTSTables(db: Database.Database): void {
+export function initializeFTSTables(db: BrainDatabase): void {
   try {
     // We use exact unicode61 tokenization for precise code search (preserves identifiers)
     db.exec(`
@@ -25,7 +25,7 @@ export function initializeFTSTables(db: Database.Database): void {
  * Inserts or replaces a chunk index inside the FTS5 table.
  */
 export function upsertChunkFTS(
-  db: Database.Database,
+  db: BrainDatabase,
   chunkId: string,
   filepath: string,
   content: string
@@ -38,7 +38,7 @@ export function upsertChunkFTS(
  * Batch inserts FTS data. Runs inside a single SQLite transaction for maximum performance.
  */
 export function upsertChunkFTSBatch(
-  db: Database.Database,
+  db: BrainDatabase,
   items: Array<{ chunkId: string; filepath: string; content: string }>
 ): void {
   const insert = db.prepare("INSERT INTO fts_chunks(chunk_id, filepath, content) VALUES(?, ?, ?)");
@@ -56,7 +56,7 @@ export function upsertChunkFTSBatch(
  * Returns matching chunks ordered by lexical relevance score.
  */
 export function searchKeywordFTS(
-  db: Database.Database,
+  db: BrainDatabase,
   keywordQuery: string,
   limit: number
 ): Array<{
@@ -130,13 +130,13 @@ export function searchKeywordFTS(
 /**
  * Deletes a chunk from FTS5 index.
  */
-export function deleteChunkFTS(db: Database.Database, chunkId: string): void {
+export function deleteChunkFTS(db: BrainDatabase, chunkId: string): void {
   db.prepare("DELETE FROM fts_chunks WHERE chunk_id = ?").run(chunkId);
 }
 
 /**
  * Cleanly wipes FTS entries for an entire file. Useful during file reindexes.
  */
-export function deleteFileFTS(db: Database.Database, filepath: string): void {
+export function deleteFileFTS(db: BrainDatabase, filepath: string): void {
   db.prepare("DELETE FROM fts_chunks WHERE filepath = ?").run(filepath);
 }

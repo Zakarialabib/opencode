@@ -1,4 +1,5 @@
 ---
+name: docs-curator
 description: "Documentation, self-improvement, and system evolution."
 mode: subagent
 steps: 30
@@ -17,6 +18,26 @@ permission:
   memory: "allow"
   context7: "allow"
   sequential-thinking: "allow"
+tools:
+  - read
+  - write
+  - edit
+  - bash
+  - skill
+  - lsp
+  - codesearch
+  - websearch
+  - webfetch
+  - todowrite
+  - memory
+  - context7
+  - sequential-thinking
+  - brain_diagnostic
+  - brain_sidecar_status
+  - brain_status
+  - brain_search
+  - brain_embed_test
+  - brain_index_project
 ---
 
 

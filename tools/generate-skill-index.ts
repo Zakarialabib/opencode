@@ -1,6 +1,5 @@
-import * as fs from "fs";
-import * as path from "path";
-import { fileURLToPath } from "url";
+import * as fs from "node:fs";
+import * as path from "node:path";
 
 const skillsDir = path.resolve(process.cwd(), "skills");
 const indexPath = path.join(skillsDir, "index.json");
@@ -8,7 +7,7 @@ const existingIndex = JSON.parse(fs.readFileSync(indexPath, "utf8"));
 const existingSkills = Array.isArray(existingIndex.skills)
   ? existingIndex.skills
   : Object.values(existingIndex.skills || {});
-const existingNames = new Set(existingSkills.map((s: any) => s.name));
+const existingNames = new Set(existingSkills.map((s: { name: string }) => s.name));
 
 const allDirs = fs
   .readdirSync(skillsDir, { withFileTypes: true })
@@ -16,9 +15,9 @@ const allDirs = fs
   .map((d) => d.name);
 
 const missing = allDirs.filter((d) => !existingNames.has(d));
-console.log("Missing from index (" + missing.length + "):", missing.join(", "));
+console.log(`Missing from index (${missing.length}):`, missing.join(", "));
 
-const categoryMap: Record<string, any> = {
+const categoryMap: Record<string, { category: string; tags: string[]; agents: string[] }> = {
   "ai-news-collectors": {
     category: "research",
     tags: ["ai", "news", "aggregation", "trends"],
@@ -204,13 +203,13 @@ function extractDescription(dir: string): string {
     const content = fs.readFileSync(skillPath, "utf-8");
     const match = content.match(/^description:\s*(.+)$/m);
     if (match) return match[1].replace(/^["']|["']$/g, "");
-  } catch (e) {}
+  } catch (_e) {}
   return "";
 }
 
 const newEntries = missing.map((dir) => {
   const meta = categoryMap[dir] || { category: "general", tags: [dir], agents: ["core-factory"] };
-  const desc = extractDescription(dir) || (displayNameMap[dir] || dir) + " skill for OpenCode";
+  const desc = extractDescription(dir) || `${displayNameMap[dir] || dir} skill for OpenCode`;
   return {
     name: dir,
     displayName: displayNameMap[dir] || dir,
@@ -229,7 +228,6 @@ existingIndex.skills = [...existingSkills, ...newEntries].sort((a, b) =>
 );
 existingIndex.totalSkills = existingIndex.skills.length;
 
-fs.writeFileSync(indexPath, JSON.stringify(existingIndex, null, 2) + "\n", "utf-8");
-console.log("Total skills in index: " + existingIndex.totalSkills);
-console.log("Added " + newEntries.length + " new entries");
-
+fs.writeFileSync(indexPath, `${JSON.stringify(existingIndex, null, 2)}\n`, "utf-8");
+console.log(`Total skills in index: ${existingIndex.totalSkills}`);
+console.log(`Added ${newEntries.length} new entries`);

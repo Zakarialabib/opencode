@@ -3,13 +3,7 @@
   "default_agent": "core-factory",
   "autoupdate": true,
   "share": "manual",
-  "enabled_providers": [
-    "opencode",
-    "lmstudio",
-    "opencode-go",
-    "cerebras",
-    "openrouter"
-  ],
+  "enabled_providers": ["opencode", "lmstudio", "opencode-go", "cerebras", "openrouter"],
   "plugin": [
     "plugins/index.ts",
     "plugins/skill-manager.ts",
@@ -98,127 +92,18 @@
     "port": 4096,
     "hostname": "127.0.0.1",
     "mdns": false,
-    "cors": [
-      "http://127.0.0.1:8080",
-      "http://"
-    ]
+    "cors": ["http://127.0.0.1:8080", "http://"]
   },
   "mcp": {
     "context7": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@upstash/context7-mcp@latest"
-      ],
+      "command": ["npx", "-y", "@upstash/context7-mcp@latest"],
       "enabled": true,
       "timeout": 45000
     },
     "memory": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-memory"
-      ],
-      "enabled": true,
-      "timeout": 30000
-    },
-    "git": {
-      "type": "local",
-      "command": [
-        "uvx",
-        "mcp-server-git"
-      ],
-      "enabled": true,
-      "timeout": 30000
-    },
-    "fetch": {
-      "type": "local",
-      "command": [
-        "uvx",
-        "mcp-server-fetch"
-      ],
-      "enabled": true,
-      "timeout": 30000
-    },
-    "sqlite": {
-      "type": "local",
-      "command": [
-        "uvx",
-        "mcp-server-sqlite",
-        "--db-path",
-        "${OPENCODE_HOME:-./database.sqlite}"
-      ],
-      "enabled": true,
-      "timeout": 30000
-    },
-    "sequential-thinking": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-sequential-thinking"
-      ],
-      "enabled": true,
-      "timeout": 45000
-    },
-    "language-server": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-language-server"
-      ],
-      "enabled": true,
-      "timeout": 45000
-    },
-    "type-inject": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@nick-vi/type-inject-mcp"
-      ],
-      "enabled": true,
-      "timeout": 45000
-    },
-    "puppeteer": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-puppeteer"
-      ],
-      "enabled": true,
-      "timeout": 60000
-    },
-    "personal-knowledge": {
-      "type": "local",
-      "command": [
-        "bunx",
-        "opencode-personal-knowledge"
-      ],
-      "enabled": false,
-      "timeout": 30000
-    },
-    "filesystem": {
-      "type": "local",
-      "command": [
-        "bunx",
-        "@modelcontextprotocol/server-filesystem",
-        "c:/opencode"
-      ],
-      "enabled": true,
-      "timeout": 45000
-    },
-    "everything": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-everything"
-      ],
+      "command": ["npx", "-y", "@modelcontextprotocol/server-memory"],
       "enabled": false,
       "timeout": 30000
     }
@@ -360,117 +245,47 @@
   },
   "lsp": {
     "typescript": {
-      "command": [
-        "typescript-language-server",
-        "--stdio"
-      ],
-      "extensions": [
-        ".ts",
-        ".tsx",
-        ".js",
-        ".jsx"
-      ]
+      "command": ["typescript-language-server", "--stdio"],
+      "extensions": [".ts", ".tsx", ".js", ".jsx"]
     },
     "php": {
-      "command": [
-        "intelephense",
-        "--stdio"
-      ],
-      "extensions": [
-        ".php"
-      ],
+      "command": ["intelephense", "--stdio"],
+      "extensions": [".php"],
       "initialization": {
         "storagePath": "${OPENCODE_HOME:-.}/.cache/intelephense"
       }
     },
     "rust": {
-      "command": [
-        "rust-analyzer"
-      ],
-      "extensions": [
-        ".rs"
-      ]
+      "command": ["rust-analyzer"],
+      "extensions": [".rs"]
     },
     "tailwind": {
-      "command": [
-        "tailwindcss-language-server",
-        "--stdio"
-      ],
-      "extensions": [
-        ".css",
-        ".html",
-        ".js",
-        ".ts",
-        ".tsx"
-      ]
+      "command": ["tailwindcss-language-server", "--stdio"],
+      "extensions": [".css", ".html", ".js", ".ts", ".tsx"]
     }
   },
   "formatter": {
     "biome": {
       "disabled": false,
-      "command": [
-        "npx",
-        "biome",
-        "format",
-        "--write",
-        "$FILE"
-      ],
-      "extensions": [
-        ".js",
-        ".jsx",
-        ".ts",
-        ".tsx",
-        ".json",
-        ".jsonc"
-      ]
+      "command": ["npx", "biome", "format", "--write", "$FILE"],
+      "extensions": [".js", ".jsx", ".ts", ".tsx", ".json", ".jsonc"]
     },
     "prettier": {
       "disabled": false,
-      "command": [
-        "npx",
-        "prettier",
-        "--write",
-        "$FILE"
-      ],
-      "extensions": [
-        ".css",
-        ".scss",
-        ".html",
-        ".md",
-        ".yaml",
-        ".yml"
-      ]
+      "command": ["npx", "prettier", "--write", "$FILE"],
+      "extensions": [".css", ".scss", ".html", ".md", ".yaml", ".yml"]
     },
     "pint": {
-      "command": [
-        "php",
-        "artisan",
-        "pint",
-        "$FILE"
-      ],
-      "extensions": [
-        ".php"
-      ]
+      "command": ["php", "artisan", "pint", "$FILE"],
+      "extensions": [".php"]
     },
     "rustfmt": {
-      "command": [
-        "rustfmt",
-        "$FILE"
-      ],
-      "extensions": [
-        ".rs"
-      ]
+      "command": ["rustfmt", "$FILE"],
+      "extensions": [".rs"]
     },
     "shfmt": {
-      "command": [
-        "shfmt",
-        "-w",
-        "$FILE"
-      ],
-      "extensions": [
-        ".sh",
-        ".bash"
-      ]
+      "command": ["shfmt", "-w", "$FILE"],
+      "extensions": [".sh", ".bash"]
     }
   },
   "instructions": [
@@ -696,7 +511,7 @@
       "mode": "subagent",
       "steps": 30,
       "description": "Strategic orchestrator, architect, and product lead. Delegates to specialized agents.",
-      "prompt": "LEAD: Orchestration and architecture. No code unless requested.\nSTRICT: Only read/analyze for planning. Delegate implementation.\nCONCISE: State decision, not reasoning. Avoid long explanations.\nWhen delegating: Name target agent + specific task. No agent delegation descriptions.\nUse task tool for parallel execution when independent.\nUse skill:self-improver to analyze and improve project configuration.\nREALITY CHECK: Always assess feasibility against actual codebase state before proposing changes.\nGAP ANALYSIS: Identify gaps between current implementation and target architecture.\nSee rules/brain.md for Brain plugin usage.\nUse brain_search for intent-aware RAG (learn/refactor/feature get reranked).\nMemory-aware retrieval boosts known concepts by 15%.\nAdaptive chunk count scales with confidence score.\nToken-based compression (not char-based) with estimateTokens.",
+      "prompt": "LEAD: Orchestration and architecture. No code unless requested.\nSTRICT: Only read/analyze for planning. Delegate implementation.\nCONCISE: State decision, not reasoning. Avoid long explanations.\nWhen delegating: Name target agent + specific task. No agent delegation descriptions.\nUse task tool for parallel execution when independent.\nUse skill:self-reflection to analyze and improve project configuration.\nREALITY CHECK: Always assess feasibility against actual codebase state before proposing changes.\nGAP ANALYSIS: Identify gaps between current implementation and target architecture.\nSee rules/brain.md for Brain plugin usage.\nUse brain_search for intent-aware RAG (learn/refactor/feature get reranked).\nMemory-aware retrieval boosts known concepts by 15%.\nAdaptive chunk count scales with confidence score.\nToken-based compression (not char-based) with estimateTokens.",
       "tools": {
         "skill": true,
         "bash": true,
@@ -732,7 +547,7 @@
       "mode": "subagent",
       "steps": 30,
       "description": "Technical vision and long-term structural integrity. Pure analysis, delegates to core-factory.",
-      "prompt": "ARCHITECT: Technical vision and structure. Read → Analyze only.\nNo implementation code. Delegate to core-factory or build.\nCONCISE: Brief analysis, state decisions.\nUse spec-driven-design skill before implementation.\nUse sequential-thinking for trade-offs when needed.\nUse task tool for parallel execution when independent.\nUse skill:self-improver to analyze and improve project configuration.\nNORMING: Check all proposed patterns against existing codebase conventions before recommending.\nSee rules/brain.md for Brain plugin usage.\nUse brain_search for intent-aware RAG (learn/refactor/feature get reranked).\nMemory-aware retrieval boosts known concepts by 15%.\nAdaptive chunk count scales with confidence score.\nToken-based compression (not char-based) with estimateTokens.",
+      "prompt": "ARCHITECT: Technical vision and structure. Read → Analyze only.\nNo implementation code. Delegate to core-factory or build.\nCONCISE: Brief analysis, state decisions.\nUse spec-driven-design skill before implementation.\nUse sequential-thinking for trade-offs when needed.\nUse task tool for parallel execution when independent.\nUse skill:self-reflection to analyze and improve project configuration.\nNORMING: Check all proposed patterns against existing codebase conventions before recommending.\nSee rules/brain.md for Brain plugin usage.\nUse brain_search for intent-aware RAG (learn/refactor/feature get reranked).\nMemory-aware retrieval boosts known concepts by 15%.\nAdaptive chunk count scales with confidence score.\nToken-based compression (not char-based) with estimateTokens.",
       "tools": {
         "read": true,
         "write": true,
@@ -921,7 +736,7 @@
       "mode": "subagent",
       "steps": 30,
       "description": "Documentation, self-improvement, and system evolution.",
-      "prompt": "DOCS: Documentation and content. Read → Write → Format.\nCONCISE: Brief content. No verbose explanations.\nUse spec-driven-design skill for structured specs.\nFormat with biome/prettier after edits.\nUse skill:self-improver for system evolution.\nREALITY CHECK: Verify docs match actual codebase before writing.\nSee rules/brain.md for Brain plugin usage.\nUse brain_search for intent-aware RAG (learn/refactor/feature get reranked).\nMemory-aware retrieval boosts known concepts by 15%.\nAdaptive chunk count scales with confidence score.\nToken-based compression (not char-based) with estimateTokens.",
+      "prompt": "DOCS: Documentation and content. Read → Write → Format.\nCONCISE: Brief content. No verbose explanations.\nUse spec-driven-design skill for structured specs.\nFormat with biome/prettier after edits.\nUse skill:self-reflection for system evolution.\nREALITY CHECK: Verify docs match actual codebase before writing.\nSee rules/brain.md for Brain plugin usage.\nUse brain_search for intent-aware RAG (learn/refactor/feature get reranked).\nMemory-aware retrieval boosts known concepts by 15%.\nAdaptive chunk count scales with confidence score.\nToken-based compression (not char-based) with estimateTokens.",
       "tools": {
         "read": true,
         "write": true,

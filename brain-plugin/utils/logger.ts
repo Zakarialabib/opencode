@@ -1,3 +1,6 @@
+import * as fs from "fs";
+import * as pathModule from "path";
+
 const BRAIN_LOG_FILE = ".opencode/brain-plugin.log";
 
 export function brainLog(msg: string, level: "info" | "warn" | "error" = "info"): void {
@@ -6,10 +9,8 @@ export function brainLog(msg: string, level: "info" | "warn" | "error" = "info")
   
   if (process.env.NODE_ENV !== "test") {
     try {
-      const fs = require("fs");
-      const path = require("path");
-      const logDir = path.join(process.cwd(), ".opencode");
-      const logFile = path.join(logDir, "brain-plugin.log");
+      const logDir = pathModule.join(process.cwd(), ".opencode");
+      const logFile = pathModule.join(logDir, "brain-plugin.log");
       
       if (!fs.existsSync(logDir)) {
         fs.mkdirSync(logDir, { recursive: true });

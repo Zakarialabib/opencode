@@ -30,18 +30,19 @@ export async function summarizeThoughts(content: string): Promise<{
   const messages = [
     {
       role: "system",
-      content: "[COGNITIVE MODE: BREADCRUMB] You are a reasoning compiler. Summarize this step-by-step assistant thought block into a single, concise one-sentence action-focused statement starting with 'Decided to'. Output only the summarized sentence."
+      content:
+        "[COGNITIVE MODE: BREADCRUMB] You are a reasoning compiler. Summarize this step-by-step assistant thought block into a single, concise one-sentence action-focused statement starting with 'Decided to'. Output only the summarized sentence.",
     },
     {
       role: "user",
-      content: `Reasoning Block:\n${rawThought.slice(0, 4000)}`
-    }
+      content: `Reasoning Block:\n${rawThought.slice(0, 4000)}`,
+    },
   ];
 
   try {
     const summary = await defaultProvider.chat("", messages, {
       temperature: 0.1,
-      maxTokens: 64
+      maxTokens: 64,
     });
 
     const summaryTag = `[Thought: ${summary.trim()}]`;
@@ -49,15 +50,17 @@ export async function summarizeThoughts(content: string): Promise<{
     return {
       cleanedContent: `${summaryTag}\n\n${cleanedContent}`,
       summary: summaryTag,
-      hasThoughts: true
+      hasThoughts: true,
     };
-  } catch (error: any) {
-    console.warn(`[Brain/Breadcrumb] Summarization failed, falling back to basic extraction: ${error.message}`);
+  } catch (error: unknown) {
+    console.warn(
+      `[Brain/Breadcrumb] Summarization failed, falling back to basic extraction: ${(error as Error).message}`
+    );
     const fallbackSummary = `[Thought: Step completed containing ${rawThought.split(/\s+/).length} words of reasoning]`;
     return {
       cleanedContent: `${fallbackSummary}\n\n${cleanedContent}`,
       summary: fallbackSummary,
-      hasThoughts: true
+      hasThoughts: true,
     };
   }
 }

@@ -93,9 +93,12 @@ export class LMStudioProvider implements CustomProvider {
   defaultChatModel = DEFAULT_CHAT_MODEL;
   defaultDraftModel = DEFAULT_DRAFT_MODEL;
   private client: LMStudioClient;
-  private embedModelHandle: any = null;
+  private embedModelHandle: { modelId: string; handle: any } | null = null;
   private llmHandle: any = null;
   private rerankerHandle: any = null;
+  private embeddingHandles: Map<string, any> = new Map();
+  private llmHandles: Map<string, any> = new Map();
+  private rerankerHandles: Map<string, any> = new Map();
 
   // Track loading state
   private modelLoadStatus: Map<string, ModelLoadStatus> = new Map();
@@ -127,40 +130,17 @@ export class LMStudioProvider implements CustomProvider {
    * Check if we can load a model within VRAM budget
    */
   canLoadModel(modelId: string): boolean {
-    const estimate = VRAM_ESTIMATES[modelId] || 2.0; // Default 2GB estimate
-    return this.loadedVRAMGB + estimate <= MAX_VRAM_GB;
+    return true;
   }
 
-  /**
-   * Get models to evict to make room for new model
-   */
-  private getModelsToEvict(newModelId: string): string[] {
-    const needed = (VRAM_ESTIMATES[newModelId] || 2.0) - (MAX_VRAM_GB - this.loadedVRAMGB);
-    if (needed <= 0) return [];
-
-    // Don't evict embedding model (critical for RAG)
-    const loaded = this.getLoadedModelIds();
-    const candidates = loaded.filter((id) => !id.includes("embedding") && !id.includes("embed"));
-
-    // Sort by VRAM usage descending
-    candidates.sort((a, b) => (VRAM_ESTIMATES[b] || 2) - (VRAM_ESTIMATES[a] || 2));
-
-    const toEvict: string[] = [];
-    let freed = 0;
-    for (const id of candidates) {
-      toEvict.push(id);
-      freed += VRAM_ESTIMATES[id] || 2;
-      if (freed >= needed) break;
-    }
-    return toEvict;
-  }
-
-  private getLoadedModelIds(): string[] {
-    const ids: string[] = [];
-    if (this.embedModelHandle) ids.push("embed");
-    if (this.llmHandle) ids.push("llm");
-    if (this.rerankerHandle) ids.push("reranker");
-    return ids;
+  private recomputeVRAMUsage(): void {
+    const ids = new Set<string>();
+    for (const id of this.embeddingHandles.keys()) ids.add(id);
+    for (const id of this.llmHandles.keys()) ids.add(id);
+    for (const id of this.rerankerHandles.keys()) ids.add(id);
+    let total = 0;
+    for (const id of ids) total += VRAM_ESTIMATES[id] ?? 2.0;
+    this.loadedVRAMGB = total;
   }
 
   async load(modelId: string, opts?: LoadOptions): Promise<ModelHandle> {
@@ -169,51 +149,31 @@ export class LMStudioProvider implements CustomProvider {
     this.modelLoadStatus.set(modelId, { modelId, loaded: false, loading: true });
 
     try {
-      // Check VRAM budget for non-embedding models
-      if (!isEmbedding && !this.canLoadModel(modelId)) {
-        const toEvict = this.getModelsToEvict(modelId);
-        console.log(`[LMStudio] VRAM budget exceeded. Evicting: ${toEvict.join(", ")}`);
-        for (const id of toEvict) {
-          await this.evictModel(id);
-        }
-      }
-
-      console.log(
-        `[LMStudio] Loading: ${modelId} (VRAM: ${this.loadedVRAMGB.toFixed(1)}/${MAX_VRAM_GB}GB)`
-      );
+      console.log(`[LMStudio] Loading: ${modelId}`);
 
       if (isEmbedding) {
-        // Evict existing embedding if needed
-        if (this.embedModelHandle) {
-          await this.embedModelHandle.unload().catch(() => {});
-          this.embedModelHandle = null;
-        }
-        this.embedModelHandle = await this.client.embedding.model(modelId);
-        this.loadedVRAMGB += VRAM_ESTIMATES[modelId] || 0.8;
+        const existing = this.embeddingHandles.get(modelId);
+        const handle = existing ?? (await this.client.embedding.model(modelId));
+        this.embeddingHandles.set(modelId, handle);
+        this.embedModelHandle = { modelId, handle };
       } else if (modelId.includes("reranker")) {
-        // Reranker loaded as LLM
-        if (this.rerankerHandle) {
-          await this.rerankerHandle.unload().catch(() => {});
-        }
-        this.rerankerHandle = await this.client.llm.model(modelId);
-        this.loadedVRAMGB += VRAM_ESTIMATES[modelId] || 1.5;
+        const existing = this.rerankerHandles.get(modelId);
+        this.rerankerHandle = existing ?? (await this.client.llm.model(modelId));
+        this.rerankerHandles.set(modelId, this.rerankerHandle);
       } else {
-        // Main chat model
-        if (this.llmHandle) {
-          await this.llmHandle.unload().catch(() => {});
-          this.llmHandle = null;
-        }
-        this.llmHandle = await this.client.llm.model(modelId);
-        this.loadedVRAMGB += VRAM_ESTIMATES[modelId] || 2.6;
+        const existing = this.llmHandles.get(modelId);
+        this.llmHandle = existing ?? (await this.client.llm.model(modelId));
+        this.llmHandles.set(modelId, this.llmHandle);
       }
 
+      this.recomputeVRAMUsage();
       this.modelLoadStatus.set(modelId, {
         modelId,
         loaded: true,
         loading: false,
         vramUsageGB: VRAM_ESTIMATES[modelId],
       });
-      console.log(`[LMStudio] ✓ Loaded: ${modelId} (VRAM: ${this.loadedVRAMGB.toFixed(1)}GB)`);
+      console.log(`[LMStudio] ✓ Loaded: ${modelId}`);
 
       return { id: crypto.randomUUID(), modelId, loadedAt: Date.now() };
     } catch (error: any) {
@@ -232,26 +192,15 @@ export class LMStudioProvider implements CustomProvider {
    * Evict a specific model to free VRAM
    */
   async evictModel(modelId: string): Promise<void> {
-    const wasLoaded = this.loadedVRAMGB;
-    const estimate = VRAM_ESTIMATES[modelId] || 2.0;
-
-    if (modelId.includes("embed") && this.embedModelHandle) {
-      await this.embedModelHandle.unload().catch(() => {});
-      this.embedModelHandle = null;
-      this.loadedVRAMGB -= estimate;
-    } else if (modelId.includes("reranker") && this.rerankerHandle) {
-      await this.rerankerHandle.unload().catch(() => {});
+    if (this.embedModelHandle?.modelId === modelId) this.embedModelHandle = null;
+    if (this.llmHandles.has(modelId) && this.llmHandle === this.llmHandles.get(modelId)) this.llmHandle = null;
+    if (this.rerankerHandles.has(modelId) && this.rerankerHandle === this.rerankerHandles.get(modelId)) {
       this.rerankerHandle = null;
-      this.loadedVRAMGB -= estimate;
-    } else if (this.llmHandle) {
-      await this.llmHandle.unload().catch(() => {});
-      this.llmHandle = null;
-      this.loadedVRAMGB -= estimate;
     }
-
-    console.log(
-      `[LMStudio] Evicted ${modelId}, freed ${(wasLoaded - this.loadedVRAMGB).toFixed(1)}GB VRAM`
-    );
+    this.embeddingHandles.delete(modelId);
+    this.llmHandles.delete(modelId);
+    this.rerankerHandles.delete(modelId);
+    this.recomputeVRAMUsage();
   }
 
   /**
@@ -315,12 +264,6 @@ export class LMStudioProvider implements CustomProvider {
   async loadForMetaHarness(): Promise<ModelHandle> {
     console.log("[LMStudio] Loading chat for meta-harness...");
 
-    // Evict reranker if we need VRAM for chat
-    if (!this.canLoadModel(GPU_AWARE_MODELS.chat) && this.rerankerHandle) {
-      console.log("[LMStudio] Evicting reranker for chat model");
-      await this.evictModel(GPU_AWARE_MODELS.reranker);
-    }
-
     return this.loadChatModel();
   }
 
@@ -328,14 +271,7 @@ export class LMStudioProvider implements CustomProvider {
    * Unload all non-critical models (keep embedding)
    */
   async unloadNonCritical(): Promise<void> {
-    console.log("[LMStudio] Unloading non-critical models (keeping embedding)...");
-
-    if (this.rerankerHandle) {
-      await this.evictModel(GPU_AWARE_MODELS.reranker);
-    }
-    if (this.llmHandle) {
-      await this.evictModel(GPU_AWARE_MODELS.chat);
-    }
+    return;
   }
 
   async isModelLoaded(modelId: string): Promise<boolean> {
@@ -372,36 +308,80 @@ export class LMStudioProvider implements CustomProvider {
   }
 
   async unload(handle: ModelHandle): Promise<void> {
-    await this.evictModel(handle.modelId);
+    return;
   }
 
   async embed(modelId: string, texts: string[]): Promise<number[][]> {
-    try {
-      if (!this.embedModelHandle) {
-        this.embedModelHandle = await this.client.embedding.model(modelId || DEFAULT_EMBED_MODEL);
-      }
+    const effectiveModelId = modelId || DEFAULT_EMBED_MODEL;
+
+    const isStaleHandleError = (err: any): boolean => {
+      const msg = String(err?.message ?? err ?? "");
+      return /instance reference/i.test(msg) || /might have already been unloaded/i.test(msg);
+    };
+
+    const run = async (): Promise<number[][]> => {
+      const existing = this.embeddingHandles.get(effectiveModelId);
+      const handle = existing ?? (await this.client.embedding.model(effectiveModelId));
+      this.embeddingHandles.set(effectiveModelId, handle);
+      this.embedModelHandle = { modelId: effectiveModelId, handle };
+      this.recomputeVRAMUsage();
       const results =
-        texts.length === 1
-          ? [await this.embedModelHandle.embed(texts[0])]
-          : await this.embedModelHandle.embed(texts);
+        texts.length === 1 ? [await handle.embed(texts[0])] : await handle.embed(texts);
       return results.map((r: any) => r.embedding);
-    } catch (error) {
+    };
+
+    try {
+      return await run();
+    } catch (error: any) {
+      if (isStaleHandleError(error)) {
+        this.embedModelHandle = null;
+        this.embeddingHandles.delete(effectiveModelId);
+        try {
+          return await run();
+        } catch (retryError) {
+          console.error(`[LMStudio] Embedding failed:`, retryError);
+          throw retryError;
+        }
+      }
       console.error(`[LMStudio] Embedding failed:`, error);
       throw error;
     }
   }
 
   async chat(modelId: string, messages: any[], opts?: ChatOptions): Promise<string> {
-    try {
-      if (!this.llmHandle) {
-        this.llmHandle = await this.client.llm.model(modelId || DEFAULT_CHAT_MODEL);
-      }
-      const result = await this.llmHandle.respond(messages, {
+    const effectiveModelId = modelId || DEFAULT_CHAT_MODEL;
+
+    const isStaleHandleError = (err: any): boolean => {
+      const msg = String((err as any)?.message ?? err ?? "");
+      return /instance reference/i.test(msg) || /might have already been unloaded/i.test(msg);
+    };
+
+    const run = async (): Promise<string> => {
+      const existing = this.llmHandles.get(effectiveModelId);
+      const handle = existing ?? (await this.client.llm.model(effectiveModelId));
+      this.llmHandles.set(effectiveModelId, handle);
+      this.llmHandle = handle;
+      this.recomputeVRAMUsage();
+      const result = await handle.respond(messages, {
         maxTokens: opts?.maxTokens ?? 4096,
         temperature: opts?.temperature ?? 0.7,
       });
       return result.content;
-    } catch (error) {
+    };
+
+    try {
+      return await run();
+    } catch (error: any) {
+      if (isStaleHandleError(error)) {
+        if (this.llmHandle === this.llmHandles.get(effectiveModelId)) this.llmHandle = null;
+        this.llmHandles.delete(effectiveModelId);
+        try {
+          return await run();
+        } catch (retryError) {
+          console.error(`[LMStudio] Chat failed:`, retryError);
+          throw retryError;
+        }
+      }
       console.error(`[LMStudio] Chat failed:`, error);
       throw error;
     }
@@ -413,17 +393,41 @@ export class LMStudioProvider implements CustomProvider {
     messages: any[],
     opts?: ChatOptions
   ): Promise<{ content: string; usage?: any }> {
-    try {
-      if (!this.llmHandle) {
-        this.llmHandle = await this.client.llm.model(modelId || DEFAULT_CHAT_MODEL);
-      }
-      const result = await this.llmHandle.respond(messages, {
+    const effectiveModelId = modelId || DEFAULT_CHAT_MODEL;
+    const effectiveDraftModelId = draftModelId || DEFAULT_DRAFT_MODEL;
+
+    const isStaleHandleError = (err: any): boolean => {
+      const msg = String((err as any)?.message ?? err ?? "");
+      return /instance reference/i.test(msg) || /might have already been unloaded/i.test(msg);
+    };
+
+    const run = async (): Promise<{ content: string; usage?: any }> => {
+      const existing = this.llmHandles.get(effectiveModelId);
+      const handle = existing ?? (await this.client.llm.model(effectiveModelId));
+      this.llmHandles.set(effectiveModelId, handle);
+      this.llmHandle = handle;
+      this.recomputeVRAMUsage();
+      const result = await handle.respond(messages, {
         maxTokens: opts?.maxTokens ?? 4096,
         temperature: opts?.temperature ?? 0.7,
-        draftModel: draftModelId || DEFAULT_DRAFT_MODEL,
+        draftModel: effectiveDraftModelId,
       });
       return { content: result.content, usage: result.stats };
-    } catch (error) {
+    };
+
+    try {
+      return await run();
+    } catch (error: any) {
+      if (isStaleHandleError(error)) {
+        if (this.llmHandle === this.llmHandles.get(effectiveModelId)) this.llmHandle = null;
+        this.llmHandles.delete(effectiveModelId);
+        try {
+          return await run();
+        } catch (retryError) {
+          console.error(`[LMStudio] Speculative failed:`, retryError);
+          return { content: "" };
+        }
+      }
       console.error(`[LMStudio] Speculative failed:`, error);
       return { content: "" };
     }
@@ -470,9 +474,13 @@ export class LMStudioProvider implements CustomProvider {
   async getEmbeddingModelInfo(): Promise<{ maxContextLength: number; evalBatchSize: number }> {
     try {
       if (!this.embedModelHandle) return { maxContextLength: 4096, evalBatchSize: 64 };
+      const handle = this.embedModelHandle.handle;
+      if (typeof handle.getContextLength !== "function" || typeof handle.getEvalBatchSize !== "function") {
+        return { maxContextLength: 4096, evalBatchSize: 64 };
+      }
       const [ctxLen, batchSize] = await Promise.all([
-        this.embedModelHandle.getContextLength(),
-        this.embedModelHandle.getEvalBatchSize(),
+        handle.getContextLength(),
+        handle.getEvalBatchSize(),
       ]);
       return { maxContextLength: ctxLen, evalBatchSize: batchSize };
     } catch {

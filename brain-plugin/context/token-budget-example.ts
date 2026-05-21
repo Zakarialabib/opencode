@@ -1,8 +1,4 @@
-import { 
-  TokenBudgetMonitor, 
-  ContextPruner, 
-  TokenCounter 
-} from "./token-budget.js";
+import { TokenBudgetMonitor, ContextPruner, TokenCounter } from "./token-budget.js";
 
 console.log("=== Token Budget System Demo ===\n");
 
@@ -14,13 +10,27 @@ console.log("");
 budgetMonitor.startOperation("brain_search");
 const searchContext = {
   chunks: [
-    { text: "function example() { return 'Hello World'; }", path: "test.js", startLine: 1, endLine: 2, score: 0.9, mtime: Date.now() },
-    { text: "const x = 42;", path: "config.js", startLine: 5, endLine: 5, score: 0.7, mtime: Date.now() - 86400000 },
+    {
+      text: "function example() { return 'Hello World'; }",
+      path: "test.js",
+      startLine: 1,
+      endLine: 2,
+      score: 0.9,
+      mtime: Date.now(),
+    },
+    {
+      text: "const x = 42;",
+      path: "config.js",
+      startLine: 5,
+      endLine: 5,
+      score: 0.7,
+      mtime: Date.now() - 86400000,
+    },
   ],
   totalChunks: 2,
 };
 
-const counter = new TokenCounter();
+const _counter = new TokenCounter();
 const contextTokens = ContextPruner.estimateContextTokens(searchContext, "What does example do?");
 console.log(`Context tokens estimate: ${contextTokens}`);
 

@@ -2,6 +2,8 @@
  * Core types for Meta-Harness OpenCode integration
  */
 
+import type { LMStudioClient } from "./lmstudio-client.js"
+
 export interface MetaHarnessOptions {
   iterations: number
   suite: "smoke" | "full"
@@ -116,4 +118,4 @@ export interface LMStudioModel {
   capabilities?: { vision: boolean; trained_for_tool_use: boolean }
 }
 
-export { LMStudioClient } from "./lmstudio-client"
+export { LMStudioClient } from "./lmstudio-client.js"

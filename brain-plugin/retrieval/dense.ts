@@ -2,10 +2,23 @@ import { defaultProvider } from "../provider/lmstudio.js";
 import * as crypto from "crypto";
 import * as os from "os";
 
-// Cache for the local ONNX embedding pipeline
-let localPipeline: any = null;
+export type EmbedBackend = "local" | "lmstudio" | "auto";
+
+let embedBackend: EmbedBackend = "local";
+let localEmbedModelId = "Xenova/nomic-embed-text-v1.5";
+let lmstudioEmbedModelId = defaultProvider.defaultEmbedModel;
+let lastBackendUsed: "local" | "lmstudio" | null = null;
+let lastModelTypeUsed: "qwen" | "nomic" = "nomic";
+
+const localPipelines = new Map<string, any>();
 let transformersImportFailed = false;
 let lastErrorTime = 0;
+
+function inferEmbeddingModelType(modelId: string): "qwen" | "nomic" {
+  const id = modelId.toLowerCase();
+  if (id.includes("nomic")) return "nomic";
+  return "qwen";
+}
 
 /**
  * Initializes the local ONNX embedding pipeline using transformers.js
@@ -13,13 +26,16 @@ let lastErrorTime = 0;
  * Dynamically tunes thread allocation to optimize CPU performance without freezing the system.
  */
 async function getLocalPipeline(projectRoot: string): Promise<any> {
-  if (localPipeline) return localPipeline;
-  
+  const cached = localPipelines.get(localEmbedModelId);
+  if (cached) return cached;
+
   if (transformersImportFailed) {
     const now = Date.now();
     // 5 minutes cooldown auto-recovery check
     if (lastErrorTime + 5 * 60 * 1000 < now) {
-      console.log("[Brain/Dense] ONNX cooldown expired. Automatically attempting local pipeline recovery...");
+      console.log(
+        "[Brain/Dense] ONNX cooldown expired. Automatically attempting local pipeline recovery..."
+      );
       transformersImportFailed = false;
     } else {
       return null;
@@ -29,7 +45,7 @@ async function getLocalPipeline(projectRoot: string): Promise<any> {
   try {
     // Dynamic import to handle cases where installation was blocked
     const { pipeline, env } = await import("@xenova/transformers");
-    
+
     // Set explicit cache path inside the project
     const cacheDir = pathJoin(projectRoot, ".opencode", "models");
     env.cacheDir = cacheDir;
@@ -40,16 +56,21 @@ async function getLocalPipeline(projectRoot: string): Promise<any> {
       // Set to physical cores (typically logical cpus / 2) capped between 1 and 8 threads
       const cpuThreads = Math.max(1, Math.min(8, Math.floor(cpus.length / 2)));
       // env.onnx is not available in newer transformers.js - skip thread tuning
-      console.log(`[Brain/Dense] Adaptive Tuning: ${cpuThreads} CPU threads available for embedding`);
+      console.log(
+        `[Brain/Dense] Adaptive Tuning: ${cpuThreads} CPU threads available for embedding`
+      );
     } catch (threadError: any) {
       console.warn(`[Brain/Dense] Could not dynamically tune CPU threads: ${threadError.message}`);
     }
 
-    console.log(`[Brain/Dense] Loading Qwen3-Embedding-0.6B from Hugging Face on CPU...`);
+    console.log(
+      `[Brain/Dense] Loading embedding model from Hugging Face on CPU: ${localEmbedModelId}`
+    );
     // Note: device option was removed from PretrainedOptions in transformers.js v2 - CPU is default
-    localPipeline = await pipeline("feature-extraction", "Qwen/Qwen3-Embedding-0.6B");
-    console.log("[Brain/Dense] Qwen3 ONNX Embedding model loaded successfully");
-    return localPipeline;
+    const pipelineInstance = await pipeline("feature-extraction", localEmbedModelId);
+    console.log("[Brain/Dense] Local ONNX embedding model loaded successfully");
+    localPipelines.set(localEmbedModelId, pipelineInstance);
+    return pipelineInstance;
   } catch (error: any) {
     console.warn(`[Brain/Dense] Local transformers.js initialization failed: ${error.message}`);
     console.warn("[Brain/Dense] Falling back to LM Studio Server for embeddings");
@@ -75,7 +96,10 @@ class EmbeddingCoalescer {
   private waitTimeMs: number;
   private currentBatch: string[] = [];
   // Maps text hash to a list of Promise resolver functions waiting for that chunk
-  private waiters: Map<string, Array<{ resolve: (val: number[]) => void; reject: (err: any) => void }>> = new Map();
+  private waiters: Map<
+    string,
+    Array<{ resolve: (val: number[]) => void; reject: (err: any) => void }>
+  > = new Map();
   private timer: NodeJS.Timeout | null = null;
   private projectRoot = "";
 
@@ -124,24 +148,29 @@ class EmbeddingCoalescer {
 
     const batchToProcess = [...this.currentBatch];
     const waitersToResolve = new Map(
-      batchToProcess.map(text => [this.hashText(text), this.waiters.get(this.hashText(text)) || []])
+      batchToProcess.map((text) => [
+        this.hashText(text),
+        this.waiters.get(this.hashText(text)) || [],
+      ])
     );
 
     // Reset batch state cleanly
     this.currentBatch = [];
-    batchToProcess.forEach(text => this.waiters.delete(this.hashText(text)));
+    batchToProcess.forEach((text) => {
+      this.waiters.delete(this.hashText(text));
+    });
 
     try {
       // Execute the batch query
       const result = await getEmbeddingsRaw(this.projectRoot, batchToProcess);
-      
+
       // Resolve all corresponding individual promises
       for (let i = 0; i < batchToProcess.length; i++) {
         const text = batchToProcess[i];
         const textHash = this.hashText(text);
         const vector = result.vectors[i];
         const waitersList = waitersToResolve.get(textHash) || [];
-        
+
         for (const waiter of waitersList) {
           if (vector) {
             waiter.resolve(vector);
@@ -176,17 +205,16 @@ export async function getEmbeddings(
   modelType: "qwen" | "nomic";
 }> {
   if (texts.length === 0) {
-    return { vectors: [], modelType: "qwen" };
+    return { vectors: [], modelType: lastModelTypeUsed };
   }
 
   // Queue and await all text chunks through the request coalescer
-  const promises = texts.map(text => coalescer.getEmbedding(projectRoot, text));
+  const promises = texts.map((text) => coalescer.getEmbedding(projectRoot, text));
   const vectors = await Promise.all(promises);
 
-  const modelType = transformersImportFailed ? "nomic" : "qwen";
   return {
     vectors,
-    modelType
+    modelType: lastModelTypeUsed,
   };
 }
 
@@ -202,59 +230,70 @@ async function getEmbeddingsRaw(
   modelType: "qwen" | "nomic";
 }> {
   if (texts.length === 0) {
-    return { vectors: [], modelType: "qwen" };
+    return { vectors: [], modelType: lastModelTypeUsed };
   }
 
-  const pipeline = await getLocalPipeline(projectRoot);
+  const pipeline = embedBackend === "lmstudio" ? null : await getLocalPipeline(projectRoot);
 
-  if (pipeline) {
+  if (pipeline && (embedBackend === "local" || embedBackend === "auto")) {
     try {
       // Adaptive Tuning: adjust batch execution chunk size based on system RAM
       let batchSize = 8;
       try {
-        const totalMemGb = os.totalmem() / (1024 ** 3);
+        const totalMemGb = os.totalmem() / 1024 ** 3;
         if (totalMemGb > 16) {
           batchSize = 16; // 16GB+ RAM, process larger chunks
         } else if (totalMemGb < 8) {
-          batchSize = 4;  // Less than 8GB RAM, consume minimal CPU memory
+          batchSize = 4; // Less than 8GB RAM, consume minimal CPU memory
         }
       } catch {}
 
-      console.log(`[Brain/Dense] Embedding batch of ${texts.length} chunks locally using Qwen3 (batch execution size: ${batchSize})...`);
+      console.log(
+        `[Brain/Dense] Embedding batch of ${texts.length} chunks locally (batch execution size: ${batchSize})...`
+      );
       const vectors: number[][] = [];
 
       for (let i = 0; i < texts.length; i += batchSize) {
         const batch = texts.slice(i, i + batchSize);
-        
+
         // Generate embeddings for the batch
         const promises = batch.map(async (text) => {
           const output = await pipeline(text, { pooling: "mean", normalize: true });
           return Array.from(output.data) as number[];
         });
-        
+
         const batchVectors = await Promise.all(promises);
         vectors.push(...batchVectors);
       }
 
+      lastBackendUsed = "local";
+      lastModelTypeUsed = inferEmbeddingModelType(localEmbedModelId);
       return {
         vectors,
-        modelType: "qwen" // 1024 dimensions
+        modelType: lastModelTypeUsed,
       };
     } catch (e: any) {
-      console.error("[Brain/Dense] Local Qwen3 embedding execution failed, falling back to LM Studio:", e.message);
+      console.error(
+        "[Brain/Dense] Local embedding execution failed, falling back to LM Studio:",
+        e.message
+      );
       transformersImportFailed = true; // Sticky deactivation of local pipeline to prevent thrashing
       lastErrorTime = Date.now();
-      localPipeline = null;
+      localPipelines.delete(localEmbedModelId);
     }
   }
 
   // Fallback: Query LM Studio Embedding Endpoint
   try {
-    console.log(`[Brain/Dense] Extracting ${texts.length} embeddings via LM Studio (${defaultProvider.defaultEmbedModel})...`);
-    const vectors = await defaultProvider.embed(defaultProvider.defaultEmbedModel, texts);
+    console.log(
+      `[Brain/Dense] Extracting ${texts.length} embeddings via LM Studio (${lmstudioEmbedModelId})...`
+    );
+    const vectors = await defaultProvider.embed(lmstudioEmbedModelId, texts);
+    lastBackendUsed = "lmstudio";
+    lastModelTypeUsed = inferEmbeddingModelType(lmstudioEmbedModelId);
     return {
       vectors,
-      modelType: "nomic" // 768 dimensions
+      modelType: lastModelTypeUsed,
     };
   } catch (error: any) {
     console.error("[Brain/Dense] LM Studio embedding fallback failed:", error.message);
@@ -262,11 +301,56 @@ async function getEmbeddingsRaw(
   }
 }
 
+export function setEmbeddingConfig(next: {
+  backend?: EmbedBackend;
+  localModelId?: string;
+  lmstudioModelId?: string;
+}): void {
+  if (next.backend) embedBackend = next.backend;
+  if (typeof next.localModelId === "string" && next.localModelId.trim()) {
+    localEmbedModelId = next.localModelId.trim();
+  }
+  if (typeof next.lmstudioModelId === "string" && next.lmstudioModelId.trim()) {
+    lmstudioEmbedModelId = next.lmstudioModelId.trim();
+  }
+}
+
+export function getEmbeddingConfig(): {
+  backend: EmbedBackend;
+  localModelId: string;
+  lmstudioModelId: string;
+} {
+  return {
+    backend: embedBackend,
+    localModelId: localEmbedModelId,
+    lmstudioModelId: lmstudioEmbedModelId,
+  };
+}
+
+export function getEmbeddingStatus(): {
+  backend: EmbedBackend;
+  lastBackendUsed: "local" | "lmstudio" | null;
+  localLoaded: boolean;
+  localModelId: string;
+  lmstudioModelId: string;
+  transformersImportFailed: boolean;
+} {
+  return {
+    backend: embedBackend,
+    lastBackendUsed,
+    localLoaded: localPipelines.has(localEmbedModelId),
+    localModelId: localEmbedModelId,
+    lmstudioModelId: lmstudioEmbedModelId,
+    transformersImportFailed,
+  };
+}
+
 /**
  * Resets the sticky fallback flag, enabling ONNX pipeline loading retries.
  */
 export function resetDenseFailedFlag(): void {
   transformersImportFailed = false;
-  localPipeline = null;
+  localPipelines.clear();
+  lastBackendUsed = null;
   console.log("[Brain/Dense] Reset sticky embedding fail flag. ONNX will be retried.");
 }

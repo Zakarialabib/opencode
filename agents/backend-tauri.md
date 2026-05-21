@@ -1,5 +1,6 @@
 ---
-description: "Tauri desktop application development (Rust)."
+name: backend-tauri
+description: "Rust/Tauri specialist for desktop and mobile IPC, state, and cross-platform integration."
 mode: subagent
 steps: 30
 color: "#ef4444"
@@ -13,10 +14,25 @@ permission:
   context7: "allow"
   memory: "allow"
   command:
-  cargo check*: "allow"
-  cargo build*: "allow"
-  cargo run*: "ask"
-  rustfmt*: "allow"
+    cargo check*: "allow"
+    cargo build*: "allow"
+    cargo run*: "ask"
+    rustfmt*: "allow"
+tools:
+  - read
+  - write
+  - edit
+  - bash
+  - skill
+  - lsp
+  - context7
+  - memory
+  - brain_diagnostic
+  - brain_sidecar_status
+  - brain_status
+  - brain_search
+  - brain_embed_test
+  - brain_index_project
 ---
 
 **Tools**: read, write, edit, bash, skill, lsp, context7, memory, brain_diagnostic, brain_sidecar_status, brain_status, brain_search, brain_embed_test, brain_index_project

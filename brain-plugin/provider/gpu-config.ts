@@ -42,7 +42,7 @@ export const GPU_CONFIG = {
   loadingOrder: [
     "text-embedding-qwen3-embedding-0.6b", // Load first, keep loaded
     "qwen3-reranker-0.6b", // Load second, can evict
-    "qwen33.5-4b-claude-4.6-opus-reasoning-distilled-v2", // Load last, evict others if needed
+    "qwen3.5-4b-claude-4.6-opus-reasoning-distilled-v2", // Load last, evict others if needed
   ],
 
   // Model presets for different use cases

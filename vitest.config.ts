@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
-    include: ["plugins/__tests__/**/*.test.ts", "tools/__tests__/**/*.test.ts"],
+    include: ["plugins/__tests__/**/*.test.ts", "tools/__tests__/**/*.test.ts", "brain-plugin/retrieval/__tests__/**/*.test.ts"],
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "lcov"],

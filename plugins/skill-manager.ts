@@ -2,7 +2,8 @@ import { parseJsonc } from "./jsonc-utils";
 import { type Plugin, tool } from "@opencode-ai/plugin";
 import { readFileSync, accessSync } from "node:fs";
 import { join, dirname, parse } from "node:path";
-import { debug, info, warn, error, SKILL_CATEGORIES } from "./debug-logger";
+import { debug, error, info, setTelemetryContext, warn, SKILL_CATEGORIES } from "./debug-logger";
+import { pruneOldTelemetry, recordRunEnd, recordRunStart } from "../brain-plugin/store/telemetry";
 
 // Debug: trace skill execution
 function traceSkillExecution(skillName: string, args: any, result: any, err?: any) {
@@ -34,6 +35,7 @@ interface SkillEntry {
 
 interface SkillExecutionTrace {
   skillName: string;
+  runId?: string;
   startedAt: number;
   duration?: number;
   status: "loading" | "executing" | "completed" | "error";
@@ -42,6 +44,8 @@ interface SkillExecutionTrace {
 
 const skillExecutionTraces = new Map<string, SkillExecutionTrace>();
 const MAX_TRACES = 100;
+let telemetryProjectRoot: string | null = null;
+const telemetryKeepMs = 7 * 24 * 60 * 60 * 1000;
 
 function findProjectRoot(startDir: string): string | null {
   let current = startDir;
@@ -114,6 +118,16 @@ function recordSkillStart(skillName: string): void {
     startedAt: Date.now(),
     status: "loading",
   };
+  if (telemetryProjectRoot) {
+    try {
+      trace.runId = recordRunStart(telemetryProjectRoot, {
+        kind: "skill",
+        name: skillName,
+        traceId: telemetryProjectRoot,
+        meta: {},
+      });
+    } catch {}
+  }
   skillExecutionTraces.set(skillName, trace);
   debug(SKILL_CATEGORIES.SKILL_LOAD, `Skill "${skillName}" loading started`, {
     existingTraces: skillExecutionTraces.size,
@@ -126,6 +140,17 @@ function recordSkillComplete(skillName: string, status: "completed" | "error", e
     trace.duration = Date.now() - trace.startedAt;
     trace.status = status;
     trace.error = err;
+    if (telemetryProjectRoot && trace.runId) {
+      try {
+        recordRunEnd(telemetryProjectRoot, trace.runId, {
+          status: status === "error" ? "error" : "success",
+          metaPatch: {
+            durationMs: trace.duration,
+            error: err,
+          },
+        });
+      } catch {}
+    }
     debug(
       SKILL_CATEGORIES.SKILL_EXECUTE,
       `Skill "${skillName}" ${status} in ${trace.duration}ms`,
@@ -147,6 +172,11 @@ const SkillManagerPlugin: Plugin = async ({ directory }) => {
   const projectRoot = resolveConfigRoot(directory);
   let skillsIndexPath: string | null = null;
   let skills: SkillEntry[] = [];
+  telemetryProjectRoot = projectRoot ?? directory;
+  setTelemetryContext({ projectRoot: telemetryProjectRoot, traceId: telemetryProjectRoot });
+  try {
+    pruneOldTelemetry(telemetryProjectRoot, { keepMs: telemetryKeepMs });
+  } catch {}
 
   debug(SKILL_CATEGORIES.SKILL_LOAD, "SkillManager initializing", { projectRoot, directory });
 

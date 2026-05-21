@@ -1,8 +1,8 @@
-import { 
-  TokenBudgetMonitor, 
-  ContextPruner, 
+import {
+  TokenBudgetMonitor,
+  ContextPruner,
   TokenCounter,
-  initializeFromConfig 
+  initializeFromConfig,
 } from "./token-budget.js";
 
 export interface Chunk {
@@ -40,32 +40,32 @@ export interface InjectOptions {
 export class ContextInjector {
   private budgetMonitor: TokenBudgetMonitor;
   private counter: TokenCounter;
-  
+
   constructor() {
     this.budgetMonitor = TokenBudgetMonitor.getInstance();
     this.counter = new TokenCounter();
   }
 
-  initializeFromConfig(config: any): void {
+  initializeFromConfig(config: Record<string, unknown>): void {
     this.budgetMonitor = initializeFromConfig(config);
     this.counter = this.budgetMonitor.getCounter();
     console.log("[ContextInjector] Token budget initialized from config");
   }
 
   inject(userMessage: string, context: RetrievalResult, opts?: InjectOptions): string {
-    this.budgetMonitor.startOperation('context_injection');
-    
+    this.budgetMonitor.startOperation("context_injection");
+
     let totalTokens = this.counter.estimateTokens(userMessage);
-    
+
     const availableForContext = this.budgetMonitor.getAvailable();
     const maxTokens = opts?.maxTokens ?? availableForContext;
-    
+
     let workingContext = { ...context };
     let prunedInfo = { pruned: false, removedChunks: 0 };
-    
+
     if (opts?.enableBudgetCheck !== false) {
       const contextTokens = ContextPruner.estimateContextTokens(context, userMessage);
-      
+
       if (contextTokens > maxTokens) {
         console.log(
           `[ContextInjector] Context exceeds budget (${contextTokens} > ${maxTokens} tokens), pruning...`
@@ -76,13 +76,13 @@ export class ContextInjector {
         totalTokens += pruned.tokens || 0;
         console.log(
           `[ContextInjector] Pruned ${prunedInfo.removedChunks} chunks, ` +
-          `reduced to ${pruned.tokens || 0} tokens`
+            `reduced to ${pruned.tokens || 0} tokens`
         );
       }
     }
-    
+
     if (workingContext.chunks.length === 0 && !opts?.sessionSummary) {
-      this.budgetMonitor.endOperation('context_injection', totalTokens);
+      this.budgetMonitor.endOperation("context_injection", totalTokens);
       return userMessage;
     }
 
@@ -129,23 +129,26 @@ export class ContextInjector {
     parts.push(`User request: ${userMessage}`);
 
     const result = `You are working on a software development task. Relevant context has been injected.\n\n${parts.join("\n---\n")}\n\nAnalyze the provided context carefully before responding. If the context is insufficient or irrelevant, say so.`;
-     
+
     const resultTokens = this.counter.estimateTokens(result);
     totalTokens += resultTokens;
-    this.budgetMonitor.endOperation('context_injection', resultTokens);
-     
+    this.budgetMonitor.endOperation("context_injection", resultTokens);
+
     if (opts?.enableBudgetCheck !== false) {
       this.budgetMonitor.logStatus();
     }
-     
+
     return result;
   }
 
   injectIntoSystem(systemPrompt: string, context: RetrievalResult): string {
-    this.budgetMonitor.startOperation('system_context_injection');
-    
+    this.budgetMonitor.startOperation("system_context_injection");
+
     if (context.chunks.length === 0) {
-      this.budgetMonitor.endOperation('system_context_injection', this.counter.estimateTokens(systemPrompt));
+      this.budgetMonitor.endOperation(
+        "system_context_injection",
+        this.counter.estimateTokens(systemPrompt)
+      );
       return systemPrompt;
     }
 
@@ -166,8 +169,11 @@ The following relevant code was retrieved from the codebase:
 ${contextText}
 
 Use this context to inform your response.`;
-    
-    this.budgetMonitor.endOperation('system_context_injection', this.counter.estimateTokens(result));
+
+    this.budgetMonitor.endOperation(
+      "system_context_injection",
+      this.counter.estimateTokens(result)
+    );
     return result;
   }
 

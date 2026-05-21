@@ -1,7 +1,10 @@
-import { SearchResultItem } from "./fusion";
+import { SearchResultItem } from "./fusion.js";
 
 let localReranker: any = null;
 let rerankerImportFailed = false;
+let rerankerEnabled = true;
+let rerankerModelId = "Xenova/bge-reranker-base";
+let lastRerankerError: string | undefined = undefined;
 
 // --- Harness-configurable state ---
 let _confidenceGate = 0.85; // skip rerank if top-3 scores > this
@@ -59,10 +62,53 @@ export function getRerankerConfig(): {
   };
 }
 
+export function setRerankerEnabled(enabled: boolean): void {
+  rerankerEnabled = !!enabled;
+  if (!rerankerEnabled) {
+    localReranker = null;
+  }
+}
+
+export function setRerankerModelId(modelId: string): void {
+  if (typeof modelId !== "string" || !modelId.trim()) return;
+  rerankerModelId = modelId.trim();
+  localReranker = null;
+  rerankerImportFailed = false;
+  lastRerankerError = undefined;
+}
+
+export function getRerankerStatus(): {
+  enabled: boolean;
+  modelId: string;
+  loaded: boolean;
+  importFailed: boolean;
+  lastError?: string;
+} {
+  return {
+    enabled: rerankerEnabled,
+    modelId: rerankerModelId,
+    loaded: !!localReranker,
+    importFailed: rerankerImportFailed,
+    lastError: lastRerankerError
+  };
+}
+
+export async function prewarmReranker(projectRoot: string): Promise<{
+  enabled: boolean;
+  modelId: string;
+  loaded: boolean;
+  importFailed: boolean;
+  lastError?: string;
+}> {
+  await getLocalReranker(projectRoot);
+  return getRerankerStatus();
+}
+
 /**
- * Initializes the Qwen3 Reranker pipeline on CPU.
+ * Initializes the local reranker pipeline on CPU.
  */
 async function getLocalReranker(projectRoot: string): Promise<any> {
+  if (!rerankerEnabled) return null;
   if (localReranker) return localReranker;
   if (rerankerImportFailed) return null;
 
@@ -73,10 +119,10 @@ async function getLocalReranker(projectRoot: string): Promise<any> {
     const cacheDir = `${projectRoot}/.opencode/models`.replace(/\\/g, "/");
     env.cacheDir = cacheDir;
 
-    console.log(`[Brain/Reranker] Loading Qwen3-Reranker-0.6B from Hugging Face on CPU...`);
+    console.log(`[Brain/Reranker] Loading reranker model from Hugging Face on CPU: ${rerankerModelId}`);
     // Note: device option was removed from PretrainedOptions in transformers.js v2 - CPU is default
-    localReranker = await pipeline("text-classification", "Qwen/Qwen3-Reranker-0.6B");
-    console.log("[Brain/Reranker] Qwen3 ONNX Reranker loaded successfully");
+    localReranker = await pipeline("text-classification", rerankerModelId);
+    console.log("[Brain/Reranker] Local ONNX reranker loaded successfully");
     return localReranker;
   } catch (error: any) {
     console.warn(`[Brain/Reranker] Local reranker initialization failed: ${error.message}`);
@@ -84,6 +130,7 @@ async function getLocalReranker(projectRoot: string): Promise<any> {
       "[Brain/Reranker] Skipping cross-encoder reranker (falling back to pure RRF fusion scores)"
     );
     rerankerImportFailed = true;
+    lastRerankerError = error?.message ?? String(error);
     return null;
   }
 }
@@ -100,6 +147,7 @@ export async function rerankChunks(
   intent: string = "unknown"
 ): Promise<SearchResultItem[]> {
   if (fusedChunks.length === 0) return [];
+  if (!rerankerEnabled) return fusedChunks;
 
   // Only rerank for configured intents with enough candidates to benefit from cross-encoding
   if (!_rerankIntents.includes(intent) || fusedChunks.length < _rerankMinResults) {

@@ -52,7 +52,9 @@ if (fs.existsSync(pluginDir)) {
     const testFiles = fs.readdirSync(oldTests).filter((f) => f.endsWith(".js"));
     if (testFiles.length > 0) {
       console.log(`\n  [OLD TESTS not in vitest] ${testFiles.length} files in plugins/tests/`);
-      testFiles.forEach((f) => console.log(`    - plugins/tests/${f}`));
+      testFiles.forEach((f) => {
+        console.log(`    - plugins/tests/${f}`);
+      });
       issues.push(`${testFiles.length} old test files in plugins/tests/ not wired into vitest`);
     }
   }
@@ -195,6 +197,7 @@ if (issues.length === 0) {
   console.log("  No issues found!");
 } else {
   console.log(`  ${issues.length} issues found:`);
-  issues.forEach((i, idx) => console.log(`  ${idx + 1}. ${i}`));
+  issues.forEach((i, idx) => {
+    console.log(`  ${idx + 1}. ${i}`);
+  });
 }
-

@@ -1,5 +1,6 @@
 ---
-description: "Unified QA: review, testing, security, and debugging."
+name: qa-guardian
+description: "Unified QA agent for code review, testing, security scanning, and debugging."
 mode: subagent
 steps: 20
 color: "#ef4444"
@@ -13,9 +14,24 @@ permission:
   grep: "allow"
   glob: "allow"
   command:
-  npm test*: "allow"
-  npm run lint*: "allow"
-  cargo test*: "allow"
+    npm test*: "allow"
+    npm run lint*: "allow"
+    cargo test*: "allow"
+tools:
+  - read
+  - bash
+  - skill
+  - lsp
+  - context7
+  - memory
+  - grep
+  - glob
+  - brain_diagnostic
+  - brain_sidecar_status
+  - brain_status
+  - brain_search
+  - brain_embed_test
+  - brain_index_project
 ---
 
 
@@ -27,7 +43,7 @@ permission:
   <system_context>OpenCode quality assurance and security scanning</system_context>
   <domain_context>Code review, testing, security, debugging across Tauri/React/Laravel stacks</domain_context>
   <task_context>Quality enforcement, vulnerability scanning, test execution, bug fixing</task_context>
-  <execution_context>Uses qa-tester, security-scan skills, LSP for analysis</execution_context>
+  <execution_context>Uses available QA and security-review skills, LSP diagnostics, and code analysis tools for precise bug finding.</execution_context>
 </context>
 
 <role>
@@ -64,7 +80,7 @@ permission:
 
 <step_3>
 <action>Security Scanning</action>
-<process> 1. Scan for vulnerabilities using security-scan skill 2. Check for secret exposure 3. Validate secure coding practices
+<process> 1. Scan for vulnerabilities using available security-review skills 2. Check for secret exposure 3. Validate secure coding practices
 </process>
 <validation>No critical vulnerabilities found</validation>
 <output>Security report</output>
@@ -89,7 +105,7 @@ permission:
 
 <constraints>
 - QUALITY: Code review, testing, security scanning, and debugging.
-- Use qa-tester skill, security-scan skill, and debug utilities.
+- Use available QA and security review skills, LSP diagnostics, and debug utilities.
 - Always enforce rules/general.md and project conventions.
 - Run linting (`npm run lint`) and tests (`npm test`) as needed.
 - Security: never expose secrets, scan for vulnerabilities.

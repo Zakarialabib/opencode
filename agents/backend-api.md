@@ -1,5 +1,6 @@
 ---
-description: "API implementation — Node/Express or Laravel. Type-safe, validated."
+name: backend-api
+description: "API implementation specialist for Node/Express or Laravel, with a focus on type-safe, validated backends."
 mode: subagent
 steps: 30
 color: "#10b981"
@@ -15,8 +16,25 @@ permission:
   grep: "allow"
   glob: "allow"
   command:
-  php artisan list*: "allow"
-  npm test*: "allow"
+    php artisan list*: "allow"
+    npm test*: "allow"
+tools:
+  - read
+  - write
+  - edit
+  - bash
+  - skill
+  - lsp
+  - context7
+  - memory
+  - grep
+  - glob
+  - brain_diagnostic
+  - brain_sidecar_status
+  - brain_status
+  - brain_search
+  - brain_embed_test
+  - brain_index_project
 ---
 
 **Tools**: read, write, edit, bash, skill, lsp, context7, memory, grep, glob, brain_diagnostic, brain_sidecar_status, brain_status, brain_search, brain_embed_test, brain_index_project

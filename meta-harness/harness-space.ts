@@ -1,4 +1,4 @@
-import type { BrainHarnessConfig } from "./types"
+import type { BrainHarnessConfig } from "./types.js"
 
 /**
  * BrainHarnessConfig defines the complete parameter space for the Brain Plugin.
@@ -121,7 +121,7 @@ export function applyHarnessConfig(config: BrainHarnessConfig): void {
 
 export function validateConfig(config: BrainHarnessConfig): void {
   const weights = config.fusionAlpha + config.fusionBeta + config.fusionGamma
-  if (Math.abs(weights - 1.0) > 0.01) {
+  if (Math.abs(weights - 1.0) > 0.01 && weights > 0) {
     // Normalize
     config.fusionAlpha /= weights
     config.fusionBeta /= weights

@@ -233,7 +233,7 @@ function semanticChunkFile(filePath: string, content: string): ChunkResult[] {
   return chunks.length > 0 ? chunks : chunkFile(filePath, content);
 }
 
-function chunkFile(filePath: string, content: string): ChunkResult[] {
+export function chunkFile(filePath: string, content: string): ChunkResult[] {
   const lines = content.split("\n");
   const chunks: ChunkResult[] = [];
   const lang = detectLanguage(filePath);
@@ -354,8 +354,14 @@ function updateFileRecord(
   db: ReturnType<typeof getDatabase>
 ) {
   db.prepare(`
-    INSERT OR REPLACE INTO files (path, mtime, size, hash, indexed_at, chunk_count)
+    INSERT INTO files (path, mtime, size, hash, indexed_at, chunk_count)
     VALUES (?, ?, ?, ?, ?, ?)
+    ON CONFLICT(path) DO UPDATE SET
+      mtime = excluded.mtime,
+      size = excluded.size,
+      hash = excluded.hash,
+      indexed_at = excluded.indexed_at,
+      chunk_count = excluded.chunk_count
   `).run(relPath, mtime, size, hash, Date.now(), chunkCount);
 }
 
@@ -463,6 +469,46 @@ export async function indexProject(rootDir: string): Promise<ChunkResult[]> {
   }
 
   return allNewChunks;
+}
+
+export async function reindexProjectFull(projectRoot: string): Promise<ChunkResult[]> {
+  const db = getDatabase(projectRoot);
+  db.transaction(() => {
+    try {
+      db.prepare("DELETE FROM concept_chunks").run();
+    } catch {}
+    try {
+      db.prepare("DELETE FROM chunks").run();
+    } catch {}
+    try {
+      db.prepare("DELETE FROM files").run();
+    } catch {}
+    try {
+      db.prepare("DELETE FROM fts_chunks").run();
+    } catch {}
+    try {
+      db.prepare("DELETE FROM chunk_embeddings").run();
+    } catch {}
+    try {
+      db.prepare("DELETE FROM chunk_embeddings_nomic").run();
+    } catch {}
+    try {
+      db.prepare("DELETE FROM concept_embeddings").run();
+    } catch {}
+    try {
+      db.prepare("DELETE FROM concepts").run();
+    } catch {}
+    try {
+      db.prepare("DELETE FROM sessions").run();
+    } catch {}
+    try {
+      db.prepare(
+        "INSERT OR REPLACE INTO config (key, value, updated_at) VALUES ('needs_reindex', 'false', ?)"
+      ).run(Date.now());
+    } catch {}
+  })();
+
+  return indexProject(projectRoot);
 }
 
 function awaitEmbeddings(

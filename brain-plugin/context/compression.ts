@@ -29,10 +29,6 @@ export function getCompressionThreshold(intent: DevIntent | string): number {
     case "refactor":
     case "feature":
       return 500; // Keep high-fidelity trace/source text
-    case "learn":
-    case "quick_chat":
-    case "review":
-    case "test":
     default:
       return 150; // Compress aggressively for lightweight conversations
   }
@@ -80,9 +76,9 @@ export async function compressIfNeeded(
       `[Brain/Compression] Compressed ${content.length} chars to ${compressed.length} chars.`
     );
     return compressed;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.warn(
-      `[Brain/Compression] Compression failed, falling back to truncation: ${error.message}`
+      `[Brain/Compression] Compression failed, falling back to truncation: ${(error as Error).message}`
     );
     return (
       content.slice(0, threshold * 4) +

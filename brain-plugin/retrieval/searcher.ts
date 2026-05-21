@@ -1,6 +1,7 @@
 import { getDatabase } from "../store/index.js";
 import { getEmbeddings } from "./dense.js";
 import { isVectorActive } from "../store/vec.js";
+import { searchDenseVectors } from "../store/vec.js";
 import { rerankChunks } from "./reranker.js";
 import { reciprocalRankFusion, SearchResultItem } from "./fusion.js";
 import { RerankingTrigger, getRerankingTrigger } from "./reranking-trigger.js";
@@ -10,19 +11,6 @@ import { RerankingTrigger, getRerankingTrigger } from "./reranking-trigger.js";
 // name, start_line, end_line, parent_id?, content, score?
 export type { SearchResultItem as SearchResult } from "./fusion.js";
 type SearchResult = SearchResultItem;
-
-function cosineSimilarity(a: number[], b: number[]): number {
-  let dot = 0,
-    magA = 0,
-    magB = 0;
-  for (let i = 0; i < a.length; i++) {
-    dot += a[i] * b[i];
-    magA += a[i] * a[i];
-    magB += b[i] * b[i];
-  }
-  const denom = Math.sqrt(magA) * Math.sqrt(magB);
-  return denom === 0 ? 0 : dot / denom;
-}
 
 function ftsSearch(
   db: ReturnType<typeof getDatabase>,
@@ -68,43 +56,9 @@ async function denseSearch(
 
     const queryVec = queryEmbedding.vectors[0];
     const modelType = queryEmbedding.modelType;
-    const tableName = modelType === "qwen" ? "chunk_embeddings" : "chunk_embeddings_nomic";
 
     if (!isVectorActive(db)) return [];
-
-    const rows = db
-      .prepare(`
-      SELECT c.id, c.filepath, c.language, c.type, c.name, c.start_line, c.end_line, c.parent_id, c.content, e.embedding
-      FROM ${tableName} e
-      JOIN chunks c ON c.rowid = e.rowid
-    `)
-      .all() as Array<any>;
-
-    const scored: SearchResult[] = [];
-    for (const row of rows) {
-      const vec = new Float32Array(
-        row.embedding.buffer,
-        row.embedding.byteOffset,
-        row.embedding.byteLength / 4
-      );
-      const vecArr = Array.from(vec);
-      const score = cosineSimilarity(queryVec, vecArr);
-      scored.push({
-        id: row.id,
-        filepath: row.filepath,
-        language: row.language,
-        type: row.type,
-        name: row.name,
-        start_line: row.start_line,
-        end_line: row.end_line,
-        parent_id: row.parent_id,
-        content: row.content,
-        score,
-      });
-    }
-
-    scored.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
-    return scored.slice(0, topK);
+    return searchDenseVectors(db as any, queryVec, topK, modelType === "qwen" ? "qwen" : "nomic");
   } catch (e: any) {
     console.warn(`[Brain/Searcher] Dense search failed: ${e.message}`);
     return [];

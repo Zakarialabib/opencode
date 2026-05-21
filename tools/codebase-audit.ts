@@ -82,7 +82,14 @@ export class IntelligentAuditor {
     this.fileLines = new Map(); // filePath -> [lines]
   }
 
-  addFinding(category: string, severity: string, file: string, line: number, message: string, suggestion = "") {
+  addFinding(
+    category: string,
+    severity: string,
+    file: string,
+    line: number,
+    message: string,
+    suggestion = ""
+  ) {
     this.findings.push({
       category,
       severity,
@@ -116,7 +123,7 @@ export class IntelligentAuditor {
   }
 
   walkDir(dir: string) {
-    let entries;
+    let entries: fs.Dirent[] | undefined;
     try {
       entries = fs.readdirSync(dir, { withFileTypes: true });
     } catch {
@@ -175,14 +182,12 @@ export class IntelligentAuditor {
         let imported: string[] | undefined;
         if (importMatch[1]) {
           // { foo, bar }
-          imported = importMatch[1]
-            .split(",")
-            .flatMap((s) =>
-              s
-                .trim()
-                .replace(/\s+as\s+.+/, "")
-                .split(/\s*,\s*/)
-            );
+          imported = importMatch[1].split(",").flatMap((s) =>
+            s
+              .trim()
+              .replace(/\s+as\s+.+/, "")
+              .split(/\s*,\s*/)
+          );
         } else if (importMatch[2]) imported = [importMatch[2]];
         else if (importMatch[3]) imported = [importMatch[3]];
 
@@ -394,7 +399,7 @@ export class IntelligentAuditor {
     console.log("   Analyzing import usage across files...");
 
     for (const [filePath, imports] of this.allImports) {
-      let content;
+      let content: string | undefined;
       try {
         content = this.fileContents.get(filePath);
       } catch {
@@ -804,10 +809,9 @@ export class IntelligentAuditor {
 }
 
 // Run
-const isMain = process.argv[1] && (
-  process.argv[1].endsWith("codebase-audit.ts") || 
-  process.argv[1].endsWith("codebase-audit.js")
-);
+const isMain =
+  process.argv[1] &&
+  (process.argv[1].endsWith("codebase-audit.ts") || process.argv[1].endsWith("codebase-audit.js"));
 if (isMain) {
   const root = process.argv[2] || process.cwd();
   const auditor = new IntelligentAuditor(root);

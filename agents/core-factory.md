@@ -1,5 +1,6 @@
 ---
-description: "Core implementation and direct file editing (merged builder/planner/opencoder). Self-evolving with autoresearch."
+name: core-factory
+description: "Fast implementation expert for direct file editing, validation, and clean code delivery."
 mode: subagent
 steps: 40
 color: "#3b82f6"
@@ -12,16 +13,35 @@ permission:
   bash: "deny"
   skill: "allow"
   command:
-  git status*: "allow"
-  ls: "allow"
-  npm test*: "allow"
+    git status*: "allow"
+    ls: "allow"
+    npm test*: "allow"
   file:
-  src/**: "allow"
-  app/**: "allow"
-  resources/**: "allow"
+    src/**: "allow"
+    app/**: "allow"
+    resources/**: "allow"
+    "**/*.md": "allow"
   memory: "allow"
   context7: "allow"
   sequential-thinking: "allow"
+tools:
+  - read
+  - write
+  - edit
+  - skill
+  - grep
+  - glob
+  - todowrite
+  - memory
+  - context7
+  - sequential-thinking
+  - lsp
+  - brain_diagnostic
+  - brain_sidecar_status
+  - brain_status
+  - brain_search
+  - brain_embed_test
+  - brain_index_project
 ---
 
 

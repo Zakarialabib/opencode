@@ -1,7 +1,9 @@
 import { parseJsonc } from "./jsonc-utils";
 import { type Plugin, tool } from "@opencode-ai/plugin";
+import { createHash } from "node:crypto";
 import { readFileSync, accessSync } from "node:fs";
 import { join, dirname, parse } from "node:path";
+import { recordRunEnd, recordRunStart } from "../brain-plugin/store/telemetry";
 
 // Find project root by looking for opencode.json
 function findConfigPath(startDir: string): string | null {
@@ -98,6 +100,11 @@ const DEFAULT_MODEL_CAPABILITIES: ModelRegistry = {
 
 const ModelRouterPlugin: Plugin = async ({ directory }) => {
   let MODEL_CAPABILITIES: ModelRegistry = DEFAULT_MODEL_CAPABILITIES;
+  const telemetryProjectRoot = directory;
+  const telemetryDefaultTraceId = createHash("sha1")
+    .update(`${process.pid}:${telemetryProjectRoot}`)
+    .digest("hex")
+    .slice(0, 12);
 
   const configPath = resolveConfigPath(directory);
   if (configPath) {
@@ -197,28 +204,82 @@ const ModelRouterPlugin: Plugin = async ({ directory }) => {
     },
 
     "model.call": async ({ provider, model, params, next }: any) => {
+      const hookStartedAt = Date.now();
+      const sessionId =
+        typeof params?.sessionID === "string"
+          ? params.sessionID
+          : typeof params?.sessionId === "string"
+            ? params.sessionId
+            : undefined;
+      const traceId =
+        typeof params?.traceId === "string"
+          ? params.traceId
+          : typeof params?.traceID === "string"
+            ? params.traceID
+            : sessionId || telemetryDefaultTraceId;
+      const agentName = typeof params?.agent === "string" ? params.agent : undefined;
+      const messageCount = Array.isArray(params?.messages) ? params.messages.length : undefined;
+      const hasTools = Array.isArray(params?.tools) && params.tools.length > 0;
+      const maxTokens =
+        typeof params?.maxTokens === "number"
+          ? params.maxTokens
+          : typeof params?.max_tokens === "number"
+            ? params.max_tokens
+            : undefined;
+      let runId: string | undefined;
+      let ok = true;
+      try {
+        runId = recordRunStart(telemetryProjectRoot, {
+          kind: "agent",
+          name: agentName || `${provider}/${model}`,
+          sessionId,
+          traceId,
+          meta: {
+            provider,
+            model,
+            messageCount,
+            hasTools,
+            maxTokens,
+          },
+        });
+      } catch {}
+
       const caps = getModelCapabilities(provider, model);
 
-      if (!caps.supportsInstructions && params.instructions) {
-        const instructions = Array.isArray(params.instructions)
-          ? params.instructions.join("\n")
-          : params.instructions;
+      try {
+        if (!caps.supportsInstructions && params.instructions) {
+          const instructions = Array.isArray(params.instructions)
+            ? params.instructions.join("\n")
+            : params.instructions;
 
-        if (params.system) {
-          params.system = `${instructions}\n\n${params.system}`;
-        } else if (params.messages && params.messages.length > 0) {
-          params.messages.unshift({ role: "system", content: instructions });
+          if (params.system) {
+            params.system = `${instructions}\n\n${params.system}`;
+          } else if (params.messages && params.messages.length > 0) {
+            params.messages.unshift({ role: "system", content: instructions });
+          }
+
+          delete params.instructions;
         }
 
-        delete params.instructions;
-      }
+        if (!caps.tool_call && params.tools && params.tools.length > 0) {
+          console.log(`Model ${provider}/${model} doesn't support tools, removing tools.`);
+          delete params.tools;
+        }
 
-      if (!caps.tool_call && params.tools && params.tools.length > 0) {
-        console.log(`Model ${provider}/${model} doesn't support tools, removing tools.`);
-        delete params.tools;
+        return await next({ provider, model, params });
+      } catch (e) {
+        ok = false;
+        throw e;
+      } finally {
+        if (runId) {
+          try {
+            recordRunEnd(telemetryProjectRoot, runId, {
+              status: ok ? "success" : "error",
+              metaPatch: { durationMs: Math.max(0, Date.now() - hookStartedAt) },
+            });
+          } catch {}
+        }
       }
-
-      return next({ provider, model, params });
     },
   };
 };

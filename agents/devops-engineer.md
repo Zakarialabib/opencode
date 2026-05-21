@@ -1,4 +1,5 @@
 ---
+name: devops-engineer
 description: "Operational tasks, MCP integration, and infrastructure."
 mode: subagent
 steps: 20
@@ -12,13 +13,27 @@ permission:
   context7: "allow"
   memory: "allow"
   command:
-  git status*: "allow"
-  ls: "allow"
-  npm*: "allow"
-  cargo*: "allow"
-  php*: "allow"
-  pnpm*: "allow"
-  bun*: "allow"
+    git status*: "allow"
+    ls: "allow"
+    npm*: "allow"
+    cargo*: "allow"
+    php*: "allow"
+    pnpm*: "allow"
+    bun*: "allow"
+tools:
+  - read
+  - write
+  - edit
+  - bash
+  - skill
+  - context7
+  - memory
+  - brain_diagnostic
+  - brain_sidecar_status
+  - brain_status
+  - brain_search
+  - brain_embed_test
+  - brain_index_project
 ---
 
 

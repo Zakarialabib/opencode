@@ -12,7 +12,7 @@ export interface SessionRating {
  * Records user interaction feedback for a learning loop session.
  * Adjusts concept-chunk relationship strengths and triggers the retrieval blame auto-tuner.
  */
-export function recordSessionFeedback(projectRoot: string, feedback: SessionRating): void {
+export async function recordSessionFeedback(projectRoot: string, feedback: SessionRating): Promise<void> {
   const db = getDatabase(projectRoot);
   const now = Date.now();
 
@@ -69,8 +69,8 @@ export function recordSessionFeedback(projectRoot: string, feedback: SessionRati
   }
 
   // 4. Report Precision@K and MRR metrics
-  const { computePrecisionAtK, computeMRR } = require("./tracer");
   try {
+    const { computePrecisionAtK, computeMRR } = await import("./tracer.js");
     const pAt5 = computePrecisionAtK(5);
     const mrr = computeMRR();
     console.log(

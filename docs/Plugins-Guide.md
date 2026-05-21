@@ -31,17 +31,10 @@ Plugins extend OpenCode's functionality via TypeScript/JavaScript modules that e
 | #   | Plugin                       | File                          | Purpose                                                       |
 | --- | ---------------------------- | ----------------------------- | ------------------------------------------------------------- |
 | 9   | **Extension Context Bridge** | `extension-context-bridge.ts` | Bridges extension context from Trae IDE                       |
-| 10  | **IDE MCP Bridge**           | `ide-mcp-bridge.ts`           | Exposes MCP servers running in IDE to OpenCode                |
-| 11  | **Language Context Bridge**  | `language-context-bridge.ts`  | LSP integration (rust-analyzer, TypeScript, PHP Intelephense) |
-| 12  | **Process Monitor**          | `process-monitor.ts`          | Process tree monitoring and health checks                     |
+| 10  | **Language Context Bridge**  | `language-context-bridge.ts`  | LSP integration (rust-analyzer, TypeScript, PHP Intelephense) |
+| 11  | **Process Monitor**          | `process-monitor.ts`          | Process tree monitoring and health checks                     |
 
-### External (npm)
 
-| Package                       | Purpose                              |
-| ----------------------------- | ------------------------------------ |
-| `@zenobius/opencode-skillful` | Skill management and discovery tools |
-
----
 
 ## 🛠️ Tools Provided by Each Core Plugin
 
@@ -110,10 +103,8 @@ Plugins are registered in `opencode.json`:
     "plugins/context-manager.ts",
     "brain-plugin/brain.ts",   # RAG engine: auto-index, vector search, speculative decoding
     "plugins/extension-context-bridge.ts",
-    "plugins/ide-mcp-bridge.ts",
     "plugins/language-context-bridge.ts",
     "plugins/process-monitor.ts",
-    "@zenobius/opencode-skillful"
   ]
 }
 ```
@@ -215,7 +206,6 @@ plugins/
 ├── skill-manager.ts            # Skill registry access
 ├── context-manager.ts          # Context configuration
 ├── extension-context-bridge.ts # Trae IDE extension bridge
-├── ide-mcp-bridge.ts           # IDE MCP bridge
 ├── language-context-bridge.ts  # LSP integration bridge
 ├── process-monitor.ts          # Process monitoring
 └── tests/                      # Test suite

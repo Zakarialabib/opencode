@@ -1,5 +1,5 @@
-import * as fs from "fs";
-import * as path from "path";
+import * as fs from "node:fs";
+import * as path from "node:path";
 // We use require or dynamic import for local JS files if they haven't been migrated yet
 const ConfigValidator = require("../scripts/config-validator");
 const { SkillRegistry } = require("../skills/registry");
@@ -42,11 +42,11 @@ async function run() {
     failures.push(`Missing config file: ${configPath}`);
   }
 
-  let config: any;
+  let config: Record<string, unknown> | undefined;
   try {
     config = JSON.parse(fs.readFileSync(configPath, "utf8"));
-  } catch (error: any) {
-    failures.push(`Cannot parse opencode.json: ${error.message}`);
+  } catch (error: unknown) {
+    failures.push(`Cannot parse opencode.json: ${(error as Error).message}`);
   }
 
   if (config) {
@@ -55,7 +55,7 @@ async function run() {
       const result = validator.validateConfig(config);
       if (!result.valid) {
         failures.push("opencode.json failed schema validation:");
-        result.errors.forEach((error: any) => {
+        result.errors.forEach((error: { path?: string; message: string }) => {
           failures.push(`  - [${error.path || "root"}] ${error.message}`);
         });
       } else {
@@ -94,7 +94,7 @@ async function run() {
 
     if (!exists(agentsDir)) {
       failures.push(`Missing agents directory: ${agentsDir}`);
-    } else if (config && config.agent && typeof config.agent === "object") {
+    } else if (config?.agent && typeof config.agent === "object") {
       const configAgents = Object.keys(config.agent);
       const agentFiles = fs
         .readdirSync(agentsDir)
@@ -122,8 +122,8 @@ async function run() {
           const workflowNames = workflowEngine.listWorkflows();
           console.log(`✅ Loaded ${workflowNames.length} workflows`);
         }
-      } catch (error: any) {
-        failures.push(`Workflow load failed: ${error.message}`);
+      } catch (error: unknown) {
+        failures.push(`Workflow load failed: ${(error as Error).message}`);
       }
     }
   }
@@ -132,7 +132,7 @@ async function run() {
     const pkg = JSON.parse(fs.readFileSync(packagePath, "utf8"));
     const requiredScripts = ["start", "lint", "test"];
     for (const scriptName of requiredScripts) {
-      if (!pkg.scripts || !pkg.scripts[scriptName]) {
+      if (!pkg.scripts?.[scriptName]) {
         warnings.push(`package.json missing script: ${scriptName}`);
       }
     }
@@ -140,12 +140,16 @@ async function run() {
 
   if (warnings.length) {
     console.log("\n⚠️  Warnings:");
-    warnings.forEach((warning) => console.log(`  - ${warning}`));
+    warnings.forEach((warning) => {
+      console.log(`  - ${warning}`);
+    });
   }
 
   if (failures.length) {
     console.log("\n❌ Health check failed:");
-    failures.forEach((failure) => console.log(`  - ${failure}`));
+    failures.forEach((failure) => {
+      console.log(`  - ${failure}`);
+    });
     process.exit(1);
   }
 

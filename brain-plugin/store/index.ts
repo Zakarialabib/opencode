@@ -1,18 +1,18 @@
-import Database from "better-sqlite3";
+import { createDatabase, type BrainDatabase } from "./driver.js";
 import { getLoadablePath } from "sqlite-vec";
 import * as path from "path";
 import * as fs from "fs";
 import { initializeVectorTables } from "./vec.js";
 import { initializeFTSTables } from "./fts.js";
 
-let dbInstance: Database.Database | null = null;
+let dbInstance: BrainDatabase | null = null;
 let dbPathResolve = "";
 
 /**
  * Gets or initializes the isolated SQLite database for the brain plugin.
  * Located at projectRoot/.opencode/brain.db.
  */
-export function getDatabase(projectRoot: string): Database.Database {
+export function getDatabase(projectRoot: string): BrainDatabase {
   if (dbInstance) return dbInstance;
 
   const opencodeDir = path.join(projectRoot, ".opencode");
@@ -23,7 +23,7 @@ export function getDatabase(projectRoot: string): Database.Database {
   dbPathResolve = path.join(opencodeDir, "brain.db");
   console.log(`[Brain/Store] Opening database at: ${dbPathResolve}`);
   
-  const db = new Database(dbPathResolve);
+  const db = createDatabase(dbPathResolve);
 
   // Load the sqlite-vec extension for vector queries
   try {
@@ -54,7 +54,7 @@ export function getDatabase(projectRoot: string): Database.Database {
  * Automatically executes database schema migrations.
  * Prevents schema blocks and manages non-blocking background re-indexing flags.
  */
-function runMigrations(db: Database.Database): void {
+function runMigrations(db: BrainDatabase): void {
   // Create schema_version table if not exists
   db.exec(`
     CREATE TABLE IF NOT EXISTS schema_version (
@@ -104,12 +104,58 @@ function runMigrations(db: Database.Database): void {
     
     console.log("[Brain/Store] Migration 1 successfully applied!");
   }
+
+  if (currentVersion < 2) {
+    console.log("[Brain/Store] Executing database Migration 2 (telemetry tables)...");
+
+    db.transaction(() => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS telemetry_runs (
+          id TEXT PRIMARY KEY,
+          started_at INTEGER NOT NULL,
+          ended_at INTEGER,
+          duration_ms INTEGER,
+          kind TEXT NOT NULL,
+          name TEXT NOT NULL,
+          session_id TEXT,
+          trace_id TEXT,
+          status TEXT NOT NULL,
+          meta_json TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_telemetry_runs_started_at ON telemetry_runs(started_at);
+        CREATE INDEX IF NOT EXISTS idx_telemetry_runs_session_id ON telemetry_runs(session_id);
+        CREATE INDEX IF NOT EXISTS idx_telemetry_runs_trace_id ON telemetry_runs(trace_id);
+        CREATE INDEX IF NOT EXISTS idx_telemetry_runs_kind ON telemetry_runs(kind);
+      `);
+
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS telemetry_events (
+          id TEXT PRIMARY KEY,
+          ts INTEGER NOT NULL,
+          trace_id TEXT,
+          session_id TEXT,
+          level TEXT NOT NULL,
+          category TEXT NOT NULL,
+          message TEXT NOT NULL,
+          extra_json TEXT
+        );
+        CREATE INDEX IF NOT EXISTS idx_telemetry_events_ts ON telemetry_events(ts);
+        CREATE INDEX IF NOT EXISTS idx_telemetry_events_trace_id ON telemetry_events(trace_id);
+        CREATE INDEX IF NOT EXISTS idx_telemetry_events_session_id ON telemetry_events(session_id);
+        CREATE INDEX IF NOT EXISTS idx_telemetry_events_level ON telemetry_events(level);
+      `);
+
+      db.prepare("INSERT INTO schema_version (version, applied_at) VALUES (2, ?)").run(now);
+    })();
+
+    console.log("[Brain/Store] Migration 2 successfully applied!");
+  }
 }
 
 /**
  * Creates the standard relational schema for chunks, files, concepts, sessions, and config.
  */
-function initializeTables(db: Database.Database): void {
+function initializeTables(db: BrainDatabase): void {
   // 1. Files table for incremental file modification tracking
   db.exec(`
     CREATE TABLE IF NOT EXISTS files (

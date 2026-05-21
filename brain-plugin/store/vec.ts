@@ -1,10 +1,10 @@
-import Database from "better-sqlite3";
+import { createDatabase, BrainDatabase } from "./driver";
 
 /**
  * Initializes the vector virtual tables for sqlite-vec.
  * Supports different models with different dimensions using separate vec0 tables.
  */
-export function initializeVectorTables(db: Database.Database): void {
+export function initializeVectorTables(db: BrainDatabase): void {
   try {
     // 1. Qwen3-Embedding-0.6B virtual table (1024 dimensions)
     db.exec("CREATE VIRTUAL TABLE IF NOT EXISTS chunk_embeddings USING vec0(embedding float[1024])");
@@ -24,7 +24,7 @@ export function initializeVectorTables(db: Database.Database): void {
 /**
  * Checks if the sqlite-vec extension is active and available.
  */
-export function isVectorActive(db: Database.Database): boolean {
+export function isVectorActive(db: BrainDatabase): boolean {
   try {
     const version = db.prepare("SELECT vec_version() AS version").get() as { version: string };
     return !!version?.version;
@@ -38,10 +38,10 @@ export function isVectorActive(db: Database.Database): boolean {
  * Maps the content-addressable chunk string ID to the internal integer ROWID of the chunk.
  */
 export function upsertChunkEmbedding(
-  db: Database.Database,
+  db: BrainDatabase,
   chunkId: string,
   vector: number[],
-  modelType: "qwen" | "nomic" = "qwen"
+  modelType: "qwen" | "nomic" = "qwen",
 ): void {
   // Get the internal rowid of the chunk in the chunks table
   const chunkRow = db.prepare("SELECT rowid FROM chunks WHERE id = ?").get(chunkId) as { rowid: number } | undefined;
@@ -67,9 +67,9 @@ export function upsertChunkEmbedding(
  * Batch inserts vector embeddings. Uses a transaction for maximum insertion performance.
  */
 export function upsertChunkEmbeddingsBatch(
-  db: Database.Database,
+  db: BrainDatabase,
   items: Array<{ chunkId: string; vector: number[] }>,
-  modelType: "qwen" | "nomic" = "qwen"
+  modelType: "qwen" | "nomic" = "qwen",
 ): void {
   const selectRowid = db.prepare("SELECT rowid FROM chunks WHERE id = ?");
   const insertQwen = db.prepare("INSERT OR REPLACE INTO chunk_embeddings(rowid, embedding) VALUES(?, ?)");
@@ -97,10 +97,10 @@ export function upsertChunkEmbeddingsBatch(
  * Returns the matching chunk models with their cosine distance scores.
  */
 export function searchDenseVectors(
-  db: Database.Database,
+  db: BrainDatabase,
   queryVector: number[],
   limit: number,
-  modelType: "qwen" | "nomic" = "qwen"
+  modelType: "qwen" | "nomic" = "qwen",
 ): Array<{
   id: string;
   filepath: string;
@@ -155,7 +155,7 @@ export function searchDenseVectors(
 /**
  * Cleanly deletes a vector embedding by mapping chunk string ID to rowid.
  */
-export function deleteChunkEmbedding(db: Database.Database, chunkId: string): void {
+export function deleteChunkEmbedding(db: BrainDatabase, chunkId: string): void {
   const chunkRow = db.prepare("SELECT rowid FROM chunks WHERE id = ?").get(chunkId) as { rowid: number } | undefined;
   if (!chunkRow) return;
 
