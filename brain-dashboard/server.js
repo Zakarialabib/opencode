@@ -1147,6 +1147,50 @@ async function handleAPI(path, method, body) {
     return json({ success: true, data: { key, value } });
   }
 
+  // ─── Brain Plugin Status ─────────────────────────────────────────────────────
+  if (path === "/brain/plugin-status" && method === "GET") {
+    const database = getDB();
+    if (!database) {
+      return json({ success: false, error: "No database. Initialize DB first." });
+    }
+    try {
+      const row = database.query("SELECT value FROM config WHERE key = ?").get("brain_plugin_status");
+      if (!row) {
+        return json({ success: true, data: null, message: "No plugin status available yet. The brain plugin may not have written its state." });
+      }
+      const data = JSON.parse(row.value);
+      return json({ success: true, data });
+    } catch (e) {
+      return json({ success: false, error: e.message });
+    }
+  }
+
+  // ─── Brain Reindex (flag for brain plugin) ────────────────────────────────────
+  if (path === "/brain/reindex" && method === "POST") {
+    const database = getDB();
+    if (!database) return json({ success: false, error: "No database. Initialize DB first." });
+    try {
+      database.run("INSERT OR REPLACE INTO config (key, value, updated_at) VALUES ('brain_reindex_request', 'true', ?)", Date.now());
+      logActivity("Reindex requested — brain plugin will pick it up within 30s", "success");
+      return json({ success: true, message: "Reindex flag written. Brain plugin will reindex within 30s." });
+    } catch (e) {
+      return json({ success: false, error: e.message });
+    }
+  }
+
+  // ─── Brain Reset (flag for brain plugin) ──────────────────────────────────────
+  if (path === "/brain/reset" && method === "POST") {
+    const database = getDB();
+    if (!database) return json({ success: false, error: "No database. Initialize DB first." });
+    try {
+      database.run("INSERT OR REPLACE INTO config (key, value, updated_at) VALUES ('brain_reset_request', 'true', ?)", Date.now());
+      logActivity("Reset requested — brain plugin will pick it up within 30s", "warning");
+      return json({ success: true, message: "Reset flag written. Brain plugin will reset within 30s." });
+    } catch (e) {
+      return json({ success: false, error: e.message });
+    }
+  }
+
   return json({ success: false, error: "Unknown endpoint" });
   } catch (err) {
     console.log("[API] Error:", err.message, err.stack);

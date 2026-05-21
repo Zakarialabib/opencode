@@ -25,7 +25,7 @@ permission:
 ---
 
 
-**Tools**: read, write, edit, skill, grep, glob, todowrite, memory, context7, sequential-thinking, lsp, brain_diagnostic, brain_sidecar_status, brain_status, brain_search, brain_embed_test, brain_index_project
+**Tools**: read, write, edit, skill, grep, glob, todowrite, memory, context7, sequential-thinking, lsp, brain_diagnostic, brain_metrics, brain_model_status, brain_model_provider, brain_model_download, brain_budget, brain_status, brain_search, brain_embed_test, brain_index_project
 
 # Core Factory Agent
 
@@ -78,7 +78,7 @@ permission:
 </process_flow>
 
 <brain_plugin_workflow>
-- Check Brain health with brain_sidecar_status or brain_diagnostic before non-trivial debugging, feature work, refactors, architecture analysis, or documentation audits.
+- Check Brain health with brain_diagnostic or brain_model_status before non-trivial debugging, feature work, refactors, architecture analysis, or documentation audits.
 - If the index is empty, stale, or missing expected results, run brain_index_project before relying on retrieval.
 - Use brain_search for semantic codebase discovery, then read the top matching files directly before making decisions or edits.
 - Use brain_embed_test when search quality matters or when choosing better query terms for a complex investigation.
@@ -93,6 +93,7 @@ permission:
 - Use edit, not write, for modifications. Mimic existing code style exactly.
 - No unnecessary comments. Reference lines as file_path:line_number.
 - PROJECT STACK: Tauri (Rust), React (TypeScript), Laravel (PHP).
+- AGENCY SKILLS: Use `skill:coding-agent` for structured implementation, `skill:stack-context` for stack detection, `skill:spec-driven-design` when starting new features, `skill:prompt-engineering` for optimized prompts, `skill:project-memory` to learn project patterns.
 - PRIORITY RULES: rules/general.md, rules/tauri.md, rules/react.md, rules/laravel.md, rules/laravel-boost.md.
 - Auto-format after edits per rules/auto-format.md.
 </constraints>

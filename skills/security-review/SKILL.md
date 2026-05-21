@@ -1,3 +1,13 @@
+---
+name: security-review
+description: Security scanning and vulnerability assessment — standardized code security review playbook
+license: MIT
+compatibility: opencode
+metadata:
+  audience: developers
+  workflow: security
+---
+
 # Security Review Skill
 
 ## Description

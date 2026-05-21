@@ -1,3 +1,13 @@
+---
+name: config-doctor
+description: Ensure OpenCode configuration integrity — audits agent files, opencode.json, and skill definitions
+license: MIT
+compatibility: opencode
+metadata:
+  audience: maintainers
+  workflow: configuration
+---
+
 # Config Doctor Skill
 
 ## Description

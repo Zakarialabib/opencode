@@ -6,6 +6,7 @@ import { indexProject } from "./retrieval/indexer.js";
 import { contextInjector } from "./context/injector.js";
 import { sessionMemory } from "./state/session.js";
 import { docsStore, DocEntry } from "./docs-store.js";
+import { miniBatchUpdate } from "./memory/graph.js";
 import { getDatabase, closeDatabase } from "./store/index.js";
 import { isVectorActive } from "./store/vec.js";
 import { resetDenseFailedFlag, getDenseModelStatus, unloadDensePipeline, forceLMStudioFallback } from "./retrieval/dense.js";
@@ -136,6 +137,53 @@ function rewritePrompt(query: string, intent: string, contextSummary: string): s
   return `${prefix}${clarification}${query}`;
 }
 
+function writePluginStatusToDB(projectDir: string, provider: any, tree: any): void {
+  try {
+    const db = getDatabase(projectDir);
+    if (!db) return;
+
+    const denseStatus = getDenseModelStatus();
+    const rerankerStatus = getRerankerStatus();
+    const budgetMonitor = TokenBudgetMonitor.getInstance();
+    const budgetStatus = budgetMonitor.getBudgetStatus();
+    const stats = tree.getStats();
+    const memory = sessionMemory.getMemory();
+    const loadedModels = provider.getLoadedModels ? provider.getLoadedModels() : [];
+
+    const statusPayload = {
+      dense: denseStatus,
+      reranker: rerankerStatus,
+      tokenBudget: {
+        total: budgetStatus.total,
+        used: budgetStatus.used,
+        reserved: budgetStatus.reserved,
+        availableForContext: budgetStatus.availableForContext,
+        percent: budgetStatus.percent,
+      },
+      decisionTree: {
+        totalNodes: stats.totalNodes,
+        pendingMutations: stats.pendingMutations,
+        intents: stats.intents,
+      },
+      sessionMemory: {
+        decisions: memory.decisions.length,
+        successes: memory.successCount,
+        failures: memory.failures.length,
+        recentFiles: memory.recentFiles.length,
+        contextUsed: memory.contextUsed.length,
+      },
+      loadedModels: loadedModels,
+      lastUpdated: Date.now(),
+    };
+
+    db.prepare(
+      "INSERT OR REPLACE INTO config (key, value, updated_at) VALUES (?, ?, ?)"
+    ).run("brain_plugin_status", JSON.stringify(statusPayload), Date.now());
+  } catch (err: any) {
+    console.debug("[Brain] Failed to write plugin status to DB:", err.message);
+  }
+}
+
 const BrainPlugin: Plugin = async ({ directory }) => {
   let tree: DecisionTree;
   let provider: LMStudioProvider;
@@ -178,6 +226,41 @@ const BrainPlugin: Plugin = async ({ directory }) => {
       } catch (err: any) {
         console.warn("[Brain] Failed to parse opencode.json for LM Studio baseURL:", err.message);
         provider.setBaseURL("http://localhost:1234");
+      }
+
+      // Merge settings from brain.db (dashboard-persisted settings take precedence)
+      try {
+        const dbSettings = getDatabase(directory);
+        if (dbSettings) {
+          const rows = dbSettings.prepare("SELECT key, value FROM config WHERE key IN ('selected_chat_model', 'selected_embedding_model', 'selected_reranker_model', 'provider_mode')").all() as { key: string; value: string }[];
+          for (const row of rows) {
+            try {
+              const val = JSON.parse(row.value);
+              if (row.key === "selected_chat_model" && val) {
+                if (!config.lmStudio) config.lmStudio = {};
+                config.lmStudio.chatModel = val;
+                console.log(`[Brain] Loaded chat model from brain.db: ${val}`);
+              }
+              if (row.key === "selected_embedding_model" && val) {
+                if (!config.lmStudio) config.lmStudio = {};
+                config.lmStudio.preferredEmbedding = val;
+                console.log(`[Brain] Loaded embedding model from brain.db: ${val}`);
+              }
+              if (row.key === "selected_reranker_model" && val) {
+                if (!config.lmStudio) config.lmStudio = {};
+                config.lmStudio.preferredReranker = val;
+                console.log(`[Brain] Loaded reranker model from brain.db: ${val}`);
+              }
+              if (row.key === "provider_mode" && val) {
+                if (!config.provider) config.provider = {};
+                config.provider.mode = val;
+                console.log(`[Brain] Loaded provider mode from brain.db: ${val}`);
+              }
+            } catch {}
+          }
+        }
+      } catch (err: any) {
+        console.debug("[Brain] Failed to read settings from brain.db:", err.message);
       }
 
       const budgetMonitor = TokenBudgetMonitor.getInstance();
@@ -242,6 +325,78 @@ const BrainPlugin: Plugin = async ({ directory }) => {
         } finally {
           indexingInProgress = false;
         }
+      });
+
+      // Periodic tasks: write status + check reindex/reset flags from dashboard
+      setInterval(() => {
+        writePluginStatusToDB(directory, provider, tree);
+
+        // Check for reindex request from dashboard
+        try {
+          const dbTick = getDatabase(directory);
+          if (dbTick) {
+            const reindexRow = dbTick.prepare("SELECT value FROM config WHERE key = 'brain_reindex_request'").get() as { value: string } | undefined;
+            if (reindexRow?.value === "true") {
+              dbTick.prepare("INSERT OR REPLACE INTO config (key, value, updated_at) VALUES ('brain_reindex_request', 'false', ?)").run(Date.now());
+              console.log("[Brain] Reindex requested from dashboard — starting...");
+              setImmediate(async () => {
+                try {
+                  const startTime = Date.now();
+                  const result = await indexProject(directory);
+                  console.log(`[Brain] Dashboard-requested reindex complete: ${result.length} chunks in ${Date.now() - startTime}ms`);
+                } catch (err: any) {
+                  console.error("[Brain] Dashboard reindex failed:", err.message);
+                }
+              });
+            }
+            const resetRow = dbTick.prepare("SELECT value FROM config WHERE key = 'brain_reset_request'").get() as { value: string } | undefined;
+            if (resetRow?.value === "true") {
+              dbTick.prepare("INSERT OR REPLACE INTO config (key, value, updated_at) VALUES ('brain_reset_request', 'false', ?)").run(Date.now());
+              console.log("[Brain] Reset requested from dashboard — executing...");
+              setImmediate(async () => {
+                try {
+                  sessionMemory.reset();
+                  docsStore.clear();
+                  contextInjector.resetBudget();
+                  dbTick.transaction(() => {
+                    dbTick.prepare("DELETE FROM chunks").run();
+                    dbTick.prepare("DELETE FROM files").run();
+                    dbTick.prepare("DELETE FROM fts_chunks").run();
+                    try { dbTick.prepare("DELETE FROM chunk_embeddings").run(); dbTick.prepare("DELETE FROM chunk_embeddings_nomic").run(); } catch {}
+                  })();
+                  console.log("[Brain] Dashboard-requested reset complete");
+                } catch (err: any) {
+                  console.error("[Brain] Dashboard reset failed:", err.message);
+                }
+              });
+            }
+          }
+        } catch (err: any) {
+          console.debug("[Brain] Failed to check dashboard flags:", err.message);
+        }
+      }, 30000);
+
+      // Auto memory graph scheduling: incremental clustering every 30 minutes
+      // Skips if no chunks exist — designed to be cheap for streaming updates
+      setInterval(() => {
+        try {
+          const dbTick = getDatabase(directory);
+          if (dbTick) {
+            const chunkCount = dbTick.prepare("SELECT COUNT(*) as count FROM chunks").get() as { count: number } | undefined;
+            if (chunkCount && chunkCount.count > 0) {
+              console.log(`[Brain] Running memory graph mini-batch update (${chunkCount.count} total chunks)...`);
+              miniBatchUpdate(directory, 10);
+              console.log("[Brain] Memory graph mini-batch update complete");
+            }
+          }
+        } catch (err: any) {
+          console.debug("[Brain] Memory graph update skipped:", err.message);
+        }
+      }, 30 * 60 * 1000);
+
+      // Write initial status + check flags immediately
+      setImmediate(() => {
+        writePluginStatusToDB(directory, provider, tree);
       });
     },
 
@@ -1051,6 +1206,8 @@ const BrainPlugin: Plugin = async ({ directory }) => {
           const vramUsage = provider.getCurrentVRAMUsage();
           const loadStatusMap = await provider.getModelLoadStatus();
 
+          writePluginStatusToDB(directory, provider, tree);
+
           return JSON.stringify({
             dense: denseStatus,
             reranker: rerankerStatus,
@@ -1117,6 +1274,39 @@ const BrainPlugin: Plugin = async ({ directory }) => {
           }
 
           return JSON.stringify({ mode, changes: results, dense: getDenseModelStatus(), reranker: getRerankerStatus() }, null, 2);
+        },
+      }),
+
+      brain_model_download: tool({
+        description: "Download a model from HuggingFace via the dashboard API at localhost:3456",
+        args: {
+          modelId: tool.schema.string().describe("Model ID from catalog (e.g. nomic-embed-text-v1.5)"),
+        },
+        async execute(args: any) {
+          const modelId = args.modelId;
+          if (!modelId) return "Error: modelId is required. Available models: nomic-embed-text-v1.5, qwen3-embedding-0.6b, qwen3-reranker-0.6b, qwen3.5-4b, qwen3.5-0.8b";
+
+          try {
+            const res = await fetch(`http://localhost:3456/api/model/download`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ modelId }),
+              signal: AbortSignal.timeout(5000),
+            });
+            const data = await res.json();
+            if (data.success) {
+              if (data.cached) {
+                return `Model "${modelId}" is already cached. No download needed.`;
+              }
+              return `Download queued for "${modelId}" (job: ${data.jobId}). Check progress at the dashboard or use brain_model_status.`;
+            }
+            return `Download failed: ${data.error || "unknown error"}`;
+          } catch (err: any) {
+            if (err.name === "TimeoutError" || err.code === "UND_ERR_CONNECT_TIMEOUT") {
+              return `Dashboard not reachable at http://localhost:3456. Start the dashboard server first (bun run brain-dashboard/server.js).`;
+            }
+            return `Download error: ${err.message}. The dashboard server (port 3456) must be running for downloads.`;
+          }
         },
       }),
     },

@@ -1,4 +1,4 @@
-# 🛠️ Skills Guide
+# Skills Guide
 
 Skills are reusable instructions that agents load on-demand via the native `skill` tool. They provide specialized workflows, best practices, and tool integrations.
 
@@ -6,7 +6,7 @@ Skills are reusable instructions that agents load on-demand via the native `skil
 
 ---
 
-## 🧐 What is a Skill?
+## What is a Skill?
 
 A skill is a folder containing a `SKILL.md` file with YAML frontmatter. Agents discover skills automatically and load them when relevant to the task.
 
@@ -19,7 +19,7 @@ Each skill provides:
 
 ---
 
-## 📂 Skill Locations
+## Skill Locations
 
 OpenCode searches these locations for skills (`<name>/SKILL.md`):
 
@@ -33,7 +33,7 @@ OpenCode searches these locations for skills (`<name>/SKILL.md`):
 
 ---
 
-## 📋 Skill Format (SKILL.md)
+## Skill Format (SKILL.md)
 
 Each `SKILL.md` must start with YAML frontmatter:
 
@@ -74,98 +74,150 @@ Ask clarifying questions if the versioning is unclear.
 | `license`       | SPDX identifier (e.g., `MIT`, `Apache-2.0`) |
 | `compatibility` | Platform compatibility (e.g., `opencode`)   |
 | `metadata`      | String-to-string map for tags/audience info |
+| `agents`        | Default agent assignments (overrides index.json if present) |
 
 ---
 
-## 🎯 Available Skills
+## Skill Registry
 
-### Core Registered Skills
+Skills are registered in `skills/index.json` with agent assignments. There are currently **48 registered skills**.
 
-These skills are managed via `skills/index.json` with agent assignments:
+### By Category
 
-| Skill                          | Category            | Agents                          |
-| ------------------------------ | ------------------- | ------------------------------- |
-| **`stack-context`**            | context-engineering | core-factory, lead-strategist   |
-| **`self-reflection`**          | meta                | lead-strategist, lead-architect |
-| **`self-improver`**            | meta                | core-factory, lead-strategist   |
-| **`security-review`**          | security            | qa-guardian, docs-curator       |
-| **`laravel-feature-scaffold`** | laravel             | backend-laravel, core-factory   |
-| **`project-orchestration`**    | orchestration       | lead-strategist                 |
-| **`ui-ux-pro-max`**            | design              | frontend-ui-ux                  |
-| **`agent-browser`**            | testing             | qa-guardian                     |
-| **`testing-strategy`**         | testing             | qa-guardian                     |
-| **`database-design`**          | architecture        | lead-architect, core-factory    |
-| **`deep-research`**            | research            | docs-curator                    |
-| **`docs-governance-audit`**    | documentation       | docs-curator                    |
-| **`git-release`**              | devops              | devops-engineer, core-factory   |
-| **`react-reuse-audit`**        | frontend            | qa-guardian                     |
-| **`workflow-manager`**         | orchestration       | lead-strategist                 |
-| **`fullstack-dev`**            | web-development     | backend-api, frontend-ui-ux     |
-| **`coding-agent`**             | development         | core-factory                    |
-| **`config-doctor`**            | meta                | core-factory, devops-engineer   |
-| **`skill-creator`**            | meta                | lead-architect                  |
-| **`skill-vetter`**             | security            | qa-guardian                     |
-| **`content-strategy`**         | marketing           | docs-curator                    |
-| **`blog-writer`**              | content             | docs-curator                    |
-| **`seo-content-writer`**       | content             | docs-curator                    |
-| **`charts`**                   | data-visualization  | frontend-ui-ux                  |
-| **`image-generation`**         | assets              | frontend-ui-ux                  |
-| **`image-understand`**         | assets              | frontend-ui-ux                  |
-| **`pdf`**                      | documents           | docs-curator                    |
-| **`docx`**                     | documents           | docs-curator                    |
-| **`ppt`**                      | documents           | docs-curator                    |
-| **`xlsx`**                     | documents           | docs-curator                    |
-| **`autoresearch`**             | research            | core-factory, lead-strategist   |
+#### Coding & Implementation
+| Skill | Agents | Description |
+|-------|--------|-------------|
+| `coding-agent` | core-factory | Structured coding with verification |
+| `laravel-feature-scaffold` | backend-laravel, core-factory | Laravel feature scaffolding |
+| `database-design` | lead-architect, backend-api, backend-laravel | DB schema design |
+| `react-reuse-audit` | frontend-ui-ux | React component reuse audit |
+| `android` | android-kotlin, devops-engineer | Android dev core |
+| `android-compose` | android-kotlin | Jetpack Compose UI |
+| `android-gradle` | android-kotlin, devops-engineer | Gradle build system |
+| `android-testing` | android-kotlin | Android testing |
+| `android-debugging` | android-kotlin, devops-engineer | Android debug & inspect |
+| `android-deployment` | android-kotlin, devops-engineer | Android deployment |
 
-### All Skills (34 total)
+#### Testing & Security
+| Skill | Agents | Description |
+|-------|--------|-------------|
+| `testing-strategy` | qa-guardian | Test planning and coverage |
+| `pest-testing` | backend-laravel, qa-guardian | Pest testing for Laravel/PHP |
+| `security-review` | qa-guardian | Vulnerability assessment |
+| `skill-vetter` | qa-guardian | Skill security vetting |
+| `agent-browser` | scout | Web browsing automation |
 
-The full skill registry is in `skills/index.json`. Browse available skills with `skill_list` or search with `skill_search query:"keyword"`.
+#### UI/Design
+| Skill | Agents | Description |
+|-------|--------|-------------|
+| `ui-ux-pro-max` | frontend-ui-ux | Premium UI/UX design tokens |
+| `visual-design-foundations` | frontend-ui-ux | Typography, color, spacing |
+| `charts` | frontend-ui-ux | Chart and visualization generation |
+| `web-shader-extractor` | frontend-ui-ux | WebGL/Canvas effect extraction |
 
-### Core Skills (34)
+#### Meta & Ops
+| Skill | Agents | Description |
+|-------|--------|-------------|
+| `self-improver` | core-factory, lead-strategist | Self-evolution and improvement |
+| `self-reflection` | lead-strategist, lead-architect | Config effectiveness analysis |
+| `config-doctor` | core-factory, devops-engineer | Configuration integrity |
+| `skill-creator` | lead-architect | Create and optimize skills |
+| `project-memory` | docs-curator, core-factory | Conventions and memory |
+| `prompt-engineering` | core-factory, lead-strategist | Prompt patterns |
 
-| Skill                       | Category      | Agents                          |
-| --------------------------- | ------------- | ------------------------------- |
-| **Coding**                  |               |                                 |
-| `stack-context`             | context       | core-factory, lead-strategist   |
-| `coding-agent`              | development   | core-factory                    |
-| `fullstack-dev`             | web-dev       | backend-api, frontend-ui-ux     |
-| `laravel-feature-scaffold`  | laravel       | backend-laravel, core-factory   |
-| `database-design`           | architecture  | lead-architect, core-factory    |
-| `react-reuse-audit`         | frontend      | qa-guardian                     |
-| **Testing/Security**        |               |                                 |
-| `testing-strategy`          | testing       | qa-guardian                     |
-| `pest-testing`              | testing       | backend-laravel, qa-guardian    |
-| `security-review`           | security      | qa-guardian, docs-curator       |
-| `agent-browser`             | testing       | qa-guardian                     |
-| **UI/Design**               |               |                                 |
-| `ui-ux-pro-max`             | design        | frontend-ui-ux                  |
-| `visual-design-foundations` | design        | frontend-ui-ux                  |
-| `charts`                    | data-viz      | frontend-ui-ux                  |
-| **Meta/Ops**                |               |                                 |
-| `self-improver`             | meta          | core-factory, lead-strategist   |
-| `self-reflection`           | meta          | lead-strategist, lead-architect |
-| `skill-creator`             | meta          | lead-architect                  |
-| `skill-vetter`              | security      | qa-guardian                     |
-| `config-doctor`             | meta          | core-factory, devops-engineer   |
-| `project-memory`            | context       | core-factory, lead-strategist   |
-| **Orchestration**           |               |                                 |
-| `workflow-manager`          | orchestration | lead-strategist, core-factory   |
-| `dynamic-workflow`          | orchestration | lead-strategist, core-factory   |
-| `project-orchestration`     | orchestration | lead-strategist                 |
-| `autoresearch`              | research      | core-factory, lead-strategist   |
-| `spec-driven-design`        | design        | lead-architect, core-factory    |
-| **Docs/Content**            |               |                                 |
-| `docs-governance-audit`     | docs          | docs-curator                    |
-| `writing-plans`             | content       | docs-curator                    |
-| `content-strategy`          | marketing     | docs-curator                    |
-| `seo-content-writer`        | content       | docs-curator                    |
-| `market-research-reports`   | research      | docs-curator                    |
-| **Reports**                 |               |                                 |
-| `pdf`                       | documents     | docs-curator                    |
-| `docx`                      | documents     | docs-curator                    |
-| `ppt`                       | documents     | docs-curator                    |
-| `xlsx`                      | documents     | docs-curator                    |
-| `git-release`               | devops        | devops-engineer, core-factory   |
+#### Orchestration & Process
+| Skill | Agents | Description |
+|-------|--------|-------------|
+| `stack-context` | core-factory, lead-strategist | Stack detection and context |
+| `workflow-manager` | lead-strategist | Multi-step workflow orchestration |
+| `dynamic-workflow` | lead-strategist | Dynamic workflow management |
+| `spec-driven-design` | lead-architect, lead-strategist | Spec before implementation |
+
+#### Research & Analysis
+| Skill | Agents | Description |
+|-------|--------|-------------|
+| `deep-research` | docs-curator, lead-architect | Domain research |
+| `knowledge-architect` | docs-curator, lead-architect | Knowledge graph management |
+| `qingyan-research` | docs-curator | Deep web research + HTML reports |
+| `market-research-reports` | docs-curator | 50+ page market reports |
+| `contentanalysis` | docs-curator | Content creation and analysis |
+
+#### Content & Marketing
+| Skill | Agents | Description |
+|-------|--------|-------------|
+| `content-strategy` | docs-curator | Marketing content strategy |
+| `seo-content-writer` | docs-curator | SEO-optimized content |
+| `storyboard-manager` | docs-curator | Story planning |
+
+#### Documents & Media
+| Skill | Agents | Description |
+|-------|--------|-------------|
+| `pdf` | docs-curator | PDF creation |
+| `docx` | docs-curator | Word document creation |
+| `ppt` | docs-curator | Presentation creation |
+| `xlsx` | docs-curator | Excel file manipulation |
+| `TTS` | docs-curator | Text-to-speech generation |
+
+#### Search & Utility
+| Skill | Agents | Description |
+|-------|--------|-------------|
+| `web-search` | scout, docs-curator | Web search |
+| `web-reader` | scout, docs-curator | Page content extraction |
+| `multi-search-engine` | scout, docs-curator | Multi-engine search |
+| `auto-target-tracker` | core-factory | Target tracking |
+| `agent-browser` | scout | Browser automation |
+| `git-release` | devops-engineer, docs-curator | Release management |
+
+#### Social & Creative
+| Skill | Agents | Description |
+|-------|--------|-------------|
+| `anti-pua` | docs-curator | Anti-manipulation analysis |
+
+### Agent → Skills Assignment
+
+| Agent | Assigned Skills |
+|-------|----------------|
+| **core-factory** | coding-agent, auto-target-tracker, config-doctor, laravel-feature-scaffold, project-memory, prompt-engineering, self-improver, stack-context, xlsx |
+| **lead-strategist** | dynamic-workflow, prompt-engineering, self-improver, self-reflection, spec-driven-design, stack-context, workflow-manager |
+| **lead-architect** | database-design, deep-research, knowledge-architect, self-reflection, skill-creator, spec-driven-design |
+| **frontend-ui-ux** | charts, react-reuse-audit, ui-ux-pro-max, visual-design-foundations, web-shader-extractor |
+| **backend-api** | database-design |
+| **backend-laravel** | database-design, laravel-feature-scaffold, pest-testing |
+| **backend-tauri** | — |
+| **qa-guardian** | pest-testing, security-review, skill-vetter, testing-strategy |
+| **devops-engineer** | android, android-gradle, android-debugging, android-deployment, config-doctor, git-release |
+| **docs-curator** | anti-pua, content-strategy, contentanalysis, deep-research, docx, git-release, knowledge-architect, market-research-reports, multi-search-engine, pdf, ppt, project-memory, qingyan-research, seo-content-writer, storyboard-manager, TTS, web-reader, web-search, xlsx |
+| **scout** | agent-browser, web-reader, web-search, multi-search-engine |
+| **android-kotlin** | android, android-compose, android-gradle, android-testing, android-debugging, android-deployment |
+
+---
+
+## Brain Plugin Tools for Agents
+
+Agents should reference the correct brain plugin tools. The following table shows the current tool inventory:
+
+| Tool | Purpose | Included in agent tools? |
+|------|---------|------------------------|
+| `brain_diagnostic` | Full pipeline health check | All agents |
+| `brain_status` | Backend health, index stats | All agents |
+| `brain_search` | Hybrid semantic search | All agents |
+| `brain_embed_test` | Test embedding quality | All agents |
+| `brain_index_project` | Re-index project | All agents |
+| `brain_metrics` | Session metrics | Core agents |
+| `brain_model_status` | Pipeline status (dense/reranker/provider) | Core agents |
+| `brain_model_provider` | Switch provider mode | Core agents |
+| `brain_model_download` | Download model via dashboard | Core agents |
+| `brain_budget` | Token budget status | Core agents |
+| `brain_benchmark` | Run benchmarks | Build/plan agents |
+| `brain_docs_cache` | Manage doc cache | Docs-curator |
+| `brain_docs_fetch` | Fetch registry docs | Docs-curator |
+| `brain_embed_lmstudio` | LM Studio embedding test | Specialized |
+
+**Removed:** `brain_sidecar_status` (replaced by `brain_diagnostic` + `brain_model_status`)
+
+---
+
+## MCP Server Integration
 
 | MCP Server            | Used By Skills                       | Purpose                          |
 | --------------------- | ------------------------------------ | -------------------------------- |
@@ -177,95 +229,7 @@ The full skill registry is in `skills/index.json`. Browse available skills with 
 
 ---
 
-## 🔬 Spotlight: Autoresearch Skill
-
-The `autoresearch` skill (located at `skills/autoresearch/SKILL.md`) enables autonomous experiment loops for code optimization.
-
-### Key Features
-
-- **Three-file architecture**: `program.md` (human-written instructions), target script (AI-modified), benchmark script (immutable)
-- **Bun server benchmarking**: Uses `bun benchmark.js` for accurate local performance measurement
-- **Git-based experiment tracking**: Each experiment = 1 commit on `autoresearch/` branch
-- **Automatic revert**: Failed experiments are reverted with `git reset --hard HEAD~1`
-
-### Real-World Example: portal.html Optimization
-
-| Metric          | Value                                                     |
-| --------------- | --------------------------------------------------------- |
-| **Target**      | `docs/portal.html`                                        |
-| **Baseline**    | 0.8ms load time                                           |
-| **Final**       | 0.5ms load time                                           |
-| **Improvement** | 37.5% (exceeds 20% target)                                |
-| **Experiments** | 2 commits (`exp 1: Fix invalid CSS`, `exp 2: Minify CSS`) |
-
-### Bun Benchmark Pattern
-
-Create a `benchmark.js` for Bun server-based testing:
-
-```javascript
-// benchmark.js - Bun server benchmark
-const server = Bun.serve({
-  port: 3000,
-  fetch(request) {
-    // Serve target file
-    return Bun.file("target.html");
-  },
-});
-
-// Run 50 sequential requests
-const samples = 50;
-let totalLoadTime = 0;
-for (let i = 0; i < samples; i++) {
-  const start = performance.now();
-  const response = await fetch("http://localhost:3000/target.html");
-  await response.text();
-  totalLoadTime += performance.now() - start;
-}
-
-console.log(
-  JSON.stringify({
-    load_time_ms: Number((totalLoadTime / samples).toFixed(1)),
-    samples: samples,
-  })
-);
-server.stop();
-```
-
-### program.md Template
-
-Reference `docs/program.md` for the full template structure:
-
-```markdown
-# Research Program: Optimize [Target]
-
-## Goal
-
-Reduce [metric] by **20%** when measured via [method].
-
-## Baseline Metric
-
-- **Metric**: [metric_name] (average of N samples)
-- **Benchmark**: `bun benchmark.js`
-- **Target**: 20% reduction from baseline
-
-## Constraints
-
-- **Only modify**: [target files]
-- **Max experiment time**: 5 minutes per iteration
-- **No new dependencies**: Keep or remove external resources
-
-## Exploration Areas
-
-### 1. [Area 1]
-
-### 2. [Area 2]
-
-...
-```
-
----
-
-## 🚀 Using Skills
+## Using Skills
 
 ### Automatic Discovery
 
@@ -314,26 +278,31 @@ Control which skills agents can access via pattern matching in `opencode.json`:
 
 ---
 
-## ✍️ Creating a Skill
+## Creating a Skill
 
 1. Create a folder: `skills/my-skill/` (or `.opencode/skills/my-skill/`)
-2. Add a `SKILL.md` with YAML frontmatter
+2. Add a `SKILL.md` with YAML frontmatter (name, description required)
 3. Register in `skills/index.json` if using the project registry:
 
 ```json
 {
   "name": "my-custom-skill",
-  "displayName": "My Custom Skill",
   "description": "Handles XYZ tasks with precision.",
-  "category": "custom",
   "agents": ["core-factory"],
-  "entryPoint": "SKILL.md"
+  "category": "custom"
 }
 ```
 
+4. Follow the frontmatter standard:
+   - `name`: lowercase, hyphens, matches folder name
+   - `description`: 1-1024 chars, specific enough for agent routing
+   - `license`: SPDX identifier (optional)
+   - `compatibility`: e.g., `opencode` (optional)
+   - `metadata`: tags/audience info (optional)
+
 ---
 
-## 🔗 Integration with Plugins
+## Integration with Plugins
 
 ### Agent Router + Skill Manager
 
@@ -356,5 +325,4 @@ Before using context7-dependent skills:
 
 ---
 
-> [!TIP]
-> Use `skill_search` to discover available skills, `skill_info` for details, and `route_agent` to find the best agent for your skill-specific task.
+> **Tip:** Use `skill_search` to discover available skills, `skill_info` for details, and `route_agent` to find the best agent for your skill-specific task.

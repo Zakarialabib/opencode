@@ -21,7 +21,7 @@ tools:
   - skill
   - lsp
   - brain_diagnostic
-  - brain_sidecar_status
+  - brain_metrics, brain_model_status, brain_model_provider, brain_model_download, brain_budget
   - brain_status
   - brain_metrics
   - brain_search

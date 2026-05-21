@@ -1,329 +1,274 @@
 {
-  "version": "1.0",
-  "generated": "2026-05-10",
+  "version": "2.1",
+  "generated": "2026-05-21",
   "skills": [
     {
       "path": "skills/agent-browser/SKILL.md",
       "name": "agent-browser",
-      "description": "Web browsing and interaction capabilities",
-      "agents": [
-        "scout",
-        "research-analyst"
-      ],
-      "category": "utility"
-    },
-    {
-      "path": "skills/anti-pua/SKILL.md",
-      "name": "anti-pua",
-      "description": "Anti-manipulation and critical thinking",
-      "agents": [
-        "docs-curator"
-      ],
-      "category": "social"
-    },
-    {
-      "path": "skills/auto-target-tracker/SKILL.md",
-      "name": "auto-target-tracker",
-      "description": "Automatic target tracking and management",
-      "agents": [
-        "core-factory"
-      ],
-      "category": "utility"
+      "description": "Headless browser automation for QA, testing, and client demo screenshots",
+      "agents": ["qa-guardian", "scout"],
+      "category": "testing"
     },
     {
       "path": "skills/charts/SKILL.md",
       "name": "charts",
-      "description": "Chart and visualization generation",
-      "agents": [
-        "frontend-ui-ux",
-        "backend-api"
-      ],
+      "description": "Professional chart and diagram generation for client reports and dashboards",
+      "agents": ["frontend-ui-ux", "docs-curator"],
       "category": "visualization"
     },
     {
       "path": "skills/coding-agent/SKILL.md",
       "name": "coding-agent",
-      "description": "Structured coding agent with verification",
-      "agents": [
-        "core-factory",
-        "qa-guardian"
-      ],
+      "description": "Structured coding workflow with planning, implementation, verification, testing",
+      "agents": ["core-factory", "qa-guardian"],
       "category": "implementation"
     },
     {
       "path": "skills/config-doctor/SKILL.md",
       "name": "config-doctor",
-      "description": "Ensure OpenCode configuration integrity",
-      "agents": [
-        "docs-curator",
-        "lead-strategist"
-      ],
+      "description": "OpenCode configuration integrity — audits agents, opencode.json, and skill definitions",
+      "agents": ["lead-strategist", "core-factory"],
       "category": "meta"
-    },
-    {
-      "path": "skills/contentanalysis/SKILL.md",
-      "name": "contentanalysis",
-      "description": "Content creation, analysis, marketing, and writing",
-      "agents": [
-        "docs-curator"
-      ],
-      "category": "analysis"
     },
     {
       "path": "skills/database-design/SKILL.md",
       "name": "database-design",
-      "description": "Database schema design and optimization",
-      "agents": [
-        "backend-api",
-        "backend-laravel"
-      ],
+      "description": "Database schema design, migration planning, and query optimization",
+      "agents": ["lead-architect", "backend-api", "backend-laravel"],
       "category": "data"
     },
     {
       "path": "skills/deep-research/SKILL.md",
       "name": "deep-research",
-      "description": "Deep domain research and knowledge synthesis",
-      "agents": [
-        "docs-curator",
-        "lead-architect"
-      ],
+      "description": "Technical domain research and knowledge synthesis for client projects",
+      "agents": ["docs-curator", "lead-architect"],
       "category": "research"
+    },
+    {
+      "path": "skills/docx/SKILL.md",
+      "name": "docx",
+      "description": "Professional Word document creation for client deliverables and proposals",
+      "agents": ["docs-curator"],
+      "category": "documents"
     },
     {
       "path": "skills/dynamic-workflow/SKILL.md",
       "name": "dynamic-workflow",
-      "description": "Dynamic workflow creation and management",
-      "agents": [
-        "lead-strategist"
-      ],
+      "description": "Adaptive multi-step workflow creation for project delivery pipelines",
+      "agents": ["lead-strategist"],
       "category": "process"
     },
     {
       "path": "skills/git-release/SKILL.md",
       "name": "git-release",
-      "description": "Consistent releases and changelogs",
-      "agents": [
-        "docs-curator",
-        "devops-engineer"
-      ],
+      "description": "Consistent releases and changelogs for client project delivery",
+      "agents": ["devops-engineer", "docs-curator"],
       "category": "release"
     },
     {
       "path": "skills/knowledge-architect/SKILL.md",
       "name": "knowledge-architect",
-      "description": "Architect and manage knowledge graphs for project success",
-      "agents": [
-        "docs-curator",
-        "lead-architect"
-      ],
+      "description": "Project knowledge graphs — track architecture decisions, patterns, and domain context",
+      "agents": ["lead-architect", "docs-curator"],
       "category": "research"
     },
     {
       "path": "skills/laravel-feature-scaffold/SKILL.md",
       "name": "laravel-feature-scaffold",
-      "description": "Scaffold Laravel features with consistent structure",
-      "agents": [
-        "backend-laravel",
-        "core-factory"
-      ],
+      "description": "Scaffold Laravel features with consistent production-grade structure",
+      "agents": ["backend-laravel", "core-factory"],
       "category": "framework"
+    },
+    {
+      "path": "skills/multi-search-engine/SKILL.md",
+      "name": "multi-search-engine",
+      "description": "Multi-engine search for technical research and client domain investigation",
+      "agents": ["scout", "docs-curator"],
+      "category": "search"
+    },
+    {
+      "path": "skills/pdf/SKILL.md",
+      "name": "pdf",
+      "description": "Professional PDF generation for client proposals, reports, and documentation",
+      "agents": ["docs-curator"],
+      "category": "documents"
     },
     {
       "path": "skills/pest-testing/SKILL.md",
       "name": "pest-testing",
-      "description": "Pest testing patterns for Laravel/PHP",
-      "agents": [
-        "backend-laravel",
-        "qa-guardian"
-      ],
+      "description": "Pest testing patterns for Laravel/PHP in client projects",
+      "agents": ["backend-laravel", "qa-guardian"],
       "category": "testing"
+    },
+    {
+      "path": "skills/ppt/SKILL.md",
+      "name": "ppt",
+      "description": "Professional presentation creation for client pitches and project reviews",
+      "agents": ["docs-curator"],
+      "category": "documents"
     },
     {
       "path": "skills/project-memory/SKILL.md",
       "name": "project-memory",
-      "description": "Project conventions, memory, and documentation governance (merged docs-governance-audit)",
-      "agents": [
-        "docs-curator",
-        "core-factory"
-      ],
+      "description": "Cross-project conventions, memory, and documentation governance for agency workflow",
+      "agents": ["docs-curator", "core-factory"],
+      "category": "meta"
+    },
+    {
+      "path": "skills/prompt-engineering/SKILL.md",
+      "name": "prompt-engineering",
+      "description": "AI prompt engineering patterns for optimized agent outputs",
+      "agents": ["core-factory", "lead-strategist"],
       "category": "meta"
     },
     {
       "path": "skills/react-reuse-audit/SKILL.md",
       "name": "react-reuse-audit",
-      "description": "Audit React components for reuse opportunities",
-      "agents": [
-        "frontend-ui-ux",
-        "code-reviewer"
-      ],
+      "description": "Audit React codebases for component reuse and optimization opportunities",
+      "agents": ["frontend-ui-ux", "qa-guardian"],
       "category": "analysis"
     },
     {
       "path": "skills/security-review/SKILL.md",
       "name": "security-review",
-      "description": "Security scanning and vulnerability assessment",
-      "agents": [
-        "qa-guardian"
-      ],
+      "description": "Security scanning and vulnerability assessment for client deliverables",
+      "agents": ["qa-guardian"],
       "category": "security"
     },
     {
       "path": "skills/self-improver/SKILL.md",
       "name": "self-improver",
-      "description": "Meta-skill: research loops, self-evolution, and continuous project improvement",
-      "agents": [
-        "core-factory",
-        "lead-strategist",
-        "docs-curator"
-      ],
+      "description": "Continuous improvement — research loops, benchmark, and adapt best practices",
+      "agents": ["lead-strategist", "core-factory"],
       "category": "meta"
+    },
+    {
+      "path": "skills/self-reflection/SKILL.md",
+      "name": "self-reflection",
+      "description": "Analyze OpenCode configuration effectiveness and propose improvements",
+      "agents": ["lead-strategist", "lead-architect"],
+      "category": "meta"
+    },
+    {
+      "path": "skills/skill-creator/SKILL.md",
+      "name": "skill-creator",
+      "description": "Create, modify, and optimize agent skills with performance measurement",
+      "agents": ["lead-architect"],
+      "category": "meta"
+    },
+    {
+      "path": "skills/skill-vetter/SKILL.md",
+      "name": "skill-vetter",
+      "description": "Security-first skill vetting before installing new agent skills",
+      "agents": ["qa-guardian"],
+      "category": "security"
     },
     {
       "path": "skills/spec-driven-design/SKILL.md",
       "name": "spec-driven-design",
-      "description": "Structured specification before implementation",
-      "agents": [
-        "lead-architect",
-        "lead-strategist"
-      ],
+      "description": "Structured specification and architecture before implementation — agency project methodology",
+      "agents": ["lead-architect", "lead-strategist", "core-factory"],
       "category": "process"
     },
     {
       "path": "skills/stack-context/SKILL.md",
       "name": "stack-context",
-      "description": "Stack detection, context, and cross-stack orchestration (merged fullstack-dev + project-orchestration)",
-      "agents": [
-        "core-factory",
-        "lead-strategist"
-      ],
+      "description": "Multi-stack project detection (Tauri/React/Laravel/Android) and context orchestration",
+      "agents": ["core-factory", "lead-strategist"],
       "category": "process"
+    },
+    {
+      "path": "skills/testing-strategy/SKILL.md",
+      "name": "testing-strategy",
+      "description": "Test coverage planning, test matrix definition, and quality gates for project delivery",
+      "agents": ["qa-guardian"],
+      "category": "testing"
     },
     {
       "path": "skills/ui-ux-pro-max/SKILL.md",
       "name": "ui-ux-pro-max",
-      "description": "Premium UI/UX design tokens and patterns",
-      "agents": [
-        "frontend-ui-ux"
-      ],
+      "description": "Premium UI/UX design tokens and implementation patterns for client-facing products",
+      "agents": ["frontend-ui-ux"],
       "category": "design"
+    },
+    {
+      "path": "skills/visual-design-foundations/SKILL.md",
+      "name": "visual-design-foundations",
+      "description": "Typography, color theory, spacing systems, and iconography for consistent product design",
+      "agents": ["frontend-ui-ux"],
+      "category": "design"
+    },
+    {
+      "path": "skills/web-reader/SKILL.md",
+      "name": "web-reader",
+      "description": "Web page content extraction for research and competitor analysis",
+      "agents": ["scout", "docs-curator"],
+      "category": "utility"
+    },
+    {
+      "path": "skills/web-search/SKILL.md",
+      "name": "web-search",
+      "description": "Web search for technical research and client domain investigation",
+      "agents": ["scout", "docs-curator"],
+      "category": "search"
     },
     {
       "path": "skills/workflow-manager/SKILL.md",
       "name": "workflow-manager",
-      "description": "Manage and orchestrate complex multi-step workflows",
-      "agents": [
-        "lead-strategist",
-        "core-factory"
-      ],
+      "description": "Multi-step workflow orchestration for project delivery pipelines",
+      "agents": ["lead-strategist"],
       "category": "process"
     },
     {
       "path": "skills/xlsx/SKILL.md",
       "name": "xlsx",
-      "description": "Excel file generation and manipulation",
-      "agents": [
-        "core-factory"
-      ],
-      "category": "utility"
-    },
-    {
-      "path": "skills/android-clean-architecture/SKILL.md",
-      "name": "android-clean-architecture",
-      "description": "Android development with Clean Architecture patterns (affaan-m)",
-      "agents": [
-        "android-kotlin"
-      ],
-      "category": "mobile",
-      "source": "affaan-m/everything-claude-code",
-      "installs": 4100
-    },
-    {
-      "path": "skills/kotlin-specialist/SKILL.md",
-      "name": "kotlin-specialist",
-      "description": "Kotlin development best practices and patterns (jeffallan)",
-      "agents": [
-        "android-kotlin",
-        "backend-tauri"
-      ],
-      "category": "mobile",
-      "source": "jeffallan/claude-skills",
-      "installs": 2700
-    },
-    {
-      "path": "skills/android-kotlin-bootstrap/SKILL.md",
-      "name": "android-kotlin-bootstrap",
-      "description": "Android/Kotlin bootstrap and setup patterns (alinaqi)",
-      "agents": [
-        "android-kotlin"
-      ],
-      "category": "mobile",
-      "source": "alinaqi/claude-bootstrap",
-      "installs": 2100
+      "description": "Excel/CSV generation for client data exports and reporting",
+      "agents": ["docs-curator"],
+      "category": "documents"
     },
     {
       "path": "skills/android/SKILL.md",
       "name": "android",
-      "description": "Android development core — architecture, patterns, and Tauri mobile integration",
-      "agents": [
-        "android-kotlin",
-        "mobile-qa",
-        "devops-engineer"
-      ],
+      "description": "Android native development — architecture, patterns, and Tauri mobile integration",
+      "agents": ["android-kotlin", "devops-engineer"],
       "category": "mobile"
     },
     {
       "path": "skills/android/compose/SKILL.md",
       "name": "android-compose",
-      "description": "Jetpack Compose UI patterns — Material 3, state management, theming",
-      "agents": [
-        "android-kotlin",
-        "mobile-qa"
-      ],
+      "description": "Jetpack Compose UI — Material 3, state management, theming for client apps",
+      "agents": ["android-kotlin"],
       "category": "mobile"
     },
     {
       "path": "skills/android/gradle/SKILL.md",
       "name": "android-gradle",
       "description": "Gradle build system — Kotlin DSL, version catalogs, build variants",
-      "agents": [
-        "android-kotlin",
-        "mobile-qa",
-        "devops-engineer"
-      ],
+      "agents": ["android-kotlin", "devops-engineer"],
       "category": "mobile"
     },
     {
       "path": "skills/android/testing/SKILL.md",
       "name": "android-testing",
       "description": "Android testing — JUnit 5, MockK, Compose UI Test, instrumented tests",
-      "agents": [
-        "android-kotlin",
-        "mobile-qa"
-      ],
+      "agents": ["android-kotlin"],
       "category": "mobile"
     },
     {
       "path": "skills/android/debugging/SKILL.md",
       "name": "android-debugging",
-      "description": "Android debug & inspect — ADB, logcat, crash analysis, UI hierarchy inspection",
-      "agents": [
-        "android-kotlin",
-        "mobile-qa",
-        "devops-engineer"
-      ],
+      "description": "Android debug & inspect — ADB, logcat, crash analysis, UI inspection",
+      "agents": ["android-kotlin", "devops-engineer"],
       "category": "mobile"
     },
     {
       "path": "skills/android/deployment/SKILL.md",
       "name": "android-deployment",
-      "description": "Android deployment — Play Store releases, code signing, CI/CD, Tauri mobile distribution",
-      "agents": [
-        "android-kotlin",
-        "devops-engineer"
-      ],
+      "description": "Android deployment — Play Store releases, code signing, CI/CD, distribution",
+      "agents": ["android-kotlin", "devops-engineer"],
       "category": "mobile"
     }
   ],
-  "lastUpdated": "2026-05-18T12:54:00.000Z",
-  "totalSkills": 32
+  "lastUpdated": "2026-05-21T19:00:00.000Z",
+  "totalSkills": 38
 }

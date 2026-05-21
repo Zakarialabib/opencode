@@ -814,6 +814,29 @@
         </div>
       </div>
       
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Brain Plugin Runtime Status</span>
+          <div class="btn-group">
+            <button class="btn" onclick="loadPluginStatus()">Refresh</button>
+          </div>
+        </div>
+        <div id="plugin-status-container">
+          <div class="empty-state">Loading plugin status...</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 16px;">
+        <div class="card-header">
+          <span class="card-title">Brain Management</span>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="btn primary" onclick="triggerReindex()" title="Writes a flag — brain plugin picks it up within 30s">Trigger Reindex</button>
+          <button class="btn danger" onclick="triggerReset()" title="Clears all index data + resets session memory">Reset Brain</button>
+          <span style="font-size: 9px; color: var(--text-secondary); align-self: center;">Flags are picked up by brain plugin's 30s polling cycle</span>
+        </div>
+      </div>
+      
       <div class="card" style="margin-top: 16px;">
         <div class="card-header">
           <span class="card-title">RAG Configuration</span>
@@ -1957,6 +1980,7 @@
             fetchStatus();
             getTuning();
             getBudget();
+            loadPluginStatus();
         });
 <<<<<<< HEAD
         
@@ -2033,6 +2057,7 @@
       await checkBrainStatus();
       await loadSources();
       await loadModelState();
+      await loadPluginStatus();
       log('Refresh complete', 'success');
     }
 
@@ -2065,6 +2090,112 @@
         if (modelState.effectiveRuntime?.baseURL) {
           document.getElementById('settings-baseurl').value = modelState.effectiveRuntime.baseURL;
         }
+      }
+    }
+
+    // ─── Plugin Status ─────────────────────────────────────────────────────────
+    async function loadPluginStatus() {
+      const container = document.getElementById('plugin-status-container');
+      const result = await apiCall('/brain/plugin-status');
+      
+      if (!result.success || !result.data) {
+        container.innerHTML = '<div class="empty-state">No plugin status available. The brain plugin may not be running.</div>';
+        return;
+      }
+      
+      const d = result.data;
+      
+      function statusBadge(condition, trueText, falseText) {
+        return condition 
+          ? `<span class="badge success">${trueText}</span>`
+          : `<span class="badge error">${falseText}</span>`;
+      }
+      
+      const dense = d.dense || {};
+      const reranker = d.reranker || {};
+      const budget = d.tokenBudget || {};
+      const dt = d.decisionTree || {};
+      const mem = d.sessionMemory || {};
+      
+      let intentHtml = '';
+      if (dt.intents) {
+        intentHtml = Object.entries(dt.intents).map(([name, data]) => 
+          `<div style="display:flex;justify-content:space-between;font-size:10px;padding:2px 0;">
+            <span style="color:var(--text-secondary)">${name}</span>
+            <span>w=${data.weight.toFixed(2)} · ${data.visits} visits</span>
+          </div>`
+        ).join('');
+      }
+      
+      container.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <div style="font-size:9px;color:var(--text-secondary);text-transform:uppercase;margin-bottom:6px;">Dense Embedder</div>
+            <div style="font-size:11px;display:flex;flex-direction:column;gap:3px;">
+              <div>Pipeline: ${statusBadge(dense.pipelineLoaded, 'Loaded', 'Unloaded')}</div>
+              <div>Import: ${statusBadge(!dense.importFailed, 'OK', 'Failed')}</div>
+              <div style="color:var(--text-secondary)">Model: ${dense.activeModel || 'N/A'}</div>
+              ${dense.cooldownActive ? `<div style="color:var(--warning)">⏳ Cooldown: ${Math.round(dense.cooldownRemainingMs/1000)}s remaining</div>` : ''}
+            </div>
+          </div>
+          <div>
+            <div style="font-size:9px;color:var(--text-secondary);text-transform:uppercase;margin-bottom:6px;">Reranker</div>
+            <div style="font-size:11px;display:flex;flex-direction:column;gap:3px;">
+              <div>Pipeline: ${statusBadge(reranker.pipelineLoaded, 'Loaded', 'Unloaded')}</div>
+              <div>Import: ${statusBadge(!reranker.importFailed, 'OK', 'Failed')}</div>
+              <div style="color:var(--text-secondary)">Gate: ${(reranker.confidenceGate || 0.85).toFixed(2)} · Min: ${reranker.rerankMinResults || 10}</div>
+              <div style="color:var(--text-secondary)">Intents: ${(reranker.rerankIntents || []).join(', ')}</div>
+            </div>
+          </div>
+        </div>
+        <div style="border-top:1px solid var(--border);margin:12px 0;"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <div style="font-size:9px;color:var(--text-secondary);text-transform:uppercase;margin-bottom:6px;">Token Budget</div>
+            <div style="font-size:11px;display:flex;flex-direction:column;gap:3px;">
+              <div>Used: ${budget.used || 0} / ${budget.total || 24000} (${(budget.percent || 0).toFixed(1)}%)</div>
+              <div style="color:var(--text-secondary)">Reserved: ${budget.reserved || 8192} · Available: ${budget.availableForContext || 0}</div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:9px;color:var(--text-secondary);text-transform:uppercase;margin-bottom:6px;">Session Memory</div>
+            <div style="font-size:11px;display:flex;flex-direction:column;gap:3px;">
+              <div>Decisions: ${mem.decisions || 0} · ✅ ${mem.successes || 0} · ❌ ${mem.failures || 0}</div>
+              <div style="color:var(--text-secondary)">Recent files: ${mem.recentFiles || 0} · Context: ${mem.contextUsed || 0}</div>
+            </div>
+          </div>
+        </div>
+        <div style="border-top:1px solid var(--border);margin:12px 0;"></div>
+        <div>
+          <div style="font-size:9px;color:var(--text-secondary);text-transform:uppercase;margin-bottom:6px;">Decision Tree (${dt.totalNodes || 0} nodes)</div>
+          ${intentHtml || '<div style="font-size:10px;color:var(--text-secondary);">No intent data</div>'}
+        </div>
+        <div style="border-top:1px solid var(--border);margin:12px 0;"></div>
+        <div style="font-size:9px;color:var(--text-secondary);display:flex;justify-content:space-between;">
+          <span>Loaded models: ${(d.loadedModels || []).join(', ') || 'none'}</span>
+          <span>Updated: ${d.lastUpdated ? new Date(d.lastUpdated).toLocaleTimeString() : 'N/A'}</span>
+        </div>
+      `;
+    }
+
+    async function triggerReindex() {
+      const result = await apiCall('/brain/reindex', 'POST');
+      if (result.success) {
+        log(result.message, 'success');
+      } else {
+        log('Reindex trigger failed: ' + (result.error || 'unknown'), 'error');
+      }
+    }
+
+    async function triggerReset() {
+      if (!confirm('This will clear all index data and reset session memory. Continue?')) return;
+      const result = await apiCall('/brain/reset', 'POST');
+      if (result.success) {
+        log(result.message, 'warning');
+        // Refresh status after reset
+        setTimeout(() => { loadPluginStatus(); loadModelState(); }, 2000);
+      } else {
+        log('Reset trigger failed: ' + (result.error || 'unknown'), 'error');
       }
     }
 

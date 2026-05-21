@@ -1,3 +1,13 @@
+---
+name: stack-context
+description: Stack detection, context, and cross-stack orchestration — auto-detects Tauri/React/Laravel stack and pulls relevant documentation
+license: MIT
+compatibility: opencode
+metadata:
+  audience: developers
+  workflow: orchestration
+---
+
 # Stack Context Engine
 
 Auto-detects Tauri/React/Laravel stack context and pulls relevant documentation, coding standards, and tool recommendations using Context7. Use proactively when starting work on any stack file or when context switching between Rust/TypeScript/PHP.

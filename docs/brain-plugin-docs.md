@@ -3,6 +3,9 @@
 > Cognitive layer for OpenCode: auto-classifies developer intent, retrieves
 > relevant codebase context via local embeddings, and augments LLM prompts
 > with RAG — all running 100% locally through LM Studio and Node-native SQLite.
+>
+> Includes a **Bun-based dashboard** (port 3456) for model management, runtime observability,
+> and brain plugin lifecycle control.
 
 ---
 
@@ -14,11 +17,13 @@
 4. [Retrieval Pipeline](#4-retrieval-pipeline)
 5. [Tool Reference](#5-tool-reference)
 6. [Models & LM Studio](#6-models--lm-studio)
-7. [Memory & Learning](#7-memory--learning)
-8. [Session Memory](#8-session-memory)
-9. [Internal Tracing](#9-internal-tracing)
-10. [File Structure](#10-file-structure)
-11. [Usage & Commands](#11-usage--commands)
+7. [Provider Modes & Download Flow](#7-provider-modes--download-flow)
+8. [Dashboard Bridge](#8-dashboard-bridge)
+9. [Memory & Learning](#9-memory--learning)
+10. [Session Memory](#10-session-memory)
+11. [Internal Tracing](#11-internal-tracing)
+12. [File Structure](#12-file-structure)
+13. [Usage & Commands](#13-usage--commands)
 
 ---
 
@@ -38,14 +43,20 @@ Storage:
   ├── SQLite (better-sqlite3):
   │   ├── FTS5 keyword index (instant)
   │   ├── ONNX dense embeddings (xenova/transformers)
-  │   └── Memory graph (K-means clusters, full recompute on demand)
+  │   └── Memory graph (K-means clusters, auto mini-batch every 30min)
   ├── LM Studio SDK (@lmstudio/sdk):
   │   ├── Chat completions
   │   └── Embeddings (no sidecar needed)
   └── Docs store (in-memory Map, 50-entry LRU — no persistence, re-fetches on restart)
 
+Dashboard (Bun, port 3456):
+  ├── Model catalog + download/prewarm/unload UI
+  ├── Runtime brain plugin status display
+  ├── Reindex / Reset brain lifecycle controls
+  └── Shared brain.db for bridge communication
+
 Brain plugin hooks:
-  - server.start: init SQLite, warm LM Studio connection
+  - server.start: init SQLite, warm LM Studio connection, start periodic tasks (30s status write, 30min memory graph)
   - message.updated: RAG pipeline (classify → search → rerank → inject)
   - chat.params: skill gap detection / prompt rewriting (NOT speculative decoding)
   - file.watcher.updated: dirty tracking → debounced reindex (3s)
@@ -62,10 +73,11 @@ Brain plugin hooks:
 | LM Studio SDK            | Direct API access; no HTTP proxy needed                           |
 | FTS5 + ONNX hybrid       | Keyword for speed (instant), dense for quality                    |
 | ONNX int8 quantization   | 2-4x faster than FP16; ~200ms per query                           |
-| K-means memory graph     | Periodic full recompute on demand; simple, predictable            |
+| K-means memory graph     | Periodic incremental update via miniBatchUpdate(); simple, predictable |
 | Reranker on CPU via ONNX | Saves VRAM; ~200ms latency acceptable for 'learn' intent only     |
 | Serial model loading     | ~4GB VRAM (M4400) can't hold all models simultaneously            |
 | In-memory docs store     | Simple LRU Map; no persistence needed for transient doc cache     |
+| Shared brain.db bridge   | Plugin writes runtime state → dashboard reads; settings flow dashboard→plugin |
 
 > **Hardware Limits:** No VRAM guard is implemented. Speculative decoding is not wired —
 > the `chat.params` hook performs skill gap detection, not `draft_model` injection.
@@ -81,7 +93,7 @@ Brain plugin hooks:
 
 | Hook                     | What it does                                                    |
 | ------------------------ | --------------------------------------------------------------- |
-| `server.start`           | Init SQLite DB, warm LM Studio connection, load decision tree   |
+| `server.start`           | Init SQLite DB, warm LM Studio, load decision tree, start periodic tasks |
 | `message.updated`        | Classify intent → search → rerank (if 'learn') → inject context |
 | `chat.params`            | Detect skill gaps; rewrite prompts with intent context          |
 | `tool.execute.after`     | Track success/failure; update tuner weights                     |
@@ -89,6 +101,15 @@ Brain plugin hooks:
 | `file.watcher.updated`   | Mark dirty; batch → 3s debounce → reindex                       |
 | `session.compacting`     | Summarize memory; persist decision tree state                   |
 | `session.archived`       | Save memory graph, close SQLite, cleanup                        |
+
+**Periodic Tasks (setInterval in server.start):**
+
+| Interval  | Task                                      | Purpose                                      |
+| --------- | ----------------------------------------- | -------------------------------------------- |
+| 30s       | writePluginStatusToDB()                   | Write runtime state to shared brain.db        |
+| 30s       | Poll brain_reindex_request flag           | Trigger reindex from dashboard                |
+| 30s       | Poll brain_reset_request flag             | Trigger reset from dashboard                  |
+| 30min     | miniBatchUpdate()                         | Incremental memory graph clustering           |
 
 ### 2.2 Decision Tree — `tree/engine.ts`
 
@@ -118,11 +139,13 @@ AND only when the top-3 fusion scores don't already exceed 0.85 (confidence gate
 ```
 server.start:
 1. Open SQLite DB (WAL mode)
-2. Create tables: files, chunks, fts5, memory_graph, decisions
+2. Create tables: files, chunks, fts5, memory_graph, decisions, config
 3. Parse opencode.json for LM Studio baseURL
-4. Warm LM Studio connection
-5. Auto-index project (background via setImmediate)
-6. Start dirty-file watcher
+4. Merge settings from brain.db config table (dashboard-persisted settings take precedence)
+5. Warm LM Studio connection
+6. Auto-index project (background via setImmediate)
+7. Start dirty-file watcher
+8. Kick off periodic tasks: 30s status write + flag poll, 30min memory graph
 ```
 
 ### 3.2 Message Flow
@@ -224,10 +247,10 @@ Replace prompt simulation with real task-tool routing:
 
 ### Diagnostic & Status
 
-| Tool               | Purpose                                                   |
-| ------------------ | --------------------------------------------------------- |
-| `brain_diagnostic` | Full pipeline: health → cache → search test → config      |
-| `brain_status`     | Backend health, index stats, memory graph, cache hit rate |
+| Tool                      | Purpose                                                   |
+| ------------------------- | --------------------------------------------------------- |
+| `brain_diagnostic`        | Full pipeline: health → cache → search test → config      |
+| `brain_status`            | Backend health, index stats, memory graph, cache hit rate |
 
 ### RAG & Search
 
@@ -239,15 +262,39 @@ Replace prompt simulation with real task-tool routing:
 
 ### Model Management
 
-| Tool               | Purpose                       |
-| ------------------ | ----------------------------- |
-| `brain_model_load` | Prewarm a model (chat, embed) |
+| Tool                     | Purpose                                                    |
+| ------------------------ | ---------------------------------------------------------- |
+| `brain_model_load`       | Prewarm a model (chat, embed) via LM Studio                |
+| `brain_model_status`     | Check dense embedder, reranker, and provider status        |
+| `brain_model_unload`     | Unload ONNX dense/reranker pipelines selectively           |
+| `brain_model_provider`   | Switch provider mode (onnx_local \| lmstudio \| download_only) |
+| `brain_model_download`   | Download a model from HuggingFace via dashboard API         |
 
 ### Lifecycle
 
 | Tool          | Purpose                             |
 | ------------- | ----------------------------------- |
 | `brain_reset` | Clear index and reset decision tree |
+
+### Tool Details
+
+**brain_model_status** — Returns JSON with:
+- `dense`: pipeline state (active/loading/unloaded/failed), model info, lastError
+- `reranker`: same structure as dense
+- `loadedModels`: list from LM Studio provider
+- `vramUsageGB`: current VRAM from provider
+- `modelLoadStatus`: per-model load state from LM Studio
+
+**brain_model_unload** — Accepts `target: "dense" | "reranker" | "all"`.
+Graceful degradation: unloads ONNX pipelines; LM Studio models unaffected.
+
+**brain_model_provider** — Accepts `mode: "onnx_local" | "lmstudio" | "download_only"`:
+- `onnx_local`: enables ONNX dense + reranker auto-init on next call
+- `lmstudio`: ONNX auto-init on demand, LM Studio fallback available
+- `download_only`: blocks ONNX pipelines entirely, LM Studio only
+
+**brain_model_download** — Accepts `modelId` from catalog. Calls `POST /api/model/download` on dashboard at localhost:3456.
+Returns job ID for progress tracking. Handles timeout (dashboard not running), cached models, and API errors.
 
 ---
 
@@ -283,15 +330,114 @@ Dense embeddings default to CPU as well.
 
 ---
 
-## 7. Memory & Learning
+## 7. Provider Modes & Download Flow
 
-### 7.1 Memory Graph (`memory/graph.ts`)
+### Provider Modes
+
+The brain plugin supports three provider modes, switched via `brain_model_provider` tool:
+
+| Mode            | ONNX Dense | ONNX Reranker | LM Studio | Use Case                             |
+| --------------- | ---------- | ------------- | --------- | ------------------------------------ |
+| `onnx_local`    | Auto-init   | Auto-init     | Available | Highest quality hybrid search        |
+| `lmstudio`      | Auto-init   | Auto-init     | Available | Balanced (default, recommended)      |
+| `download_only` | Blocked     | Blocked       | Available | VRAM-constrained or download focus   |
+
+### Model Download Flow
+
+```
+brain_model_download("nomic-embed-text-v1.5")
+  → POST http://localhost:3456/api/model/download { modelId }
+  → Dashboard checks if model is already cached (.downloaded marker)
+  → If cached: returns { success: true, cached: true }
+  → If new: creates download job, streams from HuggingFace
+  → Returns { success: true, jobId, modelId }
+  → Progress tracked via GET /api/model/jobs in dashboard UI
+  → On completion: .downloaded marker file written
+  → Brain plugin picks up downloaded model on next pipeline init
+```
+
+**Requirements:**
+- Dashboard server must be running on port 3456 (`bun run brain-dashboard/server.js`)
+- Model must exist in the catalog (model-catalog.json)
+- Download uses Content-Length for progress percentage
+
+---
+
+## 8. Dashboard Bridge
+
+### Architecture
+
+The brain plugin and dashboard communicate through a **shared `brain.db` SQLite file**
+at `<project-root>/.opencode/brain.db`. No HTTP endpoints between them — the config table
+acts as a message bus.
+
+```
+┌─────────────────────┐                     ┌──────────────────────┐
+│   Brain Plugin      │                     │   Dashboard (Bun)    │
+│   (inside OpenCode) │                     │   (port 3456)        │
+│                     │    ┌────────────┐   │                      │
+│  writePluginStatus  │───→│ brain.db   │←──│  GET /plugin-status  │
+│  every 30s          │    │ config tbl │   │                      │
+│                     │    └────────────┘   │  POST /reindex       │
+│  poll for flags     │←───────────────────→│  POST /reset         │
+│  brain_reindex_request│                   │                      │
+│  brain_reset_request │                     │  Settings page →     │
+│                     │                     │  write to config tbl │
+│  read settings on   │←────────────────────│  (model selection,   │
+│  startup            │                     │   provider mode)     │
+└─────────────────────┘                     └──────────────────────┘
+```
+
+### Bridge Communication Channels
+
+| Direction | Data              | Mechanism                                  | Frequency        |
+| --------- | ----------------- | ------------------------------------------ | ---------------- |
+| Plugin →  | Runtime status    | writePluginStatusToDB() writes JSON blob   | Every 30s        |
+| Dashboard |                   | to config key `brain_plugin_status`        |                  |
+| Dashboard→ | Model settings   | Dashboard writes to config table           | Startup (one-way)|
+| Plugin     |                   | Plugin reads on server.start               |                  |
+| Dashboard→ | Reindex request  | Dashboard writes `brain_reindex_request=true` | On button click |
+| Plugin     |                   | Plugin polls, runs indexProject(), clears flag | Within 30s      |
+| Dashboard→ | Reset request    | Dashboard writes `brain_reset_request=true`  | On button click |
+| Plugin     |                   | Plugin polls, clears DB + session, clears flag | Within 30s      |
+
+### Settings Propagation
+
+Dashboard-persisted settings that override opencode.json at startup:
+
+| Config Key                  | Maps To                         |
+| --------------------------- | ------------------------------- |
+| `selected_chat_model`       | config.lmStudio.chatModel       |
+| `selected_embedding_model`  | config.lmStudio.preferredEmbedding |
+| `selected_reranker_model`   | config.lmStudio.preferredReranker |
+| `provider_mode`             | config.provider.mode            |
+
+### Plugin Status Payload
+
+The `brain_plugin_status` JSON blob contains:
+
+```json
+{
+  "dense": { "state": "active", "model": "nomic-embed", "lastError": null },
+  "reranker": { "intentsRequiringRerank": ["learn", "refactor", "feature"] },
+  "tokenBudget": { "total": 24000, "used": 4200, "percent": 17.5, "reserved": 8192 },
+  "decisionTree": { "totalNodes": 12, "intents": { "debug": 5, "refactor": 3 } },
+  "sessionMemory": { "decisions": 8, "successes": 6, "failures": 2, "recentFiles": 4 },
+  "loadedModels": ["nomic-embed", "qwen3.5-4b"],
+  "lastUpdated": 1712345678901
+}
+```
+
+---
+
+## 9. Memory & Learning
+
+### 9.1 Memory Graph (`memory/graph.ts`)
 
 - K-means clustering of code chunks by embedding similarity
-- **Periodic full recompute** on `clusterConceptChunks()` call — not incremental
-- **Mini-batch update** on `miniBatchUpdate()` — incrementally adjusts centroids for recently active concepts
+- **Full recompute** via `clusterConceptChunks()` — on-demand, splits a concept's chunks into sub-clusters
+- **Mini-batch update** via `miniBatchUpdate()` — runs automatically every 30 minutes, incrementally adjusts centroids for recently active concepts
 - Incremental tracking: concept visit counts and relationship strengths update in real-time
-- On-demand: no automatic scheduler, must be triggered explicitly
 - SQLite-backed persistence of concepts and chunk links
 
 ### Ownership Boundaries
@@ -302,27 +448,27 @@ Dense embeddings default to CPU as well.
 | `feedback.ts` | Retrieval weight tuning | Adjusts RRF alpha/beta per intent based on `tool.execute.after` signals.                                       |
 | `tracer.ts`   | Internal analytics      | Read-only session metrics aggregator.                                                                          |
 
-### 7.2 Tuner (`learn/tuner.ts`)
+### 9.2 Tuner (`learn/tuner.ts`)
 
 - Evaluates context efficiency: `used_chunks / retrieved_chunks`
 - If efficiency < 0.8 across 3 consecutive sessions: reduces `max_context_tokens` by 20%
 - Absorbs scoring formulas from the removed external eval system
 - Tunes context budget, not retrieval weights (weight tuning is in `feedback.ts`)
 
-### 7.3 Feedback (`learn/feedback.ts`)
+### 9.3 Feedback (`learn/feedback.ts`)
 
 - Collects `tool.execute.after` signals
 - `autoTuneRRFParameters()` adjusts fusion weights per intent
 - Marks chunks as helpful/unhelpful
 
-### 7.4 Context Compression (`context/compression.ts`)
+### 9.4 Context Compression (`context/compression.ts`)
 
 - **Token-based** compression using `estimateTokens()` (not character-based)
 - Intent-aware token thresholds: debug/refactor/feature: 500 tokens, learn/quick_chat: 150 tokens
 - Uses LM Studio to summarize when content exceeds threshold, with fallback to `content.slice(0, threshold)`
 - Falls back to heuristic estimation if LM Studio unavailable
 
-### 7.5 Reasoning Compressor (`context/reasoning-compressor.ts`)
+### 9.5 Reasoning Compressor (`context/reasoning-compressor.ts`)
 
 - Extracts `<thought>...</thought>` tags from assistant messages
 - Summarizes reasoning via LM Studio; injects `[Thought: ...]` summary
@@ -331,7 +477,7 @@ Dense embeddings default to CPU as well.
 
 ---
 
-## 8. Session Memory
+## 10. Session Memory
 
 Defined in `plugins/index.ts` as `PlanState` / `planMemory`:
 
@@ -361,7 +507,7 @@ and appends a follow-up suggestion to continue the multi-step plan.
 
 ---
 
-## 9. Internal Tracing
+## 11. Internal Tracing
 
 ### Tracer (`learn/tracer.ts`)
 
@@ -378,12 +524,12 @@ were removed.
 
 ---
 
-## 10. File Structure
+## 12. File Structure
 
 ```
 brain-plugin/
 ├── index.ts                    # Plugin re-exports
-├── brain.ts                    # Hooks + tools + lifecycle
+├── brain.ts                    # Hooks + tools + lifecycle + periodic tasks + dashboard bridge
 ├── package.json
 ├── provider/
 │   └── lmstudio.ts             # @lmstudio/sdk wrapper
@@ -395,7 +541,7 @@ brain-plugin/
 │   ├── keyword.ts              # FTS5 keyword search
 │   ├── sparse.ts               # Pseudo-SPLADE (IDF-weighted sparse retrieval)
 │   ├── reranker.ts             # ONNX cross-encoder (CPU, 'learn'/'refactor'/'feature')
-│   └── cache.ts                 # LRU embedding cache (500 entries)
+│   └── cache.ts                # LRU embedding cache (500 entries)
 ├── orchestrator/
 │   └── loop.ts                 # Prompt-based delegation simulation
 ├── context/
@@ -404,7 +550,7 @@ brain-plugin/
 │   └── compression.ts          # Token-based truncation (500/150 tokens per intent)
 ├── store/                      # SQLite storage layer
 ├── memory/
-│   └── graph.ts                # K-means memory graph (periodic recompute)
+│   └── graph.ts                # K-means memory graph (auto mini-batch every 30min)
 ├── learn/
 │   ├── tuner.ts                # Context budget auto-tuning
 │   ├── tracer.ts               # Internal session analytics
@@ -414,11 +560,17 @@ brain-plugin/
 ├── tree/
 │   └── engine.ts               # Intent decision tree
 └── docs-store.ts               # In-memory doc cache (50-entry LRU)
+
+brain-dashboard/                # Bun-based management UI (port 3456)
+├── server.js                   # Express-like server with REST API endpoints
+├── index.html                  # Single-page UI with tabs: Indexing, Models, Settings
+├── model-catalog.json          # Available models for download (5 entries)
+└── package.json
 ```
 
 ---
 
-## 11. Usage & Commands
+## 13. Usage & Commands
 
 ### Quick Start
 
@@ -428,3 +580,46 @@ brain-plugin/
 - [ ] Run `brain_diagnostic` to verify
 - [ ] Run `brain_index_project` to index
 - [ ] Test: `brain_search "auth"`
+
+### Dashboard
+
+```bash
+# Start dashboard server
+bun run brain-dashboard/server.js
+
+# Open in browser
+start http://localhost:3456
+
+# Dashboard has 4 tabs:
+#  1. Indexing — project index stats, download pipeline progress
+#  2. Models — catalog, download/prewarm/unload, LM Studio state
+#  3. Settings — provider config, model selection, plugin runtime status, brain management
+#  4. Diagnostics — health checks, logs, debug info
+```
+
+### Provider Mode Switching
+
+```
+# Agent can use:
+brain_model_provider mode:"download_only"   # Block ONNX, LM Studio only
+brain_model_provider mode:"onnx_local"      # Enable ONNX pipelines
+brain_model_provider mode:"lmstudio"        # Hybrid (default)
+```
+
+### Model Management
+
+```
+brain_model_download modelId:"nomic-embed-text-v1.5"   # Queue download via dashboard
+brain_model_load modelId:"qwen3.5-4b"                   # Prewarm in LM Studio
+brain_model_unload target:"dense"                        # Unload ONNX dense only
+brain_model_status                                       # Check all pipeline states
+```
+
+### Brain Lifecycle from Dashboard
+
+```
+# UI Buttons on Settings tab:
+#   "Trigger Reindex" → writes brain_reindex_request flag → plugin reindexes within 30s
+#   "Reset Brain"     → writes brain_reset_request flag → plugin resets within 30s
+#   Plugin Status card → live runtime state refresh
+```
