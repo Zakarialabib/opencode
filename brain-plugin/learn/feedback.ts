@@ -69,8 +69,8 @@ export function recordSessionFeedback(projectRoot: string, feedback: SessionRati
   }
 
   // 4. Report Precision@K and MRR metrics
-  const { computePrecisionAtK, computeMRR } = require("./tracer");
   try {
+    const { computePrecisionAtK, computeMRR } = await import("./tracer.js");
     const pAt5 = computePrecisionAtK(5);
     const mrr = computeMRR();
     console.log(

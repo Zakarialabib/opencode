@@ -3,7 +3,7 @@
  * Logs to .opencode/logs/meta-harness.log
  */
 
-import { appendFileSync, mkdirSync, existsSync } from "fs";
+import { appendFileSync, mkdirSync, existsSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
 
 // Use process.cwd() for proper working directory resolution
@@ -41,7 +41,6 @@ export function fileLog(message: string, level: "info" | "warn" | "error" = "inf
 export function clearLog(): void {
   ensureLogDir();
   try {
-    const { writeFileSync } = require("fs");
     writeFileSync(LOG_FILE, "");
   } catch {
     // Ignore

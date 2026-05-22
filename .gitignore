@@ -82,3 +82,4 @@ workflows/auto/*.yaml
 .opencode/tools/brain-improve.ts
 .opencode/tools/brain-index.ts
 .opencode/tools/brain-query.ts
+/.opencode

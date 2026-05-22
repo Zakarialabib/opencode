@@ -1,6 +1,6 @@
-import type { BrainHarnessConfig, ProposerResult, LMStudioClient } from "./types"
-import { DEFAULT_HARNESS_CONFIG, PARAMETER_BOUNDS } from "./harness-space"
-import { fileLog } from "./utils/logger"
+import type { BrainHarnessConfig, ProposerResult, LMStudioClient } from "./types.js"
+import { DEFAULT_HARNESS_CONFIG, PARAMETER_BOUNDS } from "./harness-space.js"
+import { fileLog } from "./utils/logger.js"
 
 /**
  * Meta-Harness Proposer using LM Studio.
@@ -30,52 +30,61 @@ export async function proposeHarness(
 
   const prompt = buildProposerPrompt(currentBest, history)
 
-  try {
-    const response = await lmStudio.chatCompletion(
-      [
+  // Retry LM Studio up to maxRetries before falling back to random mutation
+  const MAX_RETRIES = 1;
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      if (attempt > 0) log(`Retry attempt ${attempt}/${MAX_RETRIES}...`);
+
+      const response = await lmStudio.chatCompletion(
+        [
+          {
+            role: "system",
+            content: `You are an expert ML systems optimizer. Your job is to propose improved configurations for an AI coding assistant's retrieval and context injection pipeline (the "harness").\n\nRules:\n1. Only mutate numeric fields within ±20% of current values\n2. Boolean flags can flip if history supports it\n3. Arrays can add/remove one item\n4. Return ONLY valid JSON matching the BrainHarnessConfig schema\n5. Reason briefly, then output JSON in a code block`,
+          },
+          { role: "user", content: prompt },
+        ],
         {
-          role: "system",
-          content: `You are an expert ML systems optimizer. Your job is to propose improved configurations for an AI coding assistant's retrieval and context injection pipeline (the "harness").\n\nRules:\n1. Only mutate numeric fields within ±20% of current values\n2. Boolean flags can flip if history supports it\n3. Arrays can add/remove one item\n4. Return ONLY valid JSON matching the BrainHarnessConfig schema\n5. Reason briefly, then output JSON in a code block`,
-        },
-        { role: "user", content: prompt },
-      ],
-      {
-        temperature: 0.8, // Slightly creative for exploration
-        max_tokens: 2048,
+          temperature: 0.8, // Slightly creative for exploration
+          max_tokens: 2048,
+        }
+      )
+
+      const content = response.choices?.[0]?.message?.content || ""
+
+      // Extract JSON from markdown code block or raw text
+      const jsonMatch = content.match(/\`\`\`json\s*([\s\S]*?)\s*\`\`\`/) || 
+                        content.match(/\`\`\`\s*([\s\S]*?)\s*\`\`\`/) ||
+                        content.match(/\{[\s\S]*\}/)
+
+      if (!jsonMatch) {
+        throw new Error("No JSON found in proposer response")
       }
-    )
 
-    const content = response.choices?.[0]?.message?.content || ""
+      const proposed = JSON.parse(jsonMatch[1] || jsonMatch[0])
 
-    // Extract JSON from markdown code block or raw text
-    const jsonMatch = content.match(/\`\`\`json\s*([\s\S]*?)\s*\`\`\`/) || 
-                      content.match(/\`\`\`\s*([\s\S]*?)\s*\`\`\`/) ||
-                      content.match(/\{[\s\S]*\}/)
+      // Validate and clamp to bounds
+      const clamped = clampConfig(proposed)
 
-    if (!jsonMatch) {
-      throw new Error("No JSON found in proposer response")
+      log(`Proposed config generated. Changes from best: ${diffConfig(currentBest, clamped)}`)
+
+      return {
+        proposedConfig: clamped,
+        reasoning: content.slice(0, 500), // Truncate for logs
+      }
+    } catch (err) {
+      lastError = err;
+      log(`Proposer attempt ${attempt + 1}/${MAX_RETRIES + 1} failed: ${err}`, "warn");
     }
+  }
 
-    const proposed = JSON.parse(jsonMatch[1] || jsonMatch[0])
-
-    // Validate and clamp to bounds
-    const clamped = clampConfig(proposed)
-
-    log(`Proposed config generated. Changes from best: ${diffConfig(currentBest, clamped)}`)
-
-    return {
-      proposedConfig: clamped,
-      reasoning: content.slice(0, 500), // Truncate for logs
-    }
-  } catch (err) {
-    log(`Proposer failed: ${err}`, "error")
-    log("Falling back to random mutation of current best", "warn")
-
-    // Fallback: random mutation
-    return {
-      proposedConfig: randomMutate(currentBest),
-      reasoning: `Fallback random mutation due to proposer error: ${err}`,
-    }
+  // All retries exhausted — fallback to random mutation
+  log("All proposer attempts failed. Falling back to random mutation.", "warn")
+  return {
+    proposedConfig: randomMutate(currentBest),
+    reasoning: `Fallback random mutation after ${MAX_RETRIES + 1} attempts: ${lastError}`,
   }
 }
 
@@ -157,9 +166,11 @@ function clampConfig(proposed: any): BrainHarnessConfig {
 
   // Normalize fusion weights
   const sum = config.fusionAlpha + config.fusionBeta + config.fusionGamma
-  config.fusionAlpha /= sum
-  config.fusionBeta /= sum
-  config.fusionGamma /= sum
+  if (sum > 0) {
+    config.fusionAlpha /= sum
+    config.fusionBeta /= sum
+    config.fusionGamma /= sum
+  }
 
   return config
 }
@@ -171,6 +182,7 @@ function randomMutate(config: BrainHarnessConfig): BrainHarnessConfig {
   const fields = [
     () => { mutated.fusionAlpha += (Math.random() - 0.5) * 0.1 },
     () => { mutated.fusionBeta += (Math.random() - 0.5) * 0.1 },
+    () => { mutated.fusionGamma += (Math.random() - 0.5) * 0.1 },
     () => { mutated.memoryBoost += (Math.random() - 0.5) * 0.05 },
     () => { mutated.confidenceGate += (Math.random() - 0.5) * 0.05 },
     () => { mutated.maxContextTokens += Math.round((Math.random() - 0.5) * 2048) },

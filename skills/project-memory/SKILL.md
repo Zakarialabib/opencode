@@ -1,138 +1,106 @@
 ---
 name: project-memory
-description: "Project conventions, memory, and documentation governance. Auto-loads conventions on session start, audits docs for drift, and manages project knowledge."
-trigger: Automatic on session start, or /load-conventions, /audit-docs commands
-allowed_tools: Memory(read_graph, search_nodes, create_entities), Read(rules/*, docs/*), Grep, Glob
+description: "Cross-project conventions, architecture decisions, and pattern library for agency workflow consistency."
+license: MIT
+compatibility: opencode
+metadata:
+  audience: all-agents
+  workflow: memory
 ---
 
-# Project Memory & Docs Governance
+# Project Memory — Agency Knowledge Management
 
-This skill combines project memory (convention tracking) with documentation governance (drift detection and audit). It auto-loads conventions on session start and provides tools to keep documentation aligned with code.
+> **Principle:** Every project is a learning opportunity. Capture decisions, patterns, and conventions so future work compounds.
 
-## Part 1: Project Memory
+## When to Use
 
-### 1. Session Start Injection
+- Starting a new client project
+- After completing a major feature or milestone
+- When discovering a reusable pattern or workaround
+- When an architecture decision is made
+- Before handing off to another agent or team member
 
-On each agent session start:
+## Knowledge Categories
 
-1. Queries memory MCP for `project-conventions` entity
-2. Loads all observations with confidence score >= 0.7
-3. Formats as "Project conventions:" block
-4. Injects into agent system prompt automatically
+### 1. Project Conventions
 
-### 2. Convention Extraction
+Track per-project:
+- Stack versions (Laravel 13, React 19, Tailwind 4, etc.)
+- Coding style preferences (PascalCase models, snake_case DB, etc.)
+- Testing framework (Pest 4, Vitest, JUnit 5)
+- CI/CD pipeline details
+- Deployment targets and infrastructure
 
-After each successful task:
+### 2. Architecture Decision Records (ADRs)
 
-1. Analyzes user interactions for implicit preferences
-2. Checks if preference mentioned 3+ times
-3. Assigns confidence score based on:
-   - Frequency: times mentioned / 10
-   - Consistency: no contradictions found
-   - Age: newer = higher score
-4. Stores in memory MCP with confidence
+Each ADR captures:
+- **Context**: Why was this decision needed?
+- **Decision**: What was chosen?
+- **Alternatives**: What was considered and rejected?
+- **Consequences**: What does this mean for future work?
 
-### 3. Confidence Scoring
+Store in `docs/adr/<project>/<YYYY-MM-DD>-<title>.md`
 
-| Mention Count | Score      | Action               |
-| ------------- | ---------- | -------------------- |
-| 1-2           | 0.1-0.2    | Track only           |
-| 3-4           | 0.5-0.6    | Tentative convention |
-| 5+            | 0.7-0.9    | Active convention    |
-| Contradiction | Reset to 0 | Remove               |
+### 3. Pattern Library
 
-### 4. Per-Agent Conventions
+Reusable solutions to common problems:
+- Authentication flow (Laravel Sanctum + SPA)
+- File upload pattern (signed URLs + S3)
+- Real-time updates (Laravel Reverb + SSE)
+- API versioning strategy
+- Error handling convention
 
-Different agents load different convention sets:
+### 4. Client Preferences
 
-```
-backend-laravel → PHP/Laravel conventions
-frontend-ui-ux → React/Tailwind conventions
-qa-guardian → Testing conventions
-core-factory → General coding conventions
-```
+Per-client notes:
+- Stakeholder names and roles
+- Preferred communication style
+- Known pain points
+- Decision-making process
 
-### 5. Memory MCP Schema
+## Workflow
 
-```json
-{
-  "entityType": "convention",
-  "name": "project-conventions",
-  "observations": [
-    { "text": "Use arrow functions over function declarations", "confidence": 0.8 },
-    { "text": "Use Pest for testing, not PHPUnit", "confidence": 0.9 }
-  ]
-}
-```
+### On Project Start
 
-## Part 2: Docs Governance Audit
+1. Create project context file: `docs/project-memory/<project-name>/README.md`
+2. Document stack, conventions, and team structure
+3. Record initial architecture decisions
+4. Set up tracking for patterns as they emerge
 
-Audit the docs folder against the actual codebase to find drift, stale guidance, and missing documentation.
+### On Milestone Complete
 
-### Audit Goals
+1. Review what was learned during the milestone
+2. Extract reusable patterns to the pattern library
+3. Update ADRs if decisions changed
+4. Record effort estimates vs actuals for future estimation
 
-- **Drift**: docs say one thing, code does another
-- **Gap**: important code exists but docs do not
-- **Redundancy**: duplicate docs, duplicate code, repeated guidance
-- **Deprecation**: docs or code still rely on outdated patterns
-- **Enhancement**: worthwhile improvement, but not necessarily broken
-- **Keep**: good patterns that should remain unchanged
+### On Agent Handoff
 
-### Audit Workflow
+1. Summarize current state in `< 100 words`
+2. Reference relevant ADRs and patterns
+3. Flag any open decisions or blockers
+4. Point to the most relevant files in the codebase
 
-1. Map the documentation surface (glob `docs/**/*.md`)
-2. Map the code surface relevant to those docs (grep for module names, paths)
-3. Cross-check claimed paths, modules, and behaviors
-4. Classify findings by severity and type
-5. Produce an execution order, not just a report
-
-### Output Format
+## Memory Structure
 
 ```
-1. scope reviewed
-2. findings table
-3. priority plan
-4. specific docs/code updates to perform next
+docs/project-memory/
+└── <project-name>/
+    ├── README.md          # Project overview, stack, conventions
+    ├── stakeholders.md    # Client contacts, roles, preferences
+    ├── decisions/         # ADRs
+    │   ├── 2026-01-15-auth-strategy.md
+    │   └── 2026-02-20-deployment-target.md
+    └── patterns/          # Reusable solutions
+        ├── api-error-handling.md
+        └── file-upload.md
 ```
 
-### Good Prompts
+## Agent Roles
 
-- "Use project-memory to compare docs/ with the current codebase and rank cleanup opportunities."
-- "Audit this project for doc drift and deprecated patterns."
-- "Build a governance report for docs folder versus implementation."
-
-## Usage
-
-```bash
-# Automatic on session start (no command needed)
-/load-conventions  # Manual trigger
-/conventions       # View current conventions
-/audit-docs        # Run docs governance audit
-```
-
-## Integration Points
-
-### Agent Startup Hook
-
-In each agent's instructions:
-```
-Load project conventions from memory MCP at session start.
-```
-
-### Task Completion Hook
-
-After successful task, update memory with new conventions.
-
-### Weekly Validation
-
-docs-curator reviews stored conventions and flags:
-- Outdated conventions (version upgrades)
-- Contradictions (conflicting patterns)
-- Unused conventions (never referenced)
-
-## Fallback Behavior
-
-If memory MCP unavailable:
-- Load from `rules/project-conventions.md`
-- Ask user for key preferences
-- Use empty conventions (no auto-loading)
+| Agent | Memory Responsibility |
+|-------|----------------------|
+| lead-architect | ADRs, pattern definitions, architecture decisions |
+| lead-strategist | Stakeholder info, project roadmap, scope decisions |
+| core-factory | Implementation patterns, code conventions |
+| docs-curator | Memory file maintenance, cross-project knowledge |

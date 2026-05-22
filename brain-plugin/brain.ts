@@ -6,9 +6,11 @@ import { indexProject } from "./retrieval/indexer.js";
 import { contextInjector } from "./context/injector.js";
 import { sessionMemory } from "./state/session.js";
 import { docsStore, DocEntry } from "./docs-store.js";
+import { miniBatchUpdate } from "./memory/graph.js";
 import { getDatabase, closeDatabase } from "./store/index.js";
 import { isVectorActive } from "./store/vec.js";
-import { resetDenseFailedFlag } from "./retrieval/dense.js";
+import { resetDenseFailedFlag, getDenseModelStatus, unloadDensePipeline, forceLMStudioFallback } from "./retrieval/dense.js";
+import { getRerankerStatus, unloadReranker, forceRerankerOff } from "./retrieval/reranker.js";
 import { formatSearchResults } from "./tools/formatter";
 import { TokenBudgetMonitor, ContextPruner, initializeFromConfig } from "./context/token-budget.js";
 import type { SignalBundle } from "./tree/engine.js";
@@ -23,7 +25,7 @@ function detectRegistry(query: string): {
   const npmMatch = query.match(/(?:npm install|npm i|import\s+.*\s+from\s+['"])(@?[a-z0-9_./-]+)/i);
   if (npmMatch) return { registry: "npm", packageName: npmMatch[1] };
 
-  const cargoMatch = query.match(/(?:cargo add|cargo.toml|use\s+)([a-z][a-z0-9_]*)(?:::|;|\s)/i);
+  const cargoMatch = query.match(/(?:cargo add|cargo\.toml|use\s+)([a-zA-Z][a-zA-Z0-9_-]*)(?:::|;|\s)/i);
   if (cargoMatch) return { registry: "crates.io", packageName: cargoMatch[1] };
 
   const composerMatch = query.match(
@@ -89,6 +91,7 @@ async function fetchDocFromRegistry(
       raw: JSON.stringify(data).slice(0, 2000),
       fetchedAt: Date.now(),
       usedCount: 1,
+      lastAccessed: Date.now(),
     };
     docsStore.add(entry);
     return entry;
@@ -114,6 +117,7 @@ async function queryContext7(query: string): Promise<string | null> {
     const data = await res.json();
     return data.message?.content || null;
   } catch {
+    console.debug("[Brain] queryContext7: context7 endpoint unavailable (http://localhost:11435)");
     return null;
   }
 }
@@ -131,6 +135,53 @@ function rewritePrompt(query: string, intent: string, contextSummary: string): s
   const prefix = `[Brain: classified as "${intent}" intent. ${contextSummary}]\n\n`;
   const clarification = `I need to understand this better. Could you rephrase or provide more context?\n\nOriginal: `;
   return `${prefix}${clarification}${query}`;
+}
+
+function writePluginStatusToDB(projectDir: string, provider: any, tree: any): void {
+  try {
+    const db = getDatabase(projectDir);
+    if (!db) return;
+
+    const denseStatus = getDenseModelStatus();
+    const rerankerStatus = getRerankerStatus();
+    const budgetMonitor = TokenBudgetMonitor.getInstance();
+    const budgetStatus = budgetMonitor.getBudgetStatus();
+    const stats = tree.getStats();
+    const memory = sessionMemory.getMemory();
+    const loadedModels = provider.getLoadedModels ? provider.getLoadedModels() : [];
+
+    const statusPayload = {
+      dense: denseStatus,
+      reranker: rerankerStatus,
+      tokenBudget: {
+        total: budgetStatus.total,
+        used: budgetStatus.used,
+        reserved: budgetStatus.reserved,
+        availableForContext: budgetStatus.availableForContext,
+        percent: budgetStatus.percent,
+      },
+      decisionTree: {
+        totalNodes: stats.totalNodes,
+        pendingMutations: stats.pendingMutations,
+        intents: stats.intents,
+      },
+      sessionMemory: {
+        decisions: memory.decisions.length,
+        successes: memory.successCount,
+        failures: memory.failures.length,
+        recentFiles: memory.recentFiles.length,
+        contextUsed: memory.contextUsed.length,
+      },
+      loadedModels: loadedModels,
+      lastUpdated: Date.now(),
+    };
+
+    db.prepare(
+      "INSERT OR REPLACE INTO config (key, value, updated_at) VALUES (?, ?, ?)"
+    ).run("brain_plugin_status", JSON.stringify(statusPayload), Date.now());
+  } catch (err: any) {
+    console.debug("[Brain] Failed to write plugin status to DB:", err.message);
+  }
 }
 
 const BrainPlugin: Plugin = async ({ directory }) => {
@@ -177,6 +228,41 @@ const BrainPlugin: Plugin = async ({ directory }) => {
         provider.setBaseURL("http://localhost:1234");
       }
 
+      // Merge settings from brain.db (dashboard-persisted settings take precedence)
+      try {
+        const dbSettings = getDatabase(directory);
+        if (dbSettings) {
+          const rows = dbSettings.prepare("SELECT key, value FROM config WHERE key IN ('selected_chat_model', 'selected_embedding_model', 'selected_reranker_model', 'provider_mode')").all() as { key: string; value: string }[];
+          for (const row of rows) {
+            try {
+              const val = JSON.parse(row.value);
+              if (row.key === "selected_chat_model" && val) {
+                if (!config.lmStudio) config.lmStudio = {};
+                config.lmStudio.chatModel = val;
+                console.log(`[Brain] Loaded chat model from brain.db: ${val}`);
+              }
+              if (row.key === "selected_embedding_model" && val) {
+                if (!config.lmStudio) config.lmStudio = {};
+                config.lmStudio.preferredEmbedding = val;
+                console.log(`[Brain] Loaded embedding model from brain.db: ${val}`);
+              }
+              if (row.key === "selected_reranker_model" && val) {
+                if (!config.lmStudio) config.lmStudio = {};
+                config.lmStudio.preferredReranker = val;
+                console.log(`[Brain] Loaded reranker model from brain.db: ${val}`);
+              }
+              if (row.key === "provider_mode" && val) {
+                if (!config.provider) config.provider = {};
+                config.provider.mode = val;
+                console.log(`[Brain] Loaded provider mode from brain.db: ${val}`);
+              }
+            } catch {}
+          }
+        }
+      } catch (err: any) {
+        console.debug("[Brain] Failed to read settings from brain.db:", err.message);
+      }
+
       const budgetMonitor = TokenBudgetMonitor.getInstance();
       if (config.compaction) {
         budgetMonitor.setBudget(config.compaction.budget || 24000);
@@ -213,7 +299,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
       }
 
       console.log(`[Brain] Auto-indexing project in background: ${directory}`);
-      setImmediate(() => {
+      setImmediate(async () => {
         indexingInProgress = true;
         try {
           const startTime = Date.now();
@@ -229,7 +315,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
               } catch {}
             })();
           }
-          const result = indexProject(directory);
+          const result = await indexProject(directory);
           const duration = Date.now() - startTime;
           console.log(
             `[Brain] Background auto-index completed in ${duration}ms (processed ${result.length} chunks)`
@@ -239,6 +325,78 @@ const BrainPlugin: Plugin = async ({ directory }) => {
         } finally {
           indexingInProgress = false;
         }
+      });
+
+      // Periodic tasks: write status + check reindex/reset flags from dashboard
+      setInterval(() => {
+        writePluginStatusToDB(directory, provider, tree);
+
+        // Check for reindex request from dashboard
+        try {
+          const dbTick = getDatabase(directory);
+          if (dbTick) {
+            const reindexRow = dbTick.prepare("SELECT value FROM config WHERE key = 'brain_reindex_request'").get() as { value: string } | undefined;
+            if (reindexRow?.value === "true") {
+              dbTick.prepare("INSERT OR REPLACE INTO config (key, value, updated_at) VALUES ('brain_reindex_request', 'false', ?)").run(Date.now());
+              console.log("[Brain] Reindex requested from dashboard — starting...");
+              setImmediate(async () => {
+                try {
+                  const startTime = Date.now();
+                  const result = await indexProject(directory);
+                  console.log(`[Brain] Dashboard-requested reindex complete: ${result.length} chunks in ${Date.now() - startTime}ms`);
+                } catch (err: any) {
+                  console.error("[Brain] Dashboard reindex failed:", err.message);
+                }
+              });
+            }
+            const resetRow = dbTick.prepare("SELECT value FROM config WHERE key = 'brain_reset_request'").get() as { value: string } | undefined;
+            if (resetRow?.value === "true") {
+              dbTick.prepare("INSERT OR REPLACE INTO config (key, value, updated_at) VALUES ('brain_reset_request', 'false', ?)").run(Date.now());
+              console.log("[Brain] Reset requested from dashboard — executing...");
+              setImmediate(async () => {
+                try {
+                  sessionMemory.reset();
+                  docsStore.clear();
+                  contextInjector.resetBudget();
+                  dbTick.transaction(() => {
+                    dbTick.prepare("DELETE FROM chunks").run();
+                    dbTick.prepare("DELETE FROM files").run();
+                    dbTick.prepare("DELETE FROM fts_chunks").run();
+                    try { dbTick.prepare("DELETE FROM chunk_embeddings").run(); dbTick.prepare("DELETE FROM chunk_embeddings_nomic").run(); } catch {}
+                  })();
+                  console.log("[Brain] Dashboard-requested reset complete");
+                } catch (err: any) {
+                  console.error("[Brain] Dashboard reset failed:", err.message);
+                }
+              });
+            }
+          }
+        } catch (err: any) {
+          console.debug("[Brain] Failed to check dashboard flags:", err.message);
+        }
+      }, 30000);
+
+      // Auto memory graph scheduling: incremental clustering every 30 minutes
+      // Skips if no chunks exist — designed to be cheap for streaming updates
+      setInterval(() => {
+        try {
+          const dbTick = getDatabase(directory);
+          if (dbTick) {
+            const chunkCount = dbTick.prepare("SELECT COUNT(*) as count FROM chunks").get() as { count: number } | undefined;
+            if (chunkCount && chunkCount.count > 0) {
+              console.log(`[Brain] Running memory graph mini-batch update (${chunkCount.count} total chunks)...`);
+              miniBatchUpdate(directory, 10);
+              console.log("[Brain] Memory graph mini-batch update complete");
+            }
+          }
+        } catch (err: any) {
+          console.debug("[Brain] Memory graph update skipped:", err.message);
+        }
+      }, 30 * 60 * 1000);
+
+      // Write initial status + check flags immediately
+      setImmediate(() => {
+        writePluginStatusToDB(directory, provider, tree);
       });
     },
 
@@ -272,16 +430,11 @@ const BrainPlugin: Plugin = async ({ directory }) => {
         return;
       }
 
-      const complexity = adaptiveChunker.estimateComplexity(msg.content);
-      const adaptiveLimit = adaptiveChunker.calculateChunkLimit(
-        scenario.intent,
-        score,
-        complexity
-      );
+      const adaptiveLimit = 20; // default fallback until adaptiveChunker is implemented
 
       try {
         console.log(
-          `[Brain] Executing search for intent: "${scenario.intent}" (strategy: ${strategy.name}, complexity: ${complexity}, chunks: ${adaptiveLimit})...`
+          `[Brain] Executing search for intent: "${scenario.intent}" (strategy: ${strategy.name}, chunks: ${adaptiveLimit})...`
         );
         const results = await searchProjectContext(
           directory,
@@ -292,6 +445,11 @@ const BrainPlugin: Plugin = async ({ directory }) => {
 
         const mappedChunks = results.map((r) => ({
           id: r.id,
+          text: r.content,
+          path: r.filepath,
+          startLine: r.start_line,
+          endLine: r.end_line,
+          mtime: 0,
           filepath: r.filepath,
           language: r.language,
           type: r.type,
@@ -387,7 +545,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
           success: context.chunks.length > 0 || !!docContext,
         });
       } catch (error) {
-        console.error("[Brain] Retrieval error:", error);
+        console.error("[Brain] message.updated: context retrieval pipeline failed:", error);
       }
     },
 
@@ -443,7 +601,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
           dirtyFiles.clear();
           try {
             console.log(`[Brain] Triggering background re-index for modified files...`);
-            const result = indexProject(directory);
+            const result = await indexProject(directory);
             console.log(
               `[Brain] Background incremental re-index complete: parsed ${result.length} new chunks`
             );
@@ -474,7 +632,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
           indexingInProgress = true;
           try {
             const startTime = Date.now();
-            const result = indexProject(root);
+            const result = await indexProject(root);
             const duration = Date.now() - startTime;
             return `Project indexed successfully. Parsed ${result.length} modified/new chunks in ${duration}ms.`;
           } catch (err: any) {
@@ -521,40 +679,50 @@ const BrainPlugin: Plugin = async ({ directory }) => {
         async execute() {
           const stats = tree.getStats();
           const memory = sessionMemory.getMemory();
-          const db = getDatabase(directory);
           const budgetStatus = contextInjector.getBudgetStatus();
 
-          let dbStats = "Database: connected\n";
+          let db: ReturnType<typeof getDatabase> | undefined;
           try {
-            const fileCount =
-              (
-                db.prepare("SELECT COUNT(*) as count FROM files").get() as
-                  | { count: number }
-                  | undefined
-              )?.count ?? 0;
-            const chunkCount =
-              (
-                db.prepare("SELECT COUNT(*) as count FROM chunks").get() as
-                  | { count: number }
-                  | undefined
-              )?.count ?? 0;
-            const ftsCount =
-              (
-                db.prepare("SELECT COUNT(*) as count FROM fts_chunks").get() as
-                  | { count: number }
-                  | undefined
-              )?.count ?? 0;
-            const vectorActiveFlag = isVectorActive(db);
+            db = getDatabase(directory);
+          } catch (err: any) {
+            console.warn("[Brain] brain_status: getDatabase failed:", err.message);
+          }
 
-            dbStats = [
-              `Database: \u2705 isolated SQLite active`,
-              `- Files tracked: ${fileCount}`,
-              `- Code chunks: ${chunkCount}`,
-              `- Lexical index records: ${ftsCount}`,
-              `- Vector extensions loaded: ${vectorActiveFlag ? "\u2705 active (sqlite-vec)" : "\u274c deactivated (keyword degraded mode)"}`,
-            ].join("\n");
-          } catch (e: any) {
-            dbStats = `Database: \u274c stats query failed (${e.message})`;
+          let dbStats;
+          if (db) {
+            try {
+              const fileCount =
+                (
+                  db.prepare("SELECT COUNT(*) as count FROM files").get() as
+                    | { count: number }
+                    | undefined
+                )?.count ?? 0;
+              const chunkCount =
+                (
+                  db.prepare("SELECT COUNT(*) as count FROM chunks").get() as
+                    | { count: number }
+                    | undefined
+                )?.count ?? 0;
+              const ftsCount =
+                (
+                  db.prepare("SELECT COUNT(*) as count FROM fts_chunks").get() as
+                    | { count: number }
+                    | undefined
+                )?.count ?? 0;
+              const vectorActiveFlag = isVectorActive(db);
+
+              dbStats = [
+                `Database: \u2705 isolated SQLite active`,
+                `- Files tracked: ${fileCount}`,
+                `- Code chunks: ${chunkCount}`,
+                `- Lexical index records: ${ftsCount}`,
+                `- Vector extensions loaded: ${vectorActiveFlag ? "\u2705 active (sqlite-vec)" : "\u274c deactivated (keyword degraded mode)"}`,
+              ].join("\n");
+            } catch (e: any) {
+              dbStats = `Database: \u274c stats query failed (${e.message})`;
+            }
+          } else {
+            dbStats = "Database: \u274c not available (getDatabase failed)";
           }
 
           return [
@@ -628,7 +796,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
         args: {},
         async execute() {
           const status = contextInjector.getBudgetStatus();
-          return {
+          return JSON.stringify({
             budget: {
               total: status.total,
               used: status.used,
@@ -639,7 +807,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
             },
             message: `Token Budget: ${status.used}/${status.total} tokens used (${status.percent.toFixed(1)}%), ` +
               `${status.availableForContext} available for new context`,
-          };
+          });
         },
       }),
 
@@ -649,7 +817,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
         async execute() {
           contextInjector.resetBudget();
           const status = contextInjector.getBudgetStatus();
-          return {
+          return JSON.stringify({
             success: true,
             message: "Token budget reset successfully",
             newStatus: {
@@ -657,7 +825,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
               used: status.used,
               availableForContext: status.availableForContext,
             },
-          };
+          });
         },
       }),
 
@@ -667,68 +835,75 @@ const BrainPlugin: Plugin = async ({ directory }) => {
         async execute() {
           const results: string[] = ["## Brain Diagnostic (Node-native v2)\n"];
 
+          let db: ReturnType<typeof getDatabase> | undefined;
           try {
-            const db = getDatabase(directory);
+            db = getDatabase(directory);
             results.push("✅ SQLite store initialized successfully");
-
-            const fileCount =
-              (
-                db.prepare("SELECT COUNT(*) as c FROM files").get() as
-                  | { c: number }
-                  | undefined
-              )?.c ?? 0;
-            const chunkCount =
-              (
-                db.prepare("SELECT COUNT(*) as c FROM chunks").get() as
-                  | { c: number }
-                  | undefined
-              )?.c ?? 0;
-            const vectorCount =
-              (
-                db.prepare("SELECT COUNT(*) as c FROM chunk_embeddings").get() as
-                  | { c: number }
-                  | undefined
-              )?.c ?? 0;
-            const conceptCount =
-              (
-                db.prepare("SELECT COUNT(*) as c FROM concepts").get() as
-                  | { c: number }
-                  | undefined
-              )?.c ?? 0;
-            const sessionCount =
-              (
-                db.prepare("SELECT COUNT(*) as c FROM sessions").get() as
-                  | { c: number }
-                  | undefined
-              )?.c ?? 0;
-            const ftsCount =
-              (
-                db.prepare("SELECT COUNT(*) as c FROM fts_chunks").get() as
-                  | { c: number }
-                  | undefined
-              )?.c ?? 0;
-
-            results.push("\n### Storage");
-            results.push(`- Files: ${fileCount}`);
-            results.push(`- Chunks: ${chunkCount}`);
-            results.push(`- Vectors: ${vectorCount}`);
-            results.push(`- Concepts: ${conceptCount}`);
-            results.push(`- Sessions: ${sessionCount}`);
-            results.push(`- FTS Records: ${ftsCount}`);
-
-            const vectorActiveFlag = isVectorActive(db);
-            results.push(`\n### Vector Store: ${vectorActiveFlag ? "✅ Active" : "❌ Inactive"}`);
-
-            const rrfK = (
-              db.prepare("SELECT value FROM config WHERE key = 'rrf_k'").get() as
-                | { value: string }
-                | undefined
-            )?.value;
-            if (rrfK) {
-              results.push(`   Configuration: rrf_k=${rrfK}`);
-            }
           } catch (err: any) {
             results.push(`❌ SQLite store: initialization failed (${err.message})`);
+          }
+
+          if (db) {
+            try {
+              const fileCount =
+                (
+                  db.prepare("SELECT COUNT(*) as c FROM files").get() as
+                    | { c: number }
+                    | undefined
+                )?.c ?? 0;
+              const chunkCount =
+                (
+                  db.prepare("SELECT COUNT(*) as c FROM chunks").get() as
+                    | { c: number }
+                    | undefined
+                )?.c ?? 0;
+              const vectorCount =
+                (
+                  db.prepare("SELECT COUNT(*) as c FROM chunk_embeddings").get() as
+                    | { c: number }
+                    | undefined
+                )?.c ?? 0;
+              const conceptCount =
+                (
+                  db.prepare("SELECT COUNT(*) as c FROM concepts").get() as
+                    | { c: number }
+                    | undefined
+                )?.c ?? 0;
+              const sessionCount =
+                (
+                  db.prepare("SELECT COUNT(*) as c FROM sessions").get() as
+                    | { c: number }
+                    | undefined
+                )?.c ?? 0;
+              const ftsCount =
+                (
+                  db.prepare("SELECT COUNT(*) as c FROM fts_chunks").get() as
+                    | { c: number }
+                    | undefined
+                )?.c ?? 0;
+
+              results.push("\n### Storage");
+              results.push(`- Files: ${fileCount}`);
+              results.push(`- Chunks: ${chunkCount}`);
+              results.push(`- Vectors: ${vectorCount}`);
+              results.push(`- Concepts: ${conceptCount}`);
+              results.push(`- Sessions: ${sessionCount}`);
+              results.push(`- FTS Records: ${ftsCount}`);
+
+              const vectorActiveFlag = isVectorActive(db);
+              results.push(`\n### Vector Store: ${vectorActiveFlag ? "✅ Active" : "❌ Inactive"}`);
+
+              const rrfK = (
+                db.prepare("SELECT value FROM config WHERE key = 'rrf_k'").get() as
+                  | { value: string }
+                  | undefined
+              )?.value;
+              if (rrfK) {
+                results.push(`   Configuration: rrf_k=${rrfK}`);
+              }
+            } catch (err: any) {
+              results.push(`❌ SQLite store: stats query failed (${err.message})`);
+            }
           }
 
           try {
@@ -800,7 +975,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
             "learn"
           );
 
-          return {
+          return JSON.stringify({
             query: args.query,
             intent: "learn",
             chunks: results.map((r) => ({
@@ -813,7 +988,7 @@ const BrainPlugin: Plugin = async ({ directory }) => {
               content_preview: r.content.slice(0, 200),
             })),
             totalReturned: results.length,
-          };
+          });
         },
       }),
 
@@ -827,18 +1002,18 @@ const BrainPlugin: Plugin = async ({ directory }) => {
           const modelId = args.model || provider.defaultEmbedModel;
           try {
             const embeddings = await provider.embed(modelId, args.texts);
-            return {
+            return JSON.stringify({
               success: true,
               model: modelId,
               count: embeddings.length,
               dimensions: embeddings[0]?.length || 0,
               embeddings: embeddings.map((e) => ({
-                embedding: e.slice(0, 5).concat(["..."]),
+                embedding: e.slice(0, 5),
                 dimensions: e.length,
               })),
-            };
+            });
           } catch (err: any) {
-            return { success: false, error: err.message };
+            return JSON.stringify({ success: false, error: err.message });
           }
         },
       }),
@@ -908,7 +1083,27 @@ const BrainPlugin: Plugin = async ({ directory }) => {
           suite: tool.schema.enum(["smoke", "full"]).optional().describe("Benchmark suite (smoke=5 tasks, full=21 tasks)"),
         },
         async execute(args: any) {
-          const { runQuickBenchmark } = await import("../meta-harness/evaluator");
+          const evaluatorModule = await (async () => {
+            try {
+              return await import("../meta-harness/evaluator");
+            } catch (primaryErr) {
+              console.debug("[Brain] brain_benchmark: primary import path failed, trying fallback...");
+              const { fileURLToPath } = await import("url");
+              const { dirname, join } = await import("path");
+              const pluginDir = dirname(fileURLToPath(import.meta.url));
+              const fallbackPath = join(pluginDir, "..", "meta-harness", "evaluator");
+              try {
+                return await import(fallbackPath);
+              } catch {
+                throw new Error(
+                  `[Brain] brain_benchmark: Cannot import meta-harness/evaluator. ` +
+                  `Tried relative path and absolute fallback: ${fallbackPath}. ` +
+                  `Primary error: ${(primaryErr as Error).message}`
+                );
+              }
+            }
+          })();
+          const { runQuickBenchmark } = evaluatorModule;
           const suite = args.suite ?? "smoke";
           
           const result = await runQuickBenchmark(directory, suite);
@@ -925,8 +1120,9 @@ const BrainPlugin: Plugin = async ({ directory }) => {
           ];
           
           for (const [intent, score] of Object.entries(result.metrics)) {
-            const bar = "█".repeat(Math.round(score * 10)) + "░".repeat(10 - Math.round(score * 10));
-            lines.push(`${intent}: [${bar}] ${(score * 100).toFixed(0)}%`);
+            const s = score as number;
+            const bar = "█".repeat(Math.round(s * 10)) + "░".repeat(10 - Math.round(s * 10));
+            lines.push(`${intent}: [${bar}] ${(s * 100).toFixed(0)}%`);
           }
           
           return lines.join("\n");
@@ -989,14 +1185,128 @@ const BrainPlugin: Plugin = async ({ directory }) => {
           const contextLength = await provider.getContextLength();
           const vramUsage = provider.getCurrentVRAMUsage();
 
-          return {
+          return JSON.stringify({
             speculativeDecoding: "not_configured",
             loadedModels: loaded,
             contextLength,
             vramUsageGB: vramUsage,
             maxVRAMGB: 5.5,
             provider: provider.baseURL || "http://localhost:1234",
-          };
+          });
+        },
+      }),
+
+      brain_model_status: tool({
+        description: "Get model subsystem status: dense embedder, reranker, and provider",
+        args: {},
+        async execute() {
+          const denseStatus = getDenseModelStatus();
+          const rerankerStatus = getRerankerStatus();
+          const loadedModels = await provider.getLoadedModels();
+          const vramUsage = provider.getCurrentVRAMUsage();
+          const loadStatusMap = await provider.getModelLoadStatus();
+
+          writePluginStatusToDB(directory, provider, tree);
+
+          return JSON.stringify({
+            dense: denseStatus,
+            reranker: rerankerStatus,
+            provider: {
+              name: provider.name,
+              baseURL: provider.baseURL || "http://localhost:1234",
+              connected: loadedModels.length > 0,
+            },
+            loadedModels,
+            loadStatus: Object.fromEntries(loadStatusMap),
+            vramUsageGB: vramUsage,
+            maxVRAMGB: 5.5,
+          }, null, 2);
+        },
+      }),
+
+      brain_model_unload: tool({
+        description: "Unload a model subsystem (dense | reranker | all). Keeps LM Studio connection intact.",
+        args: {
+          target: tool.schema.enum(["dense", "reranker", "all"]).describe("Subsystem to unload"),
+        },
+        async execute(args: any) {
+          const target = args.target || "all";
+          const results: string[] = [];
+
+          if (target === "dense" || target === "all") {
+            unloadDensePipeline();
+            results.push("dense: unloaded");
+          }
+          if (target === "reranker" || target === "all") {
+            unloadReranker();
+            results.push("reranker: unloaded");
+          }
+
+          return `Model state: ${results.join(", ")}. LM Studio provider unaffected.`;
+        },
+      }),
+
+      brain_model_provider: tool({
+        description: "Switch model provider mode (onnx_local | lmstudio | download_only). Controls whether ONNX pipelines attempt to load.",
+        args: {
+          mode: tool.schema.enum(["onnx_local", "lmstudio", "download_only"]).describe("Provider mode"),
+        },
+        async execute(args: any) {
+          const mode = args.mode || "lmstudio";
+          const results: string[] = [];
+
+          switch (mode) {
+            case "download_only":
+              unloadDensePipeline();
+              unloadReranker();
+              forceLMStudioFallback();
+              forceRerankerOff();
+              results.push("ONNX pipelines blocked, LM Studio only");
+              break;
+            case "onnx_local":
+              resetDenseFailedFlag();
+              results.push("ONNX dense enabled; reranker will auto-init on next call");
+              break;
+            case "lmstudio":
+              resetDenseFailedFlag();
+              results.push("ONNX auto-init on demand, LM Studio fallback available");
+              break;
+          }
+
+          return JSON.stringify({ mode, changes: results, dense: getDenseModelStatus(), reranker: getRerankerStatus() }, null, 2);
+        },
+      }),
+
+      brain_model_download: tool({
+        description: "Download a model from HuggingFace via the dashboard API at localhost:3456",
+        args: {
+          modelId: tool.schema.string().describe("Model ID from catalog (e.g. nomic-embed-text-v1.5)"),
+        },
+        async execute(args: any) {
+          const modelId = args.modelId;
+          if (!modelId) return "Error: modelId is required. Available models: nomic-embed-text-v1.5, qwen3-embedding-0.6b, qwen3-reranker-0.6b, qwen3.5-4b, qwen3.5-0.8b";
+
+          try {
+            const res = await fetch(`http://localhost:3456/api/model/download`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ modelId }),
+              signal: AbortSignal.timeout(5000),
+            });
+            const data = await res.json();
+            if (data.success) {
+              if (data.cached) {
+                return `Model "${modelId}" is already cached. No download needed.`;
+              }
+              return `Download queued for "${modelId}" (job: ${data.jobId}). Check progress at the dashboard or use brain_model_status.`;
+            }
+            return `Download failed: ${data.error || "unknown error"}`;
+          } catch (err: any) {
+            if (err.name === "TimeoutError" || err.code === "UND_ERR_CONNECT_TIMEOUT") {
+              return `Dashboard not reachable at http://localhost:3456. Start the dashboard server first (bun run brain-dashboard/server.js).`;
+            }
+            return `Download error: ${err.message}. The dashboard server (port 3456) must be running for downloads.`;
+          }
         },
       }),
     },

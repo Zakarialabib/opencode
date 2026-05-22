@@ -1,4 +1,4 @@
-{
+﻿{
   "$schema": "https://opencode.ai/config.json",
   "default_agent": "core-factory",
   "model": "qwen-3-235b-a22b-instruct-2507",
@@ -100,7 +100,7 @@
         "-y",
         "@modelcontextprotocol/server-memory"
       ],
-      "enabled": true,
+      "enabled": false,
       "timeout": 30000
     },
     "git": {
@@ -118,7 +118,7 @@
         "uvx",
         "mcp-server-fetch"
       ],
-      "enabled": true,
+      "enabled": false,
       "timeout": 30000
     },
     "sqlite": {
@@ -129,7 +129,7 @@
         "--db-path",
         "${OPENCODE_HOME:-./database.sqlite}"
       ],
-      "enabled": true,
+      "enabled": false,
       "timeout": 30000
     },
     "sequential-thinking": {
@@ -169,7 +169,7 @@
         "-y",
         "@modelcontextprotocol/server-puppeteer"
       ],
-      "enabled": true,
+      "enabled": false,
       "timeout": 60000
     },
     "personal-knowledge": {
@@ -302,7 +302,6 @@
     "codesearch": "allow",
     "todoread": "allow",
     "todowrite": "allow",
-    "memory": "allow",
     "context7": "allow",
     "sequential-thinking": "allow",
     "language-server": "allow",
@@ -352,7 +351,6 @@
     "codesearch": true,
     "mcp": true,
     "context7": true,
-    "memory": true,
     "filesystem": true,
     "sqlite": true,
     "sequential-thinking": true,
@@ -387,7 +385,8 @@
         ".tsx",
         ".js",
         ".jsx"
-      ]
+      ],
+      "timeout": 30000
     },
     "php": {
       "command": [
@@ -419,7 +418,8 @@
         ".html",
         ".js",
         ".ts",
-        ".tsx"
+        ".tsx",
+        ".php"
       ]
     }
   },
@@ -507,8 +507,11 @@
     "Token-based compression (not char-based) with estimateTokens function.",
     "BRAIN INDEX: If retrieval is empty or stale (>1hr), run brain_index_project before relying on Brain context.",
     "RERANKING: Cross-encoder reranking is triggered for learn/refactor/feature intents when results >= 10.",
+<<<<<<< HEAD
     "MOBILE: For Android/Kotlin tasks, use @android-kotlin. For mobile QA/testing, use @mobile-qa. For Tauri mobile build commands, @backend-tauri handles Rust side, @android-kotlin handles native Android side. Available Android skills: android, android/compose, android/gradle, android/testing, android/debugging, android/deployment. MCP servers: gradle (builds), mobile (device control), android-emulator (emulator).",
-    "See rules/brain.md for Brain plugin usage. For mobile, see rules/mobile.md."
+    "See rules/brain.md for Brain plugin usage. For mobile, see rules/mobile.md.",
+    "FALLBACK MODEL: When primary model fails or times out, fall back to LM Studio local model (qwen3.5-4b-claude-4.6-opus-reasoning-distilled-v2) for simple operations (file edits, bash commands, quick lookups).",
+    "BRAIN PLUGIN replaces memory MCP for all persistence - use brain plugin tools (brain_index_project, brain_search, brain_status, brain_diagnostic) for code context, project knowledge, and session memory."
   ],
   
   "command": {
@@ -582,8 +585,8 @@
     "build": {
       "mode": "primary",
       "steps": 50,
-      "description": "Primary build orchestrator — strategic delegation, context synthesis, multi-agent coordination.",
-      "prompt": "ORCHESTRATION: You are the primary build orchestrator. Your role is to:\n1. Analyze user requirements and decompose into sub-tasks\n2. Delegate complex tasks to specialized agents (core-factory, frontend-ui-ux, etc.)\n3. Generate optimal context summaries for each delegation\n4. Synthesize and validate results from all agents\n5. Maintain session continuity through orchestratorSession\n\nTASK ANALYSIS:\n- For simple tasks: Implement directly with fast execution\n- For complex tasks: Delegate to specialized agent with briefing\n- For ambiguous tasks: Use clarify tool to get clarity\n\nDELEGATION PROTOCOL:\nWhen delegating, you MUST:\n1. Generate context summary using orchestratorSession\n2. Create task briefing with: [specific task] + [context summary] + [constraints] + [quality gates]\n3. Track delegation in session state\n4. Wait for result before proceeding\n\nSESSION TRACKING:\nUse orchestratorSession to:\n- Track all architectural decisions\n- Monitor token budget (reserve 8192 tokens)\n- Record modified files for continuity\n- Maintain task decomposition logic\n\nVALIDATION:\nBefore synthesizing results, verify:\n- All delegated tasks completed successfully\n- No conflicts between agent outputs\n- Consistent with architectural constraints\n- Token budget not exceeded\n\nCORE: Fast implementation. Read → Analyze → Write → Validate.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor/feature/debug/test) for semantic discovery.\nMemory-aware retrieval boosts known concepts by 15% using adaptive RRF weights.\nAdaptive chunk count scales with decision tree confidence score.\nToken-based compression (not char-based) with estimateTokens.\nSTRICT: No speculation. Only state what you know or can verify.\nCONCISE: Use minimal words. Long descriptions waste tokens.\nWORKFLOW: Read file → Use edit tool (oldString→newString) → Validate.\nIf edit fails: re-read file, add context to oldString.\nNo unnecessary comments. Reference lines as file_path:line_number.\nPROJECT STACK: Tauri (Rust), React (TypeScript), Laravel (PHP).\nAuto-format after edits per rules/auto-format.md.",
+      "description": "Primary build orchestrator - strategic delegation, context synthesis, multi-agent coordination.",
+      "prompt": "ORCHESTRATION: You are the primary build orchestrator. Your role is to:\n1. Analyze user requirements and decompose into sub-tasks\n2. Delegate complex tasks to specialized agents (core-factory, frontend-ui-ux, etc.)\n3. Generate optimal context summaries for each delegation\n4. Synthesize and validate results from all agents\n5. Maintain session continuity through orchestratorSession\n\nTASK ANALYSIS:\n- For simple tasks: Implement directly with fast execution\n- For complex tasks: Delegate to specialized agent with briefing\n- For ambiguous tasks: Use clarify tool to get clarity\n\nDELEGATION PROTOCOL:\nWhen delegating, you MUST:\n1. Generate context summary using orchestratorSession\n2. Create task briefing with: [specific task] + [context summary] + [constraints] + [quality gates]\n3. Track delegation in session state\n4. Wait for result before proceeding\n\nSESSION TRACKING:\nUse orchestratorSession to:\n- Track all architectural decisions\n- Monitor token budget (reserve 8192 tokens)\n- Record modified files for continuity\n- Maintain task decomposition logic\n\nVALIDATION:\nBefore synthesizing results, verify:\n- All delegated tasks completed successfully\n- No conflicts between agent outputs\n- Consistent with architectural constraints\n- Token budget not exceeded\n\nCORE: Fast implementation. Read -> Analyze -> Write -> Validate.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor/feature/debug/test) for semantic discovery.\nMemory-aware retrieval boosts known concepts by 15% using adaptive RRF weights.\nAdaptive chunk count scales with decision tree confidence score.\nToken-based compression (not char-based) with estimateTokens.\nSTRICT: No speculation. Only state what you know or can verify.\nCONCISE: Use minimal words. Long descriptions waste tokens.\nWORKFLOW: Read file -> Use edit tool (oldString->newString) -> Validate.\nIf edit fails: re-read file, add context to oldString.\nNo unnecessary comments. Reference lines as file_path:line_number.\nPROJECT STACK: Tauri (Rust), React (TypeScript), Laravel (PHP).\nAuto-format after edits per rules/auto-format.md.",
       "permission": {
         "file": {
           "src/**": "allow",
@@ -618,7 +621,7 @@
     "plan": {
       "mode": "primary",
       "steps": 20,
-      "description": "Planning and analysis agent — no code changes, read-only analysis.",
+      "description": "Planning and analysis agent - no code changes, read-only analysis.",
       "permission": {
         "edit": "deny",
         "bash": "deny"
@@ -638,7 +641,7 @@
     "explore": {
       "mode": "subagent",
       "steps": 15,
-      "description": "Fast read-only agent for codebase exploration — find files, search patterns, answer questions about structure.",
+      "description": "Fast read-only agent for codebase exploration - find files, search patterns, answer questions about structure.",
       "permission": {
         "edit": "deny",
         "bash": "deny",
@@ -655,7 +658,7 @@
     "scout": {
       "mode": "subagent",
       "steps": 15,
-      "description": "External research agent — clone repos, inspect dependencies, cross-reference upstream implementations.",
+      "description": "External research agent - clone repos, inspect dependencies, cross-reference upstream implementations.",
       "permission": {
         "edit": "deny",
         "bash": "ask",
@@ -672,7 +675,7 @@
       "mode": "subagent",
       "steps": 40,
       "description": "Core implementation and direct file editing (merged builder/planner/opencoder). Self-evolving.",
-      "prompt": "CORE: Fast implementation. Read → Analyze → Write → Validate.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health at start.\nUse brain_search with intent parameter (learn/refactor/feature/debug/test) for semantic discovery.\nMemory-aware retrieval boosts known concepts by 15% using adaptive RRF weights.\nAdaptive chunk count scales with decision tree confidence score.\nToken-based compression (not char-based) with estimateTokens.\nSTRICT: No speculation. Only state what you know or can verify.\nCONCISE: Use minimal words. Long descriptions waste tokens.\nWORKFLOW: Read file → Use edit tool (oldString→newString) → Validate.\nIf edit fails: re-read file, add context to oldString.\nNo unnecessary comments. Reference lines as file_path:line_number.\nPROJECT STACK: Tauri (Rust), React (TypeScript), Laravel (PHP).\nAuto-format after edits per rules/auto-format.md.\nINTEGRATION: Always check for redundant imports, unused code, and naming convention violations before and after edits.",
+      "prompt": "CORE: Fast implementation. Read -> Analyze -> Write -> Validate.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health at start.\nUse brain_search with intent parameter (learn/refactor/feature/debug/test) for semantic discovery.\nMemory-aware retrieval boosts known concepts by 15% using adaptive RRF weights.\nAdaptive chunk count scales with decision tree confidence score.\nToken-based compression (not char-based) with estimateTokens.\nSTRICT: No speculation. Only state what you know or can verify.\nCONCISE: Use minimal words. Long descriptions waste tokens.\nWORKFLOW: Read file -> Use edit tool (oldString->newString) -> Validate.\nIf edit fails: re-read file, add context to oldString.\nNo unnecessary comments. Reference lines as file_path:line_number.\nPROJECT STACK: Tauri (Rust), React (TypeScript), Laravel (PHP).\nAuto-format after edits per rules/auto-format.md.\nINTEGRATION: Always check for redundant imports, unused code, and naming convention violations before and after edits.",
       "tools": {
         "read": true,
         "write": true,
@@ -683,7 +686,7 @@
         "glob": true,
         "todowrite": true,
         "context7": true,
-        "memory": true,
+
         "sequential-thinking": true,
         "brain_diagnostic": true,
         "brain_status": true,
@@ -733,7 +736,7 @@
         "codesearch": true,
         "todowrite": true,
         "task": true,
-        "memory": true,
+
         "context7": true,
         "sequential-thinking": true,
         "brain_diagnostic": true,
@@ -763,7 +766,7 @@
         "codesearch": true,
         "task": true,
         "context7": true,
-        "memory": true,
+
         "sequential-thinking": true,
         "brain_diagnostic": true,
         "brain_search": true
@@ -773,7 +776,7 @@
       "mode": "subagent",
       "steps": 30,
       "description": "Premium UI/UX implementation for React + TypeScript + Tailwind + shadcn/ui.",
-      "prompt": "UI/UX: Premium interfaces. Read → Generate → Validate.\nSTRICT: No speculation on user intent. Ask if unclear.\nCONCISE: Minimal explanation. Show code.\nUse ui-ux-pro-max skill for design tokens.\nUse parallel execution for independent components.\nValidate accessibility (WCAG AA) after implementation.\nREUSABILITY: Check for existing components before creating new ones.\nDELEGATION: See rules/agent-delegation-templates.md for optimized task delegation patterns.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor/feature) for semantic discovery.",
+      "prompt": "UI/UX: Premium interfaces. Read -> Generate -> Validate.\nSTRICT: No speculation on user intent. Ask if unclear.\nCONCISE: Minimal explanation. Show code.\nUse ui-ux-pro-max skill for design tokens.\nUse parallel execution for independent components.\nValidate accessibility (WCAG AA) after implementation.\nREUSABILITY: Check for existing components before creating new ones.\nDELEGATION: See rules/agent-delegation-templates.md for optimized task delegation patterns.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor/feature) for semantic discovery.",
       "tools": {
         "read": true,
         "write": true,
@@ -785,7 +788,7 @@
         "task": true,
         "mcp": true,
         "context7": true,
-        "memory": true,
+
         "sequential-thinking": true,
         "brain_diagnostic": true,
         "brain_status": true,
@@ -797,8 +800,8 @@
     "backend-api": {
       "mode": "subagent",
       "steps": 30,
-      "description": "API implementation — Node/Express or Laravel. Type-safe, validated.",
-      "prompt": "API: Node/Express or Laravel. Read → Implement → Validate.\nCONCISE: Brief code. No long explanations.\nUse stack-context skill for web patterns.\nValidate with LSP after changes.\nNO REDUNDANCY: Check for existing endpoints/services before implementing.\nIMPORT AUDIT: Only add external imports when necessary. Prefer stdlib.\nDELEGATION: See rules/agent-delegation-templates.md for optimized task delegation patterns.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor) for semantic discovery.",
+      "description": "API implementation - Node/Express or Laravel. Type-safe, validated.",
+      "prompt": "API: Node/Express or Laravel. Read -> Implement -> Validate.\nCONCISE: Brief code. No long explanations.\nUse stack-context skill for web patterns.\nValidate with LSP after changes.\nNO REDUNDANCY: Check for existing endpoints/services before implementing.\nIMPORT AUDIT: Only add external imports when necessary. Prefer stdlib.\nDELEGATION: See rules/agent-delegation-templates.md for optimized task delegation patterns.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor) for semantic discovery.",
       "tools": {
         "read": true,
         "write": true,
@@ -808,7 +811,7 @@
         "task": true,
         "lsp": true,
         "context7": true,
-        "memory": true,
+
         "brain_diagnostic": true,
         "brain_status": true,
         "brain_search": true,
@@ -820,7 +823,7 @@
       "mode": "subagent",
       "steps": 30,
       "description": "Specialized Laravel 13 and Livewire 4 development.",
-      "prompt": "LARAVEL: PHP/Laravel 13 + Livewire 4. Read → Implement → Validate.\nCONCISE: Brief patterns. No lengthy explanations.\nUse laravel-feature-scaffold for new features.\nUse pest-testing for tests.\nRun php artisan pint after edits.\nIMPORT AUDIT: Check for unused imports after every file change.\nNAMING: Follow Laravel conventions strictly (PascalCase models, snake_case tables).\nDELEGATION: See rules/agent-delegation-templates.md for optimized task delegation patterns.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor) for semantic discovery.",
+      "prompt": "LARAVEL: PHP/Laravel 13 + Livewire 4. Read -> Implement -> Validate.\nCONCISE: Brief patterns. No lengthy explanations.\nUse laravel-feature-scaffold for new features.\nUse pest-testing for tests.\nRun php artisan pint after edits.\nIMPORT AUDIT: Check for unused imports after every file change.\nNAMING: Follow Laravel conventions strictly (PascalCase models, snake_case tables).\nDELEGATION: See rules/agent-delegation-templates.md for optimized task delegation patterns.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor) for semantic discovery.",
       "tools": {
         "read": true,
         "write": true,
@@ -830,7 +833,7 @@
         "task": true,
         "lsp": true,
         "context7": true,
-        "memory": true,
+
         "brain_diagnostic": true,
         "brain_status": true,
         "brain_search": true,
@@ -852,7 +855,7 @@
         "task": true,
         "lsp": true,
         "context7": true,
-        "memory": true,
+
         "brain_diagnostic": true,
         "brain_status": true,
         "brain_search": true,
@@ -876,7 +879,7 @@
         "mobile": true,
         "android-emulator": true,
         "context7": true,
-        "memory": true,
+
         "brain_diagnostic": true,
         "brain_search": true
       }
@@ -896,7 +899,7 @@
         "mobile": true,
         "android-emulator": true,
         "context7": true,
-        "memory": true,
+
         "brain_diagnostic": true,
         "brain_status": true,
         "brain_search": true,
@@ -920,7 +923,7 @@
         "mobile": true,
         "android-emulator": true,
         "context7": true,
-        "memory": true,
+
         "brain_diagnostic": true,
         "brain_status": true,
         "brain_search": true,
@@ -944,7 +947,7 @@
         "websearch": true,
         "webfetch": true,
         "todowrite": true,
-        "memory": true,
+
         "context7": true,
         "sequential-thinking": true,
         "brain_diagnostic": true,

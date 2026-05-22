@@ -1,9 +1,9 @@
 import type { Plugin } from "@opencode-ai/plugin"
-import { fileLog } from "./utils/logger"
-import { MetaHarnessLoop } from "./loop"
-import { DEFAULT_HARNESS_CONFIG } from "./harness-space"
-import { LMStudioClient } from "./lmstudio-client"
-import type { MetaHarnessOptions } from "./types"
+import { fileLog } from "./utils/logger.js"
+import { MetaHarnessLoop } from "./loop.js"
+import { DEFAULT_HARNESS_CONFIG } from "./harness-space.js"
+import { LMStudioClient } from "./lmstudio-client.js"
+import type { MetaHarnessOptions } from "./types.js"
 
 /**
  * Meta-Harness Plugin for OpenCode

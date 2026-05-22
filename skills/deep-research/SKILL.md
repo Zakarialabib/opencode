@@ -1,3 +1,13 @@
+---
+name: deep-research
+description: Deep domain research and knowledge synthesis — autonomously ingest, synthesize, and structure new technical domains
+license: MIT
+compatibility: opencode
+metadata:
+  audience: researchers
+  workflow: research
+---
+
 # Deep Research Skill
 
 ## Description

@@ -1,809 +1,325 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAG Control Plane</title>
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <style>
-        :root {
-            --bg-primary: #0a0a0f;
-            --bg-secondary: #12121a;
-            --bg-tertiary: #1a1a24;
-            --border: #2a2a3a;
-            --text-primary: #f0f0f5;
-            --text-secondary: #8888a0;
-            --accent: #6366f1;
-            --success: #22c55e;
-            --warning: #f59e0b;
-            --error: #ef4444;
-            --purple: #a78bfa;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            min-height: 100vh;
-        }
-
-        .status-bar {
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border);
-            padding: 12px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .status-indicators {
-            display: flex;
-            gap: 24px;
-        }
-
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-        }
-
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-        }
-
-        .status-dot.online { background: var(--success); }
-        .status-dot.offline { background: var(--error); }
-        .status-dot.warning { background: var(--warning); }
-
-        .metrics-row {
-            background: var(--bg-tertiary);
-            border-bottom: 1px solid var(--border);
-            padding: 16px 24px;
-            display: flex;
-            gap: 32px;
-            flex-wrap: wrap;
-        }
-
-        .metric {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .metric-label {
-            font-size: 11px;
-            text-transform: uppercase;
-            color: var(--text-secondary);
-            letter-spacing: 0.5px;
-        }
-
-        .metric-value {
-            font-size: 20px;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .warning-banner {
-            background: rgba(245, 158, 11, 0.1);
-            border: 1px solid var(--warning);
-            color: var(--warning);
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .tabs-container {
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border);
-            padding: 0 24px;
-            display: flex;
-            gap: 4px;
-            overflow-x: auto;
-        }
-
-        .tab-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            padding: 14px 20px;
-            font-size: 14px;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .tab-btn:hover {
-            color: var(--text-primary);
-        }
-
-        .tab-btn.active {
-            color: var(--accent);
-            border-bottom-color: var(--accent);
-        }
-
-        .tab-content {
-            display: none;
-            padding: 24px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 16px;
-        }
-
-        .card-header {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: var(--text-primary);
-        }
-
-        .input-group {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .input-field {
-            flex: 1;
-            background: var(--bg-primary);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 10px 14px;
-            color: var(--text-primary);
-            font-size: 14px;
-        }
-
-        .input-field:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-
-        .btn {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-
-        .btn:hover {
-            opacity: 0.9;
-        }
-
-        .btn-secondary {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-        }
-
-        .btn-danger {
-            background: var(--error);
-        }
-
-        .dropdown {
-            background: var(--bg-primary);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 10px 14px;
-            color: var(--text-primary);
-            font-size: 14px;
-            min-width: 180px;
-        }
-
-        .pipeline-stages {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .pipeline-stage {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .stage-header {
-            background: var(--bg-secondary);
-            padding: 12px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-        }
-
-        .stage-title {
-            font-weight: 600;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .stage-timing {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .stage-content {
-            padding: 16px;
-            display: none;
-        }
-
-        .stage-content.expanded {
-            display: block;
-        }
-
-        .result-item {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 12px;
-        }
-
-        .result-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 8px;
-        }
-
-        .result-filepath {
-            font-family: monospace;
-            font-size: 13px;
-            color: var(--purple);
-        }
-
-        .result-scores {
-            display: flex;
-            gap: 12px;
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .result-snippet {
-            font-size: 13px;
-            color: var(--text-secondary);
-            line-height: 1.5;
-            margin: 8px 0;
-        }
-
-        .result-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-        }
-
-        .feedback-btn {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-secondary);
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .feedback-btn:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
-        .feedback-btn.positive:hover {
-            border-color: var(--success);
-            color: var(--success);
-        }
-
-        .feedback-btn.negative:hover {
-            border-color: var(--error);
-            color: var(--error);
-        }
-
-        .signal-bar {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 8px 0;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .signal-name {
-            width: 120px;
-            font-size: 13px;
-        }
-
-        .signal-value {
-            width: 60px;
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
-        .signal-track {
-            flex: 1;
-            height: 8px;
-            background: var(--bg-primary);
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .signal-fill {
-            height: 100%;
-            background: var(--accent);
-            border-radius: 4px;
-        }
-
-        .slider-group {
-            margin-bottom: 20px;
-        }
-
-        .slider-label {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
-        .slider-value {
-            color: var(--accent);
-            font-weight: 600;
-        }
-
-        .slider {
-            width: 100%;
-            height: 8px;
-            border-radius: 4px;
-            background: var(--bg-primary);
-            outline: none;
-            -webkit-appearance: none;
-        }
-
-        .slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: var(--accent);
-            cursor: pointer;
-        }
-
-        .override-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .override-table th,
-        .override-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-            font-size: 13px;
-        }
-
-        .override-table th {
-            color: var(--text-secondary);
-            font-weight: 500;
-            font-size: 11px;
-            text-transform: uppercase;
-        }
-
-        .budget-breakdown {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-
-        .budget-item {
-            background: var(--bg-tertiary);
-            border-radius: 8px;
-            padding: 16px;
-            text-align: center;
-        }
-
-        .budget-item-label {
-            font-size: 11px;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            margin-bottom: 8px;
-        }
-
-        .budget-item-value {
-            font-size: 24px;
-            font-weight: 600;
-        }
-
-        .efficiency-gauge {
-            height: 12px;
-            background: var(--bg-primary);
-            border-radius: 6px;
-            overflow: hidden;
-            margin-top: 12px;
-        }
-
-        .efficiency-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--success), var(--accent));
-            border-radius: 6px;
-            transition: width 0.3s;
-        }
-
-        .adjustment-item {
-            padding: 12px;
-            border-bottom: 1px solid var(--border);
-            font-size: 13px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .adjustment-time {
-            color: var(--text-secondary);
-        }
-
-        .cluster-item {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 12px 16px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .cluster-item:hover {
-            border-color: var(--accent);
-        }
-
-        .cluster-name {
-            font-size: 14px;
-        }
-
-        .cluster-visits {
-            font-size: 12px;
-            color: var(--text-secondary);
-            background: var(--bg-primary);
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-
-        .bar-chart {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .bar-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .bar-label {
-            width: 100px;
-            font-size: 12px;
-            text-align: right;
-        }
-
-        .bar-track {
-            flex: 1;
-            height: 24px;
-            background: var(--bg-primary);
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .bar-fill {
-            height: 100%;
-            background: var(--accent);
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            padding-left: 8px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        .chat-container {
-            display: grid;
-            grid-template-columns: 1fr 300px;
-            gap: 16px;
-            height: calc(100vh - 300px);
-            min-height: 400px;
-        }
-
-        .chat-messages {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            overflow-y: auto;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .message {
-            max-width: 80%;
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-
-        .message.user {
-            background: var(--accent);
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
-        }
-
-        .message.assistant {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
-        }
-
-        .context-panel {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 16px;
-            overflow-y: auto;
-        }
-
-        .context-title {
-            font-size: 12px;
-            text-transform: uppercase;
-            color: var(--text-secondary);
-            margin-bottom: 12px;
-        }
-
-        .context-item {
-            font-size: 12px;
-            padding: 8px;
-            background: var(--bg-primary);
-            border-radius: 4px;
-            margin-bottom: 8px;
-            font-family: monospace;
-        }
-
-        .debug-toggle {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 12px;
-            font-size: 13px;
-        }
-
-        .toggle-switch {
-            width: 40px;
-            height: 22px;
-            background: var(--bg-primary);
-            border-radius: 11px;
-            position: relative;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .toggle-switch.active {
-            background: var(--accent);
-        }
-
-        .toggle-switch::after {
-            content: '';
-            position: absolute;
-            width: 18px;
-            height: 18px;
-            background: white;
-            border-radius: 50%;
-            top: 2px;
-            left: 2px;
-            transition: transform 0.2s;
-        }
-
-        .toggle-switch.active::after {
-            transform: translateX(18px);
-        }
-
-        .index-stats {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-
-        .index-stat {
-            background: var(--bg-tertiary);
-            border-radius: 8px;
-            padding: 16px;
-            text-align: center;
-        }
-
-        .index-stat-value {
-            font-size: 28px;
-            font-weight: 600;
-            color: var(--accent);
-        }
-
-        .index-stat-label {
-            font-size: 11px;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            margin-top: 4px;
-        }
-
-        .dirty-queue {
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .dirty-item {
-            font-family: monospace;
-            font-size: 12px;
-            padding: 8px 12px;
-            background: var(--bg-tertiary);
-            border-radius: 4px;
-            margin-bottom: 4px;
-        }
-
-        .progress-bar {
-            height: 8px;
-            background: var(--bg-primary);
-            border-radius: 4px;
-            overflow: hidden;
-            margin-top: 12px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: var(--accent);
-            border-radius: 4px;
-            transition: width 0.3s;
-        }
-
-        .summary-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-
-        .summary-stat {
-            background: var(--bg-tertiary);
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .summary-stat-value {
-            font-size: 36px;
-            font-weight: 600;
-        }
-
-        .summary-stat-label {
-            font-size: 12px;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            margin-top: 8px;
-        }
-
-        .decision-item {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 12px;
-        }
-
-        .decision-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-
-        .decision-intent {
-            font-weight: 600;
-            color: var(--accent);
-        }
-
-        .decision-time {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .decision-details {
-            font-size: 13px;
-            color: var(--text-secondary);
-            line-height: 1.6;
-        }
-
-        .intent-distribution {
-            margin-top: 16px;
-        }
-
-        .loading {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 40px;
-            color: var(--text-secondary);
-        }
-
-        .spinner {
-            width: 24px;
-            height: 24px;
-            border: 2px solid var(--border);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-right: 12px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .collapsible-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
-        }
-
-        .collapsible-content.expanded {
-            max-height: 500px;
-        }
-
-        .collapsible-toggle {
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            font-size: 14px;
-            padding: 4px 8px;
-            transition: transform 0.2s;
-        }
-
-        .collapsible-toggle.expanded {
-            transform: rotate(180deg);
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brain RAG Control</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-tertiary: #1a1a24;
+      --border: #2a2a3a;
+      --text-primary: #f0f0f5;
+      --text-secondary: #8888a0;
+      --accent: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.3);
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --purple: #a78bfa;
+      --yellow: #fbbf24;
+      --blue: #60a5fa;
+      --green: #34d399;
+    }
+    body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+    
+    header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+    header h1 { font-size: 13px; font-weight: 500; letter-spacing: 0.5px; color: var(--text-secondary); }
+    .status-bar { display: flex; gap: 16px; align-items: center; }
+    .status-indicator { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--error); }
+    .status-dot.connected { background: var(--success); box-shadow: 0 0 8px var(--success); }
+    .status-dot.loading { background: var(--warning); animation: pulse 1s infinite; }
+    
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    
+    .grid { display: grid; gap: 16px; }
+    .grid-2 { grid-template-columns: 1fr 1fr; }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    
+    .card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .card-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); }
+    
+    .badge { font-size: 9px; padding: 2px 6px; border-radius: 3px; background: var(--bg-tertiary); color: var(--text-secondary); }
+    .badge.success { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+    .badge.error { background: rgba(239, 68, 68, 0.15); color: var(--error); }
+    .badge.warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .badge.loaded { background: rgba(34, 197, 94, 0.25); color: var(--success); }
+    
+    .metrics { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+    .metric { background: var(--bg-tertiary); padding: 10px; border-radius: 6px; text-align: center; }
+    .metric-value { font-size: 18px; font-weight: 600; }
+    .metric-label { font-size: 9px; color: var(--text-secondary); margin-top: 2px; text-transform: uppercase; }
+    
+    .btn { background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text-primary); padding: 6px 12px; border-radius: 4px; font-size: 10px; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+    .btn:hover { background: var(--border); }
+    .btn.primary { background: var(--accent); border-color: var(--accent); }
+    .btn.primary:hover { box-shadow: 0 0 15px var(--accent-glow); }
+    .btn.success { background: var(--success); border-color: var(--success); color: #000; }
+    .btn.danger { background: var(--error); border-color: var(--error); }
+    .btn.sm { padding: 4px 8px; font-size: 9px; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
+    
+    .input, .select { background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text-primary); padding: 6px 10px; border-radius: 4px; font-size: 11px; font-family: inherit; width: 100%; }
+    .input:focus, .select:focus { outline: none; border-color: var(--accent); }
+    .input::placeholder { color: var(--text-secondary); opacity: 0.5; }
+    .input-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    
+    .model-control { display: grid; grid-template-columns: 90px 1fr auto; gap: 8px; align-items: center; padding: 8px 10px; background: var(--bg-tertiary); border-radius: 6px; margin-bottom: 6px; }
+    .model-label { font-size: 9px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; }
+    .model-label.embed { color: var(--purple); }
+    .model-label.rerank { color: var(--yellow); }
+    .model-label.chat { color: var(--blue); }
+    .model-label.draft { color: var(--green); }
+    .model-actions { display: flex; gap: 3px; }
+    
+    .loaded-models { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+    .loaded-model { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--bg-tertiary); border-radius: 4px; font-size: 10px; border: 1px solid var(--success); }
+    .loaded-model .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+    .loaded-model .type { color: var(--text-secondary); text-transform: uppercase; font-size: 9px; }
+    .loaded-model .unload-btn { margin-left: auto; padding: 2px 6px; background: var(--error); border: none; color: #fff; border-radius: 3px; cursor: pointer; font-size: 9px; }
+    
+    .log-container { background: var(--bg-primary); border: 1px solid var(--border); border-radius: 6px; padding: 10px; max-height: 180px; overflow-y: auto; font-size: 10px; }
+    .log-entry { padding: 4px 0; color: var(--text-secondary); border-bottom: 1px solid var(--border); }
+    .log-entry:last-child { border-bottom: none; }
+    .log-entry.success { color: var(--success); }
+    .log-entry.error { color: var(--error); }
+    .log-entry.warning { color: var(--warning); }
+    .log-time { color: var(--text-secondary); margin-right: 6px; opacity: 0.7; }
+    
+    .results-container { background: var(--bg-primary); border: 1px solid var(--border); border-radius: 6px; padding: 10px; max-height: 250px; overflow-y: auto; font-size: 10px; }
+    .result-item { padding: 8px; border-bottom: 1px solid var(--border); }
+    .result-item:last-child { border-bottom: none; }
+    .result-path { color: var(--accent); font-weight: 500; }
+    .result-meta { font-size: 9px; color: var(--text-secondary); margin-top: 2px; }
+    
+    .config-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .config-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .config-item:last-child { border-bottom: none; }
+    .config-label { font-size: 10px; color: var(--text-secondary); }
+    .config-value { font-size: 10px; color: var(--text-primary); font-weight: 500; }
+    
+    .tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+    .tab { padding: 6px 12px; background: transparent; border: 1px solid var(--border); border-bottom: none; color: var(--text-secondary); font-size: 10px; cursor: pointer; border-radius: 4px 4px 0 0; }
+    .tab:hover { background: var(--bg-tertiary); }
+    .tab.active { background: var(--accent); border-color: var(--accent); color: white; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    .empty-state { text-align: center; padding: 20px; color: var(--text-secondary); font-size: 11px; }
+    
+    .benchmark-result { padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .benchmark-result:last-child { border-bottom: none; }
+    .benchmark-query { color: var(--text-primary); margin-bottom: 2px; }
+    .benchmark-meta { font-size: 9px; color: var(--text-secondary); }
+    .benchmark-meta.success { color: var(--success); }
+    .benchmark-meta.error { color: var(--error); }
+    
+    .vram-bar { height: 4px; background: var(--bg-tertiary); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+    .vram-fill { height: 100%; background: var(--accent); transition: width 0.3s; }
+    
+    .model-catalog-container { display: flex; flex-direction: column; gap: 8px; }
+    .model-catalog-item { display: grid; grid-template-columns: 1fr 80px 80px 100px; gap: 10px; align-items: center; padding: 10px; background: var(--bg-tertiary); border-radius: 6px; }
+    .model-catalog-item .name { font-size: 11px; font-weight: 500; }
+    .model-catalog-item .type { font-size: 9px; color: var(--text-secondary); text-transform: uppercase; }
+    .model-catalog-item .size { font-size: 10px; color: var(--text-secondary); text-align: right; }
+    .model-catalog-item .actions { display: flex; gap: 4px; justify-content: flex-end; }
+    
+    .model-status-container { display: flex; flex-direction: column; gap: 6px; }
+    .model-status-item { display: grid; grid-template-columns: 1fr 100px 80px; gap: 10px; align-items: center; padding: 8px 10px; background: var(--bg-tertiary); border-radius: 4px; }
+    .model-status-item .name { font-size: 10px; }
+    .model-status-item .readiness { font-size: 9px; text-align: center; }
+    .model-status-item .actions { display: flex; gap: 4px; justify-content: flex-end; }
+    
+    .jobs-container { display: flex; flex-direction: column; gap: 6px; }
+    .job-item { display: grid; grid-template-columns: 1fr 80px 100px; gap: 10px; align-items: center; padding: 8px 10px; background: var(--bg-tertiary); border-radius: 4px; }
+    .job-item .model-name { font-size: 10px; }
+    .job-item .status { font-size: 9px; text-align: center; }
+    .job-item .progress { font-size: 9px; color: var(--text-secondary); text-align: right; }
+    .job-progress-bar { height: 3px; background: var(--bg-primary); border-radius: 2px; margin-top: 4px; overflow: hidden; }
+    .job-progress-fill { height: 100%; background: var(--accent); transition: width 0.3s; }
+    
+    .readiness-loaded { color: var(--success); }
+    .readiness-ready { color: var(--blue); }
+    .readiness-missing { color: var(--error); }
+    .readiness-downloading { color: var(--warning); }
+    .readiness-failed { color: var(--error); }
+    
+    .status-badge { font-size: 9px; padding: 2px 6px; border-radius: 3px; }
+    .status-badge.loaded { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+    .status-badge.ready { background: rgba(96, 165, 250, 0.15); color: var(--blue); }
+    .status-badge.missing { background: rgba(239, 68, 68, 0.15); color: var(--error); }
+    .status-badge.downloading { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .status-badge.failed { background: rgba(239, 68, 68, 0.2); color: var(--error); }
+    
+    @media (max-width: 900px) {
+      .grid-2, .metrics, .config-grid { grid-template-columns: 1fr; }
+      .model-control { grid-template-columns: 1fr; }
+      .model-catalog-item { grid-template-columns: 1fr; }
+      .model-status-item { grid-template-columns: 1fr; }
+      .job-item { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
-    <div class="status-bar">
-        <div class="status-indicators">
-            <div class="status-indicator">
-                <div class="status-dot" id="lm-status"></div>
-                <span>LM</span>
-            </div>
+  <div class="container">
+    <header>
+      <h1>BRAIN RAG CONTROL v2</h1>
+      <div class="status-bar">
+        <div class="status-indicator">
+          <span class="status-dot" id="lm-dot"></span>
+          <span id="lm-status-text">LM</span>
+        </div>
+        <div class="status-indicator">
+          <span class="status-dot" id="db-dot"></span>
+          <span id="db-status-text">DB</span>
+        </div>
+        <div class="status-indicator">
+          <span class="status-dot" id="vec-dot"></span>
+          <span id="vec-status-text">VEC</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="card" style="margin-bottom: 16px;">
+      <div class="card-header">
+        <span class="card-title">Quick Actions</span>
+      </div>
+      <div class="input-row">
+        <input type="text" class="input" id="search-query" placeholder="Search query..." style="flex: 1; min-width: 200px;">
+        <select class="select" id="search-intent" style="width: 120px;">
+          <option value="learn">Learn</option>
+          <option value="refactor">Refactor</option>
+          <option value="feature">Feature</option>
+          <option value="debug">Debug</option>
+          <option value="test">Test</option>
+        </select>
+        <input type="number" class="input" id="search-limit" value="10" min="1" max="50" style="width: 60px;">
+        <button class="btn primary" onclick="performSearch()">Search</button>
+        <button class="btn" onclick="runBenchmark()">Benchmark</button>
+        <button class="btn" onclick="runDiagnostic()">Diagnostic</button>
+        <button class="btn" onclick="refreshAll()">Refresh</button>
+      </div>
+    </div>
+
+    <div class="metrics" style="margin-bottom: 16px;">
+      <div class="metric">
+        <div class="metric-value" id="stat-files">0</div>
+        <div class="metric-label">Files</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value" id="stat-chunks">0</div>
+        <div class="metric-label">Chunks</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value" id="stat-fts">0</div>
+        <div class="metric-label">FTS</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value" id="stat-vec">0</div>
+        <div class="metric-label">Vectors</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value" id="stat-db-size">0</div>
+        <div class="metric-label">DB KB</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value" id="stat-vram">0.0</div>
+        <div class="metric-label">VRAM GB</div>
+      </div>
+    </div>
+
+    <div class="grid grid-2" style="margin-bottom: 16px;">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Model Management</span>
+          <button class="btn danger sm" onclick="unloadAllModels()">Unload All</button>
+        </div>
+        
+        <div class="model-control">
+          <span class="model-label embed">Embed</span>
+          <select class="select" id="model-embed">
+            <option value="">Select embedding model...</option>
+          </select>
+          <div class="model-actions">
+            <button class="btn success sm" onclick="loadModel('embed')">Load</button>
+          </div>
+        </div>
+        
+        <div class="model-control">
+          <span class="model-label rerank">Rerank</span>
+          <select class="select" id="model-rerank">
+            <option value="">Select reranker model...</option>
+          </select>
+          <div class="model-actions">
+            <button class="btn success sm" onclick="loadModel('rerank')">Load</button>
+          </div>
+        </div>
+        
+        <div class="model-control">
+          <span class="model-label chat">Chat</span>
+          <select class="select" id="model-chat">
+            <option value="">Select chat model...</option>
+          </select>
+          <div class="model-actions">
+            <button class="btn success sm" onclick="loadModel('chat')">Load</button>
+          </div>
+        </div>
+        
+        <div id="loaded-models" class="loaded-models">
+          <div class="empty-state" style="padding: 10px;">No models loaded</div>
+        </div>
+        
+        <div class="vram-bar">
+          <div class="vram-fill" id="vram-fill" style="width: 0%"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 9px; color: var(--text-secondary); margin-top: 4px;">
+          <span>VRAM</span>
+          <span id="vram-text">0.0 / 5.5 GB</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">LM Studio Status</span>
+        </div>
+        <div class="input-row" style="margin-bottom: 12px;">
+          <input type="text" class="input" id="lm-url" value="localhost:1234" style="flex: 1;">
+          <button class="btn primary" onclick="updateLMURL()">Connect</button>
+        </div>
+        <div class="config-grid">
+          <div class="config-item">
+            <span class="config-label">Status</span>
+            <span class="badge" id="lm-badge">Unknown</span>
+          </div>
+          <div class="config-item">
+            <span class="config-label">Available</span>
+            <span class="config-value" id="lm-available-count">0</span>
+          </div>
+          <div class="config-item">
+            <span class="config-label">Loaded</span>
+            <span class="config-value" id="lm-loaded-count">0</span>
+          </div>
+        </div>
+        <p style="font-size: 9px; color: var(--text-secondary); margin-top: 10px;">
+          Select models and click Load. Loaded models shown above.
+        </p>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('tab-search')">Search</button>
+      <button class="tab" onclick="switchTab('tab-benchmark')">Benchmark</button>
+      <button class="tab" onclick="switchTab('tab-models')">Models</button>
+      <button class="tab" onclick="switchTab('tab-index')">Indexing</button>
+      <button class="tab" onclick="switchTab('tab-settings')">Settings</button>
+      <button class="tab" onclick="switchTab('tab-logs')">Logs</button>
+    </div>
             <div class="status-indicator">
                 <div class="status-dot" id="db-status"></div>
                 <span>DB</span>
@@ -846,16 +362,91 @@
         </div>
     </div>
 
-    <div class="tabs-container">
-        <button class="tab-btn active" onclick="switchTab('search')">Search</button>
-        <button class="tab-btn" onclick="switchTab('intent')">Intent</button>
-        <button class="tab-btn" onclick="switchTab('tuning')">Tuning</button>
-        <button class="tab-btn" onclick="switchTab('budget')">Budget</button>
-        <button class="tab-btn" onclick="switchTab('memory')">Memory</button>
-        <button class="tab-btn" onclick="switchTab('chat')">Chat</button>
-        <button class="tab-btn" onclick="switchTab('index')">Index</button>
-        <button class="tab-btn" onclick="switchTab('tracer')">Tracer</button>
-        <button class="tab-btn" onclick="switchTab('benchmarks')">Benchmarks</button>
+    <div class="grid grid-2" style="margin-bottom: 16px;">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Model Management</span>
+          <button class="btn danger sm" onclick="unloadAllModels()">Unload All</button>
+        </div>
+        
+        <div class="model-control">
+          <span class="model-label embed">Embed</span>
+          <select class="select" id="model-embed">
+            <option value="">Select embedding model...</option>
+          </select>
+          <div class="model-actions">
+            <button class="btn success sm" onclick="loadModel('embed')">Load</button>
+          </div>
+        </div>
+        
+        <div class="model-control">
+          <span class="model-label rerank">Rerank</span>
+          <select class="select" id="model-rerank">
+            <option value="">Select reranker model...</option>
+          </select>
+          <div class="model-actions">
+            <button class="btn success sm" onclick="loadModel('rerank')">Load</button>
+          </div>
+        </div>
+        
+        <div class="model-control">
+          <span class="model-label chat">Chat</span>
+          <select class="select" id="model-chat">
+            <option value="">Select chat model...</option>
+          </select>
+          <div class="model-actions">
+            <button class="btn success sm" onclick="loadModel('chat')">Load</button>
+          </div>
+        </div>
+        
+        <div id="loaded-models" class="loaded-models">
+          <div class="empty-state" style="padding: 10px;">No models loaded</div>
+        </div>
+        
+        <div class="vram-bar">
+          <div class="vram-fill" id="vram-fill" style="width: 0%"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 9px; color: var(--text-secondary); margin-top: 4px;">
+          <span>VRAM</span>
+          <span id="vram-text">0.0 / 5.5 GB</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">LM Studio Status</span>
+        </div>
+        <div class="input-row" style="margin-bottom: 12px;">
+          <input type="text" class="input" id="lm-url" value="localhost:1234" style="flex: 1;">
+          <button class="btn primary" onclick="updateLMURL()">Connect</button>
+        </div>
+        <div class="config-grid">
+          <div class="config-item">
+            <span class="config-label">Status</span>
+            <span class="badge" id="lm-badge">Unknown</span>
+          </div>
+          <div class="config-item">
+            <span class="config-label">Available</span>
+            <span class="config-value" id="lm-available-count">0</span>
+          </div>
+          <div class="config-item">
+            <span class="config-label">Loaded</span>
+            <span class="config-value" id="lm-loaded-count">0</span>
+          </div>
+        </div>
+        <p style="font-size: 9px; color: var(--text-secondary); margin-top: 10px;">
+          Select models and click Load. Loaded models shown above.
+        </p>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('tab-search')">Search</button>
+      <button class="tab" onclick="switchTab('tab-benchmark')">Benchmark</button>
+      <button class="tab" onclick="switchTab('tab-models')">Models</button>
+      <button class="tab" onclick="switchTab('tab-index')">Indexing</button>
+      <button class="tab" onclick="switchTab('tab-settings')">Settings</button>
+      <button class="tab" onclick="switchTab('tab-logs')">Logs</button>
     </div>
 
     <div id="tab-search" class="tab-content active">
@@ -1109,14 +700,415 @@
         </div>
     </div>
 
+    <div id="tab-models" class="tab-content">
+      <div class="card" style="margin-bottom: 16px;">
+        <div class="card-header">
+          <span class="card-title">Model Catalog</span>
+          <button class="btn" onclick="loadModelState()">Refresh</button>
+        </div>
+        <div id="model-catalog" class="model-catalog-container">
+          <div class="empty-state">Loading model catalog...</div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Download Jobs</span>
+        </div>
+        <div id="download-jobs" class="jobs-container">
+          <div class="empty-state">No active downloads</div>
+        </div>
+      </div>
+    </div>
+
     <div id="tab-index" class="tab-content">
         <div class="card">
+          <div class="card-header"><span class="card-title">Initialize Database</span></div>
+          <p style="font-size: 10px; color: var(--text-secondary); margin-bottom: 12px;">
+            Create database schema. Then use OpenCode brain_index_project to index files.
+          </p>
+          <button class="btn success" onclick="initDatabase()">Init DB Schema</button>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Add Sources</span></div>
+          <div class="input-row" style="margin-bottom: 8px;">
+            <input type="text" class="input" id="index-folder" placeholder="C:\path\to\project" style="flex: 1;">
+            <button class="btn success" onclick="indexFolder()">Add</button>
+          </div>
+          <div class="input-row">
+            <input type="text" class="input" id="index-url" placeholder="https://docs.example.com" style="flex: 1;">
+            <button class="btn success" onclick="indexURL()">Add</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Sources</span>
+          <div class="btn-group">
+            <button class="btn" onclick="loadSources()">Refresh</button>
+            <button class="btn danger" onclick="clearIndex()">Clear All</button>
+          </div>
+        </div>
+        <div id="sources-list"><div class="empty-state">No sources</div></div>
+      </div>
+    </div>
+
+    <div id="tab-settings" class="tab-content">
+      <div class="grid grid-2" style="margin-bottom: 16px;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Provider Settings</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div>
+              <label style="font-size: 9px; color: var(--text-secondary); text-transform: uppercase;">Provider</label>
+              <select class="select" id="settings-provider">
+                <option value="lmstudio">LM Studio</option>
+                <option value="ollama">Ollama (planned)</option>
+                <option value="onnx">ONNX Runtime (planned)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 9px; color: var(--text-secondary); text-transform: uppercase;">Base URL</label>
+              <input type="text" class="input" id="settings-baseurl" placeholder="localhost:1234">
+            </div>
+            <button class="btn primary" onclick="saveProviderSettings()">Save Provider</button>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Model Selection</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div>
+              <label style="font-size: 9px; color: var(--purple); text-transform: uppercase;">Embedding Model</label>
+              <select class="select" id="settings-embed-model">
+                <option value="">Select embedding model...</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 9px; color: var(--yellow); text-transform: uppercase;">Reranker Model</label>
+              <select class="select" id="settings-rerank-model">
+                <option value="">Select reranker model...</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 9px; color: var(--blue); text-transform: uppercase;">Chat Model</label>
+              <select class="select" id="settings-chat-model">
+                <option value="">Select chat model...</option>
+              </select>
+            </div>
+            <button class="btn primary" onclick="saveModelSelection()">Save Selection</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Model Status Overview</span>
+          <button class="btn" onclick="loadModelState()">Refresh Status</button>
+        </div>
+        <div id="model-status-overview" class="model-status-container">
+          <div class="empty-state">Loading model status...</div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Brain Plugin Runtime Status</span>
+          <div class="btn-group">
+            <button class="btn" onclick="loadPluginStatus()">Refresh</button>
+          </div>
+        </div>
+        <div id="plugin-status-container">
+          <div class="empty-state">Loading plugin status...</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 16px;">
+        <div class="card-header">
+          <span class="card-title">Brain Management</span>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="btn primary" onclick="triggerReindex()" title="Writes a flag — brain plugin picks it up within 30s">Trigger Reindex</button>
+          <button class="btn danger" onclick="triggerReset()" title="Clears all index data + resets session memory">Reset Brain</button>
+          <span style="font-size: 9px; color: var(--text-secondary); align-self: center;">Flags are picked up by brain plugin's 30s polling cycle</span>
+        </div>
+      </div>
+      
+      <div class="card" style="margin-top: 16px;">
+        <div class="card-header">
+          <span class="card-title">RAG Configuration</span>
+        </div>
+        <div class="config-grid">
+          <div class="config-item"><span class="config-label">Dense Weight</span><span class="config-value" id="cfg-dense">0.4</span></div>
+          <div class="config-item"><span class="config-label">Keyword Weight</span><span class="config-value" id="cfg-keyword">0.4</span></div>
+          <div class="config-item"><span class="config-label">RRF K</span><span class="config-value" id="cfg-rrf-k">60</span></div>
+          <div class="config-item"><span class="config-label">Memory Boost</span><span class="config-value" id="cfg-memory-boost">15%</span></div>
+          <div class="config-item"><span class="config-label">Rerank Min</span><span class="config-value" id="cfg-rerank-min">10</span></div>
+          <div class="config-item"><span class="config-label">Confidence</span><span class="config-value" id="cfg-confidence">0.85</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-logs" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Activity Log</span>
+          <div class="btn-group">
+            <button class="btn" onclick="clearLog()">Clear</button>
+            <button class="btn" onclick="exportLog()">Export</button>
+          </div>
+        </div>
+        <div class="log-container" id="log-container">
+          <div class="log-entry">System initialized</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let appConfig = null;
+    let lmState = { connected: false, models: [], loadedInstances: [] };
+    let currentLogs = [];
+
+    async function apiCall(endpoint, method = 'GET', body = null) {
+      const options = { method, headers: { 'Content-Type': 'application/json' } };
+      if (body) options.body = JSON.stringify(body);
+      try {
+        const response = await fetch(`/api${endpoint}`, options);
+        return await response.json();
+      } catch (error) {
+        log(`API Error: ${error.message}`, 'error');
+        return { success: false, error: error.message };
+      }
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.querySelector(`[onclick="switchTab('${tabId}')"]`).classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    async function loadConfig() {
+      const result = await apiCall('/config');
+      if (result.success && result.data) {
+        appConfig = result.data;
+        document.getElementById('lm-url').value = appConfig.lmStudio?.baseURL || 'localhost:1234';
+        
+        if (appConfig.rag) {
+          document.getElementById('cfg-dense').textContent = appConfig.rag.denseWeight || 0.4;
+          document.getElementById('cfg-keyword').textContent = appConfig.rag.keywordWeight || 0.4;
+          document.getElementById('cfg-rrf-k').textContent = appConfig.rag.rrfK || 60;
+          document.getElementById('cfg-memory-boost').textContent = ((appConfig.rag.memoryBoost || 0.15) * 100) + '%';
+          document.getElementById('cfg-rerank-min').textContent = appConfig.rag.rerankMinResults || 10;
+          document.getElementById('cfg-confidence').textContent = appConfig.rag.confidenceGate || 0.85;
+        }
+        if (appConfig.search) {
+          document.getElementById('cfg-search-limit').textContent = appConfig.search.defaultLimit || 10;
+          document.getElementById('cfg-search-intent').textContent = appConfig.search.defaultIntent || 'learn';
+        }
+      }
+    }
+
+    async function checkLMStudio() {
+      const result = await apiCall('/lmstudio/status');
+      
+      if (result.success && result.data) {
+        lmState = {
+          connected: result.data.connected,
+          models: result.data.available || [],
+          loadedInstances: result.data.loadedInstances || [],
+          vram: result.data.vram
+        };
+        
+        document.getElementById('lm-dot').className = `status-dot ${lmState.connected ? 'connected' : ''}`;
+        document.getElementById('lm-status-text').textContent = lmState.connected ? 'LM' : 'OFF';
+        document.getElementById('lm-badge').textContent = lmState.connected ? 'Connected' : 'Disconnected';
+        document.getElementById('lm-badge').className = `badge ${lmState.connected ? 'success' : 'error'}`;
+        
+        document.getElementById('lm-available-count').textContent = lmState.models.length;
+        document.getElementById('lm-loaded-count').textContent = lmState.loadedInstances.length;
+        
+        if (lmState.vram) {
+          const vramPercent = (parseFloat(lmState.vram.used) / lmState.vram.max) * 100;
+          document.getElementById('vram-fill').style.width = `${vramPercent}%`;
+          document.getElementById('vram-text').textContent = `${lmState.vram.used} / ${lmState.vram.max} GB`;
+          document.getElementById('stat-vram').textContent = lmState.vram.used;
+        }
+        
+        populateModelSelects();
+        renderLoadedModels();
+        
+        return result.data;
+      }
+      return null;
+    }
+
+    function populateModelSelects() {
+      const embedSelect = document.getElementById('model-embed');
+      const rerankSelect = document.getElementById('model-rerank');
+      const chatSelect = document.getElementById('model-chat');
+      
+      embedSelect.innerHTML = '<option value="">Select embedding model...</option>';
+      rerankSelect.innerHTML = '<option value="">Select reranker model...</option>';
+      chatSelect.innerHTML = '<option value="">Select chat model...</option>';
+      
+      const loadedKeys = new Set(lmState.loadedInstances.map(i => i.instanceId || i.id || i.modelKey));
+      
+      const embedModels = lmState.models.filter(m => m.includes('embed') || m.includes('embedding'));
+      const rerankModels = lmState.models.filter(m => m.includes('rerank'));
+      const chatModels = lmState.models.filter(m => !m.includes('embed') && !m.includes('rerank'));
+      
+      embedModels.forEach(m => {
+        const isLoaded = loadedKeys.has(m);
+        embedSelect.innerHTML += `<option value="${m}" ${isLoaded ? 'data-loaded="true"' : ''}>${m}${isLoaded ? ' ✓' : ''}</option>`;
+      });
+      
+      rerankModels.forEach(m => {
+        const isLoaded = loadedKeys.has(m);
+        rerankSelect.innerHTML += `<option value="${m}" ${isLoaded ? 'data-loaded="true"' : ''}>${m}${isLoaded ? ' ✓' : ''}</option>`;
+      });
+      
+      chatModels.forEach(m => {
+        const isLoaded = loadedKeys.has(m);
+        chatSelect.innerHTML += `<option value="${m}" ${isLoaded ? 'data-loaded="true"' : ''}>${m}${isLoaded ? ' ✓' : ''}</option>`;
+      });
+    }
+
+    function renderLoadedModels() {
+      const container = document.getElementById('loaded-models');
+      
+      if (lmState.loadedInstances.length === 0) {
+        container.innerHTML = '<div class="empty-state" style="padding: 10px;">No models loaded</div>';
+        return;
+      }
+      
+      container.innerHTML = lmState.loadedInstances.map(instance => {
+        const type = instance.type || (instance.id?.includes('embed') ? 'embedding' : 'llm');
+        const typeLabel = type === 'embedding' ? 'EMBED' : type === 'llm' ? 'CHAT' : type.toUpperCase();
+        const typeClass = type === 'embedding' ? 'embed' : 'chat';
+        return `
+          <div class="loaded-model">
+            <span class="dot"></span>
+            <span class="type">${typeLabel}</span>
+            <span>${instance.id || instance.modelKey || instance}</span>
+            <button class="unload-btn" onclick="unloadModel('${instance.id || ''}')">×</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function loadModel(type) {
+      const select = document.getElementById(`model-${type}`);
+      const modelId = select.value;
+      
+      if (!modelId) {
+        log(`Select a ${type} model first`, 'warning');
+        return;
+      }
+      
+      log(`Loading ${type} model: ${modelId}...`);
+      
+      const result = await apiCall('/lmstudio/load', 'POST', { modelId, type });
+      
+      if (result.success) {
+        log(`${modelId} loaded successfully`, 'success');
+        await checkLMStudio();
+      } else {
+        log(`Failed: ${result.error}`, 'error');
+      }
+    }
+
+    async function unloadModel(instanceId) {
+      log(`Unloading model...`);
+      const result = await apiCall('/lmstudio/unload', 'POST', { instanceId });
+      
+      if (result.success) {
+        log(`Model unloaded`, 'success');
+        await checkLMStudio();
+      } else {
+        log(`Failed: ${result.error}`, 'error');
+      }
+    }
+
+    async function unloadAllModels() {
+      log('Unloading all models...');
+      const result = await apiCall('/lmstudio/unload', 'POST', {});
+      
+      if (result.success) {
+        log('All models unloaded', 'success');
+        await checkLMStudio();
+      } else {
+        log(`Failed: ${result.error}`, 'error');
+      }
+    }
+
+    async function initDatabase() {
+      log('Initializing database schema...');
+      const result = await apiCall('/brain/init-db', 'POST');
+      
+      if (result.success) {
+        log('Database schema created', 'success');
+        await checkBrainStatus();
+      } else {
+        log(`DB init failed: ${result.error}`, 'error');
+      }
+    }
+
+    async function checkBrainStatus() {
+      const result = await apiCall('/brain/status');
+      
+      if (result.success && result.data) {
+        const { fileCount, chunkCount, ftsCount, vecCount, dbSize, vectorActive } = result.data;
+        
+        document.getElementById('stat-files').textContent = fileCount || 0;
+        document.getElementById('stat-chunks').textContent = chunkCount || 0;
+        document.getElementById('stat-fts').textContent = ftsCount || 0;
+        document.getElementById('stat-vec').textContent = vecCount || 0;
+        document.getElementById('stat-db-size').textContent = dbSize ? (dbSize / 1024).toFixed(1) : '0';
+        
+        document.getElementById('db-dot').className = `status-dot ${fileCount > 0 ? 'connected' : ''}`;
+        document.getElementById('db-status-text').textContent = fileCount > 0 ? 'DB' : 'No DB';
+        
+        document.getElementById('vec-dot').className = `status-dot ${vectorActive ? 'connected' : ''}`;
+        document.getElementById('vec-status-text').textContent = vectorActive ? 'VEC' : 'No VEC';
+        
+        return result.data;
+      }
+      return null;
+    }
+
+    async function performSearch() {
+      const query = document.getElementById('search-query').value.trim();
+      const intent = document.getElementById('search-intent').value;
+      const limit = parseInt(document.getElementById('search-limit').value);
+      
+      if (!query) { alert('Enter a search query'); return; }
+      
+      log(`Searching: "${query}" (${intent})`);
+      
+      const result = await apiCall('/rag/search', 'POST', { query, intent, limit });
+      
+      if (result.success && result.data) {
+        const container = document.getElementById('search-results');
+        document.getElementById('results-count').textContent = `${result.data.count || 0} results`;
+        
+        if (result.data.results && result.data.results.length > 0) {
+          container.innerHTML = result.data.results.map(r => `
+            <div class="result-item">
+              <div class="result-path">${r.path || 'Unknown'}${r.start_line ? ':' + r.start_line : ''}</div>
+              <div class="result-meta">${r.type || 'chunk'} | ${r.name || 'unnamed'} | score: ${(r.score || 0).toFixed(2)}</div>
+=======
             <div class="card-header">Index Health</div>
             <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 16px;">
                 <div id="index-health" style="display: flex; align-items: center; gap: 8px;">
                     <div class="status-dot" id="health-dot" style="width: 14px; height: 14px;"></div>
                     <span id="health-status">Checking...</span>
                 </div>
+>>>>>>> origin/master
             </div>
             <div class="index-stats">
                 <div class="index-stat">
@@ -1988,7 +1980,504 @@
             fetchStatus();
             getTuning();
             getBudget();
+            loadPluginStatus();
         });
+<<<<<<< HEAD
+        
+        document.getElementById('benchmark-results').innerHTML = html;
+        log(`Benchmark: ${summary.successful}/${summary.total} passed`, 'success');
+      } else {
+        document.getElementById('benchmark-results').innerHTML = '<div class="empty-state">Benchmark failed</div>';
+        log('Benchmark failed', 'error');
+      }
+    }
+
+    async function runDiagnostic() {
+      log('Running diagnostic...');
+      const result = await apiCall('/brain/diagnostic');
+      if (result.success && result.data) {
+        const { database, fileCount, chunkCount, vecCount, lmStudio, loadedInstances } = result.data;
+        log(`DB: ${database} | Files: ${fileCount} | Chunks: ${chunkCount} | Vectors: ${vecCount}`, 'success');
+        log(`LM: ${lmStudio} | Loaded: ${loadedInstances?.length || 0}`, 'success');
+      }
+    }
+
+    async function indexFolder() {
+      const path = document.getElementById('index-folder').value.trim();
+      if (!path) { alert('Enter folder path'); return; }
+      
+      log(`Adding folder: ${path}`);
+      const result = await apiCall('/index/folder', 'POST', { path });
+      if (result.success) {
+        log('Folder added to sources', 'success');
+        loadSources();
+      }
+    }
+
+    async function indexURL() {
+      const url = document.getElementById('index-url').value.trim();
+      if (!url) { alert('Enter URL'); return; }
+      
+      log(`Adding URL: ${url}`);
+      const result = await apiCall('/index/url', 'POST', { url });
+      if (result.success) {
+        log('URL added to sources', 'success');
+        loadSources();
+      }
+    }
+
+    async function loadSources() {
+      const result = await apiCall('/index/sources');
+      const container = document.getElementById('sources-list');
+      
+      if (result.success && result.data && result.data.length > 0) {
+        container.innerHTML = result.data.map(s => 
+          `<div class="loaded-model">${s.type === 'folder' ? '📁' : '🔗'} ${s.path || s.url}</div>`
+        ).join('');
+      } else {
+        container.innerHTML = '<div class="empty-state">No sources indexed</div>';
+      }
+    }
+
+    async function clearIndex() {
+      if (!confirm('Clear all indexed data?')) return;
+      log('Clearing index...');
+      const result = await apiCall('/index/clear', 'POST');
+      if (result.success) {
+        log('Index cleared', 'success');
+        loadSources();
+        checkBrainStatus();
+      }
+    }
+
+    async function refreshAll() {
+      log('Refreshing...');
+      await loadConfig();
+      await checkLMStudio();
+      await checkBrainStatus();
+      await loadSources();
+      await loadModelState();
+      await loadPluginStatus();
+      log('Refresh complete', 'success');
+    }
+
+    async function updateLMURL() {
+      const newURL = document.getElementById('lm-url').value.trim();
+      if (!newURL) return;
+      
+      appConfig = appConfig || {};
+      appConfig.lmStudio = appConfig.lmStudio || {};
+      appConfig.lmStudio.baseURL = newURL;
+      await apiCall('/config', 'POST', appConfig);
+      
+      log(`LM Studio URL updated: ${newURL}`, 'success');
+      await checkLMStudio();
+    }
+
+    // ─── Model State & Catalog ─────────────────────────────────────────────────
+    let modelState = null;
+    let activeJobPollTimer = null;
+
+    async function loadModelState() {
+      const result = await apiCall('/model/state');
+      if (result.success && result.data) {
+        modelState = result.data;
+        renderModelCatalog();
+        renderModelStatusOverview();
+        populateSettingsModelSelects();
+        loadDownloadJobs();
+        // Update baseURL from runtime
+        if (modelState.effectiveRuntime?.baseURL) {
+          document.getElementById('settings-baseurl').value = modelState.effectiveRuntime.baseURL;
+        }
+      }
+    }
+
+    // ─── Plugin Status ─────────────────────────────────────────────────────────
+    async function loadPluginStatus() {
+      const container = document.getElementById('plugin-status-container');
+      const result = await apiCall('/brain/plugin-status');
+      
+      if (!result.success || !result.data) {
+        container.innerHTML = '<div class="empty-state">No plugin status available. The brain plugin may not be running.</div>';
+        return;
+      }
+      
+      const d = result.data;
+      
+      function statusBadge(condition, trueText, falseText) {
+        return condition 
+          ? `<span class="badge success">${trueText}</span>`
+          : `<span class="badge error">${falseText}</span>`;
+      }
+      
+      const dense = d.dense || {};
+      const reranker = d.reranker || {};
+      const budget = d.tokenBudget || {};
+      const dt = d.decisionTree || {};
+      const mem = d.sessionMemory || {};
+      
+      let intentHtml = '';
+      if (dt.intents) {
+        intentHtml = Object.entries(dt.intents).map(([name, data]) => 
+          `<div style="display:flex;justify-content:space-between;font-size:10px;padding:2px 0;">
+            <span style="color:var(--text-secondary)">${name}</span>
+            <span>w=${data.weight.toFixed(2)} · ${data.visits} visits</span>
+          </div>`
+        ).join('');
+      }
+      
+      container.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <div style="font-size:9px;color:var(--text-secondary);text-transform:uppercase;margin-bottom:6px;">Dense Embedder</div>
+            <div style="font-size:11px;display:flex;flex-direction:column;gap:3px;">
+              <div>Pipeline: ${statusBadge(dense.pipelineLoaded, 'Loaded', 'Unloaded')}</div>
+              <div>Import: ${statusBadge(!dense.importFailed, 'OK', 'Failed')}</div>
+              <div style="color:var(--text-secondary)">Model: ${dense.activeModel || 'N/A'}</div>
+              ${dense.cooldownActive ? `<div style="color:var(--warning)">⏳ Cooldown: ${Math.round(dense.cooldownRemainingMs/1000)}s remaining</div>` : ''}
+            </div>
+          </div>
+          <div>
+            <div style="font-size:9px;color:var(--text-secondary);text-transform:uppercase;margin-bottom:6px;">Reranker</div>
+            <div style="font-size:11px;display:flex;flex-direction:column;gap:3px;">
+              <div>Pipeline: ${statusBadge(reranker.pipelineLoaded, 'Loaded', 'Unloaded')}</div>
+              <div>Import: ${statusBadge(!reranker.importFailed, 'OK', 'Failed')}</div>
+              <div style="color:var(--text-secondary)">Gate: ${(reranker.confidenceGate || 0.85).toFixed(2)} · Min: ${reranker.rerankMinResults || 10}</div>
+              <div style="color:var(--text-secondary)">Intents: ${(reranker.rerankIntents || []).join(', ')}</div>
+            </div>
+          </div>
+        </div>
+        <div style="border-top:1px solid var(--border);margin:12px 0;"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <div style="font-size:9px;color:var(--text-secondary);text-transform:uppercase;margin-bottom:6px;">Token Budget</div>
+            <div style="font-size:11px;display:flex;flex-direction:column;gap:3px;">
+              <div>Used: ${budget.used || 0} / ${budget.total || 24000} (${(budget.percent || 0).toFixed(1)}%)</div>
+              <div style="color:var(--text-secondary)">Reserved: ${budget.reserved || 8192} · Available: ${budget.availableForContext || 0}</div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:9px;color:var(--text-secondary);text-transform:uppercase;margin-bottom:6px;">Session Memory</div>
+            <div style="font-size:11px;display:flex;flex-direction:column;gap:3px;">
+              <div>Decisions: ${mem.decisions || 0} · ✅ ${mem.successes || 0} · ❌ ${mem.failures || 0}</div>
+              <div style="color:var(--text-secondary)">Recent files: ${mem.recentFiles || 0} · Context: ${mem.contextUsed || 0}</div>
+            </div>
+          </div>
+        </div>
+        <div style="border-top:1px solid var(--border);margin:12px 0;"></div>
+        <div>
+          <div style="font-size:9px;color:var(--text-secondary);text-transform:uppercase;margin-bottom:6px;">Decision Tree (${dt.totalNodes || 0} nodes)</div>
+          ${intentHtml || '<div style="font-size:10px;color:var(--text-secondary);">No intent data</div>'}
+        </div>
+        <div style="border-top:1px solid var(--border);margin:12px 0;"></div>
+        <div style="font-size:9px;color:var(--text-secondary);display:flex;justify-content:space-between;">
+          <span>Loaded models: ${(d.loadedModels || []).join(', ') || 'none'}</span>
+          <span>Updated: ${d.lastUpdated ? new Date(d.lastUpdated).toLocaleTimeString() : 'N/A'}</span>
+        </div>
+      `;
+    }
+
+    async function triggerReindex() {
+      const result = await apiCall('/brain/reindex', 'POST');
+      if (result.success) {
+        log(result.message, 'success');
+      } else {
+        log('Reindex trigger failed: ' + (result.error || 'unknown'), 'error');
+      }
+    }
+
+    async function triggerReset() {
+      if (!confirm('This will clear all index data and reset session memory. Continue?')) return;
+      const result = await apiCall('/brain/reset', 'POST');
+      if (result.success) {
+        log(result.message, 'warning');
+        // Refresh status after reset
+        setTimeout(() => { loadPluginStatus(); loadModelState(); }, 2000);
+      } else {
+        log('Reset trigger failed: ' + (result.error || 'unknown'), 'error');
+      }
+    }
+
+    function renderModelCatalog() {
+      const container = document.getElementById('model-catalog');
+      if (!modelState || !modelState.available) {
+        container.innerHTML = '<div class="empty-state">No models available</div>';
+        return;
+      }
+
+      container.innerHTML = modelState.available.map(m => {
+        const readiness = modelState.readiness?.find(r => r.id === m.id);
+        const status = readiness?.readiness || 'missing';
+        const isLoaded = readiness?.isLoaded || false;
+
+        let actions = '';
+        if (status === 'missing') {
+          actions = `<button class="btn primary sm" onclick="downloadModel('${m.id}')">Download</button>`;
+        } else if (status === 'ready' && !isLoaded) {
+          actions = `<button class="btn success sm" onclick="prewarmModel('${m.id}')">Prewarm</button>`;
+        } else if (isLoaded) {
+          actions = `<span class="badge loaded">Loaded</span>`;
+        } else if (status === 'downloading') {
+          actions = `<span class="badge warning">Downloading...</span>`;
+        }
+
+        return `
+          <div class="model-catalog-item">
+            <div>
+              <div class="name">${m.name}</div>
+              <div class="type">${m.type}${m.dimensions ? ` • ${m.dimensions}d` : ''}</div>
+            </div>
+            <div class="size">${m.sizeGB} GB</div>
+            <div><span class="status-badge ${status}">${status}</span></div>
+            <div class="actions">${actions}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderModelStatusOverview() {
+      const container = document.getElementById('model-status-overview');
+      if (!modelState || !modelState.readiness) {
+        container.innerHTML = '<div class="empty-state">No model status available</div>';
+        return;
+      }
+
+      container.innerHTML = modelState.readiness.map(m => {
+        let actions = '';
+        if (m.readiness === 'missing') {
+          actions = `<button class="btn primary sm" onclick="downloadModel('${m.id}')">Download</button>`;
+        } else if (m.readiness === 'ready' && !m.isLoaded) {
+          actions = `<button class="btn success sm" onclick="prewarmModel('${m.id}')">Prewarm</button>`;
+        } else if (m.isLoaded) {
+          actions = `<span class="badge loaded">In Memory</span>`;
+        }
+
+        return `
+          <div class="model-status-item">
+            <div class="name">${m.name || m.id}</div>
+            <div class="readiness readiness-${m.readiness}">${m.readiness.toUpperCase()}</div>
+            <div class="actions">${actions}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function populateSettingsModelSelects() {
+      if (!modelState) return;
+
+      const embedSelect = document.getElementById('settings-embed-model');
+      const rerankSelect = document.getElementById('settings-rerank-model');
+      const chatSelect = document.getElementById('settings-chat-model');
+
+      // Only show models that are cached or loaded (not missing)
+      const availableModels = modelState.readiness?.filter(m => m.readiness !== 'missing') || [];
+
+      embedSelect.innerHTML = '<option value="">Select embedding model...</option>';
+      rerankSelect.innerHTML = '<option value="">Select reranker model...</option>';
+      chatSelect.innerHTML = '<option value="">Select chat model...</option>';
+
+      availableModels.forEach(m => {
+        const option = `<option value="${m.id}" ${m.isLoaded ? 'data-loaded="true"' : ''}>${m.name || m.id}${m.isLoaded ? ' ✓' : ''}${m.readiness === 'ready' ? ' (cached)' : ''}</option>`;
+        if (m.type === 'embedding') embedSelect.innerHTML += option;
+        if (m.type === 'reranker') rerankSelect.innerHTML += option;
+        if (m.type === 'chat') chatSelect.innerHTML += option;
+      });
+
+      // Load current selections
+      if (modelState.selected) {
+        if (modelState.selected.embedding) embedSelect.value = modelState.selected.embedding;
+        if (modelState.selected.reranker) rerankSelect.value = modelState.selected.reranker;
+        if (modelState.selected.chat) chatSelect.value = modelState.selected.chat;
+      }
+    }
+
+    async function downloadModel(modelId) {
+      log(`Starting download: ${modelId}...`);
+      const result = await apiCall('/model/download', 'POST', { modelId });
+      
+      if (result.success) {
+        if (result.cached) {
+          log(`Model already cached: ${modelId}`, 'success');
+        } else {
+          log(`Download queued: ${modelId} (Job: ${result.jobId})`, 'success');
+        }
+        await loadModelState();
+        startJobPolling();
+      } else {
+        log(`Download failed: ${result.error}`, 'error');
+      }
+    }
+
+    async function prewarmModel(modelId) {
+      log(`Prewarming model: ${modelId}...`);
+      const result = await apiCall('/model/prewarm', 'POST', { modelId });
+      
+      if (result.success) {
+        log(`Model prewarmed: ${modelId}`, 'success');
+        await loadModelState();
+        await checkLMStudio();
+      } else {
+        log(`Prewarm failed: ${result.error}`, 'error');
+      }
+    }
+
+    async function loadDownloadJobs() {
+      const result = await apiCall('/model/jobs');
+      const container = document.getElementById('download-jobs');
+      
+      if (result.success && result.data && result.data.length > 0) {
+        const activeJobs = result.data.filter(j => j.status === 'downloading' || j.status === 'pending');
+        const recentJobs = result.data.filter(j => j.status === 'complete' || j.status === 'failed').slice(0, 5);
+
+        let html = '';
+        if (activeJobs.length > 0) {
+          html += '<div style="font-size: 9px; color: var(--text-secondary); margin-bottom: 6px;">Active Downloads</div>';
+          html += activeJobs.map(j => `
+            <div class="job-item">
+              <div class="model-name">${j.modelId}</div>
+              <div class="status"><span class="status-badge ${j.status}">${j.status}</span></div>
+              <div class="progress">${Math.round(j.progress)}%</div>
+            </div>
+            <div class="job-progress-bar"><div class="job-progress-fill" style="width: ${j.progress}%"></div></div>
+          `).join('');
+        }
+
+        if (recentJobs.length > 0) {
+          html += '<div style="font-size: 9px; color: var(--text-secondary); margin: 10px 0 6px;">Recent</div>';
+          html += recentJobs.map(j => `
+            <div class="job-item">
+              <div class="model-name">${j.modelId}</div>
+              <div class="status"><span class="status-badge ${j.status}">${j.status}</span></div>
+              <div class="progress">${j.error ? 'Failed: ' + j.error : 'Complete ✓'}</div>
+            </div>
+          `).join('');
+        }
+
+        container.innerHTML = html || '<div class="empty-state">No active downloads</div>';
+        
+        // Stop polling if no active jobs
+        if (activeJobs.length === 0 && activeJobPollTimer) {
+          stopJobPolling();
+        }
+      } else {
+        container.innerHTML = '<div class="empty-state">No active downloads</div>';
+        stopJobPolling();
+      }
+    }
+
+    function startJobPolling() {
+      if (activeJobPollTimer) return;
+      activeJobPollTimer = setInterval(async () => {
+        await loadModelState();
+      }, 3000);
+    }
+
+    function stopJobPolling() {
+      if (activeJobPollTimer) {
+        clearInterval(activeJobPollTimer);
+        activeJobPollTimer = null;
+      }
+    }
+
+    async function saveProviderSettings() {
+      const baseURL = document.getElementById('settings-baseurl').value.trim();
+      if (!baseURL) {
+        log('Base URL is required', 'warning');
+        return;
+      }
+
+      await apiCall('/settings', 'POST', { key: 'lmStudio_baseURL', value: baseURL });
+      
+      // Also update appConfig
+      appConfig = appConfig || {};
+      appConfig.lmStudio = appConfig.lmStudio || {};
+      appConfig.lmStudio.baseURL = baseURL;
+      await apiCall('/config', 'POST', appConfig);
+
+      log(`Provider settings saved: ${baseURL}`, 'success');
+      await checkLMStudio();
+    }
+
+    async function saveModelSelection() {
+      const embedding = document.getElementById('settings-embed-model').value;
+      const reranker = document.getElementById('settings-rerank-model').value;
+      const chat = document.getElementById('settings-chat-model').value;
+
+      await apiCall('/model/state', 'POST', {
+        selected: { embedding, reranker, chat }
+      });
+
+      // Persist to settings
+      if (embedding) await apiCall('/settings', 'POST', { key: 'lmStudio_preferredEmbedding', value: embedding });
+      if (reranker) await apiCall('/settings', 'POST', { key: 'lmStudio_preferredReranker', value: reranker });
+      if (chat) await apiCall('/settings', 'POST', { key: 'lmStudio_chatModel', value: chat });
+
+      log('Model selection saved', 'success');
+    }
+
+    function log(message, type = '') {
+      const container = document.getElementById('log-container');
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      entry.innerHTML = `<span class="log-time">${new Date().toLocaleTimeString()}</span>${message}`;
+      container.insertBefore(entry, container.firstChild);
+      while (container.children.length > 100) container.removeChild(container.lastChild);
+      
+      currentLogs.unshift({ time: new Date().toLocaleTimeString(), message, type });
+      if (currentLogs.length > 200) currentLogs.pop();
+    }
+
+    function clearLog() {
+      document.getElementById('log-container').innerHTML = '<div class="log-entry">Log cleared</div>';
+      currentLogs = [];
+    }
+
+    function exportLog() {
+      const data = JSON.stringify(currentLogs, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `brain-dashboard-log-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      log('Log exported', 'success');
+    }
+
+    async function init() {
+      log('Initializing Brain RAG Control v2...');
+      await loadConfig();
+      await checkLMStudio();
+      await checkBrainStatus();
+      await loadSources();
+      await loadModelState();
+      await loadSettings();
+      
+      // Clean up polling on page unload
+      window.addEventListener('beforeunload', () => {
+        stopJobPolling();
+      });
+    }
+
+    async function loadSettings() {
+      const result = await apiCall('/settings');
+      if (result.success && result.data) {
+        const settings = result.data;
+        if (settings.lmStudio_baseURL) {
+          document.getElementById('settings-baseurl').value = settings.lmStudio_baseURL;
+        }
+        // Provider setting
+        if (settings.provider) {
+          document.getElementById('settings-provider').value = settings.provider;
+        }
+      }
+    }
+
+    init();
+  </script>
+=======
     </script>
+>>>>>>> origin/master
 </body>
 </html>

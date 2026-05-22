@@ -1,15 +1,15 @@
+---
 name: self-improver
 displayName: Self-Improver Engine
 description: >
-Continuously improves the project by checking docs (web, Context7,
-opencode), using LSPs for code context, monitoring skills/plugins/scripts,
-and adapting best practices from OpenClaude, QwenCode, ClaudeCode.
-Auto-formats based on language detection.
+  Continuously improves the project by checking docs (web, Context7,
+  opencode), using LSPs for code context, monitoring skills/plugins/scripts,
+  and adapting best practices.
 category: meta
-tags: [self-improvement, meta, learning, adaptation, opencode, claudecode, qwencode]
-agents: [core-factory, lead-strategist, docs-evolver]
-entryPoint: SKILL.md
-
+tags: [self-improvement, meta, learning, adaptation, opencode]
+agents: [core-factory, lead-strategist]
+license: MIT
+compatibility: opencode
 ---
 
 # Self-Improver Engine

@@ -5,7 +5,7 @@
  * aggregate scores across retrieval, generation, efficiency, and token economy.
  */
 
-import { fileLog } from "./utils/logger";
+import { fileLog } from "./utils/logger.js";
 import type {
   BrainHarnessConfig,
   BenchmarkTask,
@@ -205,7 +205,7 @@ export async function smokeTest(): Promise<boolean> {
 
 export async function runQuickBenchmark(
   projectRoot: string,
-  suite: "smoke" = "smoke"
+  suite: "smoke" | "full" = "smoke"
 ): Promise<{ score: number; tasksRun: number; avgLatencyMs: number; metrics: Record<string, number> }> {
   const { loadTasks } = await import("./benchmark/tasks");
   const tasks = loadTasks(suite);
