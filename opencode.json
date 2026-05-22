@@ -85,9 +85,7 @@
     "port": 4096,
     "hostname": "127.0.0.1",
     "mdns": false,
-    "cors": [
-      "http://127.0.0.1:8080"
-    ]
+    "cors": ["http://127.0.0.1:8080"]
   },
   "plugin": [
     "plugins/index.ts",
@@ -99,119 +97,73 @@
   "mcp": {
     "context7": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@upstash/context7-mcp@latest"
-      ],
+      "command": ["npx", "-y", "@upstash/context7-mcp@latest"],
       "enabled": true,
       "timeout": 45000
     },
     "memory": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-memory"
-      ],
+      "command": ["npx", "-y", "@modelcontextprotocol/server-memory"],
       "enabled": false,
       "timeout": 30000
     },
     "git": {
       "type": "local",
-      "command": [
-        "uvx",
-        "mcp-server-git"
-      ],
+      "command": ["uvx", "mcp-server-git"],
       "enabled": true,
       "timeout": 30000
     },
     "fetch": {
       "type": "local",
-      "command": [
-        "uvx",
-        "mcp-server-fetch"
-      ],
+      "command": ["uvx", "mcp-server-fetch"],
       "enabled": false,
       "timeout": 30000
     },
     "sqlite": {
       "type": "local",
-      "command": [
-        "uvx",
-        "mcp-server-sqlite",
-        "--db-path",
-        "./database.sqlite"
-      ],
+      "command": ["uvx", "mcp-server-sqlite", "--db-path", "./database.sqlite"],
       "enabled": false,
       "timeout": 30000
     },
     "sequential-thinking": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-sequential-thinking"
-      ],
+      "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"],
       "enabled": true,
       "timeout": 45000
     },
     "language-server": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-language-server"
-      ],
+      "command": ["npx", "-y", "@modelcontextprotocol/server-language-server"],
       "enabled": false,
       "timeout": 45000
     },
     "type-inject": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@nick-vi/type-inject-mcp"
-      ],
+      "command": ["npx", "-y", "@nick-vi/type-inject-mcp"],
       "enabled": true,
       "timeout": 45000
     },
     "puppeteer": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-puppeteer"
-      ],
+      "command": ["npx", "-y", "@modelcontextprotocol/server-puppeteer"],
       "enabled": false,
       "timeout": 60000
     },
     "personal-knowledge": {
       "type": "local",
-      "command": [
-        "bunx",
-        "opencode-personal-knowledge"
-      ],
+      "command": ["bunx", "opencode-personal-knowledge"],
       "enabled": false,
       "timeout": 30000
     },
     "filesystem": {
       "type": "local",
-      "command": [
-        "bunx",
-        "@modelcontextprotocol/server-filesystem",
-        "."
-      ],
+      "command": ["bunx", "@modelcontextprotocol/server-filesystem", "."],
       "enabled": true,
       "timeout": 45000
     },
     "everything": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-everything"
-      ],
+      "command": ["npx", "-y", "@modelcontextprotocol/server-everything"],
       "enabled": false,
       "timeout": 30000
     }
@@ -302,10 +254,8 @@
     "brain_embed_lmstudio": "allow",
     "brain_docs_cache": "allow",
     "brain_diagnose": "allow",
-    "brain_query": "allow",
     "brain_index": "allow",
     "brain_config": "allow",
-    "brain_improve": "allow",
     "brain_optimize_harness": "allow",
     "brain_harness_status": "allow",
     "brain_apply_harness": "allow"
@@ -342,127 +292,54 @@
     "brain_embed_lmstudio": true,
     "brain_docs_cache": true,
     "brain_diagnose": true,
-    "brain_query": true,
     "brain_index": true,
     "brain_config": true,
-    "brain_improve": true,
     "brain_optimize_harness": true,
     "brain_harness_status": true,
     "brain_apply_harness": true
   },
   "lsp": {
     "typescript": {
-      "command": [
-        "typescript-language-server",
-        "--stdio"
-      ],
-      "extensions": [
-        ".ts",
-        ".tsx",
-        ".js",
-        ".jsx"
-      ],
+      "command": ["typescript-language-server", "--stdio"],
+      "extensions": [".ts", ".tsx", ".js", ".jsx"],
       "timeout": 30000
     },
     "php": {
-      "command": [
-        "intelephense",
-        "--stdio"
-      ],
-      "extensions": [
-        ".php"
-      ],
+      "command": ["intelephense", "--stdio"],
+      "extensions": [".php"],
       "initialization": {
         "storagePath": "./.cache/intelephense"
       }
     },
     "rust": {
-      "command": [
-        "rust-analyzer"
-      ],
-      "extensions": [
-        ".rs"
-      ]
+      "command": ["rust-analyzer"],
+      "extensions": [".rs"]
     },
     "tailwind": {
-      "command": [
-        "tailwindcss-language-server",
-        "--stdio"
-      ],
-      "extensions": [
-        ".css",
-        ".html",
-        ".js",
-        ".ts",
-        ".tsx",
-        ".php"
-      ]
+      "command": ["tailwindcss-language-server", "--stdio"],
+      "extensions": [".css", ".html", ".js", ".ts", ".tsx", ".php"]
     }
   },
   "formatter": {
     "biome": {
-      "command": [
-        "npx",
-        "biome",
-        "format",
-        "--write",
-        "$FILE"
-      ],
-      "extensions": [
-        ".js",
-        ".jsx",
-        ".ts",
-        ".tsx",
-        ".json",
-        ".jsonc"
-      ]
+      "command": ["npx", "biome", "format", "--write", "$FILE"],
+      "extensions": [".js", ".jsx", ".ts", ".tsx", ".json", ".jsonc"]
     },
     "prettier": {
-      "command": [
-        "npx",
-        "prettier",
-        "--write",
-        "$FILE"
-      ],
-      "extensions": [
-        ".css",
-        ".scss",
-        ".html",
-        ".md",
-        ".yaml",
-        ".yml"
-      ]
+      "command": ["npx", "prettier", "--write", "$FILE"],
+      "extensions": [".css", ".scss", ".html", ".md", ".yaml", ".yml"]
     },
     "pint": {
-      "command": [
-        "php",
-        "artisan",
-        "pint",
-        "$FILE"
-      ],
-      "extensions": [
-        ".php"
-      ]
+      "command": ["php", "artisan", "pint", "$FILE"],
+      "extensions": [".php"]
     },
     "rustfmt": {
-      "command": [
-        "rustfmt",
-        "$FILE"
-      ],
-      "extensions": [
-        ".rs"
-      ]
+      "command": ["rustfmt", "$FILE"],
+      "extensions": [".rs"]
     },
     "shfmt": {
-      "command": [
-        "shfmt",
-        "-w",
-        "$FILE"
-      ],
-      "extensions": [
-        ".sh",
-        ".bash"
-      ]
+      "command": ["shfmt", "-w", "$FILE"],
+      "extensions": [".sh", ".bash"]
     }
   },
   "instructions": [

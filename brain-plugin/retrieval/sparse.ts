@@ -20,34 +20,26 @@ export function sparseSearch(
   const db = getDatabase(projectRoot);
 
   // Step 1: Get candidate documents from FTS5
+  if (!query) return [];
   const sanitized = query.replace(/[^\w\s]/g, " ").trim();
   if (!sanitized) return [];
 
-  const terms = sanitized.split(/\s+/).filter(t => t.length > 1);
+  const terms = sanitized.split(/\s+/).filter((t) => t.length > 1);
   if (terms.length === 0) return [];
 
   // Step 2: Get document frequency for each term (for IDF weighting)
   const idfWeights: Map<string, number> = new Map();
   const totalDocs =
-    (
-      db
-        .prepare("SELECT COUNT(DISTINCT filepath) as count FROM chunks")
-        .get() as any
-    )?.count ?? 1;
+    (db.prepare("SELECT COUNT(DISTINCT filepath) as count FROM chunks").get() as any)?.count ?? 1;
 
   for (const term of terms) {
     try {
       const dfResult = db
-        .prepare(
-          "SELECT COUNT(DISTINCT filepath) as df FROM fts_chunks WHERE fts_chunks MATCH ?"
-        )
+        .prepare("SELECT COUNT(DISTINCT filepath) as df FROM fts_chunks WHERE fts_chunks MATCH ?")
         .get(term) as any;
       const df = dfResult?.df ?? 1;
       // IDF = log(N/df) — terms in fewer documents get higher weight
-      idfWeights.set(
-        term.toLowerCase(),
-        Math.log((totalDocs + 1) / (df + 1)) + 1
-      );
+      idfWeights.set(term.toLowerCase(), Math.log((totalDocs + 1) / (df + 1)) + 1);
     } catch {
       idfWeights.set(term.toLowerCase(), 1.0);
     }
@@ -77,9 +69,7 @@ export function sparseSearch(
 
       for (const term of terms) {
         const termLower = term.toLowerCase();
-        const tf =
-          (contentLower.match(new RegExp(`\\b${termLower}\\b`, "g")) || [])
-            .length;
+        const tf = (contentLower.match(new RegExp(`\\b${termLower}\\b`, "g")) || []).length;
         const idf = idfWeights.get(termLower) ?? 1.0;
         sparseScore += tf * idf; // TF-IDF style weighting
       }

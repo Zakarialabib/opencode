@@ -30,8 +30,11 @@ export function upsertChunkFTS(
   filepath: string,
   content: string
 ): void {
-  db.prepare("INSERT INTO fts_chunks(chunk_id, filepath, content) VALUES(?, ?, ?)")
-    .run(chunkId, filepath, content);
+  db.prepare("INSERT INTO fts_chunks(chunk_id, filepath, content) VALUES(?, ?, ?)").run(
+    chunkId,
+    filepath,
+    content
+  );
 }
 
 /**
@@ -42,7 +45,7 @@ export function upsertChunkFTSBatch(
   items: Array<{ chunkId: string; filepath: string; content: string }>
 ): void {
   const insert = db.prepare("INSERT INTO fts_chunks(chunk_id, filepath, content) VALUES(?, ?, ?)");
-  
+
   db.transaction(() => {
     for (const item of items) {
       insert.run(item.chunkId, item.filepath, item.content);
@@ -73,12 +76,13 @@ export function searchKeywordFTS(
 }> {
   // SQLite FTS5 MATCH syntax: sanitize query and format for prefix/phrase search.
   // For code, we split terms and use prefix matches: "query term*"
+  if (!keywordQuery) return [];
   const sanitized = keywordQuery
     .replace(/[^\w\s\-\.\_]/g, " ") // remove symbols
     .trim()
     .split(/\s+/)
     .filter(Boolean)
-    .map(t => `${t}*`)
+    .map((t) => `${t}*`)
     .join(" AND ");
 
   if (!sanitized) return [];
@@ -106,7 +110,7 @@ export function searchKeywordFTS(
 
   try {
     const results = query.all(sanitized, limit) as any[];
-    
+
     return results.map((r) => ({
       id: r.id,
       filepath: r.filepath,
@@ -119,7 +123,7 @@ export function searchKeywordFTS(
       content: r.content,
       // Convert negative BM25 score to a positive rank metric.
       // -bm25 gives positive numbers, higher is better.
-      score: -r.score
+      score: -r.score,
     }));
   } catch (error: any) {
     console.error("[Brain/StoreFTS] FTS query failed:", error.message);

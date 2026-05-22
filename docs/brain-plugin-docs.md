@@ -15,9 +15,10 @@
 7. [Session Memory](#7-session-memory)
 8. [Brain RAG System Reference](#8-brain-rag-system-reference)
 9. [Dashboard Integration](#9-dashboard-integration)
-10. [File Structure](#10-file-structure)
-11. [Usage & Commands](#11-usage--commands)
-12. [SQLite Query Recipes](#12-sqlite-query-recipes)
+10. [Learning Feedback Loop](#10-learning-feedback-loop)
+11. [File Structure](#11-file-structure)
+12. [Usage & Commands](#12-usage--commands)
+13. [SQLite Query Recipes](#13-sqlite-query-recipes)
 
 ---
 
@@ -211,23 +212,34 @@ The plugin exposes a set of tools built into its `tool` namespace.
 
 ### Core tools
 
-| Tool | Purpose |
-| ---- | ------- |
-| `brain_index_project` | Index the current project or refresh the SQLite index |
-| `brain_search` | Run the hybrid search pipeline and expose chunk results |
-| `brain_status` | Return database and plugin health metrics |
-| `brain_reset` | Wipe index tables, docs cache, decision tree, and session memory |
-| `brain_budget` | Report current token budget and usage |
-| `brain_budget_reset` | Reset the session token budget counter |
-| `brain_diagnostic` | Run a full pipeline diagnostic check |
-| `brain_docs_cache` | List cached package documentation entries |
-| `brain_docs_fetch` | Fetch package docs from a registry |
-| `brain_embed_test` | Return raw embedding search results for debugging |
-| `brain_embed_lmstudio` | Request embeddings from LM Studio directly |
-| `brain_metrics` | Expose RAG and session metrics as JSON |
-| `brain_benchmark` | Run a quick benchmark through `meta-harness` |
-| `brain_config` | Inspect or update reranking configuration |
-| `brain_speculative_status` | Report speculative decoding status and loaded models |
+| Tool                              | Purpose                                                              |
+| --------------------------------- | -------------------------------------------------------------------- |
+| `brain_index_project`             | Index the current project or refresh the SQLite index                |
+| `brain_search`                    | Run the hybrid search pipeline and expose chunk results              |
+| `brain_status`                    | Return database and plugin health metrics                            |
+| `brain_reset`                     | Wipe index tables, docs cache, decision tree, and session memory     |
+| `brain_budget`                    | Report current token budget and usage                                |
+| `brain_budget_reset`              | Reset the session token budget counter                               |
+| `brain_diagnostic`                | Run a full pipeline diagnostic check                                 |
+| `brain_docs_cache`                | List cached package documentation entries                            |
+| `brain_docs_fetch`                | Fetch package docs from a registry                                   |
+| `brain_embed_test`                | Return raw embedding search results for debugging                    |
+| `brain_embed_lmstudio`            | Request embeddings from LM Studio directly                           |
+| `brain_metrics`                   | Expose RAG and session metrics as JSON                               |
+| `brain_benchmark`                 | Run a quick benchmark through `meta-harness`                         |
+| `brain_config`                    | Inspect or update reranking configuration                            |
+| `brain_speculative_status`        | Report speculative decoding status and loaded models                 |
+| `brain_model_status`              | Return dense/reranker/provider status and loaded model state         |
+| `brain_model_unload`              | Unload dense/reranker pipelines without changing provider connection |
+| `brain_model_provider`            | Switch provider mode behavior for ONNX vs LM Studio fallback         |
+| `brain_model_download`            | Request model download via dashboard API                             |
+| `brain_diagnose`                  | Alias for diagnostic behavior (naming compatibility)                 |
+| `brain_index`                     | Alias for project indexing behavior (naming compatibility)           |
+| `brain_learning_status`           | Report learning feedback loop status and metrics                     |
+| `brain_learning_cycle`            | Manually trigger a pattern extraction + tuning cycle                 |
+| `brain_learning_patterns`         | List all active detected patterns with confidence scores             |
+| `brain_learning_overrides`        | List all prompt overrides applied from patterns                      |
+| `brain_learning_disable_override` | Disable and revert a specific prompt override                        |
 
 ### `brain_config` reranking payload
 
@@ -549,12 +561,166 @@ It interacts with plugin helpers and runtime state such as:
 - project indexing and reindex jobs
 - search and chat debugging
 - telemetry and session trace inspection
+- persisted model params (`params_chat`, `params_embed`, `params_rerank`)
+- provider definitions stored under the `providers` config key
 
 The dashboard is implemented as an Express server and exposes a broad HTTP API surface.
 
+Dashboard actions are additive to plugin contracts. Existing Brain tool names and payload shapes remain stable; dashboard-only provider and model-param routes persist settings in `brain.db` and use existing plugin setters where runtime changes are needed.
+
 ---
 
-## 9. File Structure
+## 10. Learning Feedback Loop
+
+The learning feedback loop (`learn/`) is a closed-loop system that captures agent outcomes, detects recurring issues, and auto-tunes agent prompts. It works alongside the meta-harness (which optimizes retrieval parameters) to form a complete quality loop.
+
+### Architecture
+
+```
+┌───────────────────────────────────────────────────────────┐
+│              LEARNING FEEDBACK LOOP                      │
+│                                                           │
+│  tool.execute.after ──▶ Observer ──▶ Patterns ──▶ Tuning  │
+│  lsp.diagnostics   ──▶        │            │             │
+│                               ▼            ▼             │
+│                          agent_outcomes  agent_patterns   │
+│                               │            │             │
+│                               ▼            ▼             │
+│                          prompt_tuner ──▶ opencode.json   │
+│                                               │           │
+│                          learner.ts ◀─────────┘           │
+│                                                    │     │
+│                          meta-harness ◀────────────┘     │
+└───────────────────────────────────────────────────────────┘
+```
+
+### 10.1 Observer (`learn/observer.ts`)
+
+Captures agent-level outcomes from two sources:
+
+- **Tool execution**: `tool.execute.after` hook records success/failure for `edit`, `write`, and `bash` tools
+- **LSP diagnostics**: `lsp.client.diagnostics` hook records error diagnostics with severity and code
+
+Stored in `agent_outcomes` table with fields: `agent_name`, `task_desc`, `tool_name`, `file_path`, `outcome` (success/failure/partial), `pattern_type`, `meta_json`.
+
+Key exports:
+
+- `recordOutcome(projectRoot, data)` — record a single outcome
+- `getOutcomeStats(projectRoot)` — aggregate outcome counts
+- `queryOutcomes(projectRoot, filter)` — query with optional filters
+
+### 10.2 Pattern Extractor (`learn/patterns.ts`)
+
+Extracts recurring patterns from recent outcomes (default: last 30 minutes). Uses multiple extractors that analyze outcomes for known issue types.
+
+Built-in pattern types:
+
+| Pattern         | Trigger                                       | Suggestion                                                 |
+| --------------- | --------------------------------------------- | ---------------------------------------------------------- |
+| `i18n_miss`     | Hardcoded UI text without checking i18n       | Check for translation files and use project's t() function |
+| `missing_test`  | Source file modified without test file update | Update corresponding test files                            |
+| `type_error`    | LSP diagnostics with type errors              | Verify LSP diagnostics after every edit                    |
+| `error_swallow` | Bash errors ignored or unfixed                | Read error output, retry or report failures                |
+
+Each pattern stores: `agent_name`, `pattern_type`, `confidence` (0–1), `suggestion`, `occurrence_count`, timestamps.
+
+Patterns with `confidence >= 0.5` are considered ready for auto-tuning.
+
+Key exports:
+
+- `extractPatterns(projectRoot, lookbackMinutes)` — run all extractors
+- `getPatterns(projectRoot, filter?)` — query stored patterns
+- `getPatternsReadyForTuning(projectRoot, threshold)` — patterns ready for auto-tune
+- `registerExtractor(name, extractor)` — add custom extractors
+
+### 10.3 Prompt Tuner (`learn/prompt-tuner.ts`)
+
+Generates prompt-level instructions from detected patterns and applies them to agent configurations in `opencode.json`.
+
+Flow:
+
+1. Read high-confidence patterns
+2. Generate instruction text via pattern-specific templates
+3. Check if already applied (via `prompt_overrides` table)
+4. Prepend instruction to target agent's prompt in `opencode.json`
+5. Record the override in `prompt_overrides` table
+
+Each override is reversible — `disablePromptOverride()` removes the instruction from the agent prompt and marks it disabled.
+
+Key exports:
+
+- `applyPatternInstruction(projectRoot, pattern)` — apply a single instruction
+- `autoTunePrompts(projectRoot, patterns)` — batch apply all eligible
+- `getPromptOverrides(projectRoot, agentName?)` — list overrides
+- `disablePromptOverride(projectRoot, overrideId)` — revert an override
+
+### 10.4 Learner Orchestrator (`learn/learner.ts`)
+
+`LearnerLoop` ties all components together:
+
+- Runs pattern extraction on a timer (default: every 5 minutes)
+- Triggers auto-tuning for high-confidence patterns
+- Integrates with meta-harness via `onHarnessEvaluation()` callback
+- Exposes status via `getStatus()`, `getActivePatterns()`, `getOverrides()`
+
+Started automatically in `server.start`. Runs as a singleton (`learnerLoop`).
+
+### 10.5 Learning Tools
+
+| Tool                              | Purpose                                        |
+| --------------------------------- | ---------------------------------------------- |
+| `brain_learning_status`           | Show learning loop status, metrics, and config |
+| `brain_learning_cycle`            | Manually trigger a learning cycle              |
+| `brain_learning_patterns`         | List all active detected patterns              |
+| `brain_learning_overrides`        | List all prompt overrides                      |
+| `brain_learning_disable_override` | Disable a specific prompt override by ID       |
+
+### 10.6 SQLite Schema (Migration 3)
+
+```sql
+CREATE TABLE IF NOT EXISTS agent_outcomes (
+  id TEXT PRIMARY KEY,
+  timestamp INTEGER NOT NULL,
+  agent_name TEXT NOT NULL,
+  task_desc TEXT NOT NULL,
+  tool_name TEXT,
+  file_path TEXT,
+  outcome TEXT NOT NULL CHECK(outcome IN ('success', 'failure', 'partial')),
+  details TEXT,
+  pattern_type TEXT,
+  meta_json TEXT
+);
+
+CREATE TABLE IF NOT EXISTS agent_patterns (
+  id TEXT PRIMARY KEY,
+  agent_name TEXT NOT NULL,
+  pattern_type TEXT NOT NULL,
+  confidence REAL NOT NULL DEFAULT 0.0,
+  suggestion TEXT NOT NULL,
+  occurrence_count INTEGER NOT NULL DEFAULT 1,
+  first_seen INTEGER NOT NULL,
+  last_seen INTEGER NOT NULL,
+  active INTEGER NOT NULL DEFAULT 1,
+  suppression_count INTEGER NOT NULL DEFAULT 0,
+  meta_json TEXT
+);
+
+CREATE TABLE IF NOT EXISTS prompt_overrides (
+  id TEXT PRIMARY KEY,
+  agent_name TEXT NOT NULL,
+  instruction TEXT NOT NULL,
+  source_pattern_id TEXT NOT NULL,
+  source_pattern_type TEXT NOT NULL,
+  enabled INTEGER NOT NULL DEFAULT 1,
+  created_at INTEGER NOT NULL,
+  applied_at INTEGER,
+  last_verified_at INTEGER
+);
+```
+
+---
+
+## 11. File Structure
 
 ```
 brain-plugin/
@@ -585,8 +751,12 @@ brain-plugin/
 │   └── graph.ts                # Concept memory graph and chunk relationships
 ├── learn/
 │   ├── feedback.ts             # Success/failure feedback and tuning hooks
-│   ├── tracer.ts             # Internal analytics and trace metrics
-│   └── tuner.ts                # Context budget tuning and scoring logic
+│   ├── tracer.ts               # Internal analytics and trace metrics
+│   ├── tuner.ts                # Context budget tuning and scoring logic
+│   ├── observer.ts             # Agent outcome capture from tools + LSP
+│   ├── patterns.ts             # Pattern extraction engine (4 built-in extractors)
+│   ├── prompt-tuner.ts         # Auto-apply pattern instructions to agent prompts
+│   └── learner.ts              # Closed-loop orchestrator (timed cycles)
 ├── state/
 │   └── session.ts              # Session state and recent-file/diagnostic memory
 ├── tree/
@@ -596,7 +766,7 @@ brain-plugin/
 
 ---
 
-## 10. Usage & Commands
+## 12. Usage & Commands
 
 ### Startup checklist
 
@@ -620,9 +790,16 @@ brain-plugin/
 - low context queries may still use `context7` and registry docs
 - `brain_reset` clears search state and index tables if you need a clean slate
 
+### Compatibility Notes
+
+- Draft-to-main migration for `2026-05-21` kept public Brain tool contracts stable.
+- No existing tool names were removed and no existing JSON payload shapes were intentionally broken.
+- Additions are backward-compatible: `brain_model_*` tools and alias tools (`brain_diagnose`, `brain_index`).
+- Retrieval/indexing hardening added defensive empty-input handling without changing output contracts.
+
 ---
 
-## 12. SQLite Query Recipes
+## 13. SQLite Query Recipes
 
 The following queries reflect the actual `brain.db` schema defined by `brain-plugin/store/index.ts`.
 
@@ -687,4 +864,38 @@ SELECT key, value FROM config WHERE key LIKE 'rrf_%';
 ```sql
 SELECT vec_version();
 ```
-''' ; Path('docs/brain-plugin-docs.md').write_text(content, encoding='utf-8')"
+
+#### Agent Outcomes
+
+```sql
+SELECT agent_name, outcome, tool_name, task_desc, timestamp
+FROM agent_outcomes
+ORDER BY timestamp DESC
+LIMIT 20;
+```
+
+#### Outcome Stats
+
+```sql
+SELECT agent_name, outcome, COUNT(*) as count
+FROM agent_outcomes
+GROUP BY agent_name, outcome
+ORDER BY count DESC;
+```
+
+#### Active Patterns
+
+```sql
+SELECT pattern_type, agent_name, confidence, occurrence_count, suggestion
+FROM agent_patterns
+WHERE active = 1
+ORDER BY confidence DESC;
+```
+
+#### Prompt Overrides
+
+```sql
+SELECT agent_name, source_pattern_type, enabled, instruction
+FROM prompt_overrides
+ORDER BY created_at DESC;
+```

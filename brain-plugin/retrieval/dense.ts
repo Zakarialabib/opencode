@@ -7,6 +7,7 @@ export type EmbedBackend = "local" | "lmstudio" | "auto";
 let embedBackend: EmbedBackend = "local";
 let localEmbedModelId = "Xenova/nomic-embed-text-v1.5";
 let lmstudioEmbedModelId = defaultProvider.defaultEmbedModel;
+let embedDownloadOnly = false; // If true, allows downloading models without loading into memory
 let lastBackendUsed: "local" | "lmstudio" | null = null;
 let lastModelTypeUsed: "qwen" | "nomic" = "nomic";
 
@@ -334,6 +335,7 @@ export function getEmbeddingStatus(): {
   localModelId: string;
   lmstudioModelId: string;
   transformersImportFailed: boolean;
+  downloadOnly: boolean;
 } {
   return {
     backend: embedBackend,
@@ -342,6 +344,7 @@ export function getEmbeddingStatus(): {
     localModelId: localEmbedModelId,
     lmstudioModelId: lmstudioEmbedModelId,
     transformersImportFailed,
+    downloadOnly: embedDownloadOnly,
   };
 }
 
@@ -373,7 +376,7 @@ export function getDenseModelStatus(): DenseModelStatus {
   const cooldownMs = 5 * 60 * 1000;
   const elapsed = now - lastErrorTime;
   return {
-    pipelineLoaded: localPipeline !== null,
+    pipelineLoaded: localPipelines.size > 0,
     importFailed: transformersImportFailed,
     lastErrorTime,
     cooldownActive: transformersImportFailed && elapsed < cooldownMs,
@@ -387,7 +390,7 @@ export function getDenseModelStatus(): DenseModelStatus {
  * Resets to allow fresh loading on next use.
  */
 export function unloadDensePipeline(): void {
-  localPipeline = null;
+  localPipelines.clear();
   transformersImportFailed = false;
   lastErrorTime = 0;
   console.log("[Brain/Dense] Dense pipeline unloaded. Will re-init on next embed request.");
@@ -400,7 +403,7 @@ export function forceLMStudioFallback(): void {
   if (!transformersImportFailed) {
     transformersImportFailed = true;
     lastErrorTime = Date.now();
-    localPipeline = null;
+    localPipelines.clear();
     console.log("[Brain/Dense] Forced LM Studio fallback mode. ONNX pipeline will not load.");
   }
 }

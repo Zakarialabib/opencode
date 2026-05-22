@@ -17,11 +17,7 @@ export class AdaptiveChunker {
     this.strategies = this.initializeStrategies();
   }
 
-  calculateChunkLimit(
-    intent: string,
-    confidence: number,
-    taskComplexity: TaskComplexity
-  ): number {
+  calculateChunkLimit(intent: string, confidence: number, taskComplexity: TaskComplexity): number {
     const strategy = this.strategies[intent] || this.strategies["default"];
 
     const weight = this.findWeight(confidence, strategy.confidenceWeights);
@@ -31,13 +27,11 @@ export class AdaptiveChunker {
     if (taskComplexity === "high") chunks *= 1.5;
     if (taskComplexity === "low") chunks *= 0.7;
 
-    return Math.max(
-      strategy.minChunks,
-      Math.min(strategy.maxChunks, Math.round(chunks))
-    );
+    return Math.max(strategy.minChunks, Math.min(strategy.maxChunks, Math.round(chunks)));
   }
 
   estimateComplexity(query: string): TaskComplexity {
+    if (!query) return "low";
     const queryLower = query.toLowerCase();
 
     const complexityIndicators = [
@@ -206,10 +200,7 @@ export class AdaptiveChunker {
     };
   }
 
-  private findWeight(
-    confidence: number,
-    weights: Record<number, number>
-  ): number {
+  private findWeight(confidence: number, weights: Record<number, number>): number {
     const levels = Object.keys(weights)
       .map(Number)
       .sort((a, b) => b - a);

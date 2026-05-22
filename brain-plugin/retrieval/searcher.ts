@@ -17,6 +17,7 @@ function ftsSearch(
   query: string,
   topK: number
 ): SearchResult[] {
+  if (!query) return [];
   const sanitized = query.replace(/[^\w\s]/g, " ").trim();
   if (!sanitized) return [];
 

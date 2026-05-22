@@ -5,11 +5,16 @@ import { searchProjectContext } from "./retrieval/searcher.js";
 import { indexProject } from "./retrieval/indexer.js";
 import { contextInjector } from "./context/injector.js";
 import { sessionMemory } from "./state/session.js";
-import { docsStore, DocEntry } from "./docs-store.js";
+import { docsStore, type DocEntry } from "./docs-store.js";
 import { miniBatchUpdate } from "./memory/graph.js";
 import { getDatabase, closeDatabase } from "./store/index.js";
 import { isVectorActive } from "./store/vec.js";
-import { resetDenseFailedFlag, getDenseModelStatus, unloadDensePipeline, forceLMStudioFallback } from "./retrieval/dense.js";
+import {
+  resetDenseFailedFlag,
+  getDenseModelStatus,
+  unloadDensePipeline,
+  forceLMStudioFallback,
+} from "./retrieval/dense.js";
 import { getRerankerStatus, unloadReranker, forceRerankerOff } from "./retrieval/reranker.js";
 import { formatSearchResults } from "./tools/formatter";
 import { TokenBudgetMonitor, ContextPruner, initializeFromConfig } from "./context/token-budget.js";
@@ -19,6 +24,11 @@ import {
   getRerankingConfig,
   RERANKING_STRATEGIES,
 } from "./retrieval/reranking-trigger";
+import { recordOutcome, getOutcomeStats, queryOutcomes } from "./learn/observer.js";
+import { getPatterns, getPatternsReadyForTuning } from "./learn/patterns.js";
+import { getPromptOverrides, disablePromptOverride } from "./learn/prompt-tuner.js";
+import { learnerLoop, runLearningCycle } from "./learn/learner.js";
+import { loadBrainConfig, getSelectedModels } from "./config/schema.ts";
 
 const FETCH_TIMEOUT = 10000;
 
@@ -183,9 +193,11 @@ function writePluginStatusToDB(projectDir: string, provider: any, tree: any): vo
       lastUpdated: Date.now(),
     };
 
-    db.prepare(
-      "INSERT OR REPLACE INTO config (key, value, updated_at) VALUES (?, ?, ?)"
-    ).run("brain_plugin_status", JSON.stringify(statusPayload), Date.now());
+    db.prepare("INSERT OR REPLACE INTO config (key, value, updated_at) VALUES (?, ?, ?)").run(
+      "brain_plugin_status",
+      JSON.stringify(statusPayload),
+      Date.now()
+    );
   } catch (err: any) {
     console.debug("[Brain] Failed to write plugin status to DB:", err.message);
   }
@@ -239,7 +251,11 @@ const BrainPlugin: Plugin = async ({ directory }) => {
       try {
         const dbSettings = getDatabase(directory);
         if (dbSettings) {
-          const rows = dbSettings.prepare("SELECT key, value FROM config WHERE key IN ('selected_chat_model', 'selected_embedding_model', 'selected_reranker_model', 'provider_mode')").all() as { key: string; value: string }[];
+          const rows = dbSettings
+            .prepare(
+              "SELECT key, value FROM config WHERE key IN ('selected_chat_model', 'selected_embedding_model', 'selected_reranker_model', 'provider_mode')"
+            )
+            .all() as { key: string; value: string }[];
           for (const row of rows) {
             try {
               const val = JSON.parse(row.value);
@@ -268,6 +284,37 @@ const BrainPlugin: Plugin = async ({ directory }) => {
         }
       } catch (err: any) {
         console.debug("[Brain] Failed to read settings from brain.db:", err.message);
+      }
+
+      // Merge settings from brain.config.json (shared dashboard config takes top precedence)
+      try {
+        const shared = loadBrainConfig(directory);
+        if (shared.selectedModels) {
+          const sm = shared.selectedModels;
+          if (sm.chat) {
+            if (!config.lmStudio) config.lmStudio = {};
+            config.lmStudio.chatModel = sm.chat;
+            console.log(`[Brain] Loaded chat model from brain.config.json: ${sm.chat}`);
+          }
+          if (sm.embed && sm.embed !== "Xenova/nomic-embed-text-v1.5") {
+            if (!config.lmStudio) config.lmStudio = {};
+            config.lmStudio.preferredEmbedding = sm.embed;
+            console.log(`[Brain] Loaded embedding model from brain.config.json: ${sm.embed}`);
+          }
+          if (sm.rerank && sm.rerankEnabled) {
+            if (!config.lmStudio) config.lmStudio = {};
+            config.lmStudio.preferredReranker = sm.rerank;
+            console.log(`[Brain] Loaded reranker model from brain.config.json: ${sm.rerank}`);
+          }
+        }
+        if (shared.providers && shared.providers.length > 0) {
+          const lmStudio = shared.providers.find((p) => p.type === "lmstudio");
+          if (lmStudio?.baseURL) {
+            provider.setBaseURL(lmStudio.baseURL);
+          }
+        }
+      } catch (err: any) {
+        console.debug("[Brain] Failed to load brain.config.json:", err.message);
       }
 
       const budgetMonitor = TokenBudgetMonitor.getInstance();
@@ -342,23 +389,37 @@ const BrainPlugin: Plugin = async ({ directory }) => {
         try {
           const dbTick = getDatabase(directory);
           if (dbTick) {
-            const reindexRow = dbTick.prepare("SELECT value FROM config WHERE key = 'brain_reindex_request'").get() as { value: string } | undefined;
+            const reindexRow = dbTick
+              .prepare("SELECT value FROM config WHERE key = 'brain_reindex_request'")
+              .get() as { value: string } | undefined;
             if (reindexRow?.value === "true") {
-              dbTick.prepare("INSERT OR REPLACE INTO config (key, value, updated_at) VALUES ('brain_reindex_request', 'false', ?)").run(Date.now());
+              dbTick
+                .prepare(
+                  "INSERT OR REPLACE INTO config (key, value, updated_at) VALUES ('brain_reindex_request', 'false', ?)"
+                )
+                .run(Date.now());
               console.log("[Brain] Reindex requested from dashboard — starting...");
               setImmediate(async () => {
                 try {
                   const startTime = Date.now();
                   const result = await indexProject(directory);
-                  console.log(`[Brain] Dashboard-requested reindex complete: ${result.length} chunks in ${Date.now() - startTime}ms`);
+                  console.log(
+                    `[Brain] Dashboard-requested reindex complete: ${result.length} chunks in ${Date.now() - startTime}ms`
+                  );
                 } catch (err: any) {
                   console.error("[Brain] Dashboard reindex failed:", err.message);
                 }
               });
             }
-            const resetRow = dbTick.prepare("SELECT value FROM config WHERE key = 'brain_reset_request'").get() as { value: string } | undefined;
+            const resetRow = dbTick
+              .prepare("SELECT value FROM config WHERE key = 'brain_reset_request'")
+              .get() as { value: string } | undefined;
             if (resetRow?.value === "true") {
-              dbTick.prepare("INSERT OR REPLACE INTO config (key, value, updated_at) VALUES ('brain_reset_request', 'false', ?)").run(Date.now());
+              dbTick
+                .prepare(
+                  "INSERT OR REPLACE INTO config (key, value, updated_at) VALUES ('brain_reset_request', 'false', ?)"
+                )
+                .run(Date.now());
               console.log("[Brain] Reset requested from dashboard — executing...");
               setImmediate(async () => {
                 try {
@@ -369,7 +430,10 @@ const BrainPlugin: Plugin = async ({ directory }) => {
                     dbTick.prepare("DELETE FROM chunks").run();
                     dbTick.prepare("DELETE FROM files").run();
                     dbTick.prepare("DELETE FROM fts_chunks").run();
-                    try { dbTick.prepare("DELETE FROM chunk_embeddings").run(); dbTick.prepare("DELETE FROM chunk_embeddings_nomic").run(); } catch {}
+                    try {
+                      dbTick.prepare("DELETE FROM chunk_embeddings").run();
+                      dbTick.prepare("DELETE FROM chunk_embeddings_nomic").run();
+                    } catch {}
                   })();
                   console.log("[Brain] Dashboard-requested reset complete");
                 } catch (err: any) {
@@ -383,23 +447,33 @@ const BrainPlugin: Plugin = async ({ directory }) => {
         }
       }, 30000);
 
+      // Start learning feedback loop (observer + patterns + prompt tuning)
+      learnerLoop.start(directory);
+
       // Auto memory graph scheduling: incremental clustering every 30 minutes
       // Skips if no chunks exist — designed to be cheap for streaming updates
-      setInterval(() => {
-        try {
-          const dbTick = getDatabase(directory);
-          if (dbTick) {
-            const chunkCount = dbTick.prepare("SELECT COUNT(*) as count FROM chunks").get() as { count: number } | undefined;
-            if (chunkCount && chunkCount.count > 0) {
-              console.log(`[Brain] Running memory graph mini-batch update (${chunkCount.count} total chunks)...`);
-              miniBatchUpdate(directory, 10);
-              console.log("[Brain] Memory graph mini-batch update complete");
+      setInterval(
+        () => {
+          try {
+            const dbTick = getDatabase(directory);
+            if (dbTick) {
+              const chunkCount = dbTick.prepare("SELECT COUNT(*) as count FROM chunks").get() as
+                | { count: number }
+                | undefined;
+              if (chunkCount && chunkCount.count > 0) {
+                console.log(
+                  `[Brain] Running memory graph mini-batch update (${chunkCount.count} total chunks)...`
+                );
+                miniBatchUpdate(directory, 10);
+                console.log("[Brain] Memory graph mini-batch update complete");
+              }
             }
+          } catch (err: any) {
+            console.debug("[Brain] Memory graph update skipped:", err.message);
           }
-        } catch (err: any) {
-          console.debug("[Brain] Memory graph update skipped:", err.message);
-        }
-      }, 30 * 60 * 1000);
+        },
+        30 * 60 * 1000
+      );
 
       // Write initial status + check flags immediately
       setImmediate(() => {
@@ -584,16 +658,63 @@ const BrainPlugin: Plugin = async ({ directory }) => {
       if (input.tool === "edit" || input.tool === "write") {
         sessionMemory.markSuccess();
       }
-      if (input.tool === "bash" && output.result?.includes("error")) {
+
+      let outcome: "success" | "failure" | "partial" = "success";
+      const errorOutput = output.result?.includes("error") || output.error;
+
+      if (input.tool === "bash" && errorOutput) {
         sessionMemory.markFailure("bash_error");
+        outcome = "failure";
+      } else if ((input.tool === "edit" || input.tool === "write") && errorOutput) {
+        outcome = "failure";
+      }
+
+      // Record outcome for learning loop
+      if (directory) {
+        try {
+          recordOutcome(directory, {
+            agentName: "assistant",
+            taskDesc: `tool:${input.tool}`,
+            toolName: input.tool,
+            filePath: input.path || input.filePath || null,
+            outcome,
+            details: errorOutput
+              ? output.result?.slice(0, 500) || output.error?.slice(0, 500) || ""
+              : "ok",
+            patternType: errorOutput ? "error_swallow" : null,
+            metadata: { hasError: !!errorOutput },
+          });
+        } catch {}
       }
     },
 
     "lsp.client.diagnostics": async (input: any) => {
       const diagnostics = input.diagnostics || [];
       sessionMemory.setDiagnostics(diagnostics);
-      if (diagnostics.some((d: any) => d.severity === "error")) {
+
+      const hasErrors = diagnostics.some((d: any) => d.severity === "error");
+      if (hasErrors) {
         tree.prewarmIntent("debug");
+      }
+
+      // Record LSP diagnostics as learning outcomes
+      if (directory && diagnostics.length > 0) {
+        try {
+          const errors = diagnostics.filter((d: any) => d.severity === "error");
+          for (const err of errors.slice(0, 3)) {
+            // Limit to 3 per batch
+            recordOutcome(directory, {
+              agentName: "assistant",
+              taskDesc: `lsp:${err.message?.slice(0, 120) || "unknown error"}`,
+              toolName: "lsp",
+              filePath: err.filePath || err.file || err.uri || null,
+              outcome: "failure",
+              details: err.message?.slice(0, 300) || "",
+              patternType: err.message?.includes("type") ? "type_error" : null,
+              metadata: { severity: err.severity, code: err.code },
+            });
+          }
+        } catch {}
       }
     },
 
@@ -1025,7 +1146,12 @@ const BrainPlugin: Plugin = async ({ directory }) => {
         description: "Get detailed RAG pipeline metrics and performance data",
         args: {},
         async execute() {
-          const db = getDatabase(directory);
+          let db: ReturnType<typeof getDatabase> | undefined;
+          try {
+            db = getDatabase(directory);
+          } catch (err: any) {
+            return JSON.stringify({ error: `Database unavailable: ${err.message}` });
+          }
           const stats = tree.getStats();
           const memory = sessionMemory.getMemory();
 
@@ -1236,24 +1362,29 @@ const BrainPlugin: Plugin = async ({ directory }) => {
 
           writePluginStatusToDB(directory, provider, tree);
 
-          return JSON.stringify({
-            dense: denseStatus,
-            reranker: rerankerStatus,
-            provider: {
-              name: provider.name,
-              baseURL: provider.baseURL || "http://localhost:1234",
-              connected: loadedModels.length > 0,
+          return JSON.stringify(
+            {
+              dense: denseStatus,
+              reranker: rerankerStatus,
+              provider: {
+                name: provider.name,
+                baseURL: provider.baseURL || "http://localhost:1234",
+                connected: loadedModels.length > 0,
+              },
+              loadedModels,
+              loadStatus: Object.fromEntries(loadStatusMap),
+              vramUsageGB: vramUsage,
+              maxVRAMGB: 5.5,
             },
-            loadedModels,
-            loadStatus: Object.fromEntries(loadStatusMap),
-            vramUsageGB: vramUsage,
-            maxVRAMGB: 5.5,
-          }, null, 2);
+            null,
+            2
+          );
         },
       }),
 
       brain_model_unload: tool({
-        description: "Unload a model subsystem (dense | reranker | all). Keeps LM Studio connection intact.",
+        description:
+          "Unload a model subsystem (dense | reranker | all). Keeps LM Studio connection intact.",
         args: {
           target: tool.schema.enum(["dense", "reranker", "all"]).describe("Subsystem to unload"),
         },
@@ -1275,9 +1406,12 @@ const BrainPlugin: Plugin = async ({ directory }) => {
       }),
 
       brain_model_provider: tool({
-        description: "Switch model provider mode (onnx_local | lmstudio | download_only). Controls whether ONNX pipelines attempt to load.",
+        description:
+          "Switch model provider mode (onnx_local | lmstudio | download_only). Controls whether ONNX pipelines attempt to load.",
         args: {
-          mode: tool.schema.enum(["onnx_local", "lmstudio", "download_only"]).describe("Provider mode"),
+          mode: tool.schema
+            .enum(["onnx_local", "lmstudio", "download_only"])
+            .describe("Provider mode"),
         },
         async execute(args: any) {
           const mode = args.mode || "lmstudio";
@@ -1301,18 +1435,25 @@ const BrainPlugin: Plugin = async ({ directory }) => {
               break;
           }
 
-          return JSON.stringify({ mode, changes: results, dense: getDenseModelStatus(), reranker: getRerankerStatus() }, null, 2);
+          return JSON.stringify(
+            { mode, changes: results, dense: getDenseModelStatus(), reranker: getRerankerStatus() },
+            null,
+            2
+          );
         },
       }),
 
       brain_model_download: tool({
         description: "Download a model from HuggingFace via the dashboard API at localhost:3456",
         args: {
-          modelId: tool.schema.string().describe("Model ID from catalog (e.g. nomic-embed-text-v1.5)"),
+          modelId: tool.schema
+            .string()
+            .describe("Model ID from catalog (e.g. nomic-embed-text-v1.5)"),
         },
         async execute(args: any) {
           const modelId = args.modelId;
-          if (!modelId) return "Error: modelId is required. Available models: nomic-embed-text-v1.5, qwen3-embedding-0.6b, qwen3-reranker-0.6b, qwen3.5-4b, qwen3.5-0.8b";
+          if (!modelId)
+            return "Error: modelId is required. Available models: nomic-embed-text-v1.5, qwen3-embedding-0.6b, qwen3-reranker-0.6b, qwen3.5-4b, qwen3.5-0.8b";
 
           try {
             const res = await fetch(`http://localhost:3456/api/model/download`, {
@@ -1337,15 +1478,224 @@ const BrainPlugin: Plugin = async ({ directory }) => {
           }
         },
       }),
+
+      // ─── Alias tools (for naming compatibility) ─────────────────────────────
+      brain_diagnose: tool({
+        description: "Run full plugin diagnostic check (alias for brain_diagnostic)",
+        args: {},
+        async execute() {
+          const results: string[] = ["## Brain Diagnostic (Node-native v2)\n"];
+
+          let db: ReturnType<typeof getDatabase> | undefined;
+          try {
+            db = getDatabase(directory);
+            results.push("✅ SQLite store initialized successfully");
+          } catch (err: any) {
+            results.push(`❌ SQLite store: initialization failed (${err.message})`);
+          }
+
+          if (db) {
+            try {
+              const fileCount =
+                (db.prepare("SELECT COUNT(*) as c FROM files").get() as { c: number } | undefined)
+                  ?.c ?? 0;
+              const chunkCount =
+                (db.prepare("SELECT COUNT(*) as c FROM chunks").get() as { c: number } | undefined)
+                  ?.c ?? 0;
+              const vectorCount =
+                (
+                  db.prepare("SELECT COUNT(*) as c FROM chunk_embeddings").get() as
+                    | { c: number }
+                    | undefined
+                )?.c ?? 0;
+              const conceptCount =
+                (
+                  db.prepare("SELECT COUNT(*) as c FROM concepts").get() as
+                    | { c: number }
+                    | undefined
+                )?.c ?? 0;
+              const sessionCount =
+                (
+                  db.prepare("SELECT COUNT(*) as c FROM sessions").get() as
+                    | { c: number }
+                    | undefined
+                )?.c ?? 0;
+              const ftsCount =
+                (
+                  db.prepare("SELECT COUNT(*) as c FROM fts_chunks").get() as
+                    | { c: number }
+                    | undefined
+                )?.c ?? 0;
+
+              results.push("\n### Storage");
+              results.push(`- Files: ${fileCount}`);
+              results.push(`- Chunks: ${chunkCount}`);
+              results.push(`- Vectors: ${vectorCount}`);
+              results.push(`- Concepts: ${conceptCount}`);
+              results.push(`- Sessions: ${sessionCount}`);
+              results.push(`- FTS Records: ${ftsCount}`);
+
+              const vectorActiveFlag = isVectorActive(db);
+              results.push(`\n### Vector Store: ${vectorActiveFlag ? "✅ Active" : "❌ Inactive"}`);
+
+              const rrfK = (
+                db.prepare("SELECT value FROM config WHERE key = 'rrf_k'").get() as
+                  | { value: string }
+                  | undefined
+              )?.value;
+              if (rrfK) {
+                results.push(`   Configuration: rrf_k=${rrfK}`);
+              }
+            } catch (err: any) {
+              results.push(`❌ SQLite store: stats query failed (${err.message})`);
+            }
+          }
+
+          try {
+            const loaded = await provider.getLoadedModels();
+            results.push(`\n### LM Studio: ✅ Connected`);
+            results.push(`Models: ${loaded.join(", ") || "none"}`);
+          } catch {
+            results.push(`\n### LM Studio: ❌ Not connected`);
+          }
+
+          results.push(`\n### Docs Cache: ${docsStore.getAll().length} entries`);
+          const docsSummary = docsStore.getSummary();
+          if (docsSummary !== "No docs cached.") {
+            results.push(docsSummary);
+          }
+
+          results.push(`\n### Project: ${directory}`);
+          return results.join("\n");
+        },
+      }),
+
+      brain_index: tool({
+        description: "Index the current project (alias for brain_index_project)",
+        args: {
+          path: tool.schema.string().optional().describe("Directory path to index"),
+        },
+        async execute(args: any) {
+          const root = args.path ?? directory;
+          indexingInProgress = true;
+          try {
+            const startTime = Date.now();
+            const result = await indexProject(root);
+            const duration = Date.now() - startTime;
+            return `Project indexed successfully. Parsed ${result.length} modified/new chunks in ${duration}ms.`;
+          } catch (err: any) {
+            return `Index failed: ${err.message}`;
+          } finally {
+            indexingInProgress = false;
+          }
+        },
+      }),
+
+      brain_learning_status: tool({
+        description: "Get the learning feedback loop status and metrics",
+        args: {},
+        async execute() {
+          const status = learnerLoop.getStatus();
+          const config = learnerLoop.getConfig();
+          const lines: string[] = [
+            "## Learning Feedback Loop Status",
+            "",
+            `Enabled: ${status.enabled ? "✅" : "❌"}`,
+            `Pattern extraction interval: ${(config.patternExtractionIntervalMs / 1000).toFixed(0)}s`,
+            `Tuning confidence threshold: ${config.promptTuningThreshold}`,
+            `Max patterns per run: ${config.maxPatternsPerRun}`,
+            `Lookback window: ${config.lookbackMinutes}min`,
+            "",
+            "### Metrics",
+            `Active patterns: ${status.activePatterns}`,
+            `Applied prompt overrides: ${status.appliedOverrides}`,
+            `Total outcomes tracked: ${status.totalOutcomes}`,
+            `Last pattern extraction: ${
+              status.lastPatternRun ? new Date(status.lastPatternRun).toLocaleTimeString() : "never"
+            }`,
+            "",
+            "### Feedback Loop (Retrieval Quality)",
+            `Precision@5: ${(status.feedbackMetrics.precisionAt5 * 100).toFixed(1)}%`,
+            `MRR: ${(status.feedbackMetrics.mrr * 100).toFixed(1)}%`,
+            `Context efficiency: ${(status.feedbackMetrics.contextEfficiency * 100).toFixed(1)}%`,
+          ];
+          return lines.join("\n");
+        },
+      }),
+
+      brain_learning_cycle: tool({
+        description: "Manually trigger a learning feedback cycle (pattern extraction + tuning)",
+        args: {},
+        async execute() {
+          try {
+            const result = await learnerLoop.runCycle();
+            return [
+              "## Learning Cycle Complete",
+              `- Patterns found: ${result.patternsFound}`,
+              `- Instructions applied: ${result.instructionsApplied}`,
+              "",
+              "Run `brain_learning_patterns` to see active patterns.",
+              "Run `brain_learning_overrides` to see applied overrides.",
+            ].join("\n");
+          } catch (err: any) {
+            return `Learning cycle failed: ${err.message}`;
+          }
+        },
+      }),
+
+      brain_learning_patterns: tool({
+        description: "List all active detected patterns from the learning loop",
+        args: {},
+        async execute() {
+          const patterns = learnerLoop.getActivePatterns();
+          if (patterns.length === 0) return "No active patterns detected yet.";
+
+          return patterns
+            .map(
+              (p, i) =>
+                `${i + 1}. **${p.patternType}** (confidence: ${(p.confidence * 100).toFixed(0)}%)\n` +
+                `   Agent: ${p.agentName}\n` +
+                `   Occurrences: ${p.occurrenceCount}\n` +
+                `   Suggestion: ${p.suggestion.slice(0, 200)}`
+            )
+            .join("\n\n");
+        },
+      }),
+
+      brain_learning_overrides: tool({
+        description: "List all prompt overrides applied by the learning loop",
+        args: {},
+        async execute() {
+          const overrides = learnerLoop.getOverrides();
+          if (overrides.length === 0) return "No prompt overrides applied yet.";
+
+          return overrides
+            .map(
+              (o, i) =>
+                `${i + 1}. **${o.enabled ? "✅ Enabled" : "❌ Disabled"}** ${o.sourcePatternType}\n` +
+                `   Agent: ${o.agentName}\n` +
+                `   Applied: ${o.appliedAt ? new Date(o.appliedAt).toLocaleString() : "pending"}\n` +
+                `   Instruction: ${o.instruction.slice(0, 200)}`
+            )
+            .join("\n\n");
+        },
+      }),
+
+      brain_learning_disable_override: tool({
+        description: "Disable a specific prompt override by ID",
+        args: {
+          id: tool.schema.string().describe("Override ID from brain_learning_overrides"),
+        },
+        async execute(args: any) {
+          const success = disablePromptOverride(directory, args.id);
+          if (success) {
+            return `Override ${args.id} disabled successfully. The instruction has been removed from the agent prompt.`;
+          }
+          return `Failed to disable override ${args.id}. Check the ID with brain_learning_overrides.`;
+        },
+      }),
     },
   };
 };
 
 export default BrainPlugin;
-export {
-  getIndexStatus,
-  queryIndexedDocs,
-  analyzeRAGPipeline,
-  improveRAG,
-  diagnoseBrainPlugin,
-} from "./rag-agent.js";

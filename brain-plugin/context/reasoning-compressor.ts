@@ -56,7 +56,8 @@ export async function summarizeThoughts(content: string): Promise<{
     console.warn(
       `[Brain/Breadcrumb] Summarization failed, falling back to basic extraction: ${(error as Error).message}`
     );
-    const fallbackSummary = `[Thought: Step completed containing ${rawThought.split(/\s+/).length} words of reasoning]`;
+    const wordCount = rawThought ? rawThought.split(/\s+/).length : 0;
+    const fallbackSummary = `[Thought: Step completed containing ${wordCount} words of reasoning]`;
     return {
       cleanedContent: `${fallbackSummary}\n\n${cleanedContent}`,
       summary: fallbackSummary,

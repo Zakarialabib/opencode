@@ -22,7 +22,7 @@ export function getDatabase(projectRoot: string): BrainDatabase {
 
   dbPathResolve = path.join(opencodeDir, "brain.db");
   console.log(`[Brain/Store] Opening database at: ${dbPathResolve}`);
-  
+
   const db = createDatabase(dbPathResolve);
 
   // Load the sqlite-vec extension for vector queries
@@ -66,7 +66,9 @@ function runMigrations(db: BrainDatabase): void {
   // Get current schema version
   let currentVersion = 0;
   try {
-    const row = db.prepare("SELECT MAX(version) as version FROM schema_version").get() as { version: number | null };
+    const row = db.prepare("SELECT MAX(version) as version FROM schema_version").get() as {
+      version: number | null;
+    };
     if (row && row.version !== null) {
       currentVersion = row.version;
     }
@@ -76,12 +78,14 @@ function runMigrations(db: BrainDatabase): void {
 
   // Migration 1: Deactivate legacy Porter Stemmer in favor of exact unicode61 tokenization
   if (currentVersion < 1) {
-    console.log(`[Brain/Store] Executing database Migration 1 (porter -> unicode61 tokenization)...`);
-    
+    console.log(
+      `[Brain/Store] Executing database Migration 1 (porter -> unicode61 tokenization)...`
+    );
+
     db.transaction(() => {
       // Drop virtual table if it exists to clean up porter schema
       db.exec("DROP TABLE IF EXISTS fts_chunks");
-      
+
       // Recreate FTS5 table with exact unicode61 tokenization
       db.exec(`
         CREATE VIRTUAL TABLE IF NOT EXISTS fts_chunks USING fts5(
@@ -101,7 +105,7 @@ function runMigrations(db: BrainDatabase): void {
       // Record applied migration version
       db.prepare("INSERT INTO schema_version (version, applied_at) VALUES (1, ?)").run(now);
     })();
-    
+
     console.log("[Brain/Store] Migration 1 successfully applied!");
   }
 
@@ -149,6 +153,72 @@ function runMigrations(db: BrainDatabase): void {
     })();
 
     console.log("[Brain/Store] Migration 2 successfully applied!");
+  }
+
+  if (currentVersion < 3) {
+    console.log("[Brain/Store] Executing database Migration 3 (learning loop tables)...");
+
+    db.transaction(() => {
+      // Agent outcomes: captures tool execution results and LSP diagnostics
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS agent_outcomes (
+          id TEXT PRIMARY KEY,
+          timestamp INTEGER NOT NULL,
+          agent_name TEXT NOT NULL,
+          task_desc TEXT NOT NULL,
+          tool_name TEXT,
+          file_path TEXT,
+          outcome TEXT NOT NULL CHECK(outcome IN ('success', 'failure', 'partial')),
+          details TEXT,
+          pattern_type TEXT,
+          meta_json TEXT
+        );
+        CREATE INDEX IF NOT EXISTS idx_agent_outcomes_ts ON agent_outcomes(timestamp);
+        CREATE INDEX IF NOT EXISTS idx_agent_outcomes_agent ON agent_outcomes(agent_name);
+        CREATE INDEX IF NOT EXISTS idx_agent_outcomes_pattern ON agent_outcomes(pattern_type);
+      `);
+
+      // Agent patterns: recurring issues detected from outcomes
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS agent_patterns (
+          id TEXT PRIMARY KEY,
+          agent_name TEXT NOT NULL,
+          pattern_type TEXT NOT NULL,
+          confidence REAL NOT NULL DEFAULT 0.0,
+          suggestion TEXT NOT NULL,
+          occurrence_count INTEGER NOT NULL DEFAULT 1,
+          first_seen INTEGER NOT NULL,
+          last_seen INTEGER NOT NULL,
+          active INTEGER NOT NULL DEFAULT 1,
+          suppression_count INTEGER NOT NULL DEFAULT 0,
+          meta_json TEXT
+        );
+        CREATE INDEX IF NOT EXISTS idx_agent_patterns_agent ON agent_patterns(agent_name);
+        CREATE INDEX IF NOT EXISTS idx_agent_patterns_type ON agent_patterns(pattern_type);
+        CREATE INDEX IF NOT EXISTS idx_agent_patterns_active ON agent_patterns(active);
+      `);
+
+      // Prompt overrides: applied modifications to agent prompts
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS prompt_overrides (
+          id TEXT PRIMARY KEY,
+          agent_name TEXT NOT NULL,
+          instruction TEXT NOT NULL,
+          source_pattern_id TEXT NOT NULL,
+          source_pattern_type TEXT NOT NULL,
+          enabled INTEGER NOT NULL DEFAULT 1,
+          created_at INTEGER NOT NULL,
+          applied_at INTEGER,
+          last_verified_at INTEGER
+        );
+        CREATE INDEX IF NOT EXISTS idx_prompt_overrides_agent ON prompt_overrides(agent_name);
+        CREATE INDEX IF NOT EXISTS idx_prompt_overrides_enabled ON prompt_overrides(enabled);
+      `);
+
+      db.prepare("INSERT INTO schema_version (version, applied_at) VALUES (3, ?)").run(now);
+    })();
+
+    console.log("[Brain/Store] Migration 3 successfully applied!");
   }
 }
 
@@ -249,9 +319,9 @@ function initializeTables(db: BrainDatabase): void {
       ["rrf_keyword_weight", "0.2"],
       ["rerank_top_k", "20"],
       ["relevance_threshold", "0.6"],
-      ["max_context_tokens", "3000"]
+      ["max_context_tokens", "3000"],
     ];
-    
+
     db.transaction(() => {
       const now = Date.now();
       for (const [k, v] of defaults) {

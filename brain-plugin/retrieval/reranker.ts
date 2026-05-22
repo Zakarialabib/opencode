@@ -5,6 +5,7 @@ let rerankerImportFailed = false;
 let rerankerEnabled = true;
 let rerankerModelId = "Xenova/bge-reranker-base";
 let lastRerankerError: string | undefined = undefined;
+let rerankerDownloadOnly = false;
 
 // --- Harness-configurable state ---
 let _confidenceGate = 0.85; // skip rerank if top-3 scores > this
@@ -77,7 +78,7 @@ export function setRerankerModelId(modelId: string): void {
   lastRerankerError = undefined;
 }
 
-export function getRerankerStatus(): {
+export function getRerankerLoadStatus(): {
   enabled: boolean;
   modelId: string;
   loaded: boolean;
@@ -89,7 +90,7 @@ export function getRerankerStatus(): {
     modelId: rerankerModelId,
     loaded: !!localReranker,
     importFailed: rerankerImportFailed,
-    lastError: lastRerankerError
+    lastError: lastRerankerError,
   };
 }
 
@@ -101,7 +102,7 @@ export async function prewarmReranker(projectRoot: string): Promise<{
   lastError?: string;
 }> {
   await getLocalReranker(projectRoot);
-  return getRerankerStatus();
+  return getRerankerLoadStatus();
 }
 
 /**
@@ -119,7 +120,9 @@ async function getLocalReranker(projectRoot: string): Promise<any> {
     const cacheDir = `${projectRoot}/.opencode/models`.replace(/\\/g, "/");
     env.cacheDir = cacheDir;
 
-    console.log(`[Brain/Reranker] Loading reranker model from Hugging Face on CPU: ${rerankerModelId}`);
+    console.log(
+      `[Brain/Reranker] Loading reranker model from Hugging Face on CPU: ${rerankerModelId}`
+    );
     // Note: device option was removed from PretrainedOptions in transformers.js v2 - CPU is default
     localReranker = await pipeline("text-classification", rerankerModelId);
     console.log("[Brain/Reranker] Local ONNX reranker loaded successfully");
@@ -216,6 +219,7 @@ export interface RerankerStatus {
   rerankMinResults: number;
   rerankIntents: string[];
   maxChunks: number;
+  downloadOnly: boolean;
 }
 
 /**
@@ -229,6 +233,7 @@ export function getRerankerStatus(): RerankerStatus {
     rerankMinResults: _rerankMinResults,
     rerankIntents: [..._rerankIntents],
     maxChunks: _rerankerMaxChunks,
+    downloadOnly: rerankerDownloadOnly,
   };
 }
 
@@ -239,6 +244,7 @@ export function getRerankerStatus(): RerankerStatus {
 export function unloadReranker(): void {
   localReranker = null;
   rerankerImportFailed = false;
+  rerankerDownloadOnly = true;
   console.log("[Brain/Reranker] Reranker pipeline unloaded. Will re-init on next rerank request.");
 }
 

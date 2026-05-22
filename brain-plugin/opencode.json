@@ -199,10 +199,8 @@
     "brain_embed_lmstudio": "allow",
     "brain_docs_cache": "allow",
     "brain_diagnose": "allow",
-    "brain_query": "allow",
     "brain_index": "allow",
-    "brain_config": "allow",
-    "brain_improve": "allow"
+    "brain_config": "allow"
   },
   "tools": {
     "read": true,
@@ -238,10 +236,8 @@
     "brain_embed_lmstudio": true,
     "brain_docs_cache": true,
     "brain_diagnose": true,
-    "brain_query": true,
     "brain_index": true,
-    "brain_config": true,
-    "brain_improve": true
+    "brain_config": true
   },
   "lsp": {
     "typescript": {

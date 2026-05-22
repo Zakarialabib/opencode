@@ -158,6 +158,7 @@ function getStaleFiles(rootDir: string, db: ReturnType<typeof getDatabase>): str
 
 function semanticChunkFile(filePath: string, content: string): ChunkResult[] {
   const lang = detectLanguage(filePath);
+  if (!content) return [];
   const lines = content.split("\n");
 
   const blockStartPatterns = [
@@ -197,7 +198,7 @@ function semanticChunkFile(filePath: string, content: string): ChunkResult[] {
 
   const chunks: ChunkResult[] = [];
   const maxChunkSize = 50;
-  const fileName = filePath.split(/[/\\]/).pop() || filePath;
+  const fileName = filePath ? filePath.split(/[/\\]/).pop() || filePath : "unknown";
 
   let i = 0;
   while (i < boundaries.length) {
@@ -234,12 +235,13 @@ function semanticChunkFile(filePath: string, content: string): ChunkResult[] {
 }
 
 export function chunkFile(filePath: string, content: string): ChunkResult[] {
+  if (!content) return [];
   const lines = content.split("\n");
   const chunks: ChunkResult[] = [];
   const lang = detectLanguage(filePath);
   const chunkSize = 50;
   const overlap = 10;
-  const fileName = filePath.split(/[/\\]/).pop() || filePath;
+  const fileName = filePath ? filePath.split(/[/\\]/).pop() || filePath : "unknown";
 
   for (let i = 0; i < lines.length; i += chunkSize - overlap) {
     const end = Math.min(i + chunkSize, lines.length);
@@ -268,6 +270,7 @@ function chunkMarkdownByHeadings(
   content: string,
   titleFallback: string
 ): ChunkResult[] {
+  if (!content) return [];
   const lines = content.split("\n");
   const chunks: ChunkResult[] = [];
 
@@ -580,7 +583,9 @@ export async function indexDocs(
               `INSERT OR REPLACE INTO ${tableName}(rowid, embedding) VALUES ((SELECT rowid FROM chunks WHERE id = ?), ?)`
             ).run(chunk.id, new Float32Array(embeddings[i]));
           } catch (e: any) {
-            console.warn(`[Brain/Indexer] Vector insert failed for chunk ${chunk.id}: ${e.message}`);
+            console.warn(
+              `[Brain/Indexer] Vector insert failed for chunk ${chunk.id}: ${e.message}`
+            );
           }
         }
       }
