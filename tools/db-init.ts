@@ -1,12 +1,23 @@
-import * as fs from "fs";
-import * as path from "path";
-import { execSync } from "child_process";
-import { fileURLToPath } from "url";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { execSync } from "node:child_process";
 
 // Define interface for config
+interface AgentConfig {
+  model?: string;
+  temperature?: number;
+  instructions?: string[];
+}
+
+interface McpConfig {
+  command?: string[];
+  type?: string;
+  enabled?: boolean;
+}
+
 interface OpenCodeConfig {
-  agent?: Record<string, any>;
-  mcp?: Record<string, any>;
+  agent?: Record<string, AgentConfig>;
+  mcp?: Record<string, McpConfig>;
 }
 
 export class DatabaseInitializer {
@@ -40,7 +51,7 @@ export class DatabaseInitializer {
       // Check if sqlite3 command is available
       try {
         execSync("sqlite3 --version", { stdio: "ignore" });
-      } catch (e) {
+      } catch (_e) {
         console.log("  ⚠️  sqlite3 CLI not found. Skipping schema initialization.");
         console.log("  ⚠️  Install sqlite3 or manually run the schema.");
         return false;
@@ -55,7 +66,7 @@ export class DatabaseInitializer {
             stdio: "inherit",
           });
           console.log("  ✅ Schema applied successfully");
-        } catch (e) {
+        } catch (_e) {
           // Try alternative approach - execute line by line
           const statements = schema.split(";").filter((s) => s.trim());
           for (const stmt of statements) {
@@ -63,7 +74,7 @@ export class DatabaseInitializer {
               execSync(`sqlite3 "${this.dbPath}" "${stmt.trim()}"`, {
                 stdio: "ignore",
               });
-            } catch (e2) {
+            } catch (_e2) {
               // Ignore individual statement errors
             }
           }
@@ -79,14 +90,14 @@ export class DatabaseInitializer {
           encoding: "utf8",
         });
         console.log("  ✅ Tables created:", result.trim());
-      } catch (e) {
+      } catch (_e) {
         console.log("  ⚠️  Could not verify tables");
       }
 
       console.log("✅ Database initialization complete!");
       return true;
-    } catch (error: any) {
-      console.error("❌ Database initialization failed:", error.message);
+    } catch (error: unknown) {
+      console.error("❌ Database initialization failed:", (error as Error).message);
       return false;
     }
   }
@@ -109,7 +120,7 @@ export class DatabaseInitializer {
 
             try {
               execSync(`sqlite3 "${this.dbPath}" "${sql}"`, { stdio: "ignore" });
-            } catch (e) {
+            } catch (_e) {
               // Ignore insertion errors
             }
           }
@@ -126,7 +137,7 @@ export class DatabaseInitializer {
 
             try {
               execSync(`sqlite3 "${this.dbPath}" "${sql}"`, { stdio: "ignore" });
-            } catch (e) {
+            } catch (_e) {
               // Ignore insertion errors
             }
           }
@@ -159,7 +170,7 @@ export class DatabaseInitializer {
 
             try {
               execSync(`sqlite3 "${this.dbPath}" "${sql}"`, { stdio: "ignore" });
-            } catch (e) {
+            } catch (_e) {
               // Ignore insertion errors
             }
           }
@@ -169,18 +180,17 @@ export class DatabaseInitializer {
 
       console.log("✅ Default data inserted!");
       return true;
-    } catch (error: any) {
-      console.error("❌ Failed to insert default data:", error.message);
+    } catch (error: unknown) {
+      console.error("❌ Failed to insert default data:", (error as Error).message);
       return false;
     }
   }
 }
 
 // Run if called directly
-const isMain = process.argv[1] && (
-  process.argv[1].endsWith("db-init.ts") || 
-  process.argv[1].endsWith("db-init.js")
-);
+const isMain =
+  process.argv[1] &&
+  (process.argv[1].endsWith("db-init.ts") || process.argv[1].endsWith("db-init.js"));
 
 if (isMain) {
   const projectRoot = process.argv[2] || process.cwd();
@@ -202,4 +212,3 @@ if (isMain) {
       process.exit(1);
     });
 }
-

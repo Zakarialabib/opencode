@@ -1,6 +1,6 @@
-import * as fs from "fs";
-import * as path from "path";
-import { execSync } from "child_process";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { execSync } from "node:child_process";
 
 /**
  * The Continuum Engine: Strata Exporter
@@ -22,7 +22,7 @@ let recentFiles: string[] = [];
 try {
   const gitStatus = execSync("git status --short", { cwd: WORKSPACE_DIR }).toString();
   recentFiles = gitStatus.split("\n").filter((line) => line.trim().length > 0);
-} catch (e) {
+} catch (_e) {
   console.log("Warning: Git not initialized or no recent changes.");
 }
 
@@ -52,4 +52,3 @@ const exportPath = path.join(CONTINUUM_DIR, filename);
 
 fs.writeFileSync(exportPath, JSON.stringify(strata, null, 2));
 console.log(`[Continuum Engine] Stratum successfully exported to: ${exportPath}`);
-

@@ -20,29 +20,6 @@ Plugins extend OpenCode's functionality via TypeScript/JavaScript modules that e
 | 6   | **Context Manager** | `context-manager.ts` | Dynamic context include/exclude configuration                              |
 | 7   | **JSONC Utils**     | `jsonc-utils.ts`     | Shared utility for parsing JSONC config (with `//`-safe comment stripping) |
 
-### Cognitive Plugins (1 — project intelligence)
-
-| #   | Plugin           | File                    | Purpose                                                                                 |
-| --- | ---------------- | ----------------------- | --------------------------------------------------------------------------------------- |
-| 8   | **Brain Plugin** | `brain-plugin/brain.ts` | RAG engine: auto-index, vector search, speculative decoding, codebase context injection |
-
-### IDE/Trae Bridge Plugins (4 — require IDE context)
-
-| #   | Plugin                       | File                          | Purpose                                                       |
-| --- | ---------------------------- | ----------------------------- | ------------------------------------------------------------- |
-| 9   | **Extension Context Bridge** | `extension-context-bridge.ts` | Bridges extension context from Trae IDE                       |
-| 10  | **IDE MCP Bridge**           | `ide-mcp-bridge.ts`           | Exposes MCP servers running in IDE to OpenCode                |
-| 11  | **Language Context Bridge**  | `language-context-bridge.ts`  | LSP integration (rust-analyzer, TypeScript, PHP Intelephense) |
-| 12  | **Process Monitor**          | `process-monitor.ts`          | Process tree monitoring and health checks                     |
-
-### External (npm)
-
-| Package                       | Purpose                              |
-| ----------------------------- | ------------------------------------ |
-| `@zenobius/opencode-skillful` | Skill management and discovery tools |
-
----
-
 ## 🛠️ Tools Provided by Each Core Plugin
 
 ### Agent Router (`agent-router.ts`)
@@ -108,12 +85,9 @@ Plugins are registered in `opencode.json`:
     "plugins/agent-router.ts",
     "plugins/skill-manager.ts",
     "plugins/context-manager.ts",
-    "brain-plugin/brain.ts",   # RAG engine: auto-index, vector search, speculative decoding
     "plugins/extension-context-bridge.ts",
-    "plugins/ide-mcp-bridge.ts",
     "plugins/language-context-bridge.ts",
     "plugins/process-monitor.ts",
-    "@zenobius/opencode-skillful"
   ]
 }
 ```
@@ -200,9 +174,6 @@ const config = parseJsonc(readFileSync("opencode.json", "utf8"));
 ```
 
 ---
-
-> **Note:** The Brain Plugin lives at `brain-plugin/brain.ts` (separate from `plugins/`) because it has its own Rust sidecar project at `C:\rust-brain-sidecar` (outside the repo). See [Brain Plugin Docs](brain-plugin-docs.md).
-
 ## 📂 Plugin File Structure
 
 ```
@@ -215,7 +186,6 @@ plugins/
 ├── skill-manager.ts            # Skill registry access
 ├── context-manager.ts          # Context configuration
 ├── extension-context-bridge.ts # Trae IDE extension bridge
-├── ide-mcp-bridge.ts           # IDE MCP bridge
 ├── language-context-bridge.ts  # LSP integration bridge
 ├── process-monitor.ts          # Process monitoring
 └── tests/                      # Test suite

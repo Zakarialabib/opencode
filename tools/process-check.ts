@@ -1,5 +1,5 @@
-import { readFile } from "fs/promises";
-import { join } from "path";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 
 interface TraeProcess {
   name: string;
@@ -116,12 +116,12 @@ export function findProcessByName(
 
 export function formatMemory(bytes?: number): string {
   if (!bytes) return "0 MB";
-  return (bytes / 1024 / 1024).toFixed(1) + " MB";
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
 export function formatCpu(percent?: number): string {
   if (percent === undefined) return "0%";
-  return (percent * 100).toFixed(1) + "%";
+  return `${(percent * 100).toFixed(1)}%`;
 }
 
 export function checkProcessHealth(processName: string): ProcessCheckResult {

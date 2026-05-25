@@ -67,18 +67,7 @@ context7_resolve-library-id({ "library": "vendor/package" })
 context7_query-docs({ "libraryId": "<id>", "query": "<what you need>" })
 ```
 
-### Step 5: Brain Integration
-
-The Brain plugin (`brain.ts`) **automatically** performs steps 1-4 via its context fallback chain:
-
-- When code search returns < 3 chunks, Brain calls `context7` and registry APIs
-- Results are cached in `docs-store.ts` (in-memory, 50-entry LRU) and injected into the user message
-- You can view cached docs with `brain_docs_cache` tool
-- Observability is handled by `learn/tracer.ts` — use `brain_status` or `brain_metrics` for pipeline analytics
-
-So you typically don't need to fetch docs manually — the Brain does it. Use `brain_docs_cache` to check what's been fetched.
-
-## Step 6: Cache and proceed
+## Step 5: Cache and proceed
 
 Keep the fetched info in your working context. You don't need to re-fetch if you already looked it up this session.
 

@@ -261,22 +261,6 @@ const recentDecisions = decisions.filter(
 );
 ```
 
-### Freshness Validation
-
-**Auto-Reindexing**:
-```typescript
-// If files modified recently
-if (dirtyFiles.size > 0) {
-  await brain_index_project();
-}
-
-// Verify freshness
-const isStale = checkStaleness(brainIndex);
-if (isStale) {
-  await brain_index_project();
-}
-```
-
 ## Performance Optimization
 
 ### Lazy Tool Loading
@@ -321,17 +305,6 @@ Track per session:
 - Context compression ratio
 - Time per delegation
 
-### Health Checks
-
-```typescript
-// At session start
-await brain_diagnostic();
-
-// Periodic checks
-if (sessionTokens > tokenThreshold) {
-  await brain_status();
-}
-```
 
 ## Anti-Patterns to Avoid
 
@@ -393,5 +366,3 @@ if (sessionTokens > tokenThreshold) {
 ## References
 
 - [Agent Delegation Templates](../rules/agent-delegation-templates.md)
-- [Brain Plugin Usage](../rules/brain.md)
-- [Session State Implementation](../../brain-plugin/state/orchestrator-session.ts)

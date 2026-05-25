@@ -3,26 +3,27 @@ import { parseJsonc } from "./jsonc-utils";
 import { readFile, writeFile, copyFile, rename, readdir } from "fs/promises";
 import { execSync } from "child_process";
 import { createHash } from "crypto";
-import { debug, warn, SKILL_CATEGORIES } from "./debug-logger";
+// import { debug, setTelemetryContext, warn, SKILL_CATEGORIES } from "./debug-logger";
+// import { pruneOldTelemetry, recordRunEnd, recordRunStart } from "../brain-plugin/store/telemetry";
 
 // Debug: trace tool execution
-function traceToolExecution(toolName: string, args: any, result: any, duration: number) {
-  debug(SKILL_CATEGORIES.TOOL_EXECUTE, `Tool executed: ${toolName}`, {
-    duration,
-    hasArgs: !!args,
-    hasResult: !!result,
-    resultPreview: typeof result === "string" ? result.slice(0, 100) : typeof result,
-  });
-}
+// function traceToolExecution(toolName: string, args: any, result: any, duration: number) {
+//   debug(SKILL_CATEGORIES.TOOL_EXECUTE, `Tool executed: ${toolName}`, {
+//     duration,
+//     hasArgs: !!args,
+//     hasResult: !!result,
+//     resultPreview: typeof result === "string" ? result.slice(0, 100) : typeof result,
+//   });
+// }
 
-// Debug: trace hook invocation
-function traceHook(name: string, input: any, output: any) {
-  debug(SKILL_CATEGORIES.HOOK_INVOKE, `Hook triggered: ${name}`, {
-    hasInput: !!input,
-    inputKeys: input ? Object.keys(input).slice(0, 5) : [],
-    hasOutput: !!output,
-  });
-}
+// // Debug: trace hook invocation
+// function traceHook(name: string, input: any, output: any) {
+//   debug(SKILL_CATEGORIES.HOOK_INVOKE, `Hook triggered: ${name}`, {
+//     hasInput: !!input,
+//     inputKeys: input ? Object.keys(input).slice(0, 5) : [],
+//     hasOutput: !!output,
+//   });
+// }
 
 // ─── Session Plan Memory ────────────────────────────────────────
 // Persists plan context across subagent delegations within a session.
@@ -374,6 +375,17 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
   // Cache for LM Studio URLs
   let nativeUrl: string | null = null;
   let openAIUrl: string | null = null;
+  const telemetryProjectRoot = directory;
+  const telemetryKeepMs = 7 * 24 * 60 * 60 * 1000;
+  const telemetryDefaultTraceId = createHash("sha1")
+    .update(`${process.pid}:${telemetryProjectRoot}`)
+    .digest("hex")
+    .slice(0, 12);
+  const toolRunMap = new Map<string, string>();
+  // setTelemetryContext({ projectRoot: telemetryProjectRoot, traceId: telemetryDefaultTraceId });
+  // try {
+  //   pruneOldTelemetry(telemetryProjectRoot, { keepMs: telemetryKeepMs });
+  // } catch {}
 
   // Helper to ensure URLs are loaded
   async function ensureUrls() {
@@ -384,6 +396,20 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
   return {
     // Hook: Before each message — LM Studio health check and diagnostic injection
     "chat.message": async (input: any, output: any) => {
+      const hookStartedAt = Date.now();
+      const sessionId = typeof input?.sessionID === "string" ? input.sessionID : undefined;
+      const traceId = sessionId || telemetryDefaultTraceId;
+      let runId: string | undefined;
+      let ok = true;
+      try {
+        // runId = recordRunStart(telemetryProjectRoot, {
+        //   kind: "orchestrator",
+        //   name: "chat.message",
+        //   sessionId,
+        //   traceId,
+        //   meta: {},
+        // });
+      } catch {}
       try {
         const { sessionID, model } = input || {};
 
@@ -391,10 +417,10 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
         const sid = sessionID || "default";
         const diags = flushDiagnostics(sid);
         if (diags.length > 0 && input?.messages) {
-          debug(
-            SKILL_CATEGORIES.LSP_CONTEXT,
-            `Injecting ${diags.length} LSP diagnostics into messages`
-          );
+          // debug(
+          //   SKILL_CATEGORIES.LSP_CONTEXT,
+          //   `Injecting ${diags.length} LSP diagnostics into messages`
+          // );
           const diagText = diags.map((d) => `⚠️ ${d.file}: ${d.errors.slice(0, 250)}`).join("\n");
 
           input.messages.unshift({
@@ -481,6 +507,7 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
           }
         }
       } catch (err: any) {
+        ok = false;
         await client.app.log({
           body: {
             service: "chat-message-hook",
@@ -488,13 +515,41 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
             message: `Error in chat.message hook: ${err.message}`,
           },
         });
+      } finally {
+        if (runId) {
+          try {
+            // recordRunEnd(telemetryProjectRoot, runId, {
+            //   status: ok ? "success" : "error",
+            //   metaPatch: { durationMs: Math.max(0, Date.now() - hookStartedAt) },
+            // });
+          } catch {}
+        }
       }
     },
 
     // Hook: Modify chat parameters — race-safe LSP checks and lazy tool loading
     "chat.params": async ({ sessionID, agent, model, provider, message }: any, output: any) => {
+      const hookStartedAt = Date.now();
+      const sessionId = typeof sessionID === "string" ? sessionID : undefined;
+      const traceId = sessionId || telemetryDefaultTraceId;
+      let runId: string | undefined;
+      let ok = true;
       try {
-        traceHook("chat.params", { sessionID, agent, messageLength: message?.length }, output);
+        // runId = recordRunStart(telemetryProjectRoot, {
+        //   kind: "orchestrator",
+        //   name: "chat.params",
+        //   sessionId,
+        //   traceId,
+        //   meta: {
+        //     agent: typeof agent === "string" ? agent : undefined,
+        //     provider: typeof provider === "string" ? provider : undefined,
+        //     model: typeof model?.modelID === "string" ? model.modelID : undefined,
+        //     messageLength: typeof message === "string" ? message.length : undefined,
+        //   },
+        // });
+      } catch {}
+      try {
+        // traceHook("chat.params", { sessionID, agent, messageLength: message?.length }, output);
 
         const sid = sessionID || "default";
 
@@ -502,9 +557,9 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
         if (pending) {
           try {
             await pending;
-            debug(SKILL_CATEGORIES.LSP_CONTEXT, "Awaited pending LSP checks");
+            // debug(SKILL_CATEGORIES.LSP_CONTEXT, "Awaited pending LSP checks");
           } catch {
-            warn(SKILL_CATEGORIES.LSP_ERROR, "Error awaiting pending LSP checks");
+            // warn(SKILL_CATEGORIES.LSP_ERROR, "Error awaiting pending LSP checks");
           }
           pendingChecks.delete(sid);
         }
@@ -514,14 +569,15 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
           const lazyTools = filterToolsByKeywords(output.tools, conversation);
 
           if (lazyTools.length !== output.tools.length) {
-            debug(
-              SKILL_CATEGORIES.TOOL_LOAD,
-              `Lazy loading: ${output.tools.length} → ${lazyTools.length} tools`
-            );
+            // debug(
+            //   SKILL_CATEGORIES.TOOL_LOAD,
+            //   `Lazy loading: ${output.tools.length} → ${lazyTools.length} tools`
+            // );
             output.tools = lazyTools;
           }
         }
       } catch (err: any) {
+        ok = false;
         await client.app.log({
           body: {
             service: "chat-params-hook",
@@ -529,7 +585,43 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
             message: `Error in chat.params hook: ${err.message}`,
           },
         });
+      } finally {
+        if (runId) {
+          try {
+            // recordRunEnd(telemetryProjectRoot, runId, {
+            //   status: ok ? "success" : "error",
+            //   metaPatch: { durationMs: Math.max(0, Date.now() - hookStartedAt) },
+            // });
+          } catch {}
+        }
       }
+    },
+
+    "tool.execute.before": async (input: any) => {
+      try {
+        const toolName = input?.tool || "unknown";
+        const sessionId = typeof input?.args?.sessionID === "string" ? input.args.sessionID : undefined;
+        const traceId = sessionId || telemetryDefaultTraceId;
+        const argsPreview =
+          input?.args && typeof input.args === "object"
+            ? JSON.stringify(input.args).slice(0, 200)
+            : typeof input?.args === "string"
+              ? input.args.slice(0, 200)
+              : undefined;
+
+        // const runId = recordRunStart(telemetryProjectRoot, {
+        //   kind: "tool",
+        //   name: toolName,
+        //   sessionId,
+        //   traceId,
+        //   meta: {
+        //     argsPreview,
+        //   },
+        // });
+
+        // input.__telemetryRunId = runId;
+        input.__telemetryStartAt = Date.now();
+      } catch {}
     },
 
     // Hook: After tool execution — same-turn diagnostic injection
@@ -539,7 +631,7 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
       const sessionID = input.args?.sessionID || "default";
 
       // Debug trace hook invocation
-      traceHook("tool.execute.after", input, output);
+      // traceHook("tool.execute.after", input, output);
 
       // Capture file modifications and run fast check for same-turn feedback
       if ((toolName === "write" || toolName === "edit") && input.args?.filePath) {
@@ -552,7 +644,7 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
           const entry = detectAndCheck(filePath);
           if (entry && output && typeof output === "object") {
             output.result = (output.result || "") + `\n\n⚠️ LSP: ${entry.errors.slice(0, 300)}`;
-            debug(SKILL_CATEGORIES.LSP_CONTEXT, `LSP injected for ${filePath}`);
+            // debug(SKILL_CATEGORIES.LSP_CONTEXT, `LSP injected for ${filePath}`);
           }
         } else {
           // Slower checks: fire-and-forget with race-safe queue
@@ -560,7 +652,7 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
             const entry = detectAndCheck(filePath);
             if (entry) {
               addDiagnostic(sessionID, entry);
-              debug(SKILL_CATEGORIES.LSP_ERROR, `LSP issue detected in ${filePath}`);
+              // debug(SKILL_CATEGORIES.LSP_ERROR, `LSP issue detected in ${filePath}`);
             }
           })();
           pendingChecks.set(
@@ -570,13 +662,59 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
         }
       }
 
+      try {
+        const sessionId = typeof input?.args?.sessionID === "string" ? input.args.sessionID : undefined;
+        const traceId = sessionId || telemetryDefaultTraceId;
+        const runId = typeof input?.__telemetryRunId === "string" ? input.__telemetryRunId : undefined;
+        const startedAt =
+          typeof input?.__telemetryStartAt === "number" ? (input.__telemetryStartAt as number) : undefined;
+        const durationMs = startedAt ? Math.max(0, Date.now() - startedAt) : undefined;
+        const resultPreview =
+          output && typeof output === "object"
+            ? typeof (output as any).result === "string"
+              ? (output as any).result.slice(0, 200)
+              : undefined
+            : typeof output === "string"
+              ? output.slice(0, 200)
+              : undefined;
+
+        const hasError =
+          (output && typeof output === "object" && typeof (output as any).error === "string") ||
+          (typeof resultPreview === "string" && resultPreview.trim().startsWith("❌"));
+
+        if (runId) {
+          // recordRunEnd(telemetryProjectRoot, runId, {
+          //   status: hasError ? "error" : "success",
+          //   metaPatch: {
+          //     durationMs,
+          //     resultPreview,
+          //   },
+          // });
+        } else {
+          // const fallbackRunId = recordRunStart(telemetryProjectRoot, {
+          //   kind: "tool",
+          //   name: toolName || "unknown",
+          //   sessionId,
+          //   traceId,
+          //   meta: {
+          //     durationMs,
+          //     resultPreview,
+          //   },
+          // });
+          // recordRunEnd(telemetryProjectRoot, fallbackRunId, { status: hasError ? "error" : "success" });
+        }
+      } catch {}
+
       // Debug trace tool execution
-      traceToolExecution(toolName, input.args, output?.result, Date.now() - startTime);
+      // traceToolExecution(toolName, input.args, output?.result, Date.now() - startTime);
     },
 
     // Hook: On session end, analyze and propose config improvements
     "session.archived": async ({ session }: any) => {
       const configPath = `${directory}/opencode.json`;
+      try {
+        // pruneOldTelemetry(telemetryProjectRoot, { keepMs: telemetryKeepMs });
+      } catch {}
 
       // Analyze session patterns
       const analysis = await analyzeSessionPatterns(session.id);

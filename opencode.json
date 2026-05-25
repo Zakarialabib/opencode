@@ -1,24 +1,7 @@
 ﻿{
   "$schema": "https://opencode.ai/config.json",
-  "default_agent": "core-factory",
-  "model": "qwen-3-235b-a22b-instruct-2507",
-  "autoupdate": true,
-  "share": "manual",
-  "enabled_providers": [
-    "opencode",
-    "lmstudio",
-    "opencode-go",
-    "cerebras",
-    "openrouter"
-  ],
-  "plugin": [
-    "plugins/index.ts",
-    "plugins/skill-manager.ts",
-    "plugins/context-manager.ts",
-    "brain-plugin/brain.ts",
-    "meta-harness/meta-harness.ts",
-    "plugins/mobile-tool-router.ts"
-  ],
+  "default_agent": "build",
+  "model": "lmstudio/gemma-4-e4b-it",
   "provider": {
     "opencode": {
       "name": "opencode",
@@ -32,7 +15,18 @@
         "baseURL": "https://api.cerebras.ai/v1",
         "apiKey": "${CEREBRAS_API_KEY}"
       },
-      "models": {}
+      "models": {
+        "qwen-3-235b-a22b-instruct-2507": {
+          "name": "Qwen 3 235B-A22B",
+          "tool_call": true,
+          "reasoning": true
+        },
+        "zai-glm-4.7": {
+          "name": "ZAI GLM 4.7",
+          "tool_call": false,
+          "reasoning": true
+        }
+      }
     },
     "lmstudio": {
       "npm": "@ai-sdk/openai-compatible",
@@ -47,7 +41,7 @@
           "reasoning": true
         },
         "gemma-4-e4b-it": {
-          "name": "Gemma 4 EB4 IT (local)",
+          "name": "Gemma 4 E4B IT (local)",
           "tool_call": true,
           "reasoning": true
         },
@@ -59,6 +53,7 @@
       }
     },
     "opencode-go": {
+      "npm": "@ai-sdk/openai-compatible",
       "name": "OpenCode Go (Premium)",
       "options": {
         "baseURL": "https://api.opencode.ai/v1"
@@ -69,167 +64,106 @@
       "npm": "@ai-sdk/openai-compatible",
       "name": "OpenRouter",
       "options": {
-        "baseURL": "https://openrouter.ai/api/v1"
+        "baseURL": "https://openrouter.ai/api/v1",
+        "apiKey": "${OPENROUTER_API_KEY}"
       },
-      "models": {}
+      "models": {
+        "inclusionai/ring-2.6-1t:free": {
+          "name": "Ring 2.6-1t (free)",
+          "tool_call": true,
+          "reasoning": true
+        },
+        "poolside/laguna-m.1:free": {
+          "name": "Laguna M.1 (free)",
+          "tool_call": true,
+          "reasoning": true
+        }
+      }
     }
   },
   "server": {
     "port": 4096,
     "hostname": "127.0.0.1",
     "mdns": false,
-    "cors": [
-      "http://127.0.0.1:8080"
-    ]
+    "cors": ["http://127.0.0.1:8080"]
   },
+  "plugin": [
+    "plugins/index.ts",
+    "plugins/skill-manager.ts",
+    "plugins/context-manager.ts",
+  ],
   "mcp": {
     "context7": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@upstash/context7-mcp@latest"
-      ],
+      "command": ["npx", "-y", "@upstash/context7-mcp@latest"],
       "enabled": true,
       "timeout": 45000
     },
     "memory": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-memory"
-      ],
+      "command": ["npx", "-y", "@modelcontextprotocol/server-memory"],
       "enabled": false,
       "timeout": 30000
     },
     "git": {
       "type": "local",
-      "command": [
-        "uvx",
-        "mcp-server-git"
-      ],
+      "command": ["uvx", "mcp-server-git"],
       "enabled": true,
       "timeout": 30000
     },
     "fetch": {
       "type": "local",
-      "command": [
-        "uvx",
-        "mcp-server-fetch"
-      ],
+      "command": ["uvx", "mcp-server-fetch"],
       "enabled": false,
       "timeout": 30000
     },
     "sqlite": {
       "type": "local",
-      "command": [
-        "uvx",
-        "mcp-server-sqlite",
-        "--db-path",
-        "${OPENCODE_HOME:-./database.sqlite}"
-      ],
+      "command": ["uvx", "mcp-server-sqlite", "--db-path", "./database.sqlite"],
       "enabled": false,
       "timeout": 30000
     },
     "sequential-thinking": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-sequential-thinking"
-      ],
+      "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"],
       "enabled": true,
       "timeout": 45000
     },
     "language-server": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-language-server"
-      ],
-      "enabled": true,
+      "command": ["npx", "-y", "@modelcontextprotocol/server-language-server"],
+      "enabled": false,
       "timeout": 45000
     },
     "type-inject": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@nick-vi/type-inject-mcp"
-      ],
+      "command": ["npx", "-y", "@nick-vi/type-inject-mcp"],
       "enabled": true,
       "timeout": 45000
     },
     "puppeteer": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-puppeteer"
-      ],
+      "command": ["npx", "-y", "@modelcontextprotocol/server-puppeteer"],
       "enabled": false,
       "timeout": 60000
     },
     "personal-knowledge": {
       "type": "local",
-      "command": [
-        "bunx",
-        "opencode-personal-knowledge"
-      ],
+      "command": ["bunx", "opencode-personal-knowledge"],
       "enabled": false,
       "timeout": 30000
     },
     "filesystem": {
       "type": "local",
-      "command": [
-        "bunx",
-        "@modelcontextprotocol/server-filesystem",
-        "."
-      ],
+      "command": ["bunx", "@modelcontextprotocol/server-filesystem", "."],
       "enabled": true,
       "timeout": 45000
     },
     "everything": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-everything"
-      ],
+      "command": ["npx", "-y", "@modelcontextprotocol/server-everything"],
       "enabled": false,
       "timeout": 30000
-    },
-    "gradle": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "gradle-mcp-server"
-      ],
-      "enabled": true,
-      "timeout": 120000
-    },
-    "mobile": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "mobile-mcp"
-      ],
-      "enabled": true,
-      "timeout": 60000
-    },
-    "android-emulator": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "mcp-android-emulator"
-      ],
-      "enabled": true,
-      "timeout": 60000
     }
   },
   "permission": {
@@ -242,35 +176,24 @@
       "*": "ask",
       "ls": "allow",
       "dir": "allow",
-      "git status*": "allow",
-      "git diff*": "allow",
-      "git log*": "allow",
+      "git status": "allow",
+      "git diff": "allow",
+      "git log": "allow",
+      "git branch": "allow",
       "git push": "ask",
       "git pull": "ask",
-      "git branch*": "allow",
-      "npm test*": "allow",
-      "npm run*": "allow",
-      "cargo check*": "allow",
-      "cargo build*": "allow",
-      "cargo run*": "ask",
-      "php artisan list*": "allow",
-      "php artisan migrate*": "ask",
-      "php artisan test*": "allow",
-      "pnpm*": "allow",
-      "bun*": "allow",
-      "npx*": "allow",
-      "rm -rf *": "deny"
-    },
-    "file": {
-      "*": "ask",
-      "*.env": "deny",
-      "*.env.*": "deny",
-      ".env*": "deny",
-      "**/node_modules/**": "deny",
-      "**/.git/**": "deny",
-      "**/vendor/**": "deny",
-      "**/target/**": "deny",
-      ".\\**": "allow"
+      "npm test": "allow",
+      "npm run": "allow",
+      "cargo check": "allow",
+      "cargo build": "allow",
+      "cargo run": "ask",
+      "php artisan list": "allow",
+      "php artisan migrate": "ask",
+      "php artisan test": "allow",
+      "php artisan pint": "allow",
+      "pnpm": "allow",
+      "bun": "allow",
+      "npx": "allow"
     },
     "read": {
       "*": "allow",
@@ -282,17 +205,32 @@
       "*": "allow",
       "*.env": "deny",
       "*.env.*": "deny",
-      "**/node_modules/**": "deny"
+      "**/node_modules/**": "deny",
+      "**/.git/**": "deny",
+      "**/vendor/**": "deny",
+      "**/target/**": "deny"
     },
     "bash": {
       "*": "ask",
       "git status": "allow",
       "git diff": "allow",
-      "git log": "allow",
+      "git log*": "allow",
+      "git branch": "allow",
       "ls": "allow",
       "pwd": "allow",
       "cat": "allow",
-      "which": "allow"
+      "which": "allow",
+      "grep*": "allow",
+      "dir": "allow",
+      "Get-ChildItem*": "allow",
+      "Test-Path*": "allow",
+      "Get-Content*": "allow",
+      "pip*": "allow",
+      "npm*": "allow",
+      "npx*": "allow",
+      "bun*": "allow",
+      "pnpm*": "allow",
+      "node*": "allow"
     },
     "glob": "allow",
     "grep": "allow",
@@ -302,6 +240,7 @@
     "codesearch": "allow",
     "todoread": "allow",
     "todowrite": "allow",
+    "mcp": "allow",
     "context7": "allow",
     "sequential-thinking": "allow",
     "language-server": "allow",
@@ -314,24 +253,7 @@
       ".\\**": "allow",
       "~\\**": "ask"
     },
-    "doom_loop": "deny",
-    "brain_diagnostic": "allow",
-    "brain_status": "allow",
-    "brain_metrics": "allow",
-    "brain_search": "allow",
-    "brain_embed_test": "allow",
-    "brain_index_project": "allow",
-    "brain_speculative_status": "allow",
-    "brain_embed_lmstudio": "allow",
-    "brain_docs_cache": "allow",
-    "brain_diagnose": "allow",
-    "brain_query": "allow",
-    "brain_index": "allow",
-    "brain_config": "allow",
-    "brain_improve": "allow",
-    "brain_optimize_harness": "allow",
-    "brain_harness_status": "allow",
-    "brain_apply_harness": "allow"
+    "doom_loop": "deny"
   },
   "tools": {
     "read": true,
@@ -354,176 +276,82 @@
     "filesystem": true,
     "sqlite": true,
     "sequential-thinking": true,
-    "language-server": true,
-    "type-inject": true,
-    "gradle": true,
-    "mobile": true,
-    "android-emulator": true,
-    "brain_diagnostic": true,
-    "brain_status": true,
-    "brain_metrics": true,
-    "brain_search": true,
-    "brain_embed_test": true,
-    "brain_index_project": true,
-    "brain_speculative_status": true,
-    "brain_embed_lmstudio": true,
-    "brain_docs_cache": true,
-    "brain_diagnose": true,
-    "brain_query": true,
-    "brain_index": true,
-    "brain_config": true,
-    "brain_improve": true
+    "type-inject": true
   },
   "lsp": {
     "typescript": {
-      "command": [
-        "typescript-language-server",
-        "--stdio"
-      ],
-      "extensions": [
-        ".ts",
-        ".tsx",
-        ".js",
-        ".jsx"
-      ],
+      "command": ["typescript-language-server", "--stdio"],
+      "extensions": [".ts", ".tsx", ".js", ".jsx"],
       "timeout": 30000
     },
     "php": {
-      "command": [
-        "intelephense",
-        "--stdio"
-      ],
-      "extensions": [
-        ".php"
-      ],
+      "command": ["intelephense", "--stdio"],
+      "extensions": [".php"],
       "initialization": {
-        "storagePath": "${OPENCODE_HOME:-.}/.cache/intelephense"
+        "storagePath": "./.cache/intelephense"
       }
     },
     "rust": {
-      "command": [
-        "rust-analyzer"
-      ],
-      "extensions": [
-        ".rs"
-      ]
+      "command": ["rust-analyzer"],
+      "extensions": [".rs"]
     },
     "tailwind": {
-      "command": [
-        "tailwindcss-language-server",
-        "--stdio"
-      ],
-      "extensions": [
-        ".css",
-        ".html",
-        ".js",
-        ".ts",
-        ".tsx",
-        ".php"
-      ]
+      "command": ["tailwindcss-language-server", "--stdio"],
+      "extensions": [".css", ".html", ".js", ".ts", ".tsx", ".php"]
     }
   },
   "formatter": {
     "biome": {
-      "disabled": false,
-      "command": [
-        "npx",
-        "biome",
-        "format",
-        "--write",
-        "$FILE"
-      ],
-      "extensions": [
-        ".js",
-        ".jsx",
-        ".ts",
-        ".tsx",
-        ".json",
-        ".jsonc"
-      ]
+      "command": ["npx", "biome", "format", "--write", "$FILE"],
+      "extensions": [".js", ".jsx", ".ts", ".tsx", ".json", ".jsonc"]
     },
     "prettier": {
-      "disabled": false,
-      "command": [
-        "npx",
-        "prettier",
-        "--write",
-        "$FILE"
-      ],
-      "extensions": [
-        ".css",
-        ".scss",
-        ".html",
-        ".md",
-        ".yaml",
-        ".yml"
-      ]
+      "command": ["npx", "prettier", "--write", "$FILE"],
+      "extensions": [".css", ".scss", ".html", ".md", ".yaml", ".yml"]
     },
     "pint": {
-      "command": [
-        "php",
-        "artisan",
-        "pint",
-        "$FILE"
-      ],
-      "extensions": [
-        ".php"
-      ]
+      "command": ["php", "artisan", "pint", "$FILE"],
+      "extensions": [".php"]
     },
     "rustfmt": {
-      "command": [
-        "rustfmt",
-        "$FILE"
-      ],
-      "extensions": [
-        ".rs"
-      ]
+      "command": ["rustfmt", "$FILE"],
+      "extensions": [".rs"]
     },
     "shfmt": {
-      "command": [
-        "shfmt",
-        "-w",
-        "$FILE"
-      ],
-      "extensions": [
-        ".sh",
-        ".bash"
-      ]
+      "command": ["shfmt", "-w", "$FILE"],
+      "extensions": [".sh", ".bash"]
     }
   },
   "instructions": [
-    "Follow project rules: rules/general.md, rules/project.md, rules/laravel-boost.md",
-    "Stack: Tauri (Rust), React (TypeScript), Laravel (PHP). Use auto-detect.",
-    "Auto-format based on rules/auto-format.md.",
-    "REASONING: Always use <thinking> blocks before acting.",
-    "ERROR HANDLING: If a tool fails, try one alternative before asking for help.",
-    "STYLE: Strict naming conventions and architectural patterns.",
-    "CONVENTIONS: Always query memory MCP for project-conventions at session start. Apply conventions with confidence >= 0.7.",
-    "SELF-IMPROVE: Use prompt-engineering skill to rewrite prompts when quality degrades.",
-    "BRAIN: Use brain_diagnostic at session start to check plugin health. Use brain_search for semantic code discovery.",
-    "Use brain_search with intent parameter (learn/refactor/feature/debug/test) for optimized retrieval.",
-    "Memory-aware retrieval boosts known concepts by 15% using adaptive RRF weights.",
-    "Adaptive chunk count scales with decision tree confidence score.",
-    "Token-based compression (not char-based) with estimateTokens function.",
-    "BRAIN INDEX: If retrieval is empty or stale (>1hr), run brain_index_project before relying on Brain context.",
-    "RERANKING: Cross-encoder reranking is triggered for learn/refactor/feature intents when results >= 10.",
-<<<<<<< HEAD
-    "MOBILE: For Android/Kotlin tasks, use @android-kotlin. For mobile QA/testing, use @mobile-qa. For Tauri mobile build commands, @backend-tauri handles Rust side, @android-kotlin handles native Android side. Available Android skills: android, android/compose, android/gradle, android/testing, android/debugging, android/deployment. MCP servers: gradle (builds), mobile (device control), android-emulator (emulator).",
-    "See rules/brain.md for Brain plugin usage. For mobile, see rules/mobile.md.",
+    "RULES: Read rules/general.md, rules/project.md, rules/laravel-boost.md at session start. Apply without exception.",
+    "STACK: Tauri (Rust) + React (TypeScript) + Laravel (PHP). Detect layer from file path — never guess.",
+    "FORMAT: Auto-format every edited file per rules/auto-format.md. No exceptions.",
+    "THINK: Before every action — What is the actual request? What do I know for certain? What must I verify first? What is the minimal path to the correct result?",
+    "HONESTY: If you do not know, say 'I do not know.' Never fabricate APIs, file contents, or code you have not read. Never guess a file path — search for it.",
+    "DIRECT: No preamble. No 'Sure!' No 'Here is the implementation:'. Produce the result immediately.",
+    "EDITS: Read the full file first. Use edit(oldString, newString). If the edit fails, the file differs from your assumption — re-read it, then retry with the correct oldString.",
+    "INTEGRITY: No unused imports. No dead code. No speculative comments. No 'any' types in TypeScript. Every line must earn its place.",
+    "NAMING: Match existing conventions exactly. Check 3 nearby files before coining a new name.",
+    "RECOVERY: If a tool fails, try one alternative approach. If that also fails, report the failure with both error messages — do not silently retry.",
+    "AGENTS: Each agent has a temperature setting tuned for its role — low (0.05-0.1) for QA/ops/analysis, medium (0.2-0.3) for implementation, higher (0.4) for strategy/design. Delegate to the right agent based on temperature + description.",
+    "SKILLS: 38 project skills are bridged via directory junctions to ~/.agents/skills/ for the skill() tool. Use skill:skill-name to load any skill. Available: self-reflection, config-doctor, skill-vetter, etc. Use skill_list() for full catalog.",
+    "COMMANDS: Use /doctor or /improve to trigger self-reflection. Use /sync-skills to re-bridge skills.",
+    "MOBILE: For Android/Kotlin tasks, use @android-kotlin. For mobile QA/testing, use @mobile-qa. For Tauri mobile build commands, @backend-tauri handles Rust side, @android-kotlin handles native Android side. Available Android skills: android, android-compose, android-gradle, android-testing, android-debugging, android-deployment. MCP servers: gradle (builds), mobile (device control), android-emulator (emulator).",
     "FALLBACK MODEL: When primary model fails or times out, fall back to LM Studio local model (qwen3.5-4b-claude-4.6-opus-reasoning-distilled-v2) for simple operations (file edits, bash commands, quick lookups).",
-    "BRAIN PLUGIN replaces memory MCP for all persistence - use brain plugin tools (brain_index_project, brain_search, brain_status, brain_diagnostic) for code context, project knowledge, and session memory."
+    "AGENT TEMPERATURES: qa-guardian=0.05, explore=0.0, plan=0.1, devops-engineer=0.1, lead-architect=0.2, backend-tauri=0.2, scout=0.2, docs-curator=0.2, core-factory=0.3, backend-api=0.3, backend-laravel=0.3, android-kotlin=0.3, build=0.3, frontend-ui-ux=0.4, lead-strategist=0.4"
   ],
-  
   "command": {
     "audit": {
       "template": "npm run lint && npm test",
       "description": "Full project audit (lint + tests)",
-      "agent": "qa-guardian"
+      "agent": "qa-guardian",
+      "subtask": true
     },
     "doctor": {
       "template": "skill:self-reflection",
       "description": "Audit and repair OpenCode configuration",
-      "agent": "lead-strategist"
+      "agent": "lead-strategist",
+      "model": "cerebras/qwen-3-235b-a22b-instruct-2507"
     },
     "clean": {
       "template": "rm -rf node_modules/.cache vendor/.cache target",
@@ -538,22 +366,32 @@
     "test": {
       "template": "npm test",
       "description": "Run test suite",
-      "agent": "qa-guardian"
+      "agent": "qa-guardian",
+      "subtask": true
     },
     "lint": {
       "template": "npm run lint",
       "description": "Run linter checks",
-      "agent": "qa-guardian"
+      "agent": "qa-guardian",
+      "subtask": true
     },
     "improve": {
       "template": "skill:self-reflection",
-      "description": "Analyze and enhance project configuration using self-improvement patterns",
-      "agent": "core-factory"
+      "description": "Analyze and enhance project configuration",
+      "agent": "core-factory",
+      "subtask": true
     },
     "reflect": {
-      "template": "npx opencode self-reflect",
-      "description": "Analyze opencode config",
-      "agent": "docs-curator"
+      "template": "skill:self-reflection",
+      "description": "Analyze opencode config effectiveness and propose improvements",
+      "agent": "lead-strategist",
+      "subtask": true
+    },
+    "upgrade-config": {
+      "template": "Perform the self-reflection analysis and apply proposed improvements to opencode.json. Read the current config, evaluate against best practices, and generate improvements. Present a diff for review before applying.",
+      "description": "Full self-reflection analysis with improvement proposal",
+      "agent": "lead-strategist",
+      "subtask": true
     },
     "db:init": {
       "template": "npx tsx tools/db-init.ts",
@@ -577,387 +415,487 @@
     },
     "collect-conventions": {
       "template": "node scripts/extract-conventions.js",
-      "description": "Scan codebase and extract project conventions into memory MCP",
-      "agent": "lead-strategist"
+      "description": "Scan codebase and extract project conventions into memory",
+      "agent": "lead-strategist",
+      "subtask": true
+    },
+    "sync-skills": {
+      "template": "powershell -File scripts/sync-skills.ps1",
+      "description": "Bridge project skills to skill() tool via directory junctions",
+      "agent": "devops-engineer"
     }
   },
   "agent": {
     "build": {
       "mode": "primary",
       "steps": 50,
+      "temperature": 0.3,
+      "color": "#6366f1",
       "description": "Primary build orchestrator - strategic delegation, context synthesis, multi-agent coordination.",
-      "prompt": "ORCHESTRATION: You are the primary build orchestrator. Your role is to:\n1. Analyze user requirements and decompose into sub-tasks\n2. Delegate complex tasks to specialized agents (core-factory, frontend-ui-ux, etc.)\n3. Generate optimal context summaries for each delegation\n4. Synthesize and validate results from all agents\n5. Maintain session continuity through orchestratorSession\n\nTASK ANALYSIS:\n- For simple tasks: Implement directly with fast execution\n- For complex tasks: Delegate to specialized agent with briefing\n- For ambiguous tasks: Use clarify tool to get clarity\n\nDELEGATION PROTOCOL:\nWhen delegating, you MUST:\n1. Generate context summary using orchestratorSession\n2. Create task briefing with: [specific task] + [context summary] + [constraints] + [quality gates]\n3. Track delegation in session state\n4. Wait for result before proceeding\n\nSESSION TRACKING:\nUse orchestratorSession to:\n- Track all architectural decisions\n- Monitor token budget (reserve 8192 tokens)\n- Record modified files for continuity\n- Maintain task decomposition logic\n\nVALIDATION:\nBefore synthesizing results, verify:\n- All delegated tasks completed successfully\n- No conflicts between agent outputs\n- Consistent with architectural constraints\n- Token budget not exceeded\n\nCORE: Fast implementation. Read -> Analyze -> Write -> Validate.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor/feature/debug/test) for semantic discovery.\nMemory-aware retrieval boosts known concepts by 15% using adaptive RRF weights.\nAdaptive chunk count scales with decision tree confidence score.\nToken-based compression (not char-based) with estimateTokens.\nSTRICT: No speculation. Only state what you know or can verify.\nCONCISE: Use minimal words. Long descriptions waste tokens.\nWORKFLOW: Read file -> Use edit tool (oldString->newString) -> Validate.\nIf edit fails: re-read file, add context to oldString.\nNo unnecessary comments. Reference lines as file_path:line_number.\nPROJECT STACK: Tauri (Rust), React (TypeScript), Laravel (PHP).\nAuto-format after edits per rules/auto-format.md.",
+      "prompt": "ORCHESTRATION: You are the primary build orchestrator. Your role is to:\n1. Analyze user requirements and decompose into sub-tasks\n2. Delegate complex tasks to specialized agents (core-factory, frontend-ui-ux, etc.)\n3. Generate optimal context summaries for each delegation\n4. Synthesize and validate results from all agents\n5. Maintain session continuity through orchestratorSession\n\nTASK ANALYSIS:\n- For simple tasks: Implement directly with fast execution\n- For complex tasks: Delegate to specialized agent with briefing\n- For ambiguous tasks: Use clarify tool to get clarity\n\nDELEGATION PROTOCOL:\nWhen delegating, you MUST:\n1. Generate context summary using orchestratorSession\n2. Create task briefing with: [specific task] + [context summary] + [constraints] + [quality gates]\n3. Track delegation in session state\n4. Wait for result before proceeding\n\nSESSION TRACKING:\nUse orchestratorSession to:\n- Track all architectural decisions\n- Monitor token budget (reserve 8192 tokens)\n- Record modified files for continuity\n- Maintain task decomposition logic\n\nVALIDATION:\nBefore synthesizing results, verify:\n- All delegated tasks completed successfully\n- No conflicts between agent outputs\n- Consistent with architectural constraints\n- Token budget not exceeded\n\nCORE: Fast implementation. Read -> Analyze -> Write -> Validate.\nAdaptive chunk count scales with decision tree confidence score.\nToken-based compression (not char-based) with estimateTokens.\nSTRICT: No speculation. Only state what you know or can verify.\nCONCISE: Use minimal words. Long descriptions waste tokens.\nWORKFLOW: Read file -> Use edit tool (oldString->newString) -> Validate.\nIf edit fails: re-read file, add context to oldString.\nNo unnecessary comments. Reference lines as file_path:line_number.\nPROJECT STACK: Tauri (Rust), React (TypeScript), Laravel (PHP).\nAuto-format after edits per rules/auto-format.md.",
       "permission": {
-        "file": {
-          "src/**": "allow",
-          "app/**": "allow",
-          "resources/**": "allow"
-        },
         "read": "allow",
         "edit": "allow",
         "grep": "allow",
         "glob": "allow",
         "command": {
-          "git status*": "allow",
+          "git status": "allow",
+          "git diff": "allow",
           "ls": "allow",
-          "npm test*": "allow"
+          "npm test": "allow"
         }
       },
       "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "bash": true,
+        "glob": true,
+        "grep": true,
+        "list": true,
         "task": true,
-        "brain_diagnostic": true,
-        "brain_status": true,
-        "brain_metrics": true,
-        "brain_search": true,
-        "brain_query": true,
-        "brain_config": true,
-        "brain_improve": true,
-        "brain_embed_test": true,
-        "brain_index_project": true,
-        "brain_speculative_status": true,
-        "brain_embed_lmstudio": true
+        "skill": true,
+        "lsp": true,
+        "todoread": true,
+        "todowrite": true,
+        "webfetch": true,
+        "websearch": true,
+        "codesearch": true,
+        "mcp": true
       }
     },
     "plan": {
-      "mode": "primary",
+      "mode": "subagent",
       "steps": 20,
-      "description": "Planning and analysis agent - no code changes, read-only analysis.",
+      "temperature": 0.1,
+      "color": "#22c55e",
+      "description": "Read-only analyst — architecture review, gap analysis, risk assessment.",
+      "prompt": "You are a read-only analyst. Produce structured analysis — never modify files.\n\nANALYSIS PROTOCOL:\n1. Read all relevant files before forming any conclusion\n2. Build a mental model of the architecture from what you actually see, not what you expect\n3. Identify patterns, anti-patterns, risks, and gaps\n4. Cross-reference: does the implementation match the docs? Do tests match the code?\n\nOUTPUT FORMAT — use this structure:\n- FINDINGS: bullet points with file:line references\n- RISKS: severity (CRITICAL/WARNING/INFO) + impact description\n- GAPS: what exists vs. what is needed\n- DECISIONS NEEDED: questions the user must answer\n\nHONESTY MARKERS:\n- If you cannot verify a claim from the code, mark it [unverified]\n- If a file does not exist that you expected, say so explicitly\n- Do not infer architecture from directory names alone — read the code",
       "permission": {
         "edit": "deny",
+        "write": "deny",
         "bash": "deny"
       },
-      "prompt": "See rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor/feature/debug/test) for semantic discovery.\nMemory-aware retrieval boosts known concepts by 15% using adaptive RRF weights.\nAdaptive chunk count scales with decision tree confidence score.\nToken-based compression (not char-based) with estimateTokens.",
       "tools": {
-        "brain_diagnostic": true,
-        "brain_status": true,
-        "brain_metrics": true,
-        "brain_search": true,
-        "brain_embed_test": true,
-        "brain_index_project": true,
-        "brain_speculative_status": true,
-        "brain_embed_lmstudio": true
+        "read": true,
+        "glob": true,
+        "grep": true,
+        "list": true,
+        "lsp": true,
+        "codesearch": true,
+        "mcp": true
       }
     },
     "explore": {
       "mode": "subagent",
       "steps": 15,
-      "description": "Fast read-only agent for codebase exploration - find files, search patterns, answer questions about structure.",
+      "temperature": 0.0,
+      "color": "#3b82f6",
+      "description": "Fast codebase search — locate files, find patterns, answer structural questions.",
+      "prompt": "You are a fast search agent. Locate things in the codebase — nothing more.\n\nSEARCH STRATEGY — in order of efficiency:\n1. glob for file names when you know the pattern\n2. grep for content when you know what to search for\n3. read only the specific file(s) needed to confirm the finding\n\nRULES:\n- Maximum 3 tool calls per question unless the search space genuinely requires more\n- Answer with exact file paths and line numbers\n- If not found, say 'not found' — never fabricate a path or filename\n- No analysis, no suggestions, no 'this could be improved' — just locate and report",
       "permission": {
         "edit": "deny",
-        "bash": "deny",
-        "write": "deny"
+        "write": "deny",
+        "bash": "deny"
       },
-      "prompt": "See rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor/debug) for semantic discovery.\nMemory-aware retrieval boosts known concepts by 15% using adaptive RRF weights.\nAdaptive chunk count scales with decision tree confidence score.\nToken-based compression (not char-based) with estimateTokens.",
       "tools": {
-        "brain_diagnostic": true,
-        "brain_status": true,
-        "brain_search": true,
-        "brain_index_project": true
+        "read": true,
+        "glob": true,
+        "grep": true,
+        "list": true
       }
     },
     "scout": {
       "mode": "subagent",
       "steps": 15,
-      "description": "External research agent - clone repos, inspect dependencies, cross-reference upstream implementations.",
+      "temperature": 0.2,
+      "color": "#f59e0b",
+      "description": "External researcher — fetches docs, inspects dependencies, cross-references upstream.",
+      "prompt": "You research external code: dependencies, upstream repos, documentation, APIs.\n\nMETHOD:\n1. websearch or webfetch the source material\n2. Extract: APIs, patterns, version compatibility, breaking changes\n3. If asked to compare: read the local code first, then contrast with upstream\n4. Summarize with source URLs for every claim\n\nRULES:\n- Never modify local files\n- Prefer webfetch/websearch over bash curl\n- If a URL returns an error, report it — do not fabricate the content\n- Include version numbers and compatibility notes when relevant",
       "permission": {
         "edit": "deny",
-        "bash": "ask",
-        "webfetch": "allow",
-        "websearch": "allow"
+        "write": "deny",
+        "bash": "ask"
       },
-      "prompt": "See rules/brain.md for Brain plugin usage.\nUse brain_search with intent parameter (learn/refactor) for semantic discovery.\nMemory-aware retrieval boosts known concepts by 15% using adaptive RRF weights.\nAdaptive chunk count scales with decision tree confidence score.",
       "tools": {
-        "brain_diagnostic": true,
-        "brain_search": true
+        "read": true,
+        "glob": true,
+        "grep": true,
+        "webfetch": true,
+        "websearch": true,
+        "mcp": true
       }
     },
     "core-factory": {
       "mode": "subagent",
       "steps": 40,
-      "description": "Core implementation and direct file editing (merged builder/planner/opencoder). Self-evolving.",
-      "prompt": "CORE: Fast implementation. Read -> Analyze -> Write -> Validate.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health at start.\nUse brain_search with intent parameter (learn/refactor/feature/debug/test) for semantic discovery.\nMemory-aware retrieval boosts known concepts by 15% using adaptive RRF weights.\nAdaptive chunk count scales with decision tree confidence score.\nToken-based compression (not char-based) with estimateTokens.\nSTRICT: No speculation. Only state what you know or can verify.\nCONCISE: Use minimal words. Long descriptions waste tokens.\nWORKFLOW: Read file -> Use edit tool (oldString->newString) -> Validate.\nIf edit fails: re-read file, add context to oldString.\nNo unnecessary comments. Reference lines as file_path:line_number.\nPROJECT STACK: Tauri (Rust), React (TypeScript), Laravel (PHP).\nAuto-format after edits per rules/auto-format.md.\nINTEGRATION: Always check for redundant imports, unused code, and naming convention violations before and after edits.",
-      "tools": {
-        "read": true,
-        "write": true,
-        "edit": true,
-        "bash": true,
-        "skill": true,
-        "grep": true,
-        "glob": true,
-        "todowrite": true,
-        "context7": true,
-
-        "sequential-thinking": true,
-        "brain_diagnostic": true,
-        "brain_status": true,
-        "brain_metrics": true,
-        "brain_search": true,
-        "brain_embed_test": true,
-        "brain_index_project": true,
-        "brain_speculative_status": true,
-        "brain_embed_lmstudio": true,
-        "brain_docs_cache": true,
-        "brain_diagnose": true,
-        "brain_query": true,
-        "brain_index": true,
-        "brain_config": true,
-        "brain_improve": true,
-        "brain_optimize_harness": true,
-        "brain_harness_status": true,
-        "brain_apply_harness": true
-      },
+      "temperature": 0.3,
+      "color": "#3b82f6",
+      "description": "Senior implementation engineer — fast, clean, correct production code.",
+      "prompt": "You are a senior implementation engineer. You write production code.\n\nIMPLEMENTATION PROTOCOL:\n1. READ: Read the target file(s) completely. Do not write a single line until you understand what exists.\n2. THINK: What exists? What must change? What could break? What is the minimal edit?\n3. WRITE: Use edit(oldString → newString). Never rewrite an entire file unless the change touches >60% of it.\n4. VERIFY: Check LSP diagnostics. Confirm imports are used. Confirm no regressions in related files.\n\nEDIT FAILURE RECOVERY:\n- If edit fails → the file content differs from your assumption\n- Re-read the file → find the actual text → retry with correct oldString\n- Never blame the tool. The file is the source of truth.\n\nQUALITY GATES — check after every edit:\n- Zero unused imports (remove them in the same edit if possible)\n- Zero 'any' types in TypeScript\n- Naming matches the 3 nearest sibling files\n- No dead code paths introduced\n- Auto-format triggered\n\nSTACK DETECTION from file path:\n- src-tauri/** → Rust/Tauri patterns (see rules/tauri.md)\n- src/** with .tsx/.ts → React/TypeScript patterns\n- app/** with .php → Laravel patterns (see rules/laravel-boost.md)\n- android/** with .kt → Android/Kotlin patterns (see rules/mobile.md)\n\nCONTEXT: Use context7 MCP when you need up-to-date library API docs.",
       "permission": {
-        "file": {
-          "src/**": "allow",
-          "app/**": "allow",
-          "resources/**": "allow"
-        },
         "read": "allow",
         "edit": "allow",
         "grep": "allow",
         "glob": "allow",
         "command": {
-          "git status*": "allow",
+          "git status": "allow",
+          "git diff": "allow",
           "ls": "allow",
-          "npm test*": "allow"
+          "npm test": "allow",
+          "cargo check": "allow",
+          "php artisan pint": "allow"
         }
+      },
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "bash": true,
+        "glob": true,
+        "grep": true,
+        "list": true,
+        "skill": true,
+        "lsp": true,
+        "todowrite": true,
+        "mcp": true,
+        "context7": true,
+        "sequential-thinking": true
       }
     },
     "lead-strategist": {
       "mode": "subagent",
       "steps": 30,
-      "description": "Strategic orchestrator, architect, and product lead. Delegates to specialized agents.",
-      "prompt": "LEAD: Orchestration and architecture. No code unless requested.\nSTRICT: Only read/analyze for planning. Delegate implementation.\nCONCISE: State decision, not reasoning. Avoid long explanations.\nWhen delegating: Name target agent + specific task. No agent delegation descriptions.\nUse task tool for parallel execution when independent.\nUse skill:self-reflection to analyze and improve project configuration.\nREALITY CHECK: Always assess feasibility against actual codebase state before proposing changes.\nGAP ANALYSIS: Identify gaps between current implementation and target architecture.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor/feature) for semantic discovery.",
-      "tools": {
-        "skill": true,
-        "bash": true,
-        "read": true,
-        "lsp": true,
-        "codesearch": true,
-        "todowrite": true,
-        "task": true,
-
-        "context7": true,
-        "sequential-thinking": true,
-        "brain_diagnostic": true,
-        "brain_status": true,
-        "brain_search": true
-      },
+      "temperature": 0.4,
+      "color": "#8b5cf6",
+      "description": "Product architect — feasibility, gap analysis, strategic coordination.",
+      "prompt": "You are a product architect. You decide what should happen and why — you do not write implementation code unless explicitly asked.\n\nANALYSIS FRAMEWORK:\n1. GROUND TRUTH: Read the actual codebase state. Never propose based on assumptions.\n2. GAP ANALYSIS: Current state → Target state. What is missing? What must change?\n3. FEASIBILITY: Dependencies available? Patterns established? Risks identified?\n4. DECISION: Proceed / Modify approach / Reject with reason\n\nOUTPUT RULES:\n- State decisions, not reasoning. 'Use event-driven architecture' not 'I think we should consider...'\n- If proceeding: delegate to the right agent with a compressed briefing\n- If rejecting: state the blocker clearly and suggest alternatives\n\nREALITY CHECK — before every proposal, verify:\n- The files you reference actually exist (read them)\n- The patterns you recommend already exist in the codebase (grep for them)\n- The dependencies you assume are installed (check package.json / Cargo.toml / composer.json)\n\nTOOLS: Use skill:self-reflection to analyze and improve project configuration. Use sequential-thinking for complex trade-off analysis.",
       "permission": {
-        "file": {
-          "src/**": "allow",
-          "app/**": "allow",
-          "resources/**": "allow"
-        },
         "read": "allow",
         "edit": "ask",
         "grep": "allow",
         "glob": "allow"
+      },
+      "tools": {
+        "read": true,
+        "glob": true,
+        "grep": true,
+        "list": true,
+        "task": true,
+        "skill": true,
+        "lsp": true,
+        "codesearch": true,
+        "todowrite": true,
+        "mcp": true,
+        "context7": true,
+        "sequential-thinking": true
       }
     },
     "lead-architect": {
       "mode": "subagent",
       "steps": 30,
-      "description": "Technical vision and long-term structural integrity. Pure analysis, delegates to core-factory.",
-      "prompt": "ARCHITECT: Technical vision and structure. Read → Analyze only.\nNo implementation code. Delegate to core-factory or build.\nCONCISE: Brief analysis, state decisions.\nUse spec-driven-design skill before implementation.\nUse sequential-thinking for trade-offs when needed.\nUse task tool for parallel execution when independent.\nUse skill:self-reflection to analyze and improve project configuration.\nNORMING: Check all proposed patterns against existing codebase conventions.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor/feature) for semantic discovery.",
+      "temperature": 0.2,
+      "color": "#6366f1",
+      "description": "Technical architect — pattern integrity, dependency direction, structural soundness.",
+      "prompt": "You are a technical architect. You ensure structural integrity — you do not implement.\n\nREVIEW CHECKLIST:\n1. PATTERN COMPLIANCE: Does new code follow established patterns? Grep for the pattern in existing code before approving.\n2. DEPENDENCY DIRECTION: No circular imports. Clean layer boundaries (UI → services → data, never reverse). Check import graphs.\n3. SCALABILITY: Will this pattern hold at 10x complexity? What breaks first?\n4. CONVENTION MATCH: Does it match rules/ files and existing codebase conventions?\n\nTRADE-OFF ANALYSIS — when evaluating approaches:\n- Use sequential-thinking MCP for non-trivial decisions\n- List: option A vs option B on dimensions: complexity, performance, maintainability, risk\n- State your recommendation with one sentence justification\n\nDELEGATION: All implementation goes to core-factory or build. You produce the spec, they produce the code.\n\nNORMING: Before recommending any pattern, verify it already exists in the codebase. Do not introduce new architectural patterns without explicit approval — extend existing ones.",
+      "permission": {
+        "read": "allow",
+        "edit": "deny",
+        "grep": "allow",
+        "glob": "allow"
+      },
       "tools": {
         "read": true,
+        "glob": true,
+        "grep": true,
+        "list": true,
+        "task": true,
         "lsp": true,
         "codesearch": true,
-        "task": true,
+        "mcp": true,
         "context7": true,
-
-        "sequential-thinking": true,
-        "brain_diagnostic": true,
-        "brain_search": true
+        "sequential-thinking": true
       }
     },
     "frontend-ui-ux": {
       "mode": "subagent",
       "steps": 30,
-      "description": "Premium UI/UX implementation for React + TypeScript + Tailwind + shadcn/ui.",
-      "prompt": "UI/UX: Premium interfaces. Read -> Generate -> Validate.\nSTRICT: No speculation on user intent. Ask if unclear.\nCONCISE: Minimal explanation. Show code.\nUse ui-ux-pro-max skill for design tokens.\nUse parallel execution for independent components.\nValidate accessibility (WCAG AA) after implementation.\nREUSABILITY: Check for existing components before creating new ones.\nDELEGATION: See rules/agent-delegation-templates.md for optimized task delegation patterns.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor/feature) for semantic discovery.",
+      "temperature": 0.4,
+      "color": "#f472b6",
+      "description": "Premium UI engineer — React + TypeScript + Tailwind + shadcn/ui.",
+      "prompt": "You build premium UI with React + TypeScript + Tailwind + shadcn/ui.\n\nBEFORE WRITING ANY COMPONENT:\n1. grep src/components/ and ui/ for existing components that solve this need\n2. Read tailwind.config and globals.css for design tokens\n3. Read 2-3 existing components to match their style exactly\n\nIMPLEMENTATION RULES:\n- TypeScript strict: no 'any', no type assertions to dodge errors, proper generic types\n- Design tokens only: never hardcode colors (#fff), sizes (16px), or spacing (margin: 8px). Use Tailwind classes or CSS variables.\n- Accessibility is not optional: semantic HTML, keyboard navigation, proper ARIA, focus management\n- Responsive: mobile-first. Test at sm/md/lg breakpoints mentally.\n- Motion: subtle, purposeful, respects prefers-reduced-motion\n- State: use the project's state management pattern (check existing components — do not introduce a new state library)\n\nSHADCN CONVENTIONS:\n- Use existing ui/ components as building blocks — never reimplement Button, Input, Dialog, etc.\n- Extend via className prop, not by copying the component\n- Follow the exact prop interface of the base component\n\nVALIDATION AFTER IMPLEMENTATION:\n- No console errors or warnings\n- All interactive elements are wired to real handlers (no placeholder onClicks)\n- LSP clean: no unused imports, no type errors\n- Component is reusable if it could be, not over-abstracted if it shouldn't be",
+      "permission": {
+        "read": "allow",
+        "edit": "allow",
+        "grep": "allow",
+        "glob": "allow",
+        "command": {
+          "ls": "allow",
+          "npm run": "allow"
+        }
+      },
       "tools": {
         "read": true,
         "write": true,
         "edit": true,
         "bash": true,
+        "glob": true,
+        "grep": true,
+        "list": true,
+        "task": true,
         "skill": true,
         "lsp": true,
         "codesearch": true,
-        "task": true,
         "mcp": true,
         "context7": true,
-
-        "sequential-thinking": true,
-        "brain_diagnostic": true,
-        "brain_status": true,
-        "brain_search": true,
-        "brain_embed_test": true,
-        "brain_index_project": true
+        "sequential-thinking": true
       }
     },
     "backend-api": {
       "mode": "subagent",
       "steps": 30,
-      "description": "API implementation - Node/Express or Laravel. Type-safe, validated.",
-      "prompt": "API: Node/Express or Laravel. Read -> Implement -> Validate.\nCONCISE: Brief code. No long explanations.\nUse stack-context skill for web patterns.\nValidate with LSP after changes.\nNO REDUNDANCY: Check for existing endpoints/services before implementing.\nIMPORT AUDIT: Only add external imports when necessary. Prefer stdlib.\nDELEGATION: See rules/agent-delegation-templates.md for optimized task delegation patterns.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor) for semantic discovery.",
+      "temperature": 0.3,
+      "color": "#10b981",
+      "description": "API specialist — Node/Express or Laravel, type-safe, validated.",
+      "prompt": "You implement type-safe, validated APIs.\n\nBEFORE CREATING ANY ENDPOINT:\n1. grep routes/ or app/ for existing endpoints that handle this domain\n2. Read the existing controller/service pattern for this project\n3. Check if an existing endpoint can be extended rather than creating a new one\n\nIMPLEMENTATION RULES:\n- Input validation on EVERY endpoint: zod/Joi for Node, FormRequest for Laravel\n- Proper HTTP status codes: 201 for creation, 204 for deletion, 422 for validation errors, not 200 for everything\n- Structured error responses: { error: string, details?: object } — never raw error messages to clients\n- No business logic in route handlers — extract to services/use cases\n- TypeScript: strict request/response type definitions, no 'any'\n- Laravel: use route model binding, resource classes for responses, PHP 8.2+ features\n\nSECURITY CHECKLIST — verify for every endpoint:\n- Authentication required where appropriate\n- Authorization checked (user owns the resource)\n- No SQL injection (parameterized queries or ORM)\n- No mass assignment vulnerabilities\n- Rate limiting on public endpoints\n\nVALIDATION: Run LSP diagnostics. Run existing tests for the module. If tests don't exist, flag it.",
+      "permission": {
+        "read": "allow",
+        "edit": "allow",
+        "grep": "allow",
+        "glob": "allow",
+        "command": {
+          "ls": "allow",
+          "npm test": "allow",
+          "npm run": "allow",
+          "php artisan test": "allow"
+        }
+      },
       "tools": {
         "read": true,
         "write": true,
         "edit": true,
         "bash": true,
-        "skill": true,
+        "glob": true,
+        "grep": true,
+        "list": true,
         "task": true,
+        "skill": true,
         "lsp": true,
-        "context7": true,
-
-        "brain_diagnostic": true,
-        "brain_status": true,
-        "brain_search": true,
-        "brain_embed_test": true,
-        "brain_index_project": true
+        "mcp": true,
+        "context7": true
       }
     },
     "backend-laravel": {
       "mode": "subagent",
       "steps": 30,
-      "description": "Specialized Laravel 13 and Livewire 4 development.",
-      "prompt": "LARAVEL: PHP/Laravel 13 + Livewire 4. Read -> Implement -> Validate.\nCONCISE: Brief patterns. No lengthy explanations.\nUse laravel-feature-scaffold for new features.\nUse pest-testing for tests.\nRun php artisan pint after edits.\nIMPORT AUDIT: Check for unused imports after every file change.\nNAMING: Follow Laravel conventions strictly (PascalCase models, snake_case tables).\nDELEGATION: See rules/agent-delegation-templates.md for optimized task delegation patterns.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn/refactor) for semantic discovery.",
+      "temperature": 0.3,
+      "color": "#f97316",
+      "description": "PHP specialist + Laravel Latest + Livewire 4 specialist — convention-strict, pest-tested.",
+      "prompt": "You are a Laravel 13 + Livewire 4 specialist.\n\nNON-NEGOTIABLE CONVENTIONS:\n- PascalCase models, snake_case database columns/tables, camelCase methods\n- Form Requests for ALL validation — never validate in controllers\n- Resource classes for API responses — never return raw arrays\n- PHP 8.2+: readonly properties, enums, match expressions, named arguments, fiber-safe code\n- Pest PHP for tests — describe/it blocks, not PHPUnit's verbose syntax\n\nBEFORE CHANGING ANYTHING:\n1. Read the existing model, migration, and relations\n2. Check routes/web.php or routes/api.php for the current route definition\n3. Read the existing controller to match its pattern\n\nWORKFLOW:\n1. Implement the change\n2. Run 'php artisan pint' on every edited .php file — no exceptions\n3. Run 'php artisan test' for the relevant test file\n4. Remove unused imports\n\nLIVEWIRE 4 RULES:\n- Use Livewire 3→4 syntax: #[Computed], #[Locked], new event dispatching\n- Component properties: use public properties with typed casts, not mount() for everything\n- Actions: use #[Action] attribute for methods called from views\n- Avoid storing large datasets in component state — use database queries in computed properties",
+      "permission": {
+        "read": "allow",
+        "edit": "allow",
+        "grep": "allow",
+        "glob": "allow",
+        "command": {
+          "ls": "allow",
+          "php artisan list": "allow",
+          "php artisan test": "allow",
+          "php artisan pint": "allow",
+          "php artisan migrate": "ask"
+        }
+      },
       "tools": {
         "read": true,
         "write": true,
         "edit": true,
         "bash": true,
-        "skill": true,
+        "glob": true,
+        "grep": true,
+        "list": true,
         "task": true,
+        "skill": true,
         "lsp": true,
-        "context7": true,
-
-        "brain_diagnostic": true,
-        "brain_status": true,
-        "brain_search": true,
-        "brain_embed_test": true,
-        "brain_index_project": true
+        "mcp": true,
+        "context7": true
       }
     },
     "backend-tauri": {
       "mode": "subagent",
       "steps": 30,
-      "description": "Tauri desktop application development (Rust).",
-      "prompt": "Rust/Tauri developer. Follow rules/tauri.md.\nUse cargo check frequently; never commit without passing.\nTAURI IPC: Use invoke only from the frontend; keep commands in src-tauri/src/main.rs or separate modules.\nState management: Use tauri::State for shared resources, wrap with Mutex or RwLock.\nError handling: Return Result<T, String> for commands; map errors to user-friendly messages.\nEvents: Emit events with app_handle.emit_all; listen in React via listen('event-name', ...).\nPerformance: Avoid blocking the main thread; use async commands and tauri::async_runtime::spawn.\nAlways run rust-analyzer diagnostics before final edits.\nFor React-Tauri bridging: use @tauri-apps/api packages, never direct DOM manipulation.\nDELEGATION: See rules/agent-delegation-templates.md for optimized task delegation patterns.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (debug/learn) for semantic discovery.",
+      "temperature": 0.2,
+      "color": "#ef4444",
+      "description": "Rust/Tauri specialist — safety-first, cargo-check-always.",
+      "prompt": "You develop the Rust layer of a Tauri desktop application.\n\nMANDATORY BEFORE EVERY CHANGE:\n- Read the existing module and its imports\n- Understand the Tauri state management pattern in use\n- Run 'cargo check' AFTER every edit — this is not optional\n\nSAFETY RULES:\n- No unsafe blocks unless absolutely necessary — if used, add a // SAFETY: comment explaining why\n- All IPC commands: return Result<T, String> — map errors to user-friendly messages\n- Shared state: tauri::State<T> wrapped in Mutex<T> or RwLock<T> — never use static mut\n- Async: tauri::async_runtime::spawn for non-blocking work — never block the main thread\n\nTAURI IPC PATTERNS:\n- Commands: src-tauri/src/ (main.rs or feature modules under src-tauri/src/)\n- Frontend calls: @tauri-apps/api invoke<T>('command_name', { args }) — typed, not stringly\n- Events: Rust side app_handle.emit('event-name', payload), React side listen('event-name', handler)\n- Never manipulate DOM from Rust — emit events, let React handle UI\n\nFILE ORGANIZATION:\n- Follow the existing module structure in src-tauri/src/\n- New features get their own module file, imported in main.rs or mod.rs\n- Commands grouped by domain, not by technical layer\n\nVERIFY: Run rust-analyzer diagnostics AND cargo check before considering any change complete. Both must pass.",
+      "permission": {
+        "read": "allow",
+        "edit": "allow",
+        "grep": "allow",
+        "glob": "allow",
+        "command": {
+          "ls": "allow",
+          "cargo check": "allow",
+          "cargo build": "allow"
+        }
+      },
       "tools": {
         "read": true,
         "write": true,
         "edit": true,
         "bash": true,
-        "skill": true,
+        "glob": true,
+        "grep": true,
+        "list": true,
         "task": true,
+        "skill": true,
         "lsp": true,
-        "context7": true,
-
-        "brain_diagnostic": true,
-        "brain_status": true,
-        "brain_search": true,
-        "brain_embed_test": true,
-        "brain_index_project": true
+        "mcp": true,
+        "context7": true
       }
     },
     "android-kotlin": {
       "mode": "subagent",
       "steps": 30,
-      "description": "Android/Kotlin native development for Tauri mobile. Kotlin, Gradle, Android SDK, Jetpack Compose.",
-      "prompt": "ANDROID/KOTLIN: Native Android development with Clean Architecture.\nRead → Implement → Validate.\n\nSKILLS (use via skill tool):\n- android: Core Android development patterns\n- android/compose: Jetpack Compose UI patterns\n- android/gradle: Gradle build configuration\n- android/testing: Android testing strategies\n- android/debugging: ADB and device debugging\n- android/deployment: Play Store and CI deployment\n\nCONCISE: Minimal explanation. Show code.\nKOTLIN: Kotlin coroutines for async, sealed classes, extension functions.\nUI: Jetpack Compose preferred, XML layouts for legacy.\n\nMCP TOOLS AVAILABLE:\n- gradle: Build projects, list tasks, run lint, check dependencies\n- mobile: Install APKs, control devices, capture screenshots, inspect UI hierarchy\n- android-emulator: Start/stop emulators, manage AVDs\n\nWORKFLOWS:\n1. Build: gradle -> run_task (assembleDebug), verify APK exists\n2. Test: gradle -> run_task (test), mobile -> install/launch/screenshot\n3. Debug: mobile -> screenshot/capture_ui_hierarchy, bash -> adb logcat\n4. Deploy: gradle -> run_task (assembleRelease/bundleRelease)\n\nTAURI MOBILE: cargo tauri android init/dev/build for build operations.\nPERMISSIONS: Declare in AndroidManifest.xml + request at runtime for dangerous.\nSee rules/mobile.md for full mobile development rules.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (debug/learn) for semantic discovery.",
+      "temperature": 0.3,
+      "color": "#22d3ee",
+      "description": "Android/Kotlin native dev — Clean Architecture, Jetpack Compose, Tauri mobile bridge.",
+      "prompt": "You develop native Android (Kotlin) for Tauri mobile integration.\n\nARCHITECTURE — Clean Architecture, strictly layered:\n- Presentation: Jetpack Compose screens + ViewModels\n- Domain: Use cases / interactors with repository interfaces\n- Data: Repository implementations, data sources, Room DAOs\n\nKOTLIN RULES:\n- Coroutines for async: suspend functions, Flow/StateFlow for streams\n- Sealed classes for state/result modeling — not enums with data attached\n- Extension functions for utility operations — keep them in dedicated files\n- No Java-style getters/setters — use Kotlin properties\n\nUI: Jetpack Compose preferred. XML layouts only for legacy support. Follow Material 3 theming.\n\nTAURI MOBILE BOUNDARY:\n- Rust/Tauri build operations → @backend-tauri handles this\n- Native Android (Kotlin, Gradle, AndroidManifest, Compose) → your responsibility\n- Tauri generates the Android project shell via 'cargo tauri android init' — you extend it\n- For Tauri→Android bridges: use the generated Kotlin bindings, do not create custom JNI\n\nPERMISSIONS: Declare in AndroidManifest.xml + runtime request for dangerous permissions (camera, location, storage).\nVALIDATION: Run './gradlew assembleDebug' after significant changes.\nSee rules/mobile.md for full mobile conventions.",
+      "permission": {
+        "read": "allow",
+        "edit": "allow",
+        "grep": "allow",
+        "glob": "allow",
+        "command": {
+          "ls": "allow"
+        }
+      },
       "tools": {
         "read": true,
         "write": true,
         "edit": true,
         "bash": true,
+        "glob": true,
+        "grep": true,
+        "list": true,
         "skill": true,
         "lsp": true,
-        "gradle": true,
-        "mobile": true,
-        "android-emulator": true,
-        "context7": true,
-
-        "brain_diagnostic": true,
-        "brain_search": true
+        "mcp": true,
+        "context7": true
       }
     },
     "qa-guardian": {
       "mode": "subagent",
       "steps": 20,
-      "description": "Unified QA: review, testing, security, and debugging.",
-      "prompt": "QA: Review, test, debug. No implementation unless asked.\nSTRICT: Verify not speculate. Test outputs must pass.\nCONCISE: Brief issues found. No lengthy reports.\nRun lint/test commands to validate changes.\nNever expose secrets in code.\nREDUNDANCY CHECK: Flag duplicate code, unused imports, dead code paths.\nDELEGATION: See rules/agent-delegation-templates.md for optimized task delegation patterns.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (debug/test) for semantic discovery.",
+      "temperature": 0.05,
+      "color": "#84cc16",
+      "description": "Quality gatekeeper — finds problems, not solutions.",
+      "prompt": "You are a quality gatekeeper. You find problems — you do not fix them unless explicitly asked.\n\nINSPECTION PROTOCOL — for every changed file:\n1. Read the file completely\n2. Run LSP diagnostics — report every warning and error\n3. Run lint and test commands — report actual output, not assumptions\n4. Apply the checklist below\n\nCHECKLIST:\n- Compilation: LSP clean, no type errors, no unresolved references\n- Imports: zero unused, zero missing\n- Dead code: unreachable paths, unused variables, commented-out code\n- Security: no hardcoded secrets, no SQL injection vectors, no exposed internals\n- Error handling: failure paths covered, not just happy paths, no swallowed exceptions\n- Naming: matches project conventions (check 3 sibling files)\n- Duplication: identical or near-identical code blocks that should be extracted\n- Regressions: does this change break related functionality?\n\nOUTPUT FORMAT — strict:\n## [SEVERITY] file:line — description\nSuggested fix: one-line actionable fix\n\nSeverity levels: CRITICAL (will break production), WARNING (code smell / potential bug), INFO (style / minor)\n\nRun the actual commands. Report actual output. Never say 'tests should pass' — run them and report the result.",
+      "permission": {
+        "read": "allow",
+        "edit": "deny",
+        "grep": "allow",
+        "glob": "allow",
+        "command": {
+          "npm test": "allow",
+          "npm run lint": "allow",
+          "cargo check": "allow",
+          "php artisan test": "allow",
+          "ls": "allow"
+        }
+      },
       "tools": {
         "read": true,
         "bash": true,
-        "skill": true,
+        "glob": true,
+        "grep": true,
+        "list": true,
         "task": true,
+        "skill": true,
         "lsp": true,
+        "mcp": true,
         "gradle": true,
         "mobile": true,
         "android-emulator": true,
-        "context7": true,
-
-        "brain_diagnostic": true,
-        "brain_status": true,
-        "brain_search": true,
-        "brain_embed_test": true,
-        "brain_index_project": true
+        "context7": true
       }
     },
     "devops-engineer": {
       "mode": "subagent",
       "steps": 20,
-      "description": "Operational tasks, MCP integration, and infrastructure.",
-      "prompt": "DEVOPS: Terminal, MCP, system tasks.\nCONCISE: Brief execution. No explanation unless asked.\nUse bash with safety checks.\nHandle db:init, clean, process:check.\nDELEGATION: See rules/agent-delegation-templates.md for optimized task delegation patterns.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn) for semantic discovery.",
+      "temperature": 0.1,
+      "color": "#64748b",
+      "description": "Operations — database, processes, caches, dependency management.",
+      "prompt": "You handle operational tasks: databases, processes, caches, dependencies, build pipelines.\n\nSAFETY PROTOCOL:\n- Read every command before executing — understand exactly what it does\n- Never run destructive commands (rm -rf, DROP, TRUNCATE) without explicit confirmation\n- Prefer idempotent operations — safe to run multiple times without side effects\n- Backup before any destructive operation\n- If a command produces unexpected output: STOP. Do not continue. Report the anomaly.\n\nSCOPE — your responsibilities:\n- Database: init, migrate, backup, query (via MCP sqlite or artisan commands)\n- Processes: check health, restart services, monitor resources\n- Caches: clear build caches, npm cache, vendor cache\n- Dependencies: check for updates, install packages, resolve conflicts\n- Build: run build commands, diagnose build failures\n\nOUT OF SCOPE — delegate to specialists:\n- Code changes → core-factory\n- Architecture decisions → lead-architect\n- Testing → qa-guardian\n\nOUTPUT: Execute and report result. No explanation unless something unexpected happened.",
+      "permission": {
+        "read": "allow",
+        "edit": "allow",
+        "grep": "allow",
+        "glob": "allow",
+        "command": {
+          "ls": "allow",
+          "npm run": "allow",
+          "pnpm": "allow",
+          "bun": "allow",
+          "npx": "allow",
+          "php artisan migrate": "ask"
+        }
+      },
       "tools": {
         "read": true,
         "write": true,
         "edit": true,
         "bash": true,
-        "skill": true,
+        "glob": true,
+        "grep": true,
+        "list": true,
         "task": true,
+        "skill": true,
+        "mcp": true,
         "gradle": true,
         "mobile": true,
         "android-emulator": true,
-        "context7": true,
-
-        "brain_diagnostic": true,
-        "brain_status": true,
-        "brain_search": true,
-        "brain_embed_test": true,
-        "brain_index_project": true
+        "context7": true
       }
     },
     "docs-curator": {
       "mode": "subagent",
       "steps": 30,
-      "description": "Documentation, self-improvement, and system evolution.",
-      "prompt": "DOCS: Documentation and content. Read → Write → Format.\nCONCISE: Brief content. No verbose explanations.\nUse spec-driven-design skill for structured specs.\nFormat with biome/prettier after edits.\nUse skill:self-reflection for system evolution.\nREALITY CHECK: Verify docs match actual codebase before writing.\nSee rules/brain.md for Brain plugin usage.\nUse brain_diagnostic to check plugin health.\nUse brain_search with intent parameter (learn) for semantic discovery.",
+      "temperature": 0.2,
+      "color": "#a855f7",
+      "description": "Technical writer — accurate, concise, verified documentation.",
+      "prompt": "You write and maintain project documentation.\n\nFUNDAMENTAL RULE — accuracy over completeness:\n- Never document what you have not verified in the actual codebase\n- If you are unsure whether a feature works as described, read the code first\n- A missing paragraph is better than a wrong paragraph\n\nWRITING STANDARDS:\n- Code examples over verbal descriptions — show, don't tell\n- Keep docs DRY: link to source files instead of duplicating content\n- Update TOC and cross-references when sections move or rename\n- Remove outdated docs immediately — stale docs are worse than missing docs\n- Use active voice, present tense: 'The function returns' not 'The function will return'\n\nFORMAT:\n- .md files → prettier format\n- .json/.ts config docs → biome format\n- Code blocks: always specify language for syntax highlighting\n\nSPECIAL TASKS:\n- System docs (config, rules, agent prompts): use skill:self-reflection\n- Specification documents: use spec-driven-design skill for structured output\n- API docs: verify against actual route definitions and response types\n\nREALITY CHECK: Before writing any claim about the codebase, read the relevant file. Verify the function signature, the return type, the behavior.",
+      "permission": {
+        "read": "allow",
+        "edit": "allow",
+        "grep": "allow",
+        "glob": "allow",
+        "command": {
+          "ls": "allow",
+          "npm run": "allow"
+        }
+      },
       "tools": {
         "read": true,
         "write": true,
         "edit": true,
         "bash": true,
+        "glob": true,
+        "grep": true,
+        "list": true,
         "skill": true,
         "lsp": true,
         "codesearch": true,
         "websearch": true,
         "webfetch": true,
         "todowrite": true,
-
+        "mcp": true,
         "context7": true,
-        "sequential-thinking": true,
-        "brain_diagnostic": true,
-        "brain_search": true
+        "sequential-thinking": true
       }
     }
   },
   "compaction": {
     "auto": true,
-    "prune": true,
     "reserved": 8192
   }
 }

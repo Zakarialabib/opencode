@@ -62,100 +62,53 @@ function checkMcpServers(config: any): { available: string[]; missing: string[] 
   return { available, missing };
 }
 
-const MobileToolRouterPlugin: Plugin = {
-  name: "mobile-tool-router",
-
-  hooks: {
-    onSessionStart: async (context: any) => {
-      const root = findProjectRoot(process.cwd());
-      if (!root) return;
-
-      const android = detectAndroidProject(root);
-      if (!android.isAndroid) return;
-
-      // Read current config
-      let config: any = {};
-      try {
-        const configRaw = readFileSync(join(root, "opencode.json"), "utf-8");
-        config = JSON.parse(configRaw);
-      } catch {
-        return;
-      }
-
-      const { available, missing } = checkMcpServers(config);
-
-      // Suggest agent switch if not on android-kotlin
-      if (context.currentAgent !== "android-kotlin" && context.currentAgent !== "mobile-qa") {
-        context.suggest(
-          `📱 Android project detected (${[
-            android.hasGradle && "Gradle",
-            android.hasManifest && "Manifest",
-            android.isTauriMobile && "Tauri Mobile",
-          ]
-            .filter(Boolean)
-            .join(", ")}). Switch to \`android-kotlin\` or \`mobile-qa\` agent for Android workflows?`
-        );
-      }
-
-      // Warn about missing MCP servers
-      if (missing.length > 0) {
-        context.suggest(
-          `⚠️ Missing MCP servers for Android: **${missing.join(", ")}**. ` +
-            `Add them to \`opencode.json\` under \`mcp\` for full build-test-deploy capability. ` +
-            `Available: ${available.join(", ") || "none"}.`
-        );
-      }
-
-      // Log detection
-      console.log(
-        `[mobile-tool-router] Android project detected: ${JSON.stringify(android)} | ` +
-          `MCP: ${available.join(", ") || "none"} available, ${missing.join(", ") || "none"} missing`
-      );
-    },
-  },
-
-  tools: {
-    android_detect: tool({
-      description: "Detect Android project structure and report available MCP tooling",
-      args: {
-        path: {
-          type: "string",
-          description: "Optional project path to scan (defaults to current directory)",
+const MobileToolRouterPlugin: Plugin = async () => {
+  return {
+    tool: {
+      android_detect: tool({
+        description: "Detect Android project structure and report available MCP tooling",
+        args: {
+          path: tool.schema
+            .string()
+            .optional()
+            .describe("Optional project path to scan (defaults to current directory)"),
         },
-      },
-      async execute(args: { path?: string }) {
-        const root = args.path || findProjectRoot(process.cwd()) || ".";
-        const android = detectAndroidProject(root);
+        async execute(args: { path?: string }) {
+          const root = args.path || findProjectRoot(process.cwd()) || ".";
+          const android = detectAndroidProject(root);
 
-        let config: any = {};
-        try {
-          const configRaw = readFileSync(join(root, "opencode.json"), "utf-8");
-          config = JSON.parse(configRaw);
-        } catch {}
+          let config: any = {};
+          try {
+            const configRaw = readFileSync(join(root, "opencode.json"), "utf-8");
+            config = JSON.parse(configRaw);
+          } catch {}
 
-        const { available, missing } = config.mcp ? checkMcpServers(config) : { available: [], missing: ["gradle", "mobile", "android-emulator"] };
+          const { available, missing } = config.mcp
+            ? checkMcpServers(config)
+            : { available: [], missing: ["gradle", "mobile", "android-emulator"] };
 
-        return JSON.stringify(
-          {
-            projectRoot: root,
-            isAndroid: android.isAndroid,
-            indicators: {
-              gradle: android.hasGradle,
-              androidManifest: android.hasManifest,
-              tauriMobile: android.isTauriMobile,
+          return JSON.stringify(
+            {
+              projectRoot: root,
+              isAndroid: android.isAndroid,
+              indicators: {
+                gradle: android.hasGradle,
+                androidManifest: android.hasManifest,
+                tauriMobile: android.isTauriMobile,
+              },
+              mcpServers: {
+                available,
+                missing,
+              },
+              suggestedAgent: android.isAndroid ? "android-kotlin" : null,
             },
-            mcpServers: {
-              available,
-              missing,
-            },
-            suggestedAgent: android.isAndroid ? "android-kotlin" : null,
-          },
-          null,
-          2
-        );
-      },
-    }),
-  },
+            null,
+            2
+          );
+        },
+      }),
+    },
+  };
 };
 
 export default MobileToolRouterPlugin;

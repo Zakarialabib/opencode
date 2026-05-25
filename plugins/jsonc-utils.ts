@@ -2,23 +2,23 @@ export function parseJsonc(content: string): any {
   // Properly strip comments only outside of strings
   let result = "";
   let inString = false;
-  let escape = false;
+  let isEscaped = false;
   let i = 0;
 
   while (i < content.length) {
     const char = content[i];
     const nextChar = i + 1 < content.length ? content[i + 1] : "";
 
-    if (escape) {
+    if (isEscaped) {
       result += char;
-      escape = false;
+      isEscaped = false;
       i++;
       continue;
     }
 
     if (char === "\\" && inString) {
       result += char;
-      escape = true;
+      isEscaped = true;
       i++;
       continue;
     }

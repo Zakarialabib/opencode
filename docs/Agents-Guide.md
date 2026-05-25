@@ -6,49 +6,46 @@ OpenCode uses specialized agents configured in `opencode.json` to handle differe
 
 ---
 
-## 🎯 Active Agents (10 configured)
+## 🎯 Configured Agents (15 configured)
 
-All agents are defined as `"primary"` mode in `opencode.json` under the `"agent"` key.
+These agents are configured in `opencode.json` under the `"agent"` key. The file is the source of truth for agent mode, permissions, and tools.
 
-### Leadership & Strategy
+Local agent docs in `agents/*.md` provide the per-agent design and execution guidance. Keep those files synchronized with `opencode.json` when agent roles, mode, or permissions change.
 
-| Agent                 | Model                       | Temperature | Role                                                                                    |
-| --------------------- | --------------------------- | ----------- | --------------------------------------------------------------------------------------- |
-| **`lead-strategist`** | Strategic orchestrator — multi-agent delegation, workflow coordination, project roadmap |
-| **`lead-architect`**  | Technical architect — system design, Context7 docs, memory MCP, sequential-thinking     |
+## 📌 Agent docs audit status
+- `qa-guardian.md`: removed invalid references to non-existent `qa-tester` and `security-scan` skills.
+- `frontend-ui-ux.md`: corrected invalid `context7_resolve-library-id`, `context7_query-docs`, and `skill_use` tool names to match actual available tools.
+- `plan.md`: corrected `Mode` to `subagent` to match `opencode.json`.
 
-### Core Implementation
+### Orchestration & Planning
 
-| Agent              | Model                      | Temperature | Role                                                                                                                |
-| ------------------ | -------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------- |
-| **`core-factory`** | Fast implementation engine — direct file editing, read-edit-validate workflow, batch operations. **Default agent.** |
+| Agent                 | Mode      | Steps | Role                                                                                    |
+| --------------------- | --------- | ----- | --------------------------------------------------------------------------------------- |
+| **`build`**           | primary   | 50    | Primary orchestrator — decomposes requests, delegates specialists, synthesizes results. |
+| **`plan`**            | subagent  | 20    | Read-only analyst — architecture review, gap analysis, risk assessment.               |
+| **`explore`**         | subagent  | 15    | Fast codebase search — locate files, find patterns, answer structural questions.      |
+| **`scout`**           | subagent  | 15    | External researcher — fetch docs, inspect dependencies, cross-reference upstream.     |
+| **`lead-strategist`** | subagent  | 30    | Product architect — feasibility, gap analysis, strategic coordination.                |
+| **`lead-architect`**  | subagent  | 30    | Technical architect — pattern integrity, dependency direction, structural soundness.  |
 
-### Frontend & Design
+### Implementation & Delivery
 
-| Agent                | Model                       | Temperature | Role                                                                                        |
-| -------------------- | --------------------------- | ----------- | ------------------------------------------------------------------------------------------- |
-| **`frontend-ui-ux`** | | Premium UI/UX — Next.js 16, TypeScript, Tailwind 4, shadcn/ui, design tokens, accessibility |
+| Agent                | Mode      | Steps | Role                                                                                                                |
+| -------------------- | --------- | ----- | ------------------------------------------------------------------------------------------------------------------- |
+| **`core-factory`**   | subagent  | 40    | Senior implementation engineer — fast, clean, correct production code.                                              |
+| **`frontend-ui-ux`** | subagent  | 30    | Premium UI engineer — React + TypeScript + Tailwind + shadcn/ui.                                                   |
+| **`backend-api`**    | subagent  | 30    | API specialist — Node/Express or Laravel, type-safe, validated.                                                     |
+| **`backend-laravel`**| subagent  | 30    | Laravel 13 + Livewire 4 specialist — convention-strict, pest-tested.                                               |
+| **`backend-tauri`**  | subagent  | 30    | Rust/Tauri specialist — safety-first, cargo-check-always.                                                          |
+| **`android-kotlin`** | subagent  | 30    | Android/Kotlin native dev — Clean Architecture, Jetpack Compose, Tauri mobile bridge.                                |
 
-### Backend Development
+### Validation & Operations
 
-| Agent                 | Model                      | Temperature | Role                                                                                               |
-| --------------------- | -------------------------- | ----------- | -------------------------------------------------------------------------------------------------- |
-| **`backend-api`**     | Generic API design — Node/Express, REST/GraphQL, Prisma. **NOT for Laravel** (use backend-laravel) |
-| **`backend-laravel`** | Laravel 13 specialist — Livewire 4, Alpine.js 3, Eloquent, Form Requests, Pest tests               |
-| **`backend-tauri`**   | Rust/Tauri desktop apps — IPC commands, async runtime, state management                            |
-
-### Quality Assurance
-
-| Agent             | Model                       | Temperature | Role                                                            |
-| ----------------- | --------------------------- | ----------- | --------------------------------------------------------------- |
-| **`qa-guardian`** | Unified QA — code review, testing, security scanning, debugging |
-
-### Operations & Knowledge
-
-| Agent                 | Model                       | Temperature | Role                                                                                   |
-| --------------------- | --------------------------- | ----------- | -------------------------------------------------------------------------------------- |
-| **`devops-engineer`** | Operational tasks — terminal execution, MCP management, backups, db operations         |
-| **`docs-curator`**    | Knowledge management — documentation, self-improvement, web research, system evolution |
+| Agent                 | Mode      | Steps | Role                                                                                   |
+| --------------------- | --------- | ----- | -------------------------------------------------------------------------------------- |
+| **`qa-guardian`**     | subagent  | 20    | Quality gatekeeper — finds problems, not solutions.                                    |
+| **`devops-engineer`** | subagent  | 20    | Operations — database, processes, caches, dependency management.                       |
+| **`docs-curator`**    | subagent  | 30    | Technical writer — accurate, concise, verified documentation.                         |
 
 ---
 

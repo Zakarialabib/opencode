@@ -268,6 +268,8 @@ function launch() {
   }
 
   let child;
+  const rootExe = path.join(configRoot, "opencode.exe");
+  const rootBat = path.join(configRoot, "opencode.bat");
   const localBin = path.join(
     configRoot,
     "node_modules",
@@ -282,7 +284,13 @@ function launch() {
   );
   const installedOpencode = resolveInstalledOpencode(scriptDir);
 
-  if (fs.existsSync(localBin)) {
+  if (fs.existsSync(rootExe)) {
+    console.log(`   Using project root executable: ${rootExe}`);
+    child = runCommand(rootExe);
+  } else if (fs.existsSync(rootBat)) {
+    console.log(`   Using project root batch: ${rootBat}`);
+    child = runCommand(rootBat);
+  } else if (fs.existsSync(localBin)) {
     console.log(`   Using local bin: ${localBin}`);
     child = runCommand(localBin);
   } else if (fs.existsSync(bunLocal)) {

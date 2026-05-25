@@ -22,9 +22,8 @@
 12. [Multi-Agent Orchestration](#12-multi-agent-orchestration)
 13. [Self-Improvement & Evolution](#13-self-improvement--evolution)
 14. [Edge Cases & Troubleshooting](#14-edge-cases--troubleshooting)
-15. [Brain Plugin — RAG & Codebase Context](#15-brain-plugin--rag--codebase-context)
-16. [Command Reference](#16-command-reference)
-17. [Anti-Patterns to Avoid](#17-anti-patterns-to-avoid)
+15. [Command Reference](#16-command-reference)
+16. [Anti-Patterns to Avoid](#17-anti-patterns-to-avoid)
 
 ---
 
@@ -786,76 +785,7 @@ Runs config-doctor skill to:
 
 ---
 
-## 15. Brain Plugin — RAG &amp; Codebase Context
-
-The **Brain Plugin** provides automatic RAG (Retrieval-Augmented Generation) for OpenCode. It indexes your project, embeds code with LM Studio, and injects relevant chunks into prompts automatically.
-
-### How RAG Works (Automatic)
-
-When you ask a question, the brain plugin:
-
-1. **Classifies intent** via decision tree (debug, refactor, feature, test, learn)
-2. **Prewarms** the embed model in LM Studio
-3. **Embeds** your query and searches the project index (HNSW vector store)
-4. **Injects** top-K code chunks into the prompt as context
-
-No manual action needed — it just works on every `message.updated`.
-
-### Manual Brain Commands
-
-| Command               | Purpose                                                        |
-| --------------------- | -------------------------------------------------------------- |
-| `brain_diagnostic`    | Full pipeline check: health, cache, search, models             |
-| `brain_status`        | Decision tree stats, index stats, memory graph, cache hit rate |
-| `brain_search`        | Hybrid search: keyword + dense + sparse (RRF fusion)           |
-| `brain_embed_test`    | Test what context a query would retrieve                       |
-| `brain_model_load`    | Prewarm a model (chat/embed/draft)                             |
-| `brain_model_unload`  | Free VRAM by unloading non-essential models                    |
-| `brain_index_project` | Re-index current project (use `force:true` to rebuild)         |
-
-### Prompting with RAG Context
-
-The brain injects context as markdown code blocks at the top of your prompt:
-
-````
-## Context 1: `src/auth/login.ts:15-45`
-```typescript
-function authenticate(user, pass) { ... }
-````
-
-## Context 2: `src/auth/utils.ts:1-30`
-
-```typescript
-const TOKEN_EXPIRY = 3600;
-```
-
----
-
-User request: <your message>
-
-```
-
-You can also force context retrieval with:
-
-```
-
-@build Use brain_search to find auth-related files, then read them.
-
-```
-
-### Troubleshooting
-
-| Symptom | Fix |
-|---------|-----|
-| RAG not injecting chunks | Run `brain_diagnostic` → check LM Studio is running → `brain_index_project force:true` |
-| 0 search results | Run `brain_index_project force:true` to (re)index |
-| LM Studio errors | Check LM Studio status at http://127.0.0.1:1234 — restart if needed |
-| VRAM full | `brain_model_unload` to free non-essential models |
-| Want to see what's indexed | `brain_status` shows chunk count, indexed projects, cache hit rate |
-
----
-
-## 16. Command Reference
+## 15. Command Reference
 
 ### System Commands
 
@@ -1048,5 +978,4 @@ From the latest `codebase-audit.js` run:
 | integration-test   | qwen3.5-4b-reasoning | lmstudio    | Test gen & execution       |
 | docs-evolver       | qwen-3-235b          | cerebras    | Doc sync & ADRs            |
 
-> **All 15 agents have Brain plugin tools** (brain_diagnostic, brain_status, brain_search, brain_index_project) for RAG-powered codebase context.
 ```

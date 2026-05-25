@@ -2,22 +2,23 @@ import { parseJsonc } from "./jsonc-utils";
 import { type Plugin, tool } from "@opencode-ai/plugin";
 import { readFileSync, accessSync } from "node:fs";
 import { join, dirname, parse } from "node:path";
-import { debug, info, warn, error, SKILL_CATEGORIES } from "./debug-logger";
+// import { debug, error, info, setTelemetryContext, warn, SKILL_CATEGORIES } from "./debug-logger";
+// import { pruneOldTelemetry, recordRunEnd, recordRunStart } from "../brain-plugin/store/telemetry";
 
 // Debug: trace skill execution
-function traceSkillExecution(skillName: string, args: any, result: any, err?: any) {
-  debug(
-    SKILL_CATEGORIES.SKILL_EXECUTE,
-    `Skill "${skillName}" execution ${err ? "FAILED" : "completed"}`,
-    {
-      skillName,
-      args: JSON.stringify(args).slice(0, 200),
-      hasError: !!err,
-      errorMessage: err?.message || err?.toString(),
-      resultPreview: typeof result === "string" ? result.slice(0, 100) : typeof result,
-    }
-  );
-}
+// function traceSkillExecution(skillName: string, args: any, result: any, err?: any) {
+//   debug(
+//     SKILL_CATEGORIES.SKILL_EXECUTE,
+//     `Skill "${skillName}" execution ${err ? "FAILED" : "completed"}`,
+//     {
+//       skillName,
+//       args: JSON.stringify(args).slice(0, 200),
+//       hasError: !!err,
+//       errorMessage: err?.message || err?.toString(),
+//       resultPreview: typeof result === "string" ? result.slice(0, 100) : typeof result,
+//     }
+//   );
+// }
 
 interface SkillEntry {
   name: string;
@@ -34,6 +35,7 @@ interface SkillEntry {
 
 interface SkillExecutionTrace {
   skillName: string;
+  runId?: string;
   startedAt: number;
   duration?: number;
   status: "loading" | "executing" | "completed" | "error";
@@ -42,6 +44,8 @@ interface SkillExecutionTrace {
 
 const skillExecutionTraces = new Map<string, SkillExecutionTrace>();
 const MAX_TRACES = 100;
+let telemetryProjectRoot: string | null = null;
+const telemetryKeepMs = 7 * 24 * 60 * 60 * 1000;
 
 function findProjectRoot(startDir: string): string | null {
   let current = startDir;
@@ -114,10 +118,20 @@ function recordSkillStart(skillName: string): void {
     startedAt: Date.now(),
     status: "loading",
   };
+  if (telemetryProjectRoot) {
+    try {
+      // trace.runId = recordRunStart(telemetryProjectRoot, {
+      //   kind: "skill",
+      //   name: skillName,
+      //   traceId: telemetryProjectRoot,
+      //   meta: {},
+      // });
+    } catch {}
+  }
   skillExecutionTraces.set(skillName, trace);
-  debug(SKILL_CATEGORIES.SKILL_LOAD, `Skill "${skillName}" loading started`, {
-    existingTraces: skillExecutionTraces.size,
-  });
+  // debug(SKILL_CATEGORIES.SKILL_LOAD, `Skill "${skillName}" loading started`, {
+  //   existingTraces: skillExecutionTraces.size,
+  // });
 }
 
 function recordSkillComplete(skillName: string, status: "completed" | "error", err?: string): void {
@@ -126,11 +140,22 @@ function recordSkillComplete(skillName: string, status: "completed" | "error", e
     trace.duration = Date.now() - trace.startedAt;
     trace.status = status;
     trace.error = err;
-    debug(
-      SKILL_CATEGORIES.SKILL_EXECUTE,
-      `Skill "${skillName}" ${status} in ${trace.duration}ms`,
-      err ? { error: err } : undefined
-    );
+    if (telemetryProjectRoot && trace.runId) {
+      try {
+        // recordRunEnd(telemetryProjectRoot, trace.runId, {
+        //   status: status === "error" ? "error" : "success",
+        //   metaPatch: {
+        //     durationMs: trace.duration,
+        //     error: err,
+        //   },
+        // });
+      } catch {}
+    }
+    // debug(
+    //   SKILL_CATEGORIES.SKILL_EXECUTE,
+    //   `Skill "${skillName}" ${status} in ${trace.duration}ms`,
+    //   err ? { error: err } : undefined
+    // );
   }
 
   if (skillExecutionTraces.size > MAX_TRACES) {
@@ -147,22 +172,27 @@ const SkillManagerPlugin: Plugin = async ({ directory }) => {
   const projectRoot = resolveConfigRoot(directory);
   let skillsIndexPath: string | null = null;
   let skills: SkillEntry[] = [];
+  telemetryProjectRoot = projectRoot ?? directory;
+  // setTelemetryContext({ projectRoot: telemetryProjectRoot, traceId: telemetryProjectRoot });
+  try {
+    // pruneOldTelemetry(telemetryProjectRoot, { keepMs: telemetryKeepMs });
+  } catch {}
 
-  debug(SKILL_CATEGORIES.SKILL_LOAD, "SkillManager initializing", { projectRoot, directory });
+  // debug(SKILL_CATEGORIES.SKILL_LOAD, "SkillManager initializing", { projectRoot, directory });
 
   if (projectRoot) {
     const candidate = join(projectRoot, "skills", "index.json");
     try {
       readFileSync(candidate, "utf8");
       skillsIndexPath = candidate;
-      debug(SKILL_CATEGORIES.SKILL_LOAD, `Found skills index at ${candidate}`);
+      // debug(SKILL_CATEGORIES.SKILL_LOAD, `Found skills index at ${candidate}`);
     } catch (e) {
-      debug(SKILL_CATEGORIES.SKILL_LOAD, `No skills index found at ${candidate}`, {
-        error: (e as Error).message,
-      });
+      // debug(SKILL_CATEGORIES.SKILL_LOAD, `No skills index found at ${candidate}`, {
+      //   error: (e as Error).message,
+      // });
     }
   } else {
-    debug(SKILL_CATEGORIES.SKILL_LOAD, `No opencode project root found for ${directory}`);
+    // debug(SKILL_CATEGORIES.SKILL_LOAD, `No opencode project root found for ${directory}`);
   }
 
   if (skillsIndexPath) {
@@ -175,16 +205,16 @@ const SkillManagerPlugin: Plugin = async ({ directory }) => {
         ...s,
         _loadedAt: Date.now(),
       }));
-      debug(SKILL_CATEGORIES.SKILL_LOAD, `Loaded ${skills.length} skills from index`);
+      // debug(SKILL_CATEGORIES.SKILL_LOAD, `Loaded ${skills.length} skills from index`);
     } catch (e) {
-      error(SKILL_CATEGORIES.SKILL_LOAD, "Failed to parse skills index", {
-        error: (e as Error).message,
-      });
+      // error(SKILL_CATEGORIES.SKILL_LOAD, "Failed to parse skills index", {
+      //   error: (e as Error).message,
+      // });
     }
   } else {
-    debug(SKILL_CATEGORIES.SKILL_LOAD, "SkillManager running without local skills index", {
-      directory,
-    });
+    // debug(SKILL_CATEGORIES.SKILL_LOAD, "SkillManager running without local skills index", {
+    //   directory,
+    // });
   }
 
   return {
@@ -199,7 +229,7 @@ const SkillManagerPlugin: Plugin = async ({ directory }) => {
         },
         async execute({ category }: { category?: string }, _context: any) {
           const startTime = Date.now();
-          debug(SKILL_CATEGORIES.SKILL_EXECUTE, "skill_list called", { category });
+          // debug(SKILL_CATEGORIES.SKILL_EXECUTE, "skill_list called", { category });
 
           let filtered = skills;
           if (category) {
@@ -221,14 +251,14 @@ const SkillManagerPlugin: Plugin = async ({ directory }) => {
                 );
 
           recordSkillComplete("skill_list", "completed");
-          debug(
-            SKILL_CATEGORIES.SKILL_EXECUTE,
-            `skill_list completed in ${Date.now() - startTime}ms`,
-            {
-              count: filtered.length,
-              category,
-            }
-          );
+          // debug(
+          //   SKILL_CATEGORIES.SKILL_EXECUTE,
+          //   `skill_list completed in ${Date.now() - startTime}ms`,
+          //   {
+          //     count: filtered.length,
+          //     category,
+          //   }
+          // );
 
           return result;
         },
@@ -242,7 +272,7 @@ const SkillManagerPlugin: Plugin = async ({ directory }) => {
         async execute({ skillName }: { skillName: string }, _context: any) {
           const startTime = Date.now();
           recordSkillStart(`skill_info:${skillName}`);
-          debug(SKILL_CATEGORIES.SKILL_EXECUTE, `skill_info called for "${skillName}"`);
+          // debug(SKILL_CATEGORIES.SKILL_EXECUTE, `skill_info called for "${skillName}"`);
 
           const skill = skills.find((s) => s.name === skillName || s.displayName === skillName);
           if (!skill) {
@@ -267,10 +297,10 @@ const SkillManagerPlugin: Plugin = async ({ directory }) => {
           };
 
           recordSkillComplete(`skill_info:${skillName}`, "completed");
-          debug(
-            SKILL_CATEGORIES.SKILL_EXECUTE,
-            `skill_info completed in ${Date.now() - startTime}ms`
-          );
+          // debug(
+          //   SKILL_CATEGORIES.SKILL_EXECUTE,
+          //   `skill_info completed in ${Date.now() - startTime}ms`
+          // );
 
           return JSON.stringify(result);
         },
@@ -283,7 +313,7 @@ const SkillManagerPlugin: Plugin = async ({ directory }) => {
         },
         async execute({ query }: { query: string }, _context: any) {
           const startTime = Date.now();
-          debug(SKILL_CATEGORIES.SKILL_EXECUTE, `skill_search called with "${query}"`);
+          // debug(SKILL_CATEGORIES.SKILL_EXECUTE, `skill_search called with "${query}"`);
 
           const queryLower = query.toLowerCase();
           const matches = skills.filter(
@@ -305,14 +335,14 @@ const SkillManagerPlugin: Plugin = async ({ directory }) => {
                   }))
                 );
 
-          debug(
-            SKILL_CATEGORIES.SKILL_EXECUTE,
-            `skill_search completed in ${Date.now() - startTime}ms`,
-            {
-              query,
-              matches: matches.length,
-            }
-          );
+          // debug(
+          //   SKILL_CATEGORIES.SKILL_EXECUTE,
+          //   `skill_search completed in ${Date.now() - startTime}ms`,
+          //   {
+          //     query,
+          //     matches: matches.length,
+          //   }
+          // );
 
           return result;
         },
