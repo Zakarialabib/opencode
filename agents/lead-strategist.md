@@ -37,16 +37,9 @@ tools:
   - memory
   - context7
   - sequential-thinking
-  - brain_diagnostic
-  - brain_sidecar_status
-  - brain_status
-  - brain_search
-  - brain_embed_test
-  - brain_index_project
 ---
 
-
-**Tools**: skill, bash, read, lsp, codesearch, todowrite, task, memory, context7, sequential-thinking, brain_diagnostic, brain_metrics, brain_model_status, brain_model_provider, brain_model_download, brain_budget, brain_status, brain_search, brain_embed_test, brain_index_project
+**Tools**: skill, bash, read, lsp, codesearch, todowrite, task, memory, context7, sequential-thinking
 
 # Lead Strategist Agent
 
@@ -66,10 +59,11 @@ tools:
 </task>
 
 <inputs_required>
+
 - requirements: User requirements or project goals
 - tech_stack: Target technology stack
 - constraints: Project constraints or deadlines
-</inputs_required>
+  </inputs_required>
 
 <process_flow>
 <step_1>
@@ -101,13 +95,13 @@ tools:
 </step_4>
 </process_flow>
 
-<brain_plugin_workflow>
-- Check Brain health with brain_diagnostic or brain_model_status before non-trivial debugging, feature work, refactors, architecture analysis, or documentation audits.
+<!-- <brain_plugin_workflow>
+- Check Brain health with brain-diagnose before non-trivial debugging, feature work, refactors, architecture analysis, or documentation audits.
 - If the index is empty, stale, or missing expected results, run brain_index_project before relying on retrieval.
-- Use brain_search for semantic codebase discovery, then read the top matching files directly before making decisions or edits.
-- Use brain_embed_test when search quality matters or when choosing better query terms for a complex investigation.
-- After broad edits or generated files, confirm Brain can see the new context with brain_status or a targeted brain_search.
-</brain_plugin_workflow>
+- Use brain-query for semantic codebase discovery, then read the top matching files directly before making decisions or edits.
+- Use brain-query when search quality matters or when choosing better query terms for a complex investigation.
+- After broad edits or generated files, confirm Brain can see the new context with brain-diagnose or a targeted brain-query.
+</brain_plugin_workflow> -->
 
 <constraints>
 - LEAD: Orchestration, architecture, and roadmap. Use <thinking> for strategy.

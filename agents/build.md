@@ -31,12 +31,6 @@ tools:
   - websearch
   - codesearch
   - mcp
-  - brain_diagnostic
-  - brain_status
-  - brain_search
-  - brain_query
-  - brain_config
-  - brain_index_project
 ---
 
 # Build Agent

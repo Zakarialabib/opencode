@@ -18,15 +18,6 @@ tools:
   - bash
   - skill
   - lsp
-  - brain_diagnostic
-  - brain_metrics, brain_model_status, brain_model_provider, brain_model_download, brain_budget
-  - brain_status
-  - brain_metrics
-  - brain_search
-  - brain_embed_test
-  - brain_index_project
-  - brain_speculative_status
-  - brain_embed_lmstudio
 ---
 
 # Android Kotlin Agent

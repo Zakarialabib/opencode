@@ -14,7 +14,6 @@ tools:
   - glob
   - grep
   - list
-  - brain_search
 ---
 
 # Explore Agent

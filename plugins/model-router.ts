@@ -3,7 +3,7 @@ import { type Plugin, tool } from "@opencode-ai/plugin";
 import { createHash } from "node:crypto";
 import { readFileSync, accessSync } from "node:fs";
 import { join, dirname, parse } from "node:path";
-import { recordRunEnd, recordRunStart } from "../brain-plugin/store/telemetry";
+// import { recordRunEnd, recordRunStart } from "../brain-plugin/store/telemetry";
 
 // Find project root by looking for opencode.json
 function findConfigPath(startDir: string): string | null {
@@ -229,19 +229,19 @@ const ModelRouterPlugin: Plugin = async ({ directory }) => {
       let runId: string | undefined;
       let ok = true;
       try {
-        runId = recordRunStart(telemetryProjectRoot, {
-          kind: "agent",
-          name: agentName || `${provider}/${model}`,
-          sessionId,
-          traceId,
-          meta: {
-            provider,
-            model,
-            messageCount,
-            hasTools,
-            maxTokens,
-          },
-        });
+        // runId = recordRunStart(telemetryProjectRoot, {
+        //   kind: "agent",
+        //   name: agentName || `${provider}/${model}`,
+        //   sessionId,
+        //   traceId,
+        //   meta: {
+        //     provider,
+        //     model,
+        //     messageCount,
+        //     hasTools,
+        //     maxTokens,
+        //   },
+        // });
       } catch {}
 
       const caps = getModelCapabilities(provider, model);
@@ -273,10 +273,10 @@ const ModelRouterPlugin: Plugin = async ({ directory }) => {
       } finally {
         if (runId) {
           try {
-            recordRunEnd(telemetryProjectRoot, runId, {
-              status: ok ? "success" : "error",
-              metaPatch: { durationMs: Math.max(0, Date.now() - hookStartedAt) },
-            });
+            // recordRunEnd(telemetryProjectRoot, runId, {
+            //   status: ok ? "success" : "error",
+            //   metaPatch: { durationMs: Math.max(0, Date.now() - hookStartedAt) },
+            // });
           } catch {}
         }
       }

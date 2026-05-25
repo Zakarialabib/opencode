@@ -20,23 +20,6 @@
    - Validate schema before editing configs
    - Use JSON language server for opencode.json changes
 
-## Brain Plugin Integration
-
-5. **Before Non-Trivial Edits**:
-   - Run `brain_status` to verify the cognitive layer is operational
-   - Run `brain_search <query>` to find relevant codebase context
-   - Use retrieved chunks to understand impact of changes
-
-6. **After Edits**:
-   - File changes trigger automatic reindex via `file.watcher.updated` hook
-   - Dirty files are batch-reindexed after 3s debounce
-   - For major refactors, run `brain_index_project` to force full reindex
-
-7. **Multi-Step Tasks**:
-   - Session memory tracks recentFiles, decisions, and failedApproaches
-   - Follow-up suggestions are injected after task completion keywords
-   - Use `brain_diagnostic` to verify pipeline health after crashes
-
 ## Project Stack
 
 8. **Tauri + React + Laravel Stack**:

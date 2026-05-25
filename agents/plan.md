@@ -17,11 +17,6 @@ tools:
   - lsp
   - codesearch
   - mcp
-  - brain_diagnostic
-  - brain_status
-  - brain_search
-  - brain_metrics
-  - brain_index_project
 ---
 
 # Plan Agent

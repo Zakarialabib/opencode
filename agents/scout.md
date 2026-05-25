@@ -18,7 +18,6 @@ tools:
   - webfetch
   - websearch
   - mcp
-  - brain_search
 ---
 
 # Scout Agent

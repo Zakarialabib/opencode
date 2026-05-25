@@ -44,7 +44,6 @@ All documentation is centralized in the [`docs/`](docs/) folder:
 | [**Workflows-Guide.md**](docs/Workflows-Guide.md)                                     | Multi-agent workflow automation                   |
 | [**Skills-Guide.md**](docs/Skills-Guide.md)                                           | 63+ specialized capabilities with MCP integration |
 | [**Plugins-Guide.md**](docs/Plugins-Guide.md)                                         | 10+ plugins including agent-router                |
-| [**Brain-Plugin-Docs.md**](docs/brain-plugin-docs.md)                               | RAG system with local embeddings and Rust sidecar |
 | [**Agents-Guide.md**](docs/Agents-Guide.md)                                           | Complete agent reference (12 agents)              |
 | [**Agent-Loop-Guide.md**](docs/Agent-Loop-Guide.md)                                   | Iterative execution and retry patterns            |
 | [**Prompting-Guide.md**](docs/Prompting-Guide.md)                                     | Effective prompt techniques                       |
@@ -83,7 +82,7 @@ lead-strategist (Orchestration)
 
 ## Features
 
-### RAG Context Retrieval (Brain Plugin)
+<!-- ### RAG Context Retrieval (Brain Plugin)
 
 Automatic codebase context injection using local embeddings:
 
@@ -97,7 +96,7 @@ Automatic codebase context injection using local embeddings:
 2. Relevant code chunks retrieved via vector search
 3. Context prepended to LLM prompt for grounded responses
 
-**Status:** TS plugin loads successfully; Rust sidecar requires Linux/Mac for building.
+**Status:** TS plugin loads successfully; Rust sidecar requires Linux/Mac for building. -->
 
 ### Workflow Orchestration
 

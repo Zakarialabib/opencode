@@ -192,31 +192,6 @@ Skills are registered in `skills/index.json` with agent assignments. There are c
 
 ---
 
-## Brain Plugin Tools for Agents
-
-Agents should reference the correct brain plugin tools. The following table shows the current tool inventory:
-
-| Tool | Purpose | Included in agent tools? |
-|------|---------|------------------------|
-| `brain_diagnostic` | Full pipeline health check | All agents |
-| `brain_status` | Backend health, index stats | All agents |
-| `brain_search` | Hybrid semantic search | All agents |
-| `brain_embed_test` | Test embedding quality | All agents |
-| `brain_index_project` | Re-index project | All agents |
-| `brain_metrics` | Session metrics | Core agents |
-| `brain_model_status` | Pipeline status (dense/reranker/provider) | Core agents |
-| `brain_model_provider` | Switch provider mode | Core agents |
-| `brain_model_download` | Download model via dashboard | Core agents |
-| `brain_budget` | Token budget status | Core agents |
-| `brain_benchmark` | Run benchmarks | Build/plan agents |
-| `brain_docs_cache` | Manage doc cache | Docs-curator |
-| `brain_docs_fetch` | Fetch registry docs | Docs-curator |
-| `brain_embed_lmstudio` | LM Studio embedding test | Specialized |
-
-**Removed:** `brain_sidecar_status` (replaced by `brain_diagnostic` + `brain_model_status`)
-
----
-
 ## MCP Server Integration
 
 | MCP Server            | Used By Skills                       | Purpose                          |

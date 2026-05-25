@@ -250,8 +250,6 @@ QUALITY: php artisan pint passes, tests green
 
 #### Must Have for All Agents:
 - `task` - For spawning subagents
-- `brain_diagnostic` - Health check
-- `brain_search` - Semantic discovery
 
 #### Agent-Specific Tools:
 
