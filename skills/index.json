@@ -178,6 +178,41 @@
       "category": "process"
     },
     {
+      "path": "skills/stitch-code-to-design/SKILL.md",
+      "name": "stitch-code-to-design",
+      "description": "Mirror existing UI code to a Stitch project for visual audit and design consistency check",
+      "agents": ["frontend-ui-ux"],
+      "category": "design"
+    },
+    {
+      "path": "skills/stitch-extract-design-md/SKILL.md",
+      "name": "stitch-extract-design-md",
+      "description": "Extract design tokens (colors, typography, spacing) from frontend source code into DESIGN.md",
+      "agents": ["frontend-ui-ux"],
+      "category": "design"
+    },
+    {
+      "path": "skills/stitch-manage-design-system/SKILL.md",
+      "name": "stitch-manage-design-system",
+      "description": "Manage and sync design system metadata and tokens across project components",
+      "agents": ["frontend-ui-ux"],
+      "category": "design"
+    },
+    {
+      "path": "skills/stitch-design-md/SKILL.md",
+      "name": "stitch-design-md",
+      "description": "Generate and manage DESIGN.md files for comprehensive design documentation",
+      "agents": ["frontend-ui-ux"],
+      "category": "design"
+    },
+    {
+      "path": "skills/stitch-taste-design/SKILL.md",
+      "name": "stitch-taste-design",
+      "description": "Audit UI against premium design standards and generate refactoring checklists for design gaps",
+      "agents": ["frontend-ui-ux"],
+      "category": "design"
+    },
+    {
       "path": "skills/testing-strategy/SKILL.md",
       "name": "testing-strategy",
       "description": "Test coverage planning, test matrix definition, and quality gates for project delivery",
@@ -269,6 +304,6 @@
       "category": "mobile"
     }
   ],
-  "lastUpdated": "2026-05-21T19:00:00.000Z",
-  "totalSkills": 38
+  "lastUpdated": "2026-05-25T14:45:00.000Z",
+  "totalSkills": 43
 }

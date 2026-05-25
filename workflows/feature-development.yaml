@@ -67,6 +67,21 @@ phases:
       - ui-mockups/ contains all screens
       - schema.sql passes validation
 
+  - name: Design System Audit
+    description: Document and audit the design system for consistency and drift using Stitch
+    agents: [frontend-ui-ux]
+    tasks:
+      - extract_design_system_tokens
+      - audit_ui_against_premium_standards
+      - generate_design_refactoring_checklist
+    artifacts: [.stitch/DESIGN.md, .stitch/refactor-checklist.md]
+    dependencies: [Design & Planning]
+    mcp_tools:
+      stitch: [extract_design_context, list_screens]
+    exit_criteria:
+      - .stitch/DESIGN.md exists and is documented
+      - .stitch/refactor-checklist.md identifies gaps
+
   - name: Implementation
     description: Core development with real-time LSP context, parallel execution, and continuous integration
     agents: [core-factory, backend-laravel, backend-api, backend-tauri, frontend-ui-ux]
@@ -80,7 +95,7 @@ phases:
       - configure_routes_and_middleware
       - verify_type_safety_and_linting
     artifacts: [src/, src-tauri/, app/, database/migrations/]
-    dependencies: [Design & Planning]
+    dependencies: [Design System Audit]
     mcp_tools:
       context7: [fetch_library_docs]
       sqlite: [write_query, read_query]

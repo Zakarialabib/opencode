@@ -141,11 +141,14 @@
       "enabled": true,
       "timeout": 45000
     },
-    "puppeteer": {
+    "stitch": {
       "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-puppeteer"],
-      "enabled": false,
-      "timeout": 60000
+      "command": ["npx", "-y", "@google-labs/stitch-mcp"],
+      "enabled": true,
+      "environment": {
+         "STITCH_API_KEY": "${STITCH_API_KEY}",
+         "STITCH_USE_SYSTEM_GCLOUD": "1"
+      }
     },
     "personal-knowledge": {
       "type": "local",
