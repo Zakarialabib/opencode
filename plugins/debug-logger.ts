@@ -3,11 +3,8 @@
  * Enable by setting DEBUG=opencode:* or specific categories
  */
 
-import { recordEvent } from "../brain-plugin/store/telemetry";
-
 const DEBUG_ENABLED = process.env.DEBUG || "";
 const LOG_PREFIX = "[DEBUG]";
-const TELEMETRY_ENABLED = process.env.OPENCODE_TELEMETRY !== "0";
 
 export type LogLevel = "debug" | "info" | "warn" | "error";
 
@@ -22,13 +19,6 @@ interface LogEntry {
 // In-memory log buffer (last 1000 entries)
 const logBuffer: LogEntry[] = [];
 const MAX_LOG_ENTRIES = 1000;
-let telemetryProjectRoot: string | null = null;
-let telemetryTraceId: string | null = null;
-
-export function setTelemetryContext(input: { projectRoot: string; traceId?: string }) {
-  telemetryProjectRoot = input.projectRoot;
-  telemetryTraceId = input.traceId ?? input.projectRoot;
-}
 
 export function shouldLog(category: string, level: LogLevel): boolean {
   // Always log errors
@@ -41,7 +31,7 @@ export function shouldLog(category: string, level: LogLevel): boolean {
 
   return patterns.some((pattern) => {
     if (pattern.includes("*")) {
-      const regex = new RegExp("^" + pattern.replace(/\*/g, ".*") + "$");
+      const regex = new RegExp(`^${pattern.replace(/\*/g, ".*")}$`);
       return regex.test(category) || regex.test(fullCategory);
     }
     return pattern === category || pattern === fullCategory;
@@ -61,18 +51,6 @@ export function log(level: LogLevel, category: string, message: string, data?: a
   logBuffer.push(entry);
   if (logBuffer.length > MAX_LOG_ENTRIES) {
     logBuffer.shift();
-  }
-
-  if (TELEMETRY_ENABLED && telemetryProjectRoot && (level === "error" || shouldLog(category, level))) {
-    try {
-      recordEvent(telemetryProjectRoot, {
-        level,
-        category,
-        message,
-        traceId: telemetryTraceId ?? undefined,
-        extra: data && typeof data === "object" ? { data } : undefined,
-      });
-    } catch {}
   }
 
   // Console output
@@ -156,6 +134,5 @@ export default {
   info,
   warn,
   error,
-  setTelemetryContext,
   SKILL_CATEGORIES,
 };

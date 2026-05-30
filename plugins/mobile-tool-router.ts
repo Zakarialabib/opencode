@@ -56,7 +56,9 @@ function detectAndroidProject(root: string): {
 // Check which MCP servers are configured
 function checkMcpServers(config: any): { available: string[]; missing: string[] } {
   const required = ["gradle", "mobile", "android-emulator"];
-  const configured = config.mcp ? Object.keys(config.mcp).filter((k) => config.mcp[k]?.enabled !== false) : [];
+  const configured = config.mcp
+    ? Object.keys(config.mcp).filter((k) => config.mcp[k]?.enabled !== false)
+    : [];
   const available = required.filter((s) => configured.includes(s));
   const missing = required.filter((s) => !configured.includes(s));
   return { available, missing };

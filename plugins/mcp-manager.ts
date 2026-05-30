@@ -286,22 +286,29 @@ const MCPManagerPlugin: Plugin = async ({ client, project, directory }) => {
       }),
 
       mcp_health: tool({
-        description: "Check health of all configured MCP servers with actual connectivity probes. Helps detect dead servers before task execution.",
+        description:
+          "Check health of all configured MCP servers with actual connectivity probes. Helps detect dead servers before task execution.",
         args: {
-          serverName: tool.schema.string().optional().describe("Optional: check a specific server only"),
+          serverName: tool.schema
+            .string()
+            .optional()
+            .describe("Optional: check a specific server only"),
         },
         async execute({ serverName }) {
-          const servers = Object.entries(mcpConfig).filter(([name]) => !serverName || name === serverName);
+          const servers = Object.entries(mcpConfig).filter(
+            ([name]) => !serverName || name === serverName
+          );
           if (servers.length === 0) return "No MCP servers found.";
 
           const results = [];
           for (const [name, config] of servers) {
             const cfg = config as any;
-            const traces = mcpTraces.filter(t => t.serverName === name);
-            const lastUsed = traces.length > 0
-              ? new Date(Math.max(...traces.map(t => t.timestamp))).toISOString()
-              : "never";
-            const lastError = traces.filter(t => t.operation === "error").pop();
+            const traces = mcpTraces.filter((t) => t.serverName === name);
+            const lastUsed =
+              traces.length > 0
+                ? new Date(Math.max(...traces.map((t) => t.timestamp))).toISOString()
+                : "never";
+            const lastError = traces.filter((t) => t.operation === "error").pop();
 
             let probeStatus = "unknown";
             let probeDetail = "";
@@ -331,17 +338,19 @@ const MCPManagerPlugin: Plugin = async ({ client, project, directory }) => {
               probeStatus,
               probeDetail,
               lastUsed,
-              errors: traces.filter(t => t.operation === "error").length,
+              errors: traces.filter((t) => t.operation === "error").length,
               lastError: lastError?.details?.error || null,
             });
           }
 
           const summary = {
             total: results.length,
-            reachable: results.filter(r => r.probeStatus === "reachable").length,
-            disabled: results.filter(r => r.probeStatus === "disabled").length,
-            unreachable: results.filter(r => r.probeStatus === "unreachable").length,
-            unknown: results.filter(r => r.probeStatus === "unknown" || r.probeStatus === "configured").length,
+            reachable: results.filter((r) => r.probeStatus === "reachable").length,
+            disabled: results.filter((r) => r.probeStatus === "disabled").length,
+            unreachable: results.filter((r) => r.probeStatus === "unreachable").length,
+            unknown: results.filter(
+              (r) => r.probeStatus === "unknown" || r.probeStatus === "configured"
+            ).length,
           };
 
           return JSON.stringify({ summary, servers: results }, null, 2);

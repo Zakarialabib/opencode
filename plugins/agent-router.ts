@@ -294,7 +294,7 @@ const AgentRouterPlugin: Plugin = async ({ directory }) => {
       if (agentConfig && Array.isArray(agentConfig)) {
         AGENT_RULES = agentConfig as AgentRule[];
       }
-    } catch (e) {
+    } catch {
       console.log("Using default agent routing rules");
     }
   } else {

@@ -72,7 +72,7 @@ const ContextManagerPlugin: Plugin = async ({ directory }) => {
     try {
       const content = readFileSync(configPath, "utf8");
       return parseJsonc(content);
-    } catch (e) {
+    } catch {
       return null;
     }
   };
