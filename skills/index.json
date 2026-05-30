@@ -304,6 +304,28 @@
       "category": "mobile"
     }
   ],
-  "lastUpdated": "2026-05-25T14:45:00.000Z",
-  "totalSkills": 43
+    {
+      "path": ".opencode/skills/plan-mode/SKILL.md",
+      "name": "plan-mode",
+      "description": "Plan before execution — analyze ambiguity, produce structured handoffs before implementation",
+      "agents": ["plan", "core-factory"],
+      "category": "process"
+    },
+    {
+      "path": ".opencode/skills/skill-evolution/SKILL.md",
+      "name": "skill-evolution",
+      "description": "Shape the skill set as you work — file signals (existing skill is wrong/missing) and proposals (reusable new pattern emerged)",
+      "agents": ["core-factory", "lead-strategist"],
+      "category": "meta"
+    },
+    {
+      "path": ".opencode/skills/skill-refiner/SKILL.md",
+      "name": "skill-refiner",
+      "description": "Refine an existing skill with evidence-driven minimal patches",
+      "agents": ["lead-architect", "core-factory"],
+      "category": "meta"
+    }
+  ],
+  "lastUpdated": "2026-05-30T00:00:00.000Z",
+  "totalSkills": 46
 }
