@@ -87,11 +87,10 @@ function killExistingServer(port = 4096) {
     const { execFileSync } = require("child_process");
 
     // Find process using the port
-    const netstatOutput = execFileSync(
-      `netstat.exe`,
-      ["-ano", "-p", "TCP"],
-      { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }
-    );
+    const netstatOutput = execFileSync(`netstat.exe`, ["-ano", "-p", "TCP"], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    });
 
     const lines = netstatOutput.split(/\r?\n/);
     for (const line of lines) {
@@ -114,10 +113,14 @@ function killExistingServer(port = 4096) {
     }
 
     // Also kill any opencode processes that might be hanging
-    const tasklistOutput = execFileSync("tasklist.exe", ["/FI", "IMAGENAME eq opencode*", "/FO", "CSV", "/NH"], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"]
-    });
+    const tasklistOutput = execFileSync(
+      "tasklist.exe",
+      ["/FI", "IMAGENAME eq opencode*", "/FO", "CSV", "/NH"],
+      {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+      }
+    );
 
     const taskLines = tasklistOutput.split(/\r?\n/).filter(Boolean);
     for (const taskLine of taskLines) {
@@ -237,12 +240,13 @@ function launch() {
     }
 
     // Use shell when command might need PATH resolution or is just a name
-    if (process.platform === "win32" && (
-      finalCommand === "opencode.cmd" ||
-      finalCommand.endsWith(".cmd") ||
-      finalCommand.endsWith(".bat") ||
-      !path.isAbsolute(finalCommand)
-    )) {
+    if (
+      process.platform === "win32" &&
+      (finalCommand === "opencode.cmd" ||
+        finalCommand.endsWith(".cmd") ||
+        finalCommand.endsWith(".bat") ||
+        !path.isAbsolute(finalCommand))
+    ) {
       useShell = true;
     }
 
