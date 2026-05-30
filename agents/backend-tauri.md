@@ -84,11 +84,3 @@ For each task:
 7. For mobile builds: use `cargo tauri android init/dev/build` for Android
 8. Configure mobile capabilities in `capabilities/mobile.json`
 9. For Kotlin native Android code, delegate to `@android-kotlin` agent
-
-<!-- <brain_plugin_workflow>
-- Check Brain health with brain-diagnose before non-trivial debugging, feature work, refactors, architecture analysis, or documentation audits.
-- If the index is empty, stale, or missing expected results, run brain_index_project before relying on retrieval.
-- Use brain-query for semantic codebase discovery, then read the top matching files directly before making decisions or edits.
-- Use brain-query when search quality matters or when choosing better query terms for a complex investigation.
-- After broad edits or generated files, confirm Brain can see the new context with brain-diagnose or a targeted brain-query.
-</brain_plugin_workflow> -->

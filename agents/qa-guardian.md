@@ -89,14 +89,6 @@ tools:
 </step_4>
 </process_flow>
 
-<!-- <brain_plugin_workflow>
-- Check Brain health with brain-diagnose before non-trivial debugging, feature work, refactors, architecture analysis, or documentation audits.
-- If the index is empty, stale, or missing expected results, run brain_index_project before relying on retrieval.
-- Use brain-query for semantic codebase discovery, then read the top matching files directly before making decisions or edits.
-- Use brain-query when search quality matters or when choosing better query terms for a complex investigation.
-- After broad edits or generated files, confirm Brain can see the new context with brain-diagnose or a targeted brain-query.
-</brain_plugin_workflow> -->
-
 <constraints>
 - QUALITY: Code review, testing, security scanning, and debugging.
 - Use available QA and security review skills, LSP diagnostics, and debug utilities.
