@@ -6,7 +6,7 @@ description: >
   UI tests with Compose, and integration testing for Tauri mobile apps.
 category: mobile
 tags: [android, testing, unit-test, instrumented-test, compose-test]
-agents: [android-kotlin, mobile-qa]
+agents: [developer, mobile-qa]
 toolkit_refs: [gradle, mobile]
 ---
 

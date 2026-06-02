@@ -1,0 +1,79 @@
+id: lifecycle-discovery
+name: Lifecycle Discovery
+version: 2.0.0
+description: Feature discovery, user research, technical feasibility, and sprint planning.
+trigger: manual
+
+mcp_tools:
+  discovery:
+    memory: [create_entities, search_nodes]
+    sqlite: [query_sprint_backlog]
+  design:
+    context7: [fetch_library_docs]
+    memory: [create_entities]
+    sequential-thinking: [sequentialthinking]
+  planning:
+    sqlite: [query_capacity, update_sprint_board]
+    memory: [search_nodes]
+
+phases:
+  - name: User Story Definition
+    owner: pm-portfolio
+    raci:
+      responsible: [pm-portfolio]
+      accountable: pm-portfolio
+      consulted: [lead-backend, lead-frontend]
+      informed: [tpm-orchestrator]
+    agents: [pm-portfolio, lead-backend, lead-frontend]
+    tasks:
+      - define_user_story
+      - feasibility_spike_backend
+      - feasibility_spike_frontend
+    artifacts:
+      - docs/prd/{feature-id}.md
+      - docs/spikes/{feature-id}-feasibility.md
+    gate:
+      id: prd-feasibility-approval
+      requires: [pm-portfolio]
+      evidence: [prd, feasibility-report]
+
+  - name: Architecture Design
+    owner: cto-governance
+    raci:
+      responsible: [lead-backend, lead-frontend, lead-security]
+      accountable: cto-governance
+      consulted: [lead-data, lead-qa]
+      informed: [pm-portfolio, tpm-orchestrator]
+    agents: [cto-governance, lead-backend, lead-frontend, lead-security, lead-data]
+    tasks:
+      - draft_adr
+      - create_threat_model
+      - review_data_model
+    artifacts:
+      - docs/adr/{feature-id}-architecture.md
+      - docs/security/{feature-id}-threat-model.md
+      - docs/data/{feature-id}-schema.md
+    gate:
+      id: architecture-approval
+      requires: [cto-governance, lead-security]
+      evidence: [adr, threat-model]
+
+  - name: Sprint Planning
+    owner: tpm-orchestrator
+    raci:
+      responsible: [tpm-orchestrator]
+      accountable: pm-portfolio
+      consulted: [lead-backend, lead-frontend, lead-qa]
+      informed: [dev-backend, dev-frontend, dev-qa, dev-devops, dev-docs]
+    agents: [tpm-orchestrator, pm-portfolio]
+    tasks:
+      - create_task_breakdown
+      - create_dependency_map
+      - confirm_capacity
+    artifacts:
+      - .opencode/sprints/{sprint-id}/{feature-id}-tasks.yaml
+      - .opencode/sprints/{sprint-id}/{feature-id}-deps.yaml
+    gate:
+      id: sprint-scope-approval
+      requires: [pm-portfolio, tpm-orchestrator]
+      evidence: [task-breakdown, dependency-map]

@@ -1,0 +1,42 @@
+id: incident-response
+name: Incident Response
+version: 2.0.0
+description: Fast incident triage, containment, hotfix routing, validation, and postmortem.
+trigger: alert
+
+phases:
+  - name: Triage
+    owner: incident-responder
+    agents: [incident-responder, dev-devops, lead-security]
+    tasks:
+      - classify_severity
+      - preserve_evidence
+      - identify_owner
+    gate:
+      id: severity-confirmed
+      requires: [incident-responder]
+      evidence: [severity, impact, owner]
+
+  - name: Stabilize
+    owner: dev-devops
+    agents: [dev-devops, dev-backend, dev-frontend]
+    tasks:
+      - apply_mitigation
+      - prepare_hotfix
+      - validate_recovery
+    gate:
+      id: service-stable
+      requires: [dev-devops, lead-qa]
+      evidence: [mitigation, validation]
+
+  - name: Learn
+    owner: docs-curator
+    agents: [docs-curator, lead-qa, incident-responder]
+    tasks:
+      - draft_postmortem
+      - record_action_items
+      - update_runbook
+    gate:
+      id: postmortem-accepted
+      requires: [lead-qa, tpm-orchestrator]
+      evidence: [postmortem, action-items]

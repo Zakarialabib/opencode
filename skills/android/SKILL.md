@@ -7,7 +7,7 @@ description: >
   best practices. Serves as the root skill for all Android sub-skills.
 category: mobile
 tags: [android, kotlin, mobile, jetpack-compose, gradle, tauri-mobile]
-agents: [android-kotlin, mobile-qa, devops-engineer]
+agents: [developer, mobile-qa, qa-devops]
 toolkit_refs: [gradle, mobile, android-emulator]
 ---
 

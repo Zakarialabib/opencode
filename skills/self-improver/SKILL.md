@@ -7,7 +7,7 @@ description: >
   and adapting best practices.
 category: meta
 tags: [self-improvement, meta, learning, adaptation, opencode]
-agents: [core-factory, lead-strategist]
+agents: [developer, strategist]
 license: MIT
 compatibility: opencode
 ---

@@ -6,7 +6,7 @@ description: >
   diagnostics for Android applications.
 category: mobile
 tags: [android, debugging, adb, crash-analysis, logcat, ui-inspection]
-agents: [android-kotlin, mobile-qa, devops-engineer]
+agents: [developer, mobile-qa, qa-devops]
 toolkit_refs: [mobile, android-emulator]
 ---
 

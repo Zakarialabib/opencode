@@ -1,0 +1,86 @@
+id: lifecycle-build
+name: Lifecycle Build
+version: 2.0.0
+description: Implementation with parallel streams, continuous review, and QA sign-off.
+trigger: manual
+
+mcp_tools:
+  build:
+    language-server: [lint, format, typecheck]
+    git: [diff, branch]
+    filesystem: [read_file, write_file]
+  review:
+    fetch: [cve_database_query]
+    sqlite: [query_test_coverage]
+    git: [diff, log]
+  qa:
+    language-server: [diagnostics]
+    git: [diff]
+
+phases:
+  - name: Implementation
+    owner: tpm-orchestrator
+    raci:
+      responsible: [dev-backend, dev-frontend, dev-devops]
+      accountable: [lead-backend, lead-frontend]
+      consulted: [lead-security, lead-data]
+      informed: [tpm-orchestrator]
+    agents: [dev-backend, dev-frontend, dev-devops, lead-backend, lead-frontend]
+    parallel_groups:
+      - group: backend-impl
+        agents: [dev-backend]
+        skills: [laravel-feature-scaffold, api-design, testing-strategy]
+      - group: frontend-impl
+        agents: [dev-frontend]
+        skills: [react-reuse-audit, accessibility-audit]
+      - group: infra-impl
+        agents: [dev-devops]
+        skills: [git-release, observability-config]
+    tasks:
+      - implement_backend_logic_with_tests
+      - implement_frontend_components
+      - update_ci_or_runtime_config
+    gate:
+      id: implementation-complete
+      requires: [lead-backend, lead-frontend]
+      evidence: [lsp-clean, tests-run, implementation-summary]
+
+  - name: Code Review
+    owner: lead-backend
+    raci:
+      responsible: [lead-backend, lead-frontend, lead-security]
+      accountable: cto-governance
+      consulted: [lead-qa]
+      informed: [tpm-orchestrator]
+    agents: [lead-backend, lead-frontend, lead-security, lead-qa, cto-governance]
+    tasks:
+      - architecture_compliance_review
+      - security_scan
+      - test_coverage_check
+    artifacts:
+      - test-reports/review-gate.md
+      - security-audit.md
+    gate:
+      id: review-approval
+      requires: [lead-backend, lead-frontend, lead-security]
+      evidence: [code-review, security-scan, coverage-report]
+
+  - name: Integration and E2E
+    owner: lead-qa
+    raci:
+      responsible: [dev-qa]
+      accountable: lead-qa
+      consulted: [dev-backend, dev-frontend]
+      informed: [pm-portfolio]
+    agents: [lead-qa, dev-qa, dev-backend, dev-frontend]
+    tasks:
+      - run_e2e_suite
+      - run_performance_benchmark
+      - verify_regression_coverage
+    artifacts:
+      - test-reports/e2e.md
+      - performance-metrics.json
+    gate:
+      id: qa-signoff
+      requires: [lead-qa]
+      evidence: [e2e-report, performance-report, regression-report]

@@ -148,31 +148,35 @@ if (fs.existsSync(skillIndexPath)) {
   const indexNames = new Set(index.skills.map((s: any) => s.name));
   const skillDir = path.join(ROOT, "skills");
   if (fs.existsSync(skillDir)) {
-    const diskDirs = fs
-      .readdirSync(skillDir, { withFileTypes: true })
-      .filter((d) => d.isDirectory() && !d.name.startsWith("_") && d.name !== "archive")
-      .map((d) => d.name);
-    const inIndex = diskDirs.filter((d) => indexNames.has(d));
-    const notInIndex = diskDirs.filter((d) => !indexNames.has(d));
-    const hasSkillMd = diskDirs.filter((d) => fs.existsSync(path.join(skillDir, d, "SKILL.md")));
-    const missingSkillMd = diskDirs.filter(
-      (d) => !fs.existsSync(path.join(skillDir, d, "SKILL.md"))
-    );
+    const skillFiles: string[] = [];
+    const walkSkillFiles = (dir: string) => {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (entry.name.startsWith("_") || entry.name === "archive") continue;
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          walkSkillFiles(fullPath);
+        } else if (entry.isFile() && entry.name === "SKILL.md") {
+          skillFiles.push(fullPath);
+        }
+      }
+    };
 
-    console.log(`  Total on disk: ${diskDirs.length}`);
+    walkSkillFiles(skillDir);
+    const diskSkills = skillFiles.map((filePath) => ({
+      filePath,
+      relDir: path.relative(skillDir, path.dirname(filePath)),
+      name: path.basename(path.dirname(filePath)).replace(/\//g, "-").replace(/\\/g, "-"),
+    }));
+    const inIndex = diskSkills.filter((skill) => indexNames.has(skill.name));
+    const notInIndex = diskSkills.filter((skill) => !indexNames.has(skill.name));
+
+    console.log(`  Total on disk: ${diskSkills.length}`);
     console.log(`  In index.json: ${inIndex.length}`);
     console.log(`  Missing from index: ${notInIndex.length}`);
-    notInIndex.forEach((d) => {
-      console.log(`    [MISSING] ${d}`);
-      issues.push(`Skill '${d}' has directory but is not in skills/index.json`);
+    notInIndex.forEach((skill) => {
+      console.log(`    [MISSING] ${skill.name}`);
+      issues.push(`Skill '${skill.name}' has directory but is not in skills/index.json`);
     });
-    if (missingSkillMd.length > 0) {
-      console.log(`  Missing SKILL.md:`);
-      missingSkillMd.forEach((d) => {
-        console.log(`    [NO SKILL.md] ${d}`);
-        issues.push(`Skill '${d}' has no SKILL.md`);
-      });
-    }
   }
 }
 

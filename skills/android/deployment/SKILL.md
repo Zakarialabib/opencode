@@ -6,7 +6,7 @@ description: >
   CI/CD pipelines, code signing, and Tauri mobile distribution.
 category: mobile
 tags: [android, deployment, play-store, ci-cd, code-signing, tauri-mobile]
-agents: [android-kotlin, devops-engineer]
+agents: [developer, qa-devops]
 toolkit_refs: [gradle, mobile]
 ---
 

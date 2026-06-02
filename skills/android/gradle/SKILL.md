@@ -6,7 +6,7 @@ description: >
   and optimization for Android projects using Kotlin DSL and version catalogs.
 category: mobile
 tags: [android, gradle, kotlin-dsl, build-system, dependency-management]
-agents: [android-kotlin, mobile-qa, devops-engineer]
+agents: [developer, mobile-qa, qa-devops]
 toolkit_refs: [gradle]
 ---
 

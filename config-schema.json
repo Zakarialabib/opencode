@@ -47,7 +47,7 @@
         }
       },
       "required": ["port", "hostname"],
-      "additionalProperties": false
+      "additionalProperties": true
     },
     "provider": {
       "type": "object",
@@ -110,11 +110,62 @@
           "timeout": {
             "type": "integer",
             "minimum": 0
+          },
+          "rate_limit": {
+            "type": "string"
+          },
+          "environment": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "circuit_breaker": {
+            "type": "object",
+            "properties": {
+              "failure_threshold": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "recovery_timeout": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "half_open_max_calls": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "additionalProperties": false
           }
         },
         "required": ["type", "command"],
         "additionalProperties": false
       }
+    },
+    "agency": {
+      "type": "object",
+      "properties": {
+        "operating_model": { "type": "string" },
+        "version": { "type": "string" },
+        "tiers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "aliases": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "governance": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      },
+      "required": ["operating_model", "version", "tiers"],
+      "additionalProperties": true
     },
     "permission": {
       "type": "object",
@@ -317,7 +368,7 @@
           "enum": ["allow", "ask", "deny"]
         }
       },
-      "additionalProperties": false
+      "additionalProperties": true
     },
     "tools": {
       "type": "object",
@@ -411,7 +462,7 @@
           "agent": { "type": "string" }
         },
         "required": ["template", "description", "agent"],
-        "additionalProperties": false
+        "additionalProperties": true
       }
     },
     "agent": {
@@ -693,11 +744,11 @@
                 ]
               }
             },
-            "additionalProperties": false
+            "additionalProperties": true
           },
           "description": { "type": "string" }
         },
-        "additionalProperties": false
+        "additionalProperties": true
       }
     },
     "compaction": {
@@ -714,7 +765,6 @@
     "$schema",
     "model",
     "default_agent",
-    "enabled_providers",
     "plugin",
     "server",
     "provider",

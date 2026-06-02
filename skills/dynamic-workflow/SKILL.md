@@ -52,7 +52,7 @@ Phases: 6 (Strategy → Design → Backend → Frontend → Migration → QA)
 ```yaml
 - name: Strategy & Analysis
   description: Analyze requirements and create technical plan
-  agents: [lead-strategist, lead-architect]
+  agents: [architect, strategist]
   use_agent_router: true
   mcp_tools:
     context7: [fetch_library_docs]
@@ -67,7 +67,7 @@ Phases: 6 (Strategy → Design → Backend → Frontend → Migration → QA)
 ```yaml
 - name: Design & Planning
   description: Premium UI/UX design and API contracts
-  agents: [frontend-ui-ux, backend-api, lead-architect]
+  agents: [architect, developer]
   use_agent_router: true
   mcp_tools:
     context7: [fetch_library_docs]
@@ -80,7 +80,7 @@ Phases: 6 (Strategy → Design → Backend → Frontend → Migration → QA)
 ```yaml
 - name: Implementation
   description: Core development with LSP context
-  agents: [core-factory, backend-laravel]
+  agents: [developer]
   use_agent_router: true
   mcp_tools:
     context7: [fetch_library_docs]
@@ -94,7 +94,7 @@ Phases: 6 (Strategy → Design → Backend → Frontend → Migration → QA)
 ```yaml
 - name: Quality Assurance
   description: Testing, security, and performance validation
-  agents: [qa-guardian]
+  agents: [qa-devops]
   mcp_tools:
     git: [diff, log]
     sequential-thinking: [sequentialthinking]
@@ -106,7 +106,7 @@ Phases: 6 (Strategy → Design → Backend → Frontend → Migration → QA)
 ```yaml
 - name: Documentation
   description: Technical documentation and updates
-  agents: [docs-curator]
+  agents: [developer]
   mcp_tools:
     memory: [create_entities, search_nodes]
     git: [add, commit]
@@ -214,14 +214,14 @@ mcp_servers:
 
 phases:
   - name: Analysis
-    agents: [lead-architect]
+    agents: [architect]
     tasks: [analyze_current_auth, identify_token_handling]
     mcp_tools:
       context7: [fetch_library_docs]
       memory: [search_nodes]
 
   - name: Implementation
-    agents: [backend-laravel, core-factory]
+    agents: [developer]
     tasks: [implement_jwt_middleware, create_token_service, update_login_controller]
     mcp_tools:
       sqlite: [write_query, read_query]
@@ -229,14 +229,14 @@ phases:
     dependencies: [Analysis]
 
   - name: Frontend Update
-    agents: [frontend-ui-ux]
+    agents: [developer]
     tasks: [update_auth_context, add_token_to_storage]
     mcp_tools:
       context7: [fetch_library_docs]
     dependencies: [Implementation]
 
   - name: QA
-    agents: [qa-guardian]
+    agents: [qa-devops]
     tasks: [run_auth_tests, verify_token_expiry, security_scan]
     mcp_tools:
       git: [diff]

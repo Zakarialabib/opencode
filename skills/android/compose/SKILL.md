@@ -6,7 +6,7 @@ description: >
   and Material 3 theming for Android applications.
 category: mobile
 tags: [android, jetpack-compose, ui, kotlin, material3]
-agents: [android-kotlin, mobile-qa]
+agents: [developer, mobile-qa]
 toolkit_refs: [mobile]
 ---
 

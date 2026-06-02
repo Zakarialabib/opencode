@@ -33,26 +33,39 @@ export class SkillRegistry {
 
     for (const skillInfo of this.index.skills) {
       try {
-        await this.loadSkill(skillInfo.name);
+        await this.loadSkill(skillInfo.name, skillInfo.path || skillInfo.entryPoint);
       } catch (error) {
         console.error(`Failed to load skill ${skillInfo.name}:`, error);
       }
     }
   }
 
-  async loadSkill(skillName: string): Promise<any> {
+  resolveSkillPath(skillName: string, skillPath?: string): string {
+    if (skillPath) {
+      const normalized = skillPath.startsWith("skills/")
+        ? skillPath.slice("skills/".length)
+        : skillPath;
+      return path.isAbsolute(normalized)
+        ? normalized
+        : path.join(this.skillsDir, normalized);
+    }
+
+    return path.join(this.skillsDir, skillName, "SKILL.md");
+  }
+
+  async loadSkill(skillName: string, skillPath?: string): Promise<any> {
     if (this.skills.has(skillName)) {
       return this.skills.get(skillName);
     }
 
-    const skillDir = path.join(this.skillsDir, skillName);
-    const skillPath = path.join(skillDir, "SKILL.md");
+    const resolvedSkillPath = this.resolveSkillPath(skillName, skillPath);
+    const skillDir = path.dirname(resolvedSkillPath);
 
-    if (!fs.existsSync(skillPath)) {
-      throw new Error(`Skill ${skillName} not found at ${skillPath}`);
+    if (!fs.existsSync(resolvedSkillPath)) {
+      throw new Error(`Skill ${skillName} not found at ${resolvedSkillPath}`);
     }
 
-    const content = fs.readFileSync(skillPath, "utf8");
+    const content = fs.readFileSync(resolvedSkillPath, "utf8");
     const skill = {
       name: skillName,
       path: skillDir,

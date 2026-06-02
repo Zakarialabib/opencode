@@ -1,6 +1,9 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-// We use require or dynamic import for local JS files if they haven't been migrated yet
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
+// We use require for local CommonJS files if they haven't been migrated yet
 const ConfigValidator = require("../scripts/config-validator");
 const { SkillRegistry } = require("../skills/registry");
 const WorkflowEngine = require("../scripts/workflow-engine");

@@ -63,17 +63,150 @@ function resolveConfigPath(startDir: string): string | null {
 
 // Type definitions
 interface AgentRule {
+import { parseJsonc } from "./jsonc-utils";
+import { type Plugin, tool } from "@opencode-ai/plugin";
+import { readFileSync, accessSync } from "node:fs";
+import { join, dirname, parse } from "node:path";
+
+// Find project root by looking for opencode.json
+function findConfigPath(startDir: string): string | null {
+  let current = startDir;
+  const root = parse(current).root;
+
+  while (current !== root) {
+    try {
+      const configPath = join(current, "opencode.json");
+      accessSync(configPath);
+      return configPath;
+    } catch {
+      current = dirname(current);
+    }
+  }
+
+  // Check root
+  try {
+    const configPath = join(root, "opencode.json");
+    accessSync(configPath);
+    return configPath;
+  } catch {
+    return null;
+  }
+}
+
+function resolveConfigPath(startDir: string): string | null {
+  const explicitConfig = process.env.OPENCODE_CONFIG;
+  if (explicitConfig) {
+    try {
+      accessSync(explicitConfig);
+      return explicitConfig;
+    } catch {
+      // Fall back to directory search.
+    }
+  }
+
+  const explicitDir = process.env.OPENCODE_CONFIG_DIR;
+  if (explicitDir) {
+    const candidate = join(explicitDir, "opencode.json");
+    try {
+      accessSync(candidate);
+      return candidate;
+    } catch {
+      // Fall back to directory search.
+    }
+  }
+
+  const cwdCandidate = join(process.cwd(), "opencode.json");
+  try {
+    accessSync(cwdCandidate);
+    return cwdCandidate;
+  } catch {
+    // Fall back to directory search.
+  }
+
+  return findConfigPath(startDir);
+}
+
+// Type definitions
+interface AgentRule {
   agent: string;
   keywords: string[];
   skills: string[];
   description: string;
 }
 
-// Default agent routing rules - UPDATED to match opencode.json agents
+// Default agent routing rules - UPDATED to match consolidated agents
 const DEFAULT_AGENT_RULES: AgentRule[] = [
   {
-    agent: "backend-laravel",
+    agent: "strategist",
     keywords: [
+      "orchestrate",
+      "multi-agent",
+      "delegate",
+      "workflow",
+      "coordinate",
+      "complex",
+      "strategy",
+      "prd",
+      "product",
+      "scope",
+      "roadmap",
+      "milestone",
+      "backlog",
+      "user story",
+      "acceptance criteria",
+      "release notes",
+      "plan",
+      "explore",
+      "scout",
+      "research",
+      "learn",
+      "market",
+      "seo"
+    ],
+    skills: ["workflow-manager", "project-orchestration", "task", "spec-driven-design", "portfolio-management", "self-reflection"],
+    description: "Product and project strategy orchestrator — requirements scoping, plan decomposition, multi-agent coordination, and research curation"
+  },
+  {
+    agent: "architect",
+    keywords: [
+      "architecture",
+      "design",
+      "system",
+      "structure",
+      "decision",
+      "database",
+      "schema",
+      "security",
+      "vulnerability",
+      "secret",
+      "leak",
+      "audit",
+      "csrf",
+      "xss",
+      "injection",
+      "adr",
+      "data model",
+      "analytics",
+      "retention",
+      "warehouse",
+      "etl",
+      "reporting"
+    ],
+    skills: ["database-design", "self-reflection", "context7", "memory", "sequential-thinking", "security-review", "threat-modeling", "compliance-audit"],
+    description: "Technical and security architect — structural pattern enforcement, schema designs, security audits, and ADR governance"
+  },
+  {
+    agent: "developer",
+    keywords: [
+      "implement",
+      "code",
+      "edit",
+      "modify",
+      "build",
+      "create file",
+      "change",
+      "fix",
+      "pattern",
       "laravel",
       "php",
       "livewire",
@@ -82,15 +215,6 @@ const DEFAULT_AGENT_RULES: AgentRule[] = [
       "blade",
       "pest",
       "phpunit",
-      "laravel 13",
-    ],
-    skills: ["laravel-feature-scaffold", "pest-testing"],
-    description:
-      "Laravel 13, Livewire 4, PHP 8.3 development - NOT for generic API (use backend-api)",
-  },
-  {
-    agent: "frontend-ui-ux",
-    keywords: [
       "react",
       "typescript",
       "ui",
@@ -98,7 +222,6 @@ const DEFAULT_AGENT_RULES: AgentRule[] = [
       "css",
       "tailwind",
       "component",
-      "design",
       "html",
       "chart",
       "visual",
@@ -110,57 +233,31 @@ const DEFAULT_AGENT_RULES: AgentRule[] = [
       "widget",
       "next.js",
       "shadcn",
+      "rust",
+      "tauri",
+      "desktop",
+      "cargo",
+      ".rs",
+      "android",
+      "kotlin",
+      "compose",
+      "gradle",
+      "docs",
+      "documentation",
+      "guide",
+      "write",
+      "readme"
     ],
-    skills: ["ui-ux-pro-max", "react-reuse-audit", "charts", "visual-design-foundations"],
-    description: "Premium UI/UX design and frontend development (Next.js, TypeScript, Tailwind)",
+    skills: ["self-improver", "stack-context", "coding-agent", "laravel-feature-scaffold", "ui-ux-pro-max", "react-reuse-audit", "charts", "visual-design-foundations", "xlsx", "docx", "pdf", "ppt"],
+    description: "Senior full-stack implementer — high-speed feature delivery, UI/UX premium designs, Tauri/desktop, Laravel/PHP, mobile native, and documentation"
   },
   {
-    agent: "backend-tauri",
-    keywords: ["rust", "tauri", "desktop", "cargo", ".rs", "tauri app"],
-    skills: ["stack-context"],
-    description: "Rust and Tauri desktop application development",
-  },
-  {
-    agent: "backend-api",
-    keywords: [
-      "api",
-      "rest",
-      "graphql",
-      "prisma",
-      "endpoint",
-      "backend",
-      "json:api",
-      "node",
-      "express",
-    ],
-    skills: ["fullstack-dev"],
-    description:
-      "Generic API design (Node/Express, REST/GraphQL) - NOT for Laravel (use backend-laravel)",
-  },
-  {
-    agent: "qa-guardian",
+    agent: "qa-devops",
     keywords: [
       "test",
       "testing",
-      "pest",
-      "phpunit",
-      "vitest",
-      "cargo test",
       "coverage",
       "test suite",
-      "security",
-      "vulnerability",
-      "secret",
-      "leak",
-      "audit",
-      "csrf",
-      "xss",
-      "injection",
-      "review",
-      "code review",
-      "standards",
-      "performance",
-      "refactor",
       "quality",
       "bug",
       "debug",
@@ -169,103 +266,9 @@ const DEFAULT_AGENT_RULES: AgentRule[] = [
       "troubleshoot",
       "browser",
       "reproduce",
-    ],
-    skills: ["testing-strategy", "security-review", "react-reuse-audit"],
-    description: "Unified QA: code review, testing, security scanning, and debugging",
-  },
-  {
-    agent: "lead-architect",
-    keywords: ["architecture", "design", "system", "structure", "decision", "database", "schema"],
-    skills: ["database-design", "self-reflection", "context7", "memory", "sequential-thinking"],
-    description: "Technical vision and long-term structural integrity",
-  },
-  {
-    agent: "lead-strategist",
-    keywords: [
-      "orchestrate",
-      "multi-agent",
-      "delegate",
-      "workflow",
-      "coordinate",
-      "complex",
-      "strategy",
-    ],
-    skills: ["workflow-manager", "project-orchestration", "task"],
-    description: "Strategic orchestrator managing complex multi-agent workflows and coordination",
-  },
-  {
-    agent: "core-factory",
-    keywords: [
-      "implement",
-      "code",
-      "edit",
-      "modify",
-      "build",
-      "create file",
-      "change",
-      "fix",
-      "agent",
-      "pattern",
-    ],
-    skills: ["self-improver", "stack-context", "coding-agent"],
-    description: "Core implementation and direct file editing (merged builder/planner/opencoder)",
-  },
-  {
-    agent: "docs-curator",
-    keywords: [
-      "docs",
-      "documentation",
-      "guide",
-      "write",
-      "content",
-      "readme",
-      "report",
-      "excel",
-      "word",
-      "pdf",
-      "powerpoint",
-      "presentation",
-      "spreadsheet",
-      "governance",
-      "audit docs",
-      "standards",
-      "documentation audit",
-      "drift",
-      "improve",
-      "evolve",
-      "self-improve",
-      "research",
-      "learn",
-      "adapt",
-      "marketing",
-      "content",
-      "strategy",
-      "campaign",
-      "seo",
-      "social",
-      "brand",
-      "market",
-    ],
-    skills: [
-      "xlsx",
-      "docx",
-      "pdf",
-      "ppt",
-      "content-strategy",
-      "market-research-reports",
-      "docs-governance-audit",
-      "writing-plans",
-      "seo-content-writer",
-    ],
-    description: "Documentation, self-improvement, and system evolution",
-  },
-  {
-    agent: "devops-engineer",
-    keywords: [
       "ops",
       "terminal",
       "deploy",
-      "build",
       "process",
       "operational",
       "git",
@@ -273,18 +276,23 @@ const DEFAULT_AGENT_RULES: AgentRule[] = [
       "mcp",
       "server",
       "integration",
-      "tool integration",
       "mcp server",
+      "incident",
+      "outage",
+      "alert",
+      "p0",
+      "p1",
+      "hotfix",
+      "mttr",
+      "postmortem",
+      "ci/cd",
+      "pipeline",
+      "cache"
     ],
-    skills: ["git-release"],
-    description: "Operational tasks, MCP integration, and infrastructure",
-  },
+    skills: ["testing-strategy", "git-release", "incident-triage", "post-mortem-authoring", "agent-browser", "pest-testing"],
+    description: "Quality assurance & DevOps expert — E2E testing, CI/CD automation, environment administration, incident response, and security scanning"
+  }
 ];
-
-const AgentRouterPlugin: Plugin = async ({ directory }) => {
-  // Load agent routing rules from config, fallback to defaults
-  let AGENT_RULES: AgentRule[] = DEFAULT_AGENT_RULES;
-
   const configPath = resolveConfigPath(directory);
   if (configPath) {
     try {
@@ -366,7 +374,7 @@ const AgentRouterPlugin: Plugin = async ({ directory }) => {
           const matches = routeTask(task);
 
           if (matches.length === 0) {
-            return `No specific agent matched for task: "${task}". Defaulting to lead-strategist for analysis.`;
+            return `No specific agent matched for task: "${task}". Defaulting to tpm-orchestrator for analysis.`;
           }
 
           const bestMatch = matches[0];
