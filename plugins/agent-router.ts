@@ -63,71 +63,6 @@ function resolveConfigPath(startDir: string): string | null {
 
 // Type definitions
 interface AgentRule {
-import { parseJsonc } from "./jsonc-utils";
-import { type Plugin, tool } from "@opencode-ai/plugin";
-import { readFileSync, accessSync } from "node:fs";
-import { join, dirname, parse } from "node:path";
-
-// Find project root by looking for opencode.json
-function findConfigPath(startDir: string): string | null {
-  let current = startDir;
-  const root = parse(current).root;
-
-  while (current !== root) {
-    try {
-      const configPath = join(current, "opencode.json");
-      accessSync(configPath);
-      return configPath;
-    } catch {
-      current = dirname(current);
-    }
-  }
-
-  // Check root
-  try {
-    const configPath = join(root, "opencode.json");
-    accessSync(configPath);
-    return configPath;
-  } catch {
-    return null;
-  }
-}
-
-function resolveConfigPath(startDir: string): string | null {
-  const explicitConfig = process.env.OPENCODE_CONFIG;
-  if (explicitConfig) {
-    try {
-      accessSync(explicitConfig);
-      return explicitConfig;
-    } catch {
-      // Fall back to directory search.
-    }
-  }
-
-  const explicitDir = process.env.OPENCODE_CONFIG_DIR;
-  if (explicitDir) {
-    const candidate = join(explicitDir, "opencode.json");
-    try {
-      accessSync(candidate);
-      return candidate;
-    } catch {
-      // Fall back to directory search.
-    }
-  }
-
-  const cwdCandidate = join(process.cwd(), "opencode.json");
-  try {
-    accessSync(cwdCandidate);
-    return cwdCandidate;
-  } catch {
-    // Fall back to directory search.
-  }
-
-  return findConfigPath(startDir);
-}
-
-// Type definitions
-interface AgentRule {
   agent: string;
   keywords: string[];
   skills: string[];
@@ -293,6 +228,11 @@ const DEFAULT_AGENT_RULES: AgentRule[] = [
     description: "Quality assurance & DevOps expert — E2E testing, CI/CD automation, environment administration, incident response, and security scanning"
   }
 ];
+
+const AgentRouterPlugin: Plugin = async ({ directory }) => {
+  // Load agent routing rules from config, fallback to defaults
+  let AGENT_RULES: AgentRule[] = DEFAULT_AGENT_RULES;
+
   const configPath = resolveConfigPath(directory);
   if (configPath) {
     try {
