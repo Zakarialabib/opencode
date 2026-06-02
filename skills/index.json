@@ -443,8 +443,112 @@
         "core-factory"
       ],
       "category": "meta"
+    },
+    {
+      "path": "skills/code-review/SKILL.md",
+      "name": "code-review",
+      "displayName": "Code Review",
+      "description": "Read diffs carefully, identify risks, and produce review feedback that is specific and actionable.",
+      "agents": [
+        "software-architect",
+        "core-factory",
+        "qa-guardian"
+      ],
+      "category": "general"
+    },
+    {
+      "path": "skills/documentation/SKILL.md",
+      "name": "documentation",
+      "displayName": "Documentation",
+      "description": "Write accurate docs, keep references current, and capture verified behavior only.",
+      "agents": [
+        "lead-strategist",
+        "software-architect",
+        "core-factory",
+        "docs-curator"
+      ],
+      "category": "general"
+    },
+    {
+      "path": "skills/git-workflow/SKILL.md",
+      "name": "git-workflow",
+      "displayName": "Git Workflow",
+      "description": "Branching, rebasing, commit hygiene, and review-friendly history for agency delivery.",
+      "agents": [
+        "lead-strategist",
+        "software-architect",
+        "core-factory",
+        "qa-guardian",
+        "devops-engineer"
+      ],
+      "category": "general"
+    },
+    {
+      "path": "skills/lsp-navigation/SKILL.md",
+      "name": "lsp-navigation",
+      "displayName": "LSP Navigation",
+      "description": "Use the language server for precise navigation, symbol lookup, refactoring, and diagnostics.",
+      "agents": [
+        "software-architect",
+        "core-factory",
+        "qa-guardian"
+      ],
+      "category": "general"
+    },
+    {
+      "path": "skills/testing-basics/SKILL.md",
+      "name": "testing-basics",
+      "displayName": "Testing Basics",
+      "description": "Unit, integration, and regression testing fundamentals for reliable delivery.",
+      "agents": [
+        "core-factory",
+        "qa-guardian"
+      ],
+      "category": "general"
     }
   ],
-  "lastUpdated": "2026-05-30T00:00:00.000Z",
-  "totalSkills": 46
+  "categories": {
+    "general": {
+      "description": "Baseline skills available to all agents",
+      "skills": [
+        "git-workflow",
+        "code-review",
+        "lsp-navigation",
+        "testing-basics",
+        "documentation"
+      ]
+    },
+    "implementation": {
+      "description": "Domain delivery skills for feature development",
+      "skills": [
+        "laravel-feature-scaffold",
+        "react-reuse-audit",
+        "database-design",
+        "stack-context",
+        "coding-agent"
+      ]
+    },
+    "architecture": {
+      "description": "Architecture, security, performance, and observability skills",
+      "skills": [
+        "spec-driven-design",
+        "security-review",
+        "knowledge-architect",
+        "deep-research",
+        "testing-strategy"
+      ]
+    },
+    "orchestration": {
+      "description": "Strategic orchestration, workflow, and governance skills",
+      "skills": [
+        "dynamic-workflow",
+        "workflow-manager",
+        "project-memory",
+        "config-doctor",
+        "self-reflection"
+      ]
+    }
+  },
+  "lastUpdated": "2026-06-02T00:00:00.000Z",
+  "totalSkills": 52
 }

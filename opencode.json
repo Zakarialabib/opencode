@@ -8,26 +8,6 @@
       "options": {},
       "models": {}
     },
-    "cerebras": {
-      "npm": "@ai-sdk/cerebras",
-      "name": "Cerebras",
-      "options": {
-        "baseURL": "https://api.cerebras.ai/v1",
-        "apiKey": "${CEREBRAS_API_KEY}"
-      },
-      "models": {
-        "qwen-3-235b-a22b-instruct-2507": {
-          "name": "Qwen 3 235B-A22B",
-          "tool_call": true,
-          "reasoning": true
-        },
-        "zai-glm-4.7": {
-          "name": "ZAI GLM 4.7",
-          "tool_call": false,
-          "reasoning": true
-        }
-      }
-    },
     "lmstudio": {
       "npm": "@ai-sdk/openai-compatible",
       "name": "LM Studio (local)",
@@ -337,7 +317,9 @@
     "INTEGRITY: No unused imports. No dead code. No speculative comments. No 'any' types in TypeScript. Every line must earn its place.",
     "NAMING: Match existing conventions exactly. Check 3 nearby files before coining a new name.",
     "RECOVERY: If a tool fails, try one alternative approach. If that also fails, report the failure with both error messages — do not silently retry.",
-    "AGENTS: Each agent has a temperature setting tuned for its role — low (0.05-0.1) for QA/ops/analysis, medium (0.2-0.3) for implementation, higher (0.4) for strategy/design. Delegate to the right agent based on temperature + description.",
+    "AGENCY DELIVERY: For complex features: (1) Strategist/lead-strategist decomposes → (2) software-architect reviews design → (3) core-factory/stack-agent implements → (4) qa-guardian validates → (5) Strategist synthesizes.",
+    "AGENT HIERARCHY: Executive(lead-strategist) → Leadership(software-architect) → Execution(core-factory, backend-laravel, frontend-ui-ux, qa-guardian, devops-engineer).",
+    "DELEGATION: Use the task() tool to delegate to specialized agents. Provide: (1) Task description, (2) Success criteria, (3) Files to modify, (4) Constraints to follow.",
     "SKILLS: 38 project skills are bridged via directory junctions to ~/.agents/skills/ for the skill() tool. Use skill:skill-name to load any skill. Available: self-reflection, config-doctor, skill-vetter, etc. Use skill_list() for full catalog.",
     "COMMANDS: Use /doctor or /improve to trigger self-reflection. Use /sync-skills to re-bridge skills.",
     "MOBILE: For Android/Kotlin tasks, use @android-kotlin. For mobile QA/testing, use @mobile-qa. For Tauri mobile build commands, @backend-tauri handles Rust side, @android-kotlin handles native Android side. Available Android skills: android, android-compose, android-gradle, android-testing, android-debugging, android-deployment. MCP servers: gradle (builds), mobile (device control), android-emulator (emulator).",
@@ -354,8 +336,7 @@
     "doctor": {
       "template": "skill:self-reflection",
       "description": "Audit and repair OpenCode configuration",
-      "agent": "lead-strategist",
-      "model": "cerebras/qwen-3-235b-a22b-instruct-2507"
+      "agent": "lead-strategist"
     },
     "clean": {
       "template": "rm -rf node_modules/.cache vendor/.cache target",
