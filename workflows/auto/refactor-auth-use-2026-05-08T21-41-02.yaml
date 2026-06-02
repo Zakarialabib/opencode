@@ -12,7 +12,7 @@ mcp_servers:
 phases:
   - name: Analysis
     agents:
-      - lead-architect
+      - software-architect
       - qa-guardian
     use_agent_router: true
     mcp_tools:

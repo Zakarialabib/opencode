@@ -86,14 +86,6 @@ const DEFAULT_MODEL_CAPABILITIES: ModelRegistry = {
     "qwen3.5-4b": { tool_call: true, reasoning: false, supportsInstructions: false },
     "google/gemma-3n-e4b": { tool_call: true, reasoning: true, supportsInstructions: false },
   },
-  cerebras: {
-    "qwen-3-235b-a22b-instruct-2507": {
-      tool_call: true,
-      reasoning: true,
-      supportsInstructions: false,
-    },
-    "zai-glm-4.7": { tool_call: false, reasoning: true, supportsInstructions: false },
-  },
 };
 
 const ModelRouterPlugin: Plugin = async ({ directory }) => {
@@ -126,7 +118,7 @@ const ModelRouterPlugin: Plugin = async ({ directory }) => {
   function routeModel(requirements: { needsTools?: boolean; needsReasoning?: boolean }) {
     const { needsTools = false, needsReasoning = false } = requirements;
 
-    const providers = ["opencode-go", "opencode", "lmstudio", "cerebras"];
+    const providers = ["opencode-go", "opencode", "lmstudio"];
 
     for (const provider of providers) {
       const models = MODEL_CAPABILITIES[provider];
@@ -152,7 +144,7 @@ const ModelRouterPlugin: Plugin = async ({ directory }) => {
       check_model: tool({
         description: "Check capabilities of a specific model",
         args: {
-          provider: tool.schema.string().describe("Provider name (e.g., 'opencode', 'cerebras')"),
+          provider: tool.schema.string().describe("Provider name (e.g., 'opencode', 'lmstudio')"),
           model: tool.schema.string().describe("Model name/ID"),
         },
         async execute({ provider, model }) {

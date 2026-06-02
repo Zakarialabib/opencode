@@ -43,7 +43,7 @@ phases:
 
   - name: Fix Implementation
     description: Implement the fix with real-time context, tests, and continuous validation
-    agents: [core-factory, backend-api, frontend-ui-ux, backend-laravel]
+    agents: [core-factory, software-architect, frontend-ui-ux, backend-laravel]
     use_agent_router: true
     tasks:
       - implement_technical_fix
@@ -149,7 +149,7 @@ notifications:
     - generate: fix-summary.md
     - tag_release: v.next
   on_failure:
-    - alert: [lead-architect, qa-guardian]
+    - alert: [software-architect, qa-guardian]
     - escalate_to: lead-strategist
     - create: incident-report.md
     - notify: oncall-engineer

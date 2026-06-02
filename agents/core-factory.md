@@ -1,9 +1,9 @@
 ---
 name: core-factory
-description: "Fast implementation expert for direct file editing, validation, and clean code delivery."
-mode: subagent
-steps: 40
-color: "#3b82f6"
+description: "Primary orchestrator + implementation engineer {ARROW} strategic delegation, production code, multi-agent coordination."
+mode: primary
+steps: 50
+color: "#6366f1"
 permission:
   read: "allow"
   edit: "allow"

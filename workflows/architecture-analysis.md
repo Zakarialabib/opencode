@@ -31,7 +31,7 @@
 - `docs-curator.md` — Good but missing autoresearch integration
 - `backend-laravel.md` — Feature list, not proper agent format
 - `backend-tauri.md` — Same, needs proper agent structure
-- `backend-api.md` — Same
+- `software-architect.md` — Same
 - `frontend-ui-ux.md` — Same
 - `qa-guardian.md` — Good but missing steps limit
 - `devops-engineer.md` — Minimal instructions
@@ -100,8 +100,8 @@ Based on common patterns in Tauri + React + Laravel projects:
 │  │ code-reviewer │ refactor-architect │                 │
 │  │ research-analyst │ integration-test │                │
 │  │ docs-evolver │ lead-strategist  │                    │
-│  │ lead-architect │ frontend-ui-ux │                   │
-│  │ backend-api │ backend-laravel │                      │
+│  │ software-architect │ frontend-ui-ux │                   │
+│  │ software-architect │ backend-laravel │                      │
 │  │ backend-tauri │ qa-guardian │                        │
 │  │ devops-engineer │             │                      │
 │  └───────────────────────────────┘                      │
@@ -125,14 +125,14 @@ Based on common patterns in Tauri + React + Laravel projects:
 │  ├── gemma-4-e4b-it (frontend UI generation)             │
 │  └── Default fallback for all subagents                  │
 │                                                          │
-│  POWERFUL / REASONING (Cerebras / OpenCode Go)           │
-│  ├── qwen-3-235b-a22b (lead-strategist, lead-architect)  │
+│  POWERFUL / REASONING (OpenCode Go)           │
+│  ├── qwen-3-235b-a22b (lead-strategist, software-architect)  │
 │  ├── qwen-3-235b-a22b (docs-curator, refactor-architect) │
 │  └── Complex reasoning, architecture decisions           │
 │                                                          │
 │  BALANCED (LM Studio Reasoning)                          │
 │  ├── qwen3.5-4b-claude-4.6-opus-reasoning (build, QA)   │
-│  ├── backend-api, backend-laravel, backend-tauri         │
+│  ├── software-architect, backend-laravel, backend-tauri         │
 │  └── qa-guardian, integration-test, devops-engineer      │
 │                                                          │
 │  CLOUD FALLBACK (OpenRouter)                             │
@@ -157,9 +157,9 @@ integration-test    ✅    🔒    ❌     ✅     ❌     ❌    ✅      ❌
 docs-evolver        ✅    ✅     ✅     🔒    ✅     ✅    ✅      ❌
 core-factory        ✅    ✅     ✅     ✅     ✅     ❌    ✅      ✅
 lead-strategist     ✅    🔒    🔒     ✅     ✅     ❌    ✅      ✅
-lead-architect      ✅    ✅     ✅     ✅     ✅     ❌    ✅      ✅
+software-architect      ✅    ✅     ✅     ✅     ✅     ❌    ✅      ✅
 frontend-ui-ux      ✅    ✅     ✅     ✅     ✅     ❌    ✅      ✅
-backend-api         ✅    ✅     ✅     ✅     ✅     ❌    ✅      ❌
+software-architect         ✅    ✅     ✅     ✅     ✅     ❌    ✅      ❌
 backend-laravel     ✅    ✅     ✅     ✅     ✅     ❌    ✅      ❌
 backend-tauri       ✅    ✅     ✅     ✅     ✅     ❌    ✅      ❌
 qa-guardian         ✅    ❌     ❌     ✅     ✅     ❌    ✅      ❌

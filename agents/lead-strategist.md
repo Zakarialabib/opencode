@@ -37,6 +37,10 @@ tools:
   - memory
   - context7
   - sequential-thinking
+  - webfetch
+  - websearch
+  webfetch: "allow"
+  websearch: "allow"
 ---
 
 **Tools**: skill, bash, read, lsp, codesearch, todowrite, task, memory, context7, sequential-thinking

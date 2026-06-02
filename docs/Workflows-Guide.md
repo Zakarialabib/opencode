@@ -46,13 +46,13 @@ Ask lead-strategist: "Use workflow-manager skill to develop feature X"
 
 **Phases** (with intelligent agent routing and MCP integration):
 
-| Phase                            | Agents                                                                    | MCP Tools                                  | Parallel Groups                                                            | Exit Criteria                                  |
-| -------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------ | -------------------------------------------------------------------------- | ---------------------------------------------- |
-| **Strategy & Analysis**          | lead-strategist, lead-architect, core-factory                             | context7, memory, sequential-thinking      | No                                                                         | requirements.md, architecture.md, roadmap.json |
-| **Design & Planning**            | frontend-ui-ux, backend-api, lead-architect, backend-laravel              | context7, sqlite, sequential-thinking      | [design_ui, define_api], [create_schema, plan_components]                  | api-spec.yaml, ui-mockups/, schema.sql         |
-| **Implementation**               | core-factory, backend-laravel, backend-api, backend-tauri, frontend-ui-ux | context7, sqlite, git, filesystem          | [implement_backend, implement_api], [implement_frontend, setup_migrations] | All tests pass, no LSP errors                  |
-| **Quality Assurance & Security** | qa-guardian                                                               | context7, sqlite, git, sequential-thinking | [run_tests, browser_test], [security_scan, check_secrets]                  | >80% coverage, no critical issues              |
-| **Documentation & Evolution**    | docs-curator                                                              | context7, memory, git                      | No                                                                         | docs/ updated, changelog.md                    |
+| Phase                            | Agents                                                                           | MCP Tools                                  | Parallel Groups                                                            | Exit Criteria                                  |
+| -------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------ | -------------------------------------------------------------------------- | ---------------------------------------------- |
+| **Strategy & Analysis**          | lead-strategist, software-architect, core-factory                                | context7, memory, sequential-thinking      | No                                                                         | requirements.md, architecture.md, roadmap.json |
+| **Design & Planning**            | frontend-ui-ux, software-architect, backend-laravel                              | context7, sqlite, sequential-thinking      | [design_ui, define_api], [create_schema, plan_components]                  | api-spec.yaml, ui-mockups/, schema.sql         |
+| **Implementation**               | core-factory, backend-laravel, backend-tauri, frontend-ui-ux, software-architect | context7, sqlite, git, filesystem          | [implement_backend, implement_api], [implement_frontend, setup_migrations] | All tests pass, no LSP errors                  |
+| **Quality Assurance & Security** | qa-guardian                                                                      | context7, sqlite, git, sequential-thinking | [run_tests, browser_test], [security_scan, check_secrets]                  | >80% coverage, no critical issues              |
+| **Documentation & Evolution**    | docs-curator                                                                     | context7, memory, git                      | No                                                                         | docs/ updated, changelog.md                    |
 
 **Advanced Features**:
 
@@ -65,12 +65,12 @@ Ask lead-strategist: "Use workflow-manager skill to develop feature X"
 
 **Phases** (with enhanced orchestration):
 
-| Phase                       | Agents                                                     | MCP Tools                                              | Parallel Groups                                                  | Exit Criteria                                     |
-| --------------------------- | ---------------------------------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------- | ------------------------------------------------- |
-| **Triage & Analysis**       | qa-guardian, lead-strategist, core-factory                 | context7, fetch, memory, sequential-thinking, git      | No                                                               | bug-report.md, root-cause.md with >80% confidence |
-| **Fix Implementation**      | core-factory, backend-api, frontend-ui-ux, backend-laravel | context7, sqlite, git, filesystem, sequential-thinking | [implement_fix, update_docs], [write_tests, add_edge_cases]      | Fix addresses root cause, all tests pass          |
-| **Verification & Testing**  | qa-guardian                                                | context7, sqlite, git, sequential-thinking, fetch      | [run_tests, visual_verify], [security_scan, accessibility_check] | >80% coverage, performance within SLA             |
-| **Documentation & Closure** | docs-curator, lead-strategist                              | context7, memory, git                                  | No                                                               | changelog.md, troubleshooting.md updated          |
+| Phase                       | Agents                                                            | MCP Tools                                              | Parallel Groups                                                  | Exit Criteria                                     |
+| --------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------- | ------------------------------------------------- |
+| **Triage & Analysis**       | qa-guardian, lead-strategist, core-factory                        | context7, fetch, memory, sequential-thinking, git      | No                                                               | bug-report.md, root-cause.md with >80% confidence |
+| **Fix Implementation**      | core-factory, software-architect, frontend-ui-ux, backend-laravel | context7, sqlite, git, filesystem, sequential-thinking | [implement_fix, update_docs], [write_tests, add_edge_cases]      | Fix addresses root cause, all tests pass          |
+| **Verification & Testing**  | qa-guardian                                                       | context7, sqlite, git, sequential-thinking, fetch      | [run_tests, visual_verify], [security_scan, accessibility_check] | >80% coverage, performance within SLA             |
+| **Documentation & Closure** | docs-curator, lead-strategist                                     | context7, memory, git                                  | No                                                               | changelog.md, troubleshooting.md updated          |
 
 **Advanced Features**:
 
@@ -288,7 +288,7 @@ User: "Add authentication feature"
 → lead-strategist: Uses workflow-manager skill
 → workflow-manager: Creates phases with use_agent_router: true
 → Phase1 (Strategy): route_agent tool → Recommends core-factory
-→ Phase2 (Design): route_agent tool → Recommends lead-architect
+→ Phase2 (Design): route_agent tool → Recommends software-architect
 → Phase3 (Implementation): route_agent tool → Recommends backend-laravel
 → Phase4 (QA): route_agent tool → Recommends qa-guardian
 → Result: Each phase uses the best agent automatically with scoring

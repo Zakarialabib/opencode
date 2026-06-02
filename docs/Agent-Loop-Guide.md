@@ -152,7 +152,7 @@ Phase 3: Testing
 Task: qa-guardian, "Create comprehensive tests for Product CRUD"
 
 Phase 4: Final Verification
-Task: lead-architect, "Verify architecture alignment"
+Task: software-architect, "Verify architecture alignment"
 
 # Track with task_id and performance metrics
 ```
@@ -165,7 +165,7 @@ Using lead-strategist:
 Task: Build and test the notification system
 
 Parallel execution (all run simultaneously):
-- Task 1: backend-api, "Implement notification API endpoints"
+- Task 1: software-architect, "Implement notification API endpoints"
 - Task 2: frontend-ui-ux, "Build notification UI components"
 - Task 3: qa-guardian, "Prepare test data and test cases"
 

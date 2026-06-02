@@ -19,7 +19,7 @@ env:
 phases:
   - name: Strategy & Analysis
     description: Define requirements, analyze existing patterns, and create technical plan using intelligent agent routing
-    agents: [lead-strategist, lead-architect, core-factory]
+    agents: [lead-strategist, software-architect, core-factory]
     # Agent router will select the best agent based on task analysis
     use_agent_router: true
     tasks:
@@ -44,7 +44,7 @@ phases:
 
   - name: Design & Planning
     description: Premium UI/UX design, API contracts, and detailed implementation plan
-    agents: [frontend-ui-ux, backend-api, lead-architect, backend-laravel]
+    agents: [frontend-ui-ux, software-architect, software-architect, backend-laravel]
     use_agent_router: true
     tasks:
       - design_premium_ui_with_hsl_palette
@@ -84,7 +84,7 @@ phases:
 
   - name: Implementation
     description: Core development with real-time LSP context, parallel execution, and continuous integration
-    agents: [core-factory, backend-laravel, backend-api, backend-tauri, frontend-ui-ux]
+    agents: [core-factory, backend-laravel, software-architect, backend-tauri, frontend-ui-ux]
     use_agent_router: true
     tasks:
       - fetch_lsp_context_and_types
@@ -175,7 +175,7 @@ success_criteria:
 # Notification hooks
 notifications:
   on_start:
-    - notify: [lead-strategist, lead-architect]
+    - notify: [lead-strategist, software-architect]
     - channel: email
     - template: workflow-started.md
   on_phase_complete:
@@ -187,7 +187,7 @@ notifications:
     - notify: [stakeholders]
     - generate: release-notes.md
   on_failure:
-    - alert: [lead-architect, qa-guardian]
+    - alert: [software-architect, qa-guardian]
     - escalate_to: lead-strategist
     - create: incident-report.md
   on_rollback:

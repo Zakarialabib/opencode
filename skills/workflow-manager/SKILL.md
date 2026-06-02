@@ -61,11 +61,11 @@ metadata:
 Project: [Name]
 ├── Phase 1: Foundation
 │   ├── [ ] Database schema (→ backend-laravel)
-│   ├── [ ] API contracts (→ backend-api)
+│   ├── [ ] API contracts (→ software-architect)
 │   └── [ ] UI component tree (→ frontend-ui-ux)
 ├── Phase 2: Core
 │   ├── [→DB] Business logic (→ backend-laravel)
-│   ├── [→API] API endpoints (→ backend-api)
+│   ├── [→API] API endpoints (→ software-architect)
 │   └── [→UI] Screen implementation (→ frontend-ui-ux)
 ├── Phase 3: Integration
 │   ├── [→Core] Integration tests (→ qa-guardian)
@@ -81,13 +81,13 @@ Project: [Name]
 
 | Task Type | Primary Agent | Backup Agent | Skills |
 |-----------|--------------|--------------|--------|
-| Backend API (Node) | backend-api | core-factory | — |
+| Backend API (Node) | software-architect | core-factory | — |
 | Backend API (Laravel) | backend-laravel | core-factory | laravel-feature-scaffold, pest-testing |
 | Frontend UI | frontend-ui-ux | core-factory | ui-ux-pro-max, visual-design-foundations |
 | Mobile (Android) | android-kotlin | — | android, android-compose |
-| Database | backend-laravel | lead-architect | database-design |
+| Database | backend-laravel | software-architect | database-design |
 | Infrastructure | devops-engineer | — | git-release |
 | Testing/QA | qa-guardian | — | testing-strategy, agent-browser, security-review |
 | Documentation | docs-curator | — | pdf, docx, xlsx, ppt |
-| Architecture | lead-architect | lead-strategist | spec-driven-design, knowledge-architect |
+| Architecture | software-architect | lead-strategist | spec-driven-design, knowledge-architect |
 | Orchestration | lead-strategist | — | dynamic-workflow, self-improver |

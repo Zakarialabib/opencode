@@ -54,7 +54,7 @@ Each template follows: **CONTEXT + TASK + CONSTRAINTS + QUALITY_GATES**
 - Responsive at all breakpoints
 - Design consistency score ≥8/10
 
-## backend-api Delegation Template
+## software-architect Delegation Template
 
 **When to use**: API endpoints, Node/Express, Laravel routes
 
@@ -255,7 +255,7 @@ QUALITY: php artisan pint passes, tests green
 
 **core-factory**: read, write, edit, bash, lsp, grep, glob
 **frontend-ui-ux**: read, write, edit, bash, lsp, skill, context7
-**backend-api**: read, write, edit, bash, lsp, context7
+**software-architect**: read, write, edit, bash, lsp, context7
 **backend-laravel**: read, write, edit, bash, lsp, skill
 **backend-tauri**: read, write, edit, bash, lsp, context7
 **qa-guardian**: read, bash, lsp, skill, grep, glob

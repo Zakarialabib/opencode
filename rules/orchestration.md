@@ -334,7 +334,7 @@ Track per session:
 1. Analyze → Complex, multi-component task
 2. Delegate to lead-strategist for decomposition
 3. Create subtasks: database, API, UI, testing
-4. Parallel delegation to backend-laravel, backend-api, frontend-ui-ux
+4. Parallel delegation to backend-laravel, software-architect, frontend-ui-ux
 5. Sequential delegation to qa-guardian for testing
 6. Synthesize results and validate integration
 

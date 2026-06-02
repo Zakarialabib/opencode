@@ -17,6 +17,7 @@ permission:
   memory: "allow"
   context7: "allow"
   sequential-thinking: "allow"
+  type-inject: "allow"
 tools:
   - read
   - write
@@ -30,6 +31,7 @@ tools:
   - memory
   - context7
   - sequential-thinking
+  - type-inject
 ---
 
 **Tools**: read, write, edit, bash, skill, lsp, codesearch, task, mcp, memory, context7, sequential-thinking

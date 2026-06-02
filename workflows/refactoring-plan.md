@@ -287,7 +287,7 @@ cargo fmt --check
 | Implementation       | core-factory       |                   |
 | Code Review          | code-reviewer      |                   |
 | Testing              | integration-test   | qa-guardian       |
-| Documentation        | docs-evolver       | lead-architect    |
+| Documentation        | docs-evolver       | software-architect    |
 | Self-Evolution       | core-factory       | research-analyst  |
 
 ---

@@ -71,8 +71,8 @@ lead-strategist (Orchestration)
 | Category     | Agents                                      | Specialization                   |
 | ------------ | ------------------------------------------- | -------------------------------- |
 | **Core**     | core-factory                                | Core implementation              |
-| **Lead**     | lead-strategist, lead-architect             | Orchestration, Architecture      |
-| **Backend**  | backend-api, backend-laravel, backend-tauri | API, Laravel, Tauri              |
+| **Lead**     | lead-strategist, software-architect             | Orchestration, Architecture      |
+| **Backend**  | software-architect, backend-laravel, backend-tauri | API, Laravel, Tauri              |
 | **Frontend** | frontend-ui-ux                              | UI/UX Engineering                |
 | **QA**       | qa-guardian                                 | Review, Testing, Security, Debug |
 | **DevOps**   | devops-engineer                             | Operations, MCP                  |
@@ -81,22 +81,6 @@ lead-strategist (Orchestration)
 ---
 
 ## Features
-
-<!-- ### RAG Context Retrieval (Brain Plugin)
-
-Automatic codebase context injection using local embeddings:
-
-- **Local Embeddings**: nomic-embed model via LM Studio (no cloud)
-- **Rust Sidecar**: High-performance vector search with HNSW
-- **Tree-sitter Chunking**: AST-aware code splitting for semantic chunks
-- **Intent Classification**: 7 intent types with adaptive retrieval strategies
-
-**How it works:**
-1. User types query → Intent classified (debug/learn/feature/etc.)
-2. Relevant code chunks retrieved via vector search
-3. Context prepended to LLM prompt for grounded responses
-
-**Status:** TS plugin loads successfully; Rust sidecar requires Linux/Mac for building. -->
 
 ### Workflow Orchestration
 
@@ -186,7 +170,7 @@ opencode/
 ### Main Config: `opencode.json`
 
 - **Model**: `opencode-go/kimi-k2.6` (default)
-- **Providers**: opencode, lmstudio, cerebras, opencode-go
+- **Providers**: opencode, lmstudio, opencode-go
 - **Agents**: 12 custom agents with specialized tools
 - **MCP Servers**: 8+ servers with timeouts
 - **Plugins**: 10+ plugins (agent-router, model-router, etc.)

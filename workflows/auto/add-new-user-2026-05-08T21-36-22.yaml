@@ -10,8 +10,8 @@ mcp_servers:
   - context7
   - filesystem
 phases:
-  - {"name":"Strategy & Analysis","description":"Analyze requirements and create technical plan","agents":["lead-strategist","lead-architect"],"use_agent_router":true,"mcp_tools":{"context7":["fetch_library_docs"],"memory":["create_entities"],"sequential_thinking":["sequential_thinking"]}}
-  - {"name":"Design & Planning","description":"Design and planning phase","agents":["frontend-ui-ux","backend-api","lead-architect"],"use_agent_router":true,"dependencies":["Strategy & Analysis"],"mcp_tools":{"context7":["fetch_library_docs"],"sqlite":["read_query"]}}
-  - {"name":"Implementation","description":"Core development","agents":["core-factory","backend-laravel","backend-api"],"use_agent_router":true,"dependencies":["Design & Planning"],"mcp_tools":{"context7":["fetch_library_docs"],"git":["add","commit"],"filesystem":["read_file","write_file"]}}
+  - {"name":"Strategy & Analysis","description":"Analyze requirements and create technical plan","agents":["lead-strategist","software-architect"],"use_agent_router":true,"mcp_tools":{"context7":["fetch_library_docs"],"memory":["create_entities"],"sequential_thinking":["sequential_thinking"]}}
+  - {"name":"Design & Planning","description":"Design and planning phase","agents":["frontend-ui-ux","software-architect","software-architect"],"use_agent_router":true,"dependencies":["Strategy & Analysis"],"mcp_tools":{"context7":["fetch_library_docs"],"sqlite":["read_query"]}}
+  - {"name":"Implementation","description":"Core development","agents":["core-factory","backend-laravel","software-architect"],"use_agent_router":true,"dependencies":["Design & Planning"],"mcp_tools":{"context7":["fetch_library_docs"],"git":["add","commit"],"filesystem":["read_file","write_file"]}}
   - {"name":"Quality Assurance","description":"QA and security validation","agents":["qa-guardian"],"dependencies":["Implementation"],"mcp_tools":{"git":["diff"],"context7":["fetch_library_docs"]}}
   - {"name":"Documentation","description":"Technical documentation update","agents":["docs-curator"],"dependencies":["Quality Assurance"],"mcp_tools":{"memory":["search_nodes","create_entities"],"git":["add","commit"]}}
