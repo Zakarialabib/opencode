@@ -1,19 +1,10 @@
 ---
 name: documentation
-displayName: Documentation
 description: Write accurate docs, keep references current, and capture verified behavior only.
-version: 1.0.0
-category: foundation
-tags:
-  - docs
-  - api
-  - readme
-  - runbook
-agents:
-  - lead-strategist
-  - software-architect
-  - core-factory
-  - docs-curator
+compatibility: opencode
+metadata:
+  audience: writers
+  workflow: documentation
 ---
 
 # Documentation

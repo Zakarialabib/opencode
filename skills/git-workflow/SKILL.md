@@ -1,22 +1,10 @@
 ---
 name: git-workflow
-displayName: Git Workflow
 description: Branching, rebasing, commit hygiene, and review-friendly history for agency delivery.
-version: 1.0.0
-category: foundation
-tags:
-  - git
-  - branching
-  - commits
-  - pull-request
-agents:
-  - lead-strategist
-  - software-architect
-  - core-factory
-  - qa-guardian
-  - devops-engineer
-  - backend-laravel
-  - frontend-ui-ux
+compatibility: opencode
+metadata:
+  audience: developers
+  workflow: git
 ---
 
 # Git Workflow

@@ -1,20 +1,10 @@
 ---
 name: lsp-navigation
-displayName: LSP Navigation
 description: Use the language server for precise navigation, symbol lookup, refactoring, and diagnostics.
-version: 1.0.0
-category: foundation
-tags:
-  - lsp
-  - symbols
-  - diagnostics
-  - refactor
-agents:
-  - software-architect
-  - core-factory
-  - qa-guardian
-  - backend-laravel
-  - frontend-ui-ux
+compatibility: opencode
+metadata:
+  audience: developers
+  workflow: lsp
 ---
 
 # LSP Navigation

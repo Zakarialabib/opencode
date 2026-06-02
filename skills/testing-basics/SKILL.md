@@ -1,19 +1,10 @@
 ---
 name: testing-basics
-displayName: Testing Basics
 description: Unit, integration, and regression testing fundamentals for reliable delivery.
-version: 1.0.0
-category: foundation
-tags:
-  - tests
-  - regression
-  - unit
-  - integration
-agents:
-  - core-factory
-  - qa-guardian
-  - backend-laravel
-  - frontend-ui-ux
+compatibility: opencode
+metadata:
+  audience: testers
+  workflow: testing
 ---
 
 # Testing Basics

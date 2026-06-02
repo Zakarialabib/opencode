@@ -41,7 +41,6 @@ Each `SKILL.md` must start with YAML frontmatter:
 ---
 name: git-release
 description: Create consistent releases and changelogs
-license: MIT
 compatibility: opencode
 metadata:
   audience: maintainers
@@ -80,9 +79,19 @@ Ask clarifying questions if the versioning is unclear.
 
 ## Skill Registry
 
-Skills are registered in `skills/index.json` with agent assignments. There are currently **44 registered skills**.
+Skills are registered in `skills/index.json` with agent assignments. There are currently **52 registered skills**.
 
 ### By Category
+
+#### General
+
+| Skill               | Agents                                      | Description                                                      |
+| ------------------- | ------------------------------------------- | ---------------------------------------------------------------- |
+| `code-review`       | software-architect, core-factory, qa-guardian | Read diffs, identify risks, produce actionable feedback          |
+| `documentation`     | lead-strategist, software-architect, core-factory, docs-curator | Write accurate docs, keep references current                     |
+| `git-workflow`      | lead-strategist, software-architect, core-factory, qa-guardian, devops-engineer | Branching, rebasing, commit hygiene, review-friendly history    |
+| `lsp-navigation`    | software-architect, core-factory, qa-guardian | Use language server for precise navigation, refactoring, diagnostics |
+| `testing-basics`    | core-factory, qa-guardian                  | Unit, integration, and regression testing fundamentals          |
 
 #### Coding & Implementation
 
@@ -187,15 +196,15 @@ Skills are registered in `skills/index.json` with agent assignments. There are c
 
 | Agent                  | Assigned Skills                                                                                                                                                                                                                                                         |
 | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **core-factory**       | coding-agent, auto-target-tracker, config-doctor, laravel-feature-scaffold, project-memory, prompt-engineering, self-improver, stack-context, xlsx                                                                                                                      |
-| **lead-strategist**    | dynamic-workflow, prompt-engineering, self-improver, self-reflection, spec-driven-design, stack-context, workflow-manager                                                                                                                                               |
-| **software-architect** | database-design, deep-research, knowledge-architect, self-reflection, skill-creator, spec-driven-design                                                                                                                                                                 |
+| **core-factory**       | coding-agent, auto-target-tracker, code-review, config-doctor, documentation, git-workflow, laravel-feature-scaffold, lsp-navigation, project-memory, prompt-engineering, self-improver, stack-context, testing-basics, xlsx                                                                                                           |
+| **lead-strategist**    | documentation, dynamic-workflow, git-workflow, prompt-engineering, self-improver, self-reflection, spec-driven-design, stack-context, workflow-manager                                                                                                                                                                                 |
+| **software-architect** | code-review, database-design, deep-research, git-workflow, knowledge-architect, lsp-navigation, self-reflection, skill-creator, spec-driven-design                                                                                                                                                                                     |
 | **frontend-ui-ux**     | charts, react-reuse-audit, ui-ux-pro-max, visual-design-foundations, web-shader-extractor                                                                                                                                                                               |
 | **backend-laravel**    | database-design, laravel-feature-scaffold, pest-testing                                                                                                                                                                                                                 |
 | **backend-tauri**      | —                                                                                                                                                                                                                                                                       |
-| **qa-guardian**        | pest-testing, security-review, skill-vetter, testing-strategy                                                                                                                                                                                                           |
-| **devops-engineer**    | android, android-gradle, android-debugging, android-deployment, config-doctor, git-release                                                                                                                                                                              |
-| **docs-curator**       | anti-pua, content-strategy, contentanalysis, deep-research, docx, git-release, knowledge-architect, market-research-reports, multi-search-engine, pdf, ppt, project-memory, qingyan-research, seo-content-writer, storyboard-manager, TTS, web-reader, web-search, xlsx |
+| **qa-guardian**        | code-review, lsp-navigation, pest-testing, security-review, skill-vetter, testing-basics, testing-strategy                                                                                                                                                               |
+| **devops-engineer**    | android, android-gradle, android-debugging, android-deployment, config-doctor, git-release, git-workflow                                                                                                                                                                |
+| **docs-curator**       | anti-pua, content-strategy, contentanalysis, deep-research, docx, documentation, git-release, git-workflow, knowledge-architect, market-research-reports, multi-search-engine, pdf, ppt, project-memory, qingyan-research, seo-content-writer, storyboard-manager, TTS, web-reader, web-search, xlsx                                       |
 | **scout**              | agent-browser, web-reader, web-search, multi-search-engine                                                                                                                                                                                                              |
 | **android-kotlin**     | android, android-compose, android-gradle, android-testing, android-debugging, android-deployment                                                                                                                                                                        |
 
