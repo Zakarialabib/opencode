@@ -16,7 +16,7 @@ env:
 phases:
   - name: Discovery
     description: Scan codebase for undocumented components and identify documentation gaps
-    agents: [docs-curator, lead-architect]
+    agents: [docs-curator, software-architect]
     use_agent_router: true
     tasks:
       - scan_codebase_for_undocumented_components
@@ -104,7 +104,7 @@ notifications:
     - generate: doc-summary.md
     - notify: [lead-strategist]
   on_failure:
-    - alert: [lead-architect]
+    - alert: [software-architect]
     - create: doc-issue-report.md
 
 error_handling:

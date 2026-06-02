@@ -6,15 +6,15 @@ Welcome to the **OpenCode** ecosystem. This guide helps you navigate the agentic
 
 ## 🧭 Navigation
 
-| Section                                                            | Description                                                             |
-| ------------------------------------------------------------------ | ----------------------------------------------------------------------- |
-| [**👥 Agents Guide**](Agents-Guide.md)                             | Meet your 10 configured AI agents with intelligent routing              |
-| [**⚡ Workflows Guide**](Workflows-Guide.md)                       | Automate complex tasks with multi-agent workflows                       |
-| [**🔌 Plugins Guide**](Plugins-Guide.md)                           | Extend OpenCode with 11 plugins including agent-router and MCP managers |
-| [**🛠️ Skills Guide**](Skills-Guide.md)                             | Deep dive into specialized capabilities with MCP integration            |
-| [**💬 Prompting Guide**](Prompting-Guide.md)                       | Master the art of prompting agents for maximum productivity             |
-| [**🧠 Context Engineering**](Prompting-and-Context-Engineering.md) | MVI philosophy and plan-first workflows                                 |
-| [**🔄 Agent Loop Guide**](Agent-Loop-Guide.md)                     | Iterative execution and self-improvement patterns                       |
+| Section                                                            | Description                                                          |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| [**👥 Agents Guide**](Agents-Guide.md)                             | Meet your 14 configured AI agents with intelligent routing           |
+| [**⚡ Workflows Guide**](Workflows-Guide.md)                       | Automate complex tasks with multi-agent workflows                    |
+| [**🔌 Plugins Guide**](Plugins-Guide.md)                           | Extend OpenCode with plugins including agent-router and MCP managers |
+| [**🛠️ Skills Guide**](Skills-Guide.md)                             | Deep dive into 44 specialized skills with MCP integration            |
+| [**💬 Prompting Guide**](Prompting-Guide.md)                       | Master the art of prompting agents for maximum productivity          |
+| [**🧠 Context Engineering**](Prompting-and-Context-Engineering.md) | MVI philosophy and plan-first workflows                              |
+| [**🔄 Agent Loop Guide**](Agent-Loop-Guide.md)                     | Iterative execution and self-improvement patterns                    |
 
 ---
 
@@ -24,7 +24,7 @@ OpenCode uses specialized agents configured in `opencode.json` to handle differe
 
 ### Core Philosophy
 
-1. **Plan Before Action**: Use `lead-strategist` or `lead-architect` for analysis before major changes (uses Sequential Thinking MCP)
+1. **Plan Before Action**: Use `lead-strategist` or `software-architect` for analysis before major changes (uses Sequential Thinking MCP)
 2. **Specialization Wins**: Use the right agent for the right task (e.g., `backend-laravel` for PHP, `frontend-ui-ux` for CSS)
 3. **Intelligent Routing**: The `agent-router` plugin automatically recommends the best agent
 4. **Workflow Automation**: Use `workflow-manager` skill for complex multi-step tasks with MCP integration
@@ -56,19 +56,22 @@ Ask: "Which agent should handle Laravel authentication?"
 
 ## 🛠️ Essential Tools
 
-### MCP Servers (9 configured)
+### MCP Servers (12 configured, 6 enabled)
 
-| Server                | Purpose                                    | Timeout |
-| --------------------- | ------------------------------------------ | ------- |
-| `context7`            | Up-to-date documentation and code examples | 60s     |
-| `filesystem`          | File system operations                     | 30s     |
-| `memory`              | Persistent knowledge graph                 | 15s     |
-| `git`                 | Git repository operations                  | 20s     |
-| `fetch`               | Web content fetching                       | 15s     |
-| `sqlite`              | SQLite database operations                 | 15s     |
-| `sequential-thinking` | Step-by-step reasoning                     | 30s     |
-| `language-server`     | LSP integration                            | 20s     |
-| `type-inject`         | TypeScript type injection                  | 20s     |
+| Server                | Status      | Purpose                                    | Timeout |
+| --------------------- | ----------- | ------------------------------------------ | ------- |
+| `context7`            | ✅ enabled  | Up-to-date documentation and code examples | 45s     |
+| `git`                 | ✅ enabled  | Git repository operations                  | 30s     |
+| `sequential-thinking` | ✅ enabled  | Step-by-step reasoning                     | 45s     |
+| `type-inject`         | ✅ enabled  | TypeScript type injection                  | 45s     |
+| `stitch`              | ✅ enabled  | Google Stitch design system sync           | 45s     |
+| `filesystem`          | ✅ enabled  | File system operations                     | 45s     |
+| `memory`              | ⏸️ disabled | Persistent knowledge graph                 | 30s     |
+| `fetch`               | ⏸️ disabled | Web content fetching                       | 30s     |
+| `sqlite`              | ⏸️ disabled | SQLite database operations                 | 30s     |
+| `language-server`     | ⏸️ disabled | LSP integration                            | 45s     |
+| `personal-knowledge`  | ⏸️ disabled | Personal knowledge base                    | 30s     |
+| `everything`          | ⏸️ disabled | MCP test server                            | 30s     |
 
 Use `mcp_list` to view all servers, `mcp_check` for health status, `mcp_toggle` to enable/disable.
 
@@ -84,12 +87,10 @@ Built-in support for Biome (JS/TS), Prettier (CSS/HTML/MD), Pint (PHP), rustfmt 
 
 ## 🎯 Model Configuration
 
-| Provider                  | Models                                          |
-| ------------------------- | ----------------------------------------------- |
-| **opencode-go** (default) | `kimi-k2.6`, `glm-5.1`, `qwen3.6-plus`          |
-| **cerebras**              | `qwen-3-235b-a22b-instruct-2507`, `zai-glm-4.7` |
-| **lmstudio** (local)      | `qwen3.5-4b`, `gemma-4-e4b-it`, `gemma-3n-e4b`  |
-| **opencode**              | `hy3-preview-free`                              |
+| Provider       | Models                                           | Use Case                    |
+| -------------- | ------------------------------------------------ | --------------------------- |
+| **lmstudio**   | `gemma-4-e4b-it`, `gemma-4-e2b-it`, `qwen3.5-4b` | Local, free, fast inference |
+| **openrouter** | `ring-2.6-1t:free`, `laguna-m.1:free`            | Free cloud models           |
 
 Use `recommend_model` to get model suggestions based on your requirements (tool calling, reasoning).
 
@@ -186,22 +187,15 @@ Run with: `bun benchmark.js`
 
 ---
 
-## 🔗 Plugin Ecosystem (12 plugins)
+## 🔗 Plugin Ecosystem (3 registered)
 
-| Plugin                        | Purpose                                                                                                    |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `agent-router.ts`             | Intelligent task-to-agent routing                                                                          |
-| `model-router.ts`             | Smart model selection based on capabilities                                                                |
-| `mcp-manager.ts`              | MCP server health and toggle management                                                                    |
-| `skill-manager.ts`            | Skill registry access and search                                                                           |
-| `context-manager.ts`          | Dynamic context configuration                                                                              |
-| `index.ts`                    | LM Studio management + self-improvement                                                                    |
-| `jsonc-utils.ts`              | Shared JSONC parser (comment-safe)                                                                         |
-| `extension-context-bridge.ts` | Trae IDE extension bridge                                                                                  |
-| `language-context-bridge.ts`  | LSP integration bridge                                                                                     |
-| `process-monitor.ts`          | Process monitoring                                                                                         |
+| Plugin               | Purpose                                 |
+| -------------------- | --------------------------------------- |
+| `index.ts`           | LM Studio management + self-improvement |
+| `skill-manager.ts`   | Skill registry access and search        |
+| `context-manager.ts` | Dynamic context configuration           |
 
-> See [**Plugins Guide**](Plugins-Guide.md) for complete details.
+> See [**Plugins Guide**](Plugins-Guide.md) for complete details on all available plugins.
 
 ---
 

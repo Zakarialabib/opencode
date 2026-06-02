@@ -1,0 +1,38 @@
+id: sprint-ceremony
+name: Sprint Ceremony
+version: 2.0.0
+description: Sprint planning, daily unblock review, demo prep, and retrospective generation.
+trigger: scheduled
+
+phases:
+  - name: Planning
+    owner: tpm-orchestrator
+    agents: [tpm-orchestrator, pm-portfolio, lead-backend, lead-frontend, lead-qa]
+    tasks:
+      - confirm_priority
+      - estimate_capacity
+      - assign_owners
+    gate:
+      id: sprint-committed
+      requires: [pm-portfolio, tpm-orchestrator]
+      evidence: [committed-scope, capacity]
+
+  - name: Unblock Review
+    owner: tpm-orchestrator
+    agents: [tpm-orchestrator, lead-backend, lead-frontend, lead-qa]
+    tasks:
+      - scan_blockers
+      - resolve_dependencies
+      - update_risk_register
+
+  - name: Retrospective
+    owner: lead-qa
+    agents: [lead-qa, tpm-orchestrator, docs-curator]
+    tasks:
+      - summarize_delivery_metrics
+      - identify_process_improvements
+      - publish_retro_notes
+    gate:
+      id: retro-published
+      requires: [lead-qa, tpm-orchestrator]
+      evidence: [retro-notes, action-items]

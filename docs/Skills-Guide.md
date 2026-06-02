@@ -41,7 +41,6 @@ Each `SKILL.md` must start with YAML frontmatter:
 ---
 name: git-release
 description: Create consistent releases and changelogs
-license: MIT
 compatibility: opencode
 metadata:
   audience: maintainers
@@ -69,126 +68,145 @@ Ask clarifying questions if the versioning is unclear.
 
 ### Optional Fields
 
-| Field           | Purpose                                     |
-| --------------- | ------------------------------------------- |
-| `license`       | SPDX identifier (e.g., `MIT`, `Apache-2.0`) |
-| `compatibility` | Platform compatibility (e.g., `opencode`)   |
-| `metadata`      | String-to-string map for tags/audience info |
+| Field           | Purpose                                                     |
+| --------------- | ----------------------------------------------------------- |
+| `license`       | SPDX identifier (e.g., `MIT`, `Apache-2.0`)                 |
+| `compatibility` | Platform compatibility (e.g., `opencode`)                   |
+| `metadata`      | String-to-string map for tags/audience info                 |
 | `agents`        | Default agent assignments (overrides index.json if present) |
 
 ---
 
 ## Skill Registry
 
-Skills are registered in `skills/index.json` with agent assignments. There are currently **48 registered skills**.
+Skills are registered in `skills/index.json` with agent assignments. There are currently **52 registered skills**.
 
 ### By Category
 
+#### General
+
+| Skill               | Agents                                      | Description                                                      |
+| ------------------- | ------------------------------------------- | ---------------------------------------------------------------- |
+| `code-review`       | software-architect, core-factory, qa-guardian | Read diffs, identify risks, produce actionable feedback          |
+| `documentation`     | lead-strategist, software-architect, core-factory, docs-curator | Write accurate docs, keep references current                     |
+| `git-workflow`      | lead-strategist, software-architect, core-factory, qa-guardian, devops-engineer | Branching, rebasing, commit hygiene, review-friendly history    |
+| `lsp-navigation`    | software-architect, core-factory, qa-guardian | Use language server for precise navigation, refactoring, diagnostics |
+| `testing-basics`    | core-factory, qa-guardian                  | Unit, integration, and regression testing fundamentals          |
+
 #### Coding & Implementation
-| Skill | Agents | Description |
-|-------|--------|-------------|
-| `coding-agent` | core-factory | Structured coding with verification |
-| `laravel-feature-scaffold` | backend-laravel, core-factory | Laravel feature scaffolding |
-| `database-design` | lead-architect, backend-api, backend-laravel | DB schema design |
-| `react-reuse-audit` | frontend-ui-ux | React component reuse audit |
-| `android` | android-kotlin, devops-engineer | Android dev core |
-| `android-compose` | android-kotlin | Jetpack Compose UI |
-| `android-gradle` | android-kotlin, devops-engineer | Gradle build system |
-| `android-testing` | android-kotlin | Android testing |
-| `android-debugging` | android-kotlin, devops-engineer | Android debug & inspect |
-| `android-deployment` | android-kotlin, devops-engineer | Android deployment |
+
+| Skill                      | Agents                              | Description                         |
+| -------------------------- | ----------------------------------- | ----------------------------------- |
+| `coding-agent`             | core-factory                        | Structured coding with verification |
+| `laravel-feature-scaffold` | backend-laravel, core-factory       | Laravel feature scaffolding         |
+| `database-design`          | software-architect, backend-laravel | DB schema design                    |
+| `react-reuse-audit`        | frontend-ui-ux                      | React component reuse audit         |
+| `android`                  | android-kotlin, devops-engineer     | Android dev core                    |
+| `android-compose`          | android-kotlin                      | Jetpack Compose UI                  |
+| `android-gradle`           | android-kotlin, devops-engineer     | Gradle build system                 |
+| `android-testing`          | android-kotlin                      | Android testing                     |
+| `android-debugging`        | android-kotlin, devops-engineer     | Android debug & inspect             |
+| `android-deployment`       | android-kotlin, devops-engineer     | Android deployment                  |
 
 #### Testing & Security
-| Skill | Agents | Description |
-|-------|--------|-------------|
-| `testing-strategy` | qa-guardian | Test planning and coverage |
-| `pest-testing` | backend-laravel, qa-guardian | Pest testing for Laravel/PHP |
-| `security-review` | qa-guardian | Vulnerability assessment |
-| `skill-vetter` | qa-guardian | Skill security vetting |
-| `agent-browser` | scout | Web browsing automation |
+
+| Skill              | Agents                       | Description                  |
+| ------------------ | ---------------------------- | ---------------------------- |
+| `testing-strategy` | qa-guardian                  | Test planning and coverage   |
+| `pest-testing`     | backend-laravel, qa-guardian | Pest testing for Laravel/PHP |
+| `security-review`  | qa-guardian                  | Vulnerability assessment     |
+| `skill-vetter`     | qa-guardian                  | Skill security vetting       |
+| `agent-browser`    | scout                        | Web browsing automation      |
 
 #### UI/Design
-| Skill | Agents | Description |
-|-------|--------|-------------|
-| `ui-ux-pro-max` | frontend-ui-ux | Premium UI/UX design tokens |
-| `visual-design-foundations` | frontend-ui-ux | Typography, color, spacing |
-| `charts` | frontend-ui-ux | Chart and visualization generation |
-| `web-shader-extractor` | frontend-ui-ux | WebGL/Canvas effect extraction |
+
+| Skill                       | Agents         | Description                        |
+| --------------------------- | -------------- | ---------------------------------- |
+| `ui-ux-pro-max`             | frontend-ui-ux | Premium UI/UX design tokens        |
+| `visual-design-foundations` | frontend-ui-ux | Typography, color, spacing         |
+| `charts`                    | frontend-ui-ux | Chart and visualization generation |
+| `web-shader-extractor`      | frontend-ui-ux | WebGL/Canvas effect extraction     |
 
 #### Meta & Ops
-| Skill | Agents | Description |
-|-------|--------|-------------|
-| `self-improver` | core-factory, lead-strategist | Self-evolution and improvement |
-| `self-reflection` | lead-strategist, lead-architect | Config effectiveness analysis |
-| `config-doctor` | core-factory, devops-engineer | Configuration integrity |
-| `skill-creator` | lead-architect | Create and optimize skills |
-| `project-memory` | docs-curator, core-factory | Conventions and memory |
-| `prompt-engineering` | core-factory, lead-strategist | Prompt patterns |
+
+| Skill                | Agents                              | Description                    |
+| -------------------- | ----------------------------------- | ------------------------------ |
+| `self-improver`      | core-factory, lead-strategist       | Self-evolution and improvement |
+| `self-reflection`    | lead-strategist, software-architect | Config effectiveness analysis  |
+| `config-doctor`      | core-factory, devops-engineer       | Configuration integrity        |
+| `skill-creator`      | software-architect                  | Create and optimize skills     |
+| `project-memory`     | docs-curator, core-factory          | Conventions and memory         |
+| `prompt-engineering` | core-factory, lead-strategist       | Prompt patterns                |
 
 #### Orchestration & Process
-| Skill | Agents | Description |
-|-------|--------|-------------|
-| `stack-context` | core-factory, lead-strategist | Stack detection and context |
-| `workflow-manager` | lead-strategist | Multi-step workflow orchestration |
-| `dynamic-workflow` | lead-strategist | Dynamic workflow management |
-| `spec-driven-design` | lead-architect, lead-strategist | Spec before implementation |
+
+| Skill                | Agents                              | Description                       |
+| -------------------- | ----------------------------------- | --------------------------------- |
+| `stack-context`      | core-factory, lead-strategist       | Stack detection and context       |
+| `workflow-manager`   | lead-strategist                     | Multi-step workflow orchestration |
+| `dynamic-workflow`   | lead-strategist                     | Dynamic workflow management       |
+| `spec-driven-design` | software-architect, lead-strategist | Spec before implementation        |
 
 #### Research & Analysis
-| Skill | Agents | Description |
-|-------|--------|-------------|
-| `deep-research` | docs-curator, lead-architect | Domain research |
-| `knowledge-architect` | docs-curator, lead-architect | Knowledge graph management |
-| `qingyan-research` | docs-curator | Deep web research + HTML reports |
-| `market-research-reports` | docs-curator | 50+ page market reports |
-| `contentanalysis` | docs-curator | Content creation and analysis |
+
+| Skill                     | Agents                           | Description                      |
+| ------------------------- | -------------------------------- | -------------------------------- |
+| `deep-research`           | docs-curator, software-architect | Domain research                  |
+| `knowledge-architect`     | docs-curator, software-architect | Knowledge graph management       |
+| `qingyan-research`        | docs-curator                     | Deep web research + HTML reports |
+| `market-research-reports` | docs-curator                     | 50+ page market reports          |
+| `contentanalysis`         | docs-curator                     | Content creation and analysis    |
 
 #### Content & Marketing
-| Skill | Agents | Description |
-|-------|--------|-------------|
-| `content-strategy` | docs-curator | Marketing content strategy |
-| `seo-content-writer` | docs-curator | SEO-optimized content |
-| `storyboard-manager` | docs-curator | Story planning |
+
+| Skill                | Agents       | Description                |
+| -------------------- | ------------ | -------------------------- |
+| `content-strategy`   | docs-curator | Marketing content strategy |
+| `seo-content-writer` | docs-curator | SEO-optimized content      |
+| `storyboard-manager` | docs-curator | Story planning             |
 
 #### Documents & Media
-| Skill | Agents | Description |
-|-------|--------|-------------|
-| `pdf` | docs-curator | PDF creation |
-| `docx` | docs-curator | Word document creation |
-| `ppt` | docs-curator | Presentation creation |
-| `xlsx` | docs-curator | Excel file manipulation |
-| `TTS` | docs-curator | Text-to-speech generation |
+
+| Skill  | Agents       | Description               |
+| ------ | ------------ | ------------------------- |
+| `pdf`  | docs-curator | PDF creation              |
+| `docx` | docs-curator | Word document creation    |
+| `ppt`  | docs-curator | Presentation creation     |
+| `xlsx` | docs-curator | Excel file manipulation   |
+| `TTS`  | docs-curator | Text-to-speech generation |
 
 #### Search & Utility
-| Skill | Agents | Description |
-|-------|--------|-------------|
-| `web-search` | scout, docs-curator | Web search |
-| `web-reader` | scout, docs-curator | Page content extraction |
-| `multi-search-engine` | scout, docs-curator | Multi-engine search |
-| `auto-target-tracker` | core-factory | Target tracking |
-| `agent-browser` | scout | Browser automation |
-| `git-release` | devops-engineer, docs-curator | Release management |
+
+| Skill                 | Agents                        | Description             |
+| --------------------- | ----------------------------- | ----------------------- |
+| `web-search`          | scout, docs-curator           | Web search              |
+| `web-reader`          | scout, docs-curator           | Page content extraction |
+| `multi-search-engine` | scout, docs-curator           | Multi-engine search     |
+| `auto-target-tracker` | core-factory                  | Target tracking         |
+| `agent-browser`       | scout                         | Browser automation      |
+| `git-release`         | devops-engineer, docs-curator | Release management      |
 
 #### Social & Creative
-| Skill | Agents | Description |
-|-------|--------|-------------|
+
+| Skill      | Agents       | Description                |
+| ---------- | ------------ | -------------------------- |
 | `anti-pua` | docs-curator | Anti-manipulation analysis |
 
 ### Agent → Skills Assignment
 
-| Agent | Assigned Skills |
-|-------|----------------|
-| **core-factory** | coding-agent, auto-target-tracker, config-doctor, laravel-feature-scaffold, project-memory, prompt-engineering, self-improver, stack-context, xlsx |
-| **lead-strategist** | dynamic-workflow, prompt-engineering, self-improver, self-reflection, spec-driven-design, stack-context, workflow-manager |
-| **lead-architect** | database-design, deep-research, knowledge-architect, self-reflection, skill-creator, spec-driven-design |
-| **frontend-ui-ux** | charts, react-reuse-audit, ui-ux-pro-max, visual-design-foundations, web-shader-extractor |
-| **backend-api** | database-design |
-| **backend-laravel** | database-design, laravel-feature-scaffold, pest-testing |
-| **backend-tauri** | — |
-| **qa-guardian** | pest-testing, security-review, skill-vetter, testing-strategy |
-| **devops-engineer** | android, android-gradle, android-debugging, android-deployment, config-doctor, git-release |
-| **docs-curator** | anti-pua, content-strategy, contentanalysis, deep-research, docx, git-release, knowledge-architect, market-research-reports, multi-search-engine, pdf, ppt, project-memory, qingyan-research, seo-content-writer, storyboard-manager, TTS, web-reader, web-search, xlsx |
-| **scout** | agent-browser, web-reader, web-search, multi-search-engine |
-| **android-kotlin** | android, android-compose, android-gradle, android-testing, android-debugging, android-deployment |
+| Agent                  | Assigned Skills                                                                                                                                                                                                                                                         |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **core-factory**       | coding-agent, auto-target-tracker, code-review, config-doctor, documentation, git-workflow, laravel-feature-scaffold, lsp-navigation, project-memory, prompt-engineering, self-improver, stack-context, testing-basics, xlsx                                                                                                           |
+| **lead-strategist**    | documentation, dynamic-workflow, git-workflow, prompt-engineering, self-improver, self-reflection, spec-driven-design, stack-context, workflow-manager                                                                                                                                                                                 |
+| **software-architect** | code-review, database-design, deep-research, git-workflow, knowledge-architect, lsp-navigation, self-reflection, skill-creator, spec-driven-design                                                                                                                                                                                     |
+| **frontend-ui-ux**     | charts, react-reuse-audit, ui-ux-pro-max, visual-design-foundations, web-shader-extractor                                                                                                                                                                               |
+| **backend-laravel**    | database-design, laravel-feature-scaffold, pest-testing                                                                                                                                                                                                                 |
+| **backend-tauri**      | —                                                                                                                                                                                                                                                                       |
+| **qa-guardian**        | code-review, lsp-navigation, pest-testing, security-review, skill-vetter, testing-basics, testing-strategy                                                                                                                                                               |
+| **devops-engineer**    | android, android-gradle, android-debugging, android-deployment, config-doctor, git-release, git-workflow                                                                                                                                                                |
+| **docs-curator**       | anti-pua, content-strategy, contentanalysis, deep-research, docx, documentation, git-release, git-workflow, knowledge-architect, market-research-reports, multi-search-engine, pdf, ppt, project-memory, qingyan-research, seo-content-writer, storyboard-manager, TTS, web-reader, web-search, xlsx                                       |
+| **scout**              | agent-browser, web-reader, web-search, multi-search-engine                                                                                                                                                                                                              |
+| **android-kotlin**     | android, android-compose, android-gradle, android-testing, android-debugging, android-deployment                                                                                                                                                                        |
 
 ---
 

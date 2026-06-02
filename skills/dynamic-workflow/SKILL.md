@@ -52,7 +52,7 @@ Phases: 6 (Strategy → Design → Backend → Frontend → Migration → QA)
 ```yaml
 - name: Strategy & Analysis
   description: Analyze requirements and create technical plan
-  agents: [lead-strategist, lead-architect]
+  agents: [lead-strategist, software-architect]
   use_agent_router: true
   mcp_tools:
     context7: [fetch_library_docs]
@@ -67,7 +67,7 @@ Phases: 6 (Strategy → Design → Backend → Frontend → Migration → QA)
 ```yaml
 - name: Design & Planning
   description: Premium UI/UX design and API contracts
-  agents: [frontend-ui-ux, backend-api, lead-architect]
+  agents: [frontend-ui-ux, software-architect, software-architect]
   use_agent_router: true
   mcp_tools:
     context7: [fetch_library_docs]
@@ -214,7 +214,7 @@ mcp_servers:
 
 phases:
   - name: Analysis
-    agents: [lead-architect]
+    agents: [software-architect]
     tasks: [analyze_current_auth, identify_token_handling]
     mcp_tools:
       context7: [fetch_library_docs]

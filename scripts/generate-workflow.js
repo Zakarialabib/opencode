@@ -49,19 +49,19 @@ const TASK_TYPE_MAP = {
 const PHASE_TEMPLATES = {
   Strategy: {
     name: "Strategy & Analysis",
-    agents: ["lead-strategist", "lead-architect"],
+    agents: ["lead-strategist", "software-architect"],
     use_router: true,
     mcp: ["context7", "memory"],
   },
   Analysis: {
     name: "Analysis",
-    agents: ["lead-architect", "qa-guardian"],
+    agents: ["software-architect", "qa-guardian"],
     use_router: true,
     mcp: ["context7", "memory"],
   },
   Design: {
     name: "Design & Planning",
-    agents: ["frontend-ui-ux", "backend-api"],
+    agents: ["frontend-ui-ux", "software-architect"],
     use_router: true,
     mcp: ["context7", "sqlite"],
   },

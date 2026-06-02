@@ -17,7 +17,7 @@ env:
 phases:
   - name: Analysis
     description: Analyze changed files, understand context, and prepare review scope
-    agents: [qa-guardian, lead-architect]
+    agents: [qa-guardian, software-architect]
     use_agent_router: true
     tasks:
       - analyze_git_diff_and_scope
@@ -103,7 +103,7 @@ notifications:
     - generate: code-review-report.md
     - notify: [lead-strategist]
   on_failure:
-    - alert: [lead-architect]
+    - alert: [software-architect]
     - escalate_to: lead-strategist
 
 error_handling:

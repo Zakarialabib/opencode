@@ -87,7 +87,7 @@ Plugins are registered in `opencode.json`:
     "plugins/context-manager.ts",
     "plugins/extension-context-bridge.ts",
     "plugins/language-context-bridge.ts",
-    "plugins/process-monitor.ts",
+    "plugins/process-monitor.ts"
   ]
 }
 ```
@@ -174,6 +174,7 @@ const config = parseJsonc(readFileSync("opencode.json", "utf8"));
 ```
 
 ---
+
 ## 📂 Plugin File Structure
 
 ```
@@ -307,11 +308,11 @@ node scripts/generate-workflow.js "Refactor auth to use JWT"
 
 ### Generated Workflow Examples
 
-| Input Task                 | Task Type | Phases | Agents Used                                               |
-| -------------------------- | --------- | ------ | --------------------------------------------------------- |
-| "Refactor auth to use JWT" | REFACTOR  | 3      | lead-architect, qa-guardian, core-factory                 |
-| "Add user profile page"    | CREATE    | 5      | lead-strategist, frontend-ui-ux, backend-api, qa-guardian |
-| "Fix login button crash"   | FIX       | 4      | qa-guardian, core-factory, backend-laravel, docs-curator  |
+| Input Task                 | Task Type | Phases | Agents Used                                                      |
+| -------------------------- | --------- | ------ | ---------------------------------------------------------------- |
+| "Refactor auth to use JWT" | REFACTOR  | 3      | software-architect, qa-guardian, core-factory                    |
+| "Add user profile page"    | CREATE    | 5      | lead-strategist, frontend-ui-ux, software-architect, qa-guardian |
+| "Fix login button crash"   | FIX       | 4      | qa-guardian, core-factory, backend-laravel, docs-curator         |
 
 ### Phase Templates Library
 

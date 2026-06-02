@@ -100,7 +100,7 @@ docs/project-memory/
 
 | Agent | Memory Responsibility |
 |-------|----------------------|
-| lead-architect | ADRs, pattern definitions, architecture decisions |
+| software-architect | ADRs, pattern definitions, architecture decisions |
 | lead-strategist | Stakeholder info, project roadmap, scope decisions |
 | core-factory | Implementation patterns, code conventions |
 | docs-curator | Memory file maintenance, cross-project knowledge |

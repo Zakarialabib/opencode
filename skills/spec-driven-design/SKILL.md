@@ -46,7 +46,7 @@ metadata:
 
 ### Phase 3: Review & Lock
 
-1. Present spec to **lead-architect** or **lead-strategist** for sign-off
+1. Present spec to **software-architect** or **lead-strategist** for sign-off
 2. Iterate on feedback — spec is a living doc until locked
 3. Once locked: create implementation tickets for each sub-task
 4. Delegate sub-tasks to specialized agents via `task` tool
@@ -115,7 +115,7 @@ Before marking a spec as "ready for implementation":
 | Phase | Lead Agent | Supporting Skills |
 |-------|-----------|-------------------|
 | Discovery | lead-strategist | deep-research, web-search |
-| Specification | lead-architect | database-design, ui-ux-pro-max |
+| Specification | software-architect | database-design, ui-ux-pro-max |
 | Review | lead-strategist | — |
 | Implementation | core-factory | coding-agent, laravel-feature-scaffold, pest-testing |
 | Verification | qa-guardian | testing-strategy, agent-browser, security-review |

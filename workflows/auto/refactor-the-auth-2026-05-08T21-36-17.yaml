@@ -10,6 +10,6 @@ mcp_servers:
   - context7
   - filesystem
 phases:
-  - {"name":"Analysis","description":"Analyze codebase and identify patterns","agents":["lead-architect","qa-guardian"],"use_agent_router":true,"mcp_tools":{"context7":["fetch_library_docs"],"memory":["search_nodes"]}}
-  - {"name":"Implementation","description":"Core development","agents":["core-factory","backend-laravel","backend-api"],"use_agent_router":true,"dependencies":["Analysis"],"mcp_tools":{"context7":["fetch_library_docs"],"git":["add","commit"],"filesystem":["read_file","write_file"]}}
+  - {"name":"Analysis","description":"Analyze codebase and identify patterns","agents":["software-architect","qa-guardian"],"use_agent_router":true,"mcp_tools":{"context7":["fetch_library_docs"],"memory":["search_nodes"]}}
+  - {"name":"Implementation","description":"Core development","agents":["core-factory","backend-laravel","software-architect"],"use_agent_router":true,"dependencies":["Analysis"],"mcp_tools":{"context7":["fetch_library_docs"],"git":["add","commit"],"filesystem":["read_file","write_file"]}}
   - {"name":"Quality Assurance","description":"QA and security validation","agents":["qa-guardian"],"dependencies":["Implementation"],"mcp_tools":{"git":["diff"],"context7":["fetch_library_docs"]}}

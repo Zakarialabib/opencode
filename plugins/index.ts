@@ -1,8 +1,8 @@
-import { type Plugin, tool } from "@opencode-ai/plugin";
 import { parseJsonc } from "./jsonc-utils";
-import { readFile, writeFile, copyFile, rename, readdir } from "fs/promises";
+import { type Plugin, tool } from "@opencode-ai/plugin";
 import { execSync } from "child_process";
 import { createHash } from "crypto";
+import { readFile, writeFile, copyFile, rename, readdir } from "fs/promises";
 
 // // Debug: trace hook invocation
 // function traceHook(name: string, input: any, output: any) {
@@ -604,9 +604,8 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
               "core-builder",
               "core-planner",
               "lead-strategist",
-              "lead-architect",
+              "software-architect",
               "frontend-ui-ux",
-              "backend-api",
               "backend-laravel",
               "qa-reviewer",
               "qa-tester",
@@ -664,11 +663,6 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
           } else {
             result += `❌ LM Studio is unreachable: ${health.error}\n\n`;
           }
-
-          // Cerebras models
-          result += `## Cerebras Models (API)\n\n`;
-          result += `- \`qwen-3-235b-a22b-instruct-2507\` (Tool calling: ✅, Reasoning: ✅)\n`;
-          result += `- \`zai-glm-4.7\` (Tool calling: ❌, Reasoning: ✅)\n\n`;
 
           // OpenCode-Go models
           result += `## OpenCode-Go Models (API)\n\n`;

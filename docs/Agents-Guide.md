@@ -6,46 +6,46 @@ OpenCode uses specialized agents configured in `opencode.json` to handle differe
 
 ---
 
-## 🎯 Configured Agents (15 configured)
+## 🎯 Configured Agents (13 configured + 6 extended)
 
 These agents are configured in `opencode.json` under the `"agent"` key. The file is the source of truth for agent mode, permissions, and tools.
 
-Local agent docs in `agents/*.md` provide the per-agent design and execution guidance. Keep those files synchronized with `opencode.json` when agent roles, mode, or permissions change.
+Local agent docs in `.opencode/agents/*.md` provide extended agent definitions. Keep those files synchronized with `opencode.json` when agent roles, mode, or permissions change.
 
 ## 📌 Agent docs audit status
+
 - `qa-guardian.md`: removed invalid references to non-existent `qa-tester` and `security-scan` skills.
 - `frontend-ui-ux.md`: corrected invalid `context7_resolve-library-id`, `context7_query-docs`, and `skill_use` tool names to match actual available tools.
 - `plan.md`: corrected `Mode` to `subagent` to match `opencode.json`.
 
 ### Orchestration & Planning
 
-| Agent                 | Mode      | Steps | Role                                                                                    |
-| --------------------- | --------- | ----- | --------------------------------------------------------------------------------------- |
-| **`build`**           | primary   | 50    | Primary orchestrator — decomposes requests, delegates specialists, synthesizes results. |
-| **`plan`**            | subagent  | 20    | Read-only analyst — architecture review, gap analysis, risk assessment.               |
-| **`explore`**         | subagent  | 15    | Fast codebase search — locate files, find patterns, answer structural questions.      |
-| **`scout`**           | subagent  | 15    | External researcher — fetch docs, inspect dependencies, cross-reference upstream.     |
-| **`lead-strategist`** | subagent  | 30    | Product architect — feasibility, gap analysis, strategic coordination.                |
-| **`lead-architect`**  | subagent  | 30    | Technical architect — pattern integrity, dependency direction, structural soundness.  |
+| Agent                    | Mode     | Steps | Role                                                                                                      |
+| ------------------------ | -------- | ----- | --------------------------------------------------------------------------------------------------------- |
+| **`core-factory`**       | primary  | 50    | Primary orchestrator — decomposes requests, delegates specialists, synthesizes results.                   |
+| **`plan`**               | subagent | 20    | Read-only analyst — architecture review, gap analysis, risk assessment.                                   |
+| **`explore`**            | subagent | 15    | Fast codebase search — locate files, find patterns, answer structural questions.                          |
+| **`scout`**              | subagent | 15    | External researcher — fetch docs, inspect dependencies, cross-reference upstream.                         |
+| **`lead-strategist`**    | subagent | 30    | Product architect — feasibility, gap analysis, strategic coordination.                                    |
+| **`software-architect`** | subagent | 30    | Senior software engineer + architect — system design, Node/Bun backend, code quality, technical backbone. |
 
 ### Implementation & Delivery
 
-| Agent                | Mode      | Steps | Role                                                                                                                |
-| -------------------- | --------- | ----- | ------------------------------------------------------------------------------------------------------------------- |
-| **`core-factory`**   | subagent  | 40    | Senior implementation engineer — fast, clean, correct production code.                                              |
-| **`frontend-ui-ux`** | subagent  | 30    | Premium UI engineer — React + TypeScript + Tailwind + shadcn/ui.                                                   |
-| **`backend-api`**    | subagent  | 30    | API specialist — Node/Express or Laravel, type-safe, validated.                                                     |
-| **`backend-laravel`**| subagent  | 30    | Laravel 13 + Livewire 4 specialist — convention-strict, pest-tested.                                               |
-| **`backend-tauri`**  | subagent  | 30    | Rust/Tauri specialist — safety-first, cargo-check-always.                                                          |
-| **`android-kotlin`** | subagent  | 30    | Android/Kotlin native dev — Clean Architecture, Jetpack Compose, Tauri mobile bridge.                                |
+| Agent                 | Mode     | Steps | Role                                                                                   |
+| --------------------- | -------- | ----- | -------------------------------------------------------------------------------------- |
+| **`core-factory`**    | primary  | 50    | Primary orchestrator + implementation engineer — fast, clean, correct production code. |
+| **`frontend-ui-ux`**  | subagent | 30    | Premium UI engineer — React + TypeScript + Tailwind + shadcn/ui.                       |
+| **`backend-laravel`** | subagent | 30    | Laravel 13 + Livewire 4 specialist — convention-strict, pest-tested.                   |
+| **`backend-tauri`**   | subagent | 30    | Rust/Tauri specialist — safety-first, cargo-check-always.                              |
+| **`android-kotlin`**  | subagent | 30    | Android/Kotlin native dev — Clean Architecture, Jetpack Compose, Tauri mobile bridge.  |
 
 ### Validation & Operations
 
-| Agent                 | Mode      | Steps | Role                                                                                   |
-| --------------------- | --------- | ----- | -------------------------------------------------------------------------------------- |
-| **`qa-guardian`**     | subagent  | 20    | Quality gatekeeper — finds problems, not solutions.                                    |
-| **`devops-engineer`** | subagent  | 20    | Operations — database, processes, caches, dependency management.                       |
-| **`docs-curator`**    | subagent  | 30    | Technical writer — accurate, concise, verified documentation.                         |
+| Agent                 | Mode     | Steps | Role                                                             |
+| --------------------- | -------- | ----- | ---------------------------------------------------------------- |
+| **`qa-guardian`**     | subagent | 20    | Quality gatekeeper — finds problems, not solutions.              |
+| **`devops-engineer`** | subagent | 20    | Operations — database, processes, caches, dependency management. |
+| **`docs-curator`**    | subagent | 30    | Technical writer — accurate, concise, verified documentation.    |
 
 ---
 
@@ -53,18 +53,17 @@ Local agent docs in `agents/*.md` provide the per-agent design and execution gui
 
 Each agent has tailored tool access defined in `opencode.json`. The permission system controls what tools agents can use:
 
-| Agent               | Core Tools                                            | Advanced Tools                                       |
-| ------------------- | ----------------------------------------------------- | ---------------------------------------------------- |
-| **core-factory**    | read, write, edit, bash, skill, grep, glob, todowrite | —                                                    |
-| **lead-strategist** | skill, bash, read, lsp, codesearch, todowrite         | **task** (subagent delegation)                       |
-| **lead-architect**  | read, write, edit, bash, skill, lsp, codesearch       | **task, mcp, context7, memory, sequential-thinking** |
-| **frontend-ui-ux**  | read, write, edit, bash, skill, lsp, codesearch       | **task, mcp, context7, memory, sequential-thinking** |
-| **backend-api**     | read, write, edit, bash, skill, lsp                   | —                                                    |
-| **backend-laravel** | read, write, edit, bash, skill, lsp                   | —                                                    |
-| **backend-tauri**   | read, write, edit, bash, skill, lsp                   | —                                                    |
-| **qa-guardian**     | read, bash, skill, lsp                                | —                                                    |
-| **devops-engineer** | read, write, edit, bash, skill                        | —                                                    |
-| **docs-curator**    | read, write, edit, bash, skill, codesearch, lsp       | **websearch, webfetch, todowrite**                   |
+| Agent                  | Core Tools                                                                                          | Advanced Tools                                                    |
+| ---------------------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| **core-factory**       | read, write, edit, bash, skill, grep, glob, todowrite                                               | —                                                                 |
+| **lead-strategist**    | skill, bash, read, lsp, codesearch, todowrite                                                       | **task** (subagent delegation)                                    |
+| **software-architect** | read, write, edit, bash, skill, lsp, codesearch, glob, grep, list, type-inject, todoread, todowrite | **task, mcp, context7, sequential-thinking, webfetch, websearch** |
+| **frontend-ui-ux**     | read, write, edit, bash, skill, lsp, codesearch                                                     | **task, mcp, context7, memory, sequential-thinking**              |
+| **backend-laravel**    | read, write, edit, bash, skill, lsp                                                                 | —                                                                 |
+| **backend-tauri**      | read, write, edit, bash, skill, lsp                                                                 | —                                                                 |
+| **qa-guardian**        | read, bash, skill, lsp                                                                              | —                                                                 |
+| **devops-engineer**    | read, write, edit, bash, skill                                                                      | —                                                                 |
+| **docs-curator**       | read, write, edit, bash, skill, codesearch, lsp                                                     | **websearch, webfetch, todowrite**                                |
 
 > **Optimization Note (2026-05-08)**: qa-guardian is now READ-ONLY (removed write/edit). devops-engineer gained write/edit for config fixes. docs-curator gained LSP for code validation.
 
@@ -74,13 +73,13 @@ Each agent has tailored tool access defined in `opencode.json`. The permission s
 
 ## 🎯 Agent Orchestration
 
-The `lead-strategist` coordinates complex tasks using the **Task tool** for SubAgent delegation, following an ANALYZE→PLAN→DELEGATE→SYNTHESIZE→VERIFY pattern.
+The `core-factory` agent coordinates complex tasks using the **Task tool** for SubAgent delegation, following an ANALYZE→PLAN→DELEGATE→SYNTHESIZE→VERIFY pattern.
 
 ### Example Flow: "Add real-time notifications"
 
-1. **`lead-strategist`**: Defines requirements and outlines architecture
-2. **`lead-architect`**: Details technical implementation approach (using Context7 + Sequential Thinking MCP)
-3. **`backend-laravel`** or **`backend-api`**: Implements server-side logic
+1. **`core-factory`**: Decomposes requirements and delegates specialists
+2. **`software-architect`**: Designs architecture and implements backend logic (using Context7 + Sequential Thinking MCP)
+3. **`backend-laravel`**: Implements server-side logic (if Laravel-specific)
 4. **`frontend-ui-ux`**: Builds UI components (using `ui-ux-pro-max` skill)
 5. **`qa-guardian`**: Performs quality check, testing, and security review
 6. **`docs-curator`**: Updates documentation
@@ -109,8 +108,8 @@ Ask: "Which agent should handle this Laravel migration?"
 
 ```
 "Add user authentication to the Laravel app"
-→ lead-strategist decomposes and delegates:
-  lead-architect → backend-laravel → qa-guardian → docs-curator
+→ core-factory decomposes and delegates:
+  software-architect → backend-laravel → qa-guardian → docs-curator
 ```
 
 ---
@@ -155,22 +154,22 @@ Key configuration options:
 
 Based on our agent configuration audit, we've identified three cognitive modes to optimize token usage and task alignment:
 
-| Mode           | Purpose                          | Model             | Temperature | Tools                                                       | When to Use                                |
-| -------------- | -------------------------------- | ----------------- | ----------- | ----------------------------------------------------------- | ------------------------------------------ |
-| **plan-**      | Read-only analysis, architecture | `hy3-review-free` | 0.2         | read, grep, glob, codesearch, context7, sequential-thinking | "Analyze this code", "Design architecture" |
-| **explore-**   | Research, web search, discovery  | `hy3-review-free` | 0.4         | read, websearch, webfetch, codesearch, skill                | "Research X topic", "Find examples"        |
-| **implement-** | Code changes, implementation     | `hy3-review-free` | 0.3         | read, write, edit, bash, lsp, skill                         | "Fix this bug", "Add feature"              |
+| Mode           | Purpose                          | Model            | Temperature | Tools                                                       | When to Use                                |
+| -------------- | -------------------------------- | ---------------- | ----------- | ----------------------------------------------------------- | ------------------------------------------ |
+| **plan-**      | Read-only analysis, architecture | `qwen-3-235b`    | 0.2         | read, grep, glob, codesearch, context7, sequential-thinking | "Analyze this code", "Design architecture" |
+| **explore-**   | Research, web search, discovery  | `gemma-4-e4b-it` | 0.4         | read, websearch, webfetch, codesearch, skill                | "Research X topic", "Find examples"        |
+| **implement-** | Code changes, implementation     | `gemma-4-e4b-it` | 0.3         | read, write, edit, bash, lsp, skill                         | "Fix this bug", "Add feature"              |
 
 ### Key Changes Applied:
 
-1. **Model Downgrades**: 5 agents moved from `kimi-k2.6` (expensive) to `hy3-review-free` (75% cheaper)
+1. **Model Distribution**: Strategy/architecture agents or (fast reasoning) use LM Studio (local, free)
 2. **Temperature Tuning**: Implementation agents → 0.3, Planning agents → 0.2, Exploration → 0.4
 3. **Tool Alignment**: Each agent now has tools matching their cognitive mode
-4. **Least Privilege**: qa-guardian is now READ-ONLY, devops-engineer gained limited write
+4. **Least Privilege**: qa-guardian is READ-ONLY, devops-engineer gained limited write
 
 ### Expected Improvements:
 
-- **Token Savings**: ~75% on 5 agents
+- **Token Savings**: ~75% on strategy agents
 - **Routing Accuracy**: Target >85% (was 40% before fixes)
 - **Config Health**: Target >95%
 

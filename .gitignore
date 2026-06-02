@@ -66,5 +66,4 @@ workflows/auto/*.yaml
 /experiments
 .opencode/*
 opencode.exe
-.opencode/brain-sources.json
 /.opencode

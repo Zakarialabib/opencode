@@ -81,7 +81,7 @@ const categoryMap: Record<string, { category: string; tags: string[]; agents: st
   LLM: {
     category: "ai",
     tags: ["llm", "language-model", "ai", "prompting"],
-    agents: ["lead-architect"],
+    agents: ["software-architect"],
   },
   "marketing-mode": {
     category: "marketing",
@@ -111,7 +111,7 @@ const categoryMap: Record<string, { category: string; tags: string[]; agents: st
   "skill-creator": {
     category: "meta",
     tags: ["skill", "creation", "development", "authoring"],
-    agents: ["lead-architect"],
+    agents: ["software-architect"],
   },
   "skill-vetter": {
     category: "security",
@@ -141,7 +141,7 @@ const categoryMap: Record<string, { category: string; tags: string[]; agents: st
   VLM: {
     category: "ai",
     tags: ["vlm", "vision", "language-model", "multimodal"],
-    agents: ["lead-architect"],
+    agents: ["software-architect"],
   },
   "web-reader": {
     category: "research",

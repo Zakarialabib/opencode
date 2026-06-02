@@ -32,24 +32,20 @@
 9. **Build & Deploy**:
    - Verify Rust toolchain before `cargo build`
    - Monitor build process memory usage
-   - Use `brain_status` to check LM Studio availability before AI features
 
 ## Agent Coordination
 
 10. **Delegation**:
     - Use `task` tool for parallel agent execution when independent
-    - Pass brain plugin context (retrieved chunks, plan state) to sub-agents
     - Use `sequential-thinking` for trade-off analysis
 
 11. **Memory MCP**:
     - Query memory MCP for project conventions at session start
     - Store discovered patterns for cross-session continuity
-    - Fallback to brain_search if memory MCP is unavailable
 
 ## Retrieval Strategy
 
 12. **Intent-Aware Search**:
-    - `brain_search` auto-classifies intent (debug, refactor, feature, learn, test)
     - Reranker fires for learn, refactor, and feature intents (ONNX cross-encoder)
     - Memory-aware: chunks linked to known concepts get 15% score boost
     - Adaptive chunk count: high confidence → fewer chunks, low confidence → more
@@ -62,4 +58,4 @@
 ---
 
 **Last Updated**: 2026-05-17
-**Applies To**: All agents working with brain plugin and OpenCode stack
+**Applies To**: All agents working OpenCode stack

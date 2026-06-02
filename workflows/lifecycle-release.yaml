@@ -1,0 +1,86 @@
+id: lifecycle-release
+name: Lifecycle Release
+version: 2.0.0
+description: Release preparation, deployment, production validation, and conditional incident response.
+trigger: manual
+
+mcp_tools:
+  release:
+    git: [diff, log, tag]
+    memory: [create_entities, add_observations]
+  deploy:
+    bash: [deploy, smoke_test]
+    git: [tag]
+  operate:
+    sqlite: [log_incident, query_incidents]
+    memory: [create_entities]
+
+phases:
+  - name: Release Preparation
+    owner: tpm-orchestrator
+    raci:
+      responsible: [docs-curator, pm-portfolio]
+      accountable: pm-portfolio
+      consulted: [lead-qa, cto-governance]
+      informed: [dev-backend, dev-frontend, dev-devops]
+    agents: [tpm-orchestrator, docs-curator, pm-portfolio, lead-qa]
+    tasks:
+      - generate_changelog
+      - draft_release_notes
+      - verify_release_scope
+    gate:
+      id: release-notes-approval
+      requires: [pm-portfolio]
+      evidence: [release-notes, changelog]
+
+  - name: Deployment
+    owner: dev-devops
+    raci:
+      responsible: [dev-devops, dev-qa]
+      accountable: lead-qa
+      consulted: [lead-backend, lead-frontend]
+      informed: [tpm-orchestrator, pm-portfolio]
+    agents: [dev-devops, dev-qa, lead-qa]
+    tasks:
+      - deploy_staging
+      - run_smoke_tests
+      - validate_observability
+    gate:
+      id: staging-smoke-pass
+      requires: [lead-qa, dev-devops]
+      evidence: [smoke-test-report, observability-check]
+
+  - name: Production Release
+    owner: tpm-orchestrator
+    raci:
+      responsible: [dev-devops]
+      accountable: tpm-orchestrator
+      consulted: [lead-qa, cto-governance]
+      informed: [pm-portfolio]
+    agents: [tpm-orchestrator, dev-devops, lead-qa, cto-governance]
+    tasks:
+      - deploy_production
+      - monitor_slos
+      - publish_release_notes
+    gate:
+      id: production-stable
+      requires: [lead-qa, tpm-orchestrator]
+      evidence: [slo-stability, production-checklist]
+
+  - name: Incident Response
+    owner: incident-responder
+    trigger: alert_threshold_breach
+    raci:
+      responsible: [incident-responder]
+      accountable: tpm-orchestrator
+      consulted: [lead-qa, lead-security, lead-backend, lead-frontend]
+      informed: [pm-portfolio, cto-governance]
+    agents: [incident-responder, dev-devops, dev-qa, docs-curator]
+    tasks:
+      - triage_incident
+      - coordinate_hotfix
+      - draft_postmortem
+    gate:
+      id: incident-closed
+      requires: [lead-qa, tpm-orchestrator]
+      evidence: [triage-notes, fix-validation, postmortem-draft]

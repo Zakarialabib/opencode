@@ -102,7 +102,7 @@ Task: Implement new feature based on requirements
 Plan:
 1. ANALYZE: Profile current implementation (use core-factory)
 2. RESEARCH: Fetch relevant documentation (context7 MCP)
-3. DESIGN: Plan architecture (lead-architect)
+3. DESIGN: Plan architecture (software-architect)
 4. IMPLEMENT: Execute with tests (core-factory, qa-guardian)
 5. VERIFY: Ambient LSP catches syntax errors
 

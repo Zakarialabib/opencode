@@ -62,7 +62,7 @@ phases:
     description: Update all documentation to match new codebase
     agents:
       - docs-evolver
-      - lead-architect
+      - software-architect
     tasks:
       - update-api-docs
       - generate-changelog
