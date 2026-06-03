@@ -47,9 +47,7 @@ Ask: "Which agent should handle Laravel authentication?"
 /reflect        # Triggers self-reflection via docs-curator
 /audit          # Full project audit: lint + tests via qa-guardian
 /clean          # Clean project caches via devops-engineer
-/db:init        # Initialize database via devops-engineer
 /db:backup      # Backup database via devops-engineer
-/process:check  # Check process health via devops-engineer
 ```
 
 ---

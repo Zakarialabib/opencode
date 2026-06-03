@@ -1102,9 +1102,7 @@ Useful when onboarding to a new project or after major refactoring.
 | `/improve`             | Self-improvement analysis       | core-factory    | default |
 | `/reflect`             | Analyze config effectiveness    | lead-strategist |
 | `/clean`               | Clear project caches            | devops-engineer | default |
-| `/db:init`             | Initialize database             | devops-engineer | default |
 | `/db:backup`           | Backup database                 | devops-engineer | default |
-| `/process:check`       | Check processes & health        | devops-engineer | default |
 | `/check-updates`       | Check dependency updates        | devops-engineer | default |
 | `/sync-skills`         | Bridge skills via junctions     | devops-engineer | default |
 | `/collect-conventions` | Extract project conventions     | lead-strategist | default |

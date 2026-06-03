@@ -86,8 +86,6 @@ Plugins are registered in `opencode.json`:
     "plugins/skill-manager.ts",
     "plugins/context-manager.ts",
     "plugins/extension-context-bridge.ts",
-    "plugins/language-context-bridge.ts",
-    "plugins/process-monitor.ts"
   ]
 }
 ```
@@ -186,9 +184,6 @@ plugins/
 ├── mcp-manager.ts              # MCP server management
 ├── skill-manager.ts            # Skill registry access
 ├── context-manager.ts          # Context configuration
-├── extension-context-bridge.ts # Trae IDE extension bridge
-├── language-context-bridge.ts  # LSP integration bridge
-├── process-monitor.ts          # Process monitoring
 └── tests/                      # Test suite
     ├── parseJsonc.test.js      # JSONC parser unit tests
     └── core-plugins-e2e.test.js # Core plugin integration tests
