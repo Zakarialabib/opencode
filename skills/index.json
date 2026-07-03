@@ -8,7 +8,8 @@
       "description": "Headless browser automation for QA, testing, and client demo screenshots",
       "agents": [
         "qa-guardian",
-        "scout"
+        "scout",
+        "explore"
       ],
       "category": "testing"
     },
@@ -28,7 +29,8 @@
       "description": "Structured coding workflow with planning, implementation, verification, testing",
       "agents": [
         "core-factory",
-        "qa-guardian"
+        "qa-guardian",
+        "backend-tauri"
       ],
       "category": "implementation"
     },
@@ -116,7 +118,8 @@
       "description": "Multi-engine search for technical research and client domain investigation",
       "agents": [
         "scout",
-        "docs-curator"
+        "docs-curator",
+        "explore"
       ],
       "category": "search"
     },
@@ -242,7 +245,8 @@
       "description": "Multi-stack project detection (Tauri/React/Laravel/Android) and context orchestration",
       "agents": [
         "core-factory",
-        "lead-strategist"
+        "lead-strategist",
+        "backend-tauri"
       ],
       "category": "process"
     },
@@ -324,7 +328,8 @@
       "description": "Web page content extraction for research and competitor analysis",
       "agents": [
         "scout",
-        "docs-curator"
+        "docs-curator",
+        "explore"
       ],
       "category": "utility"
     },
@@ -334,7 +339,8 @@
       "description": "Web search for technical research and client domain investigation",
       "agents": [
         "scout",
-        "docs-curator"
+        "docs-curator",
+        "explore"
       ],
       "category": "search"
     },
@@ -452,7 +458,8 @@
       "agents": [
         "software-architect",
         "core-factory",
-        "qa-guardian"
+        "qa-guardian",
+        "backend-tauri"
       ],
       "category": "general"
     },
@@ -491,7 +498,8 @@
       "agents": [
         "software-architect",
         "core-factory",
-        "qa-guardian"
+        "qa-guardian",
+        "backend-tauri"
       ],
       "category": "general"
     },
@@ -502,7 +510,8 @@
       "description": "Unit, integration, and regression testing fundamentals for reliable delivery.",
       "agents": [
         "core-factory",
-        "qa-guardian"
+        "qa-guardian",
+        "backend-tauri"
       ],
       "category": "general"
     }
@@ -549,6 +558,6 @@
       ]
     }
   },
-  "lastUpdated": "2026-06-02T00:00:00.000Z",
+  "lastUpdated": "2026-06-06T00:00:00.000Z",
   "totalSkills": 52
 }

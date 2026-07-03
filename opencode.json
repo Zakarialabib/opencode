@@ -37,14 +37,6 @@
         }
       }
     },
-    "opencode-go": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "OpenCode Go (Premium)",
-      "options": {
-        "baseURL": "https://api.opencode.ai/v1"
-      },
-      "models": {}
-    },
     "openrouter": {
       "npm": "@ai-sdk/openai-compatible",
       "name": "OpenRouter",
@@ -72,7 +64,17 @@
     "mdns": false,
     "cors": ["http://127.0.0.1:8080"]
   },
-  "plugin": ["plugins/index.ts", "plugins/skill-manager.ts", "plugins/context-manager.ts"],
+  "plugin": [
+    "plugins/index.ts",
+    "plugins/skill-manager.ts",
+    "plugins/memory-context.ts",
+    "plugins/context-manager.ts",
+    "plugins/agent-router.ts",
+    "plugins/mcp-manager.ts",
+    "plugins/adr-workflow.ts",
+    "plugins/mobile-tool-router.ts",
+    "plugins/workflow-router.ts"
+  ],
   "mcp": {
     "context7": {
       "type": "local",
@@ -95,13 +97,13 @@
     "fetch": {
       "type": "local",
       "command": ["uvx", "mcp-server-fetch"],
-      "enabled": true,
+      "enabled": false,
       "timeout": 30000
     },
     "sqlite": {
       "type": "local",
       "command": ["uvx", "mcp-server-sqlite", "--db-path", "./database.sqlite"],
-      "enabled": false,
+      "enabled": true,
       "timeout": 30000
     },
     "sequential-thinking": {
@@ -265,8 +267,7 @@
   "lsp": {
     "typescript": {
       "command": ["typescript-language-server", "--stdio"],
-      "extensions": [".ts", ".tsx", ".js", ".jsx"],
-      "timeout": 30000
+      "extensions": [".ts", ".tsx", ".js", ".jsx"]
     },
     "php": {
       "command": ["intelephense", "--stdio"],
@@ -324,7 +325,8 @@
     "COMMANDS: Use /doctor or /improve to trigger self-reflection. Use /sync-skills to re-bridge skills.",
     "MOBILE: For Android/Kotlin tasks, use @android-kotlin. For mobile QA/testing, use @mobile-qa. For Tauri mobile build commands, @backend-tauri handles Rust side, @android-kotlin handles native Android side. Available Android skills: android, android-compose, android-gradle, android-testing, android-debugging, android-deployment. MCP servers: gradle (builds), mobile (device control), android-emulator (emulator).",
     "FALLBACK MODEL: When primary model fails or times out, fall back to LM Studio local model (qwen3.5-4b-claude-4.6-opus-reasoning-distilled-v2) for simple operations (file edits, bash commands, quick lookups).",
-    "AGENT TEMPERATURES: qa-guardian=0.05, explore=0.0, plan=0.1, devops-engineer=0.1, software-architect=0.2, backend-tauri=0.2, scout=0.2, docs-curator=0.2, core-factory=0.3, software-architect=0.3, backend-laravel=0.3, android-kotlin=0.3, build=0.3, frontend-ui-ux=0.4, lead-strategist=0.4"
+    "MEMORY: Use memory tools (memory_store, memory_recall, memory_learn, memory_find) to persist decisions, conventions, and patterns across sessions. Call memory_session with outcome+task to save session summaries. Use memory_decision to log key architectural choices. Context is automatically injected on subsequent tasks.",
+    "AGENT TEMPERATURES: qa-guardian=0.05, explore=0.0, plan=0.1, devops-engineer=0.1, software-architect=0.2, backend-tauri=0.2, scout=0.2, docs-curator=0.2, core-factory=0.3, backend-laravel=0.3, android-kotlin=0.3, build=0.3, frontend-ui-ux=0.4, lead-strategist=0.4"
   ],
   "command": {
     "audit": {

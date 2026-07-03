@@ -6,19 +6,23 @@ Plugins extend OpenCode's functionality via TypeScript/JavaScript modules that e
 
 ---
 
-## 🚀 Active Plugins (12 total)
+## 🚀 Active Plugins (8 total)
 
-### Core Plugins (7 — work in web + CLI)
+### Core Orchestration Plugins (5)
 
-| #   | Plugin              | File                 | Purpose                                                                    |
-| --- | ------------------- | -------------------- | -------------------------------------------------------------------------- |
-| 1   | **Self-Improve**    | `index.ts`           | LM Studio health checks, model management, config improvement proposals    |
-| 2   | **Agent Router**    | `agent-router.ts`    | Intelligent task-to-agent routing with keyword/skill scoring               |
-| 3   | **Model Router**    | `model-router.ts`    | Smart model selection based on tool/reasoning capabilities                 |
-| 4   | **MCP Manager**     | `mcp-manager.ts`     | List, check, and toggle MCP servers                                        |
-| 5   | **Skill Manager**   | `skill-manager.ts`   | List, search, and inspect registered skills                                |
-| 6   | **Context Manager** | `context-manager.ts` | Dynamic context include/exclude configuration                              |
-| 7   | **JSONC Utils**     | `jsonc-utils.ts`     | Shared utility for parsing JSONC config (with `//`-safe comment stripping) |
+| #   | Plugin              | File                    | Purpose                                                                            |
+| --- | ------------------- | ----------------------- | ---------------------------------------------------------------------------------- |
+| 1   | **Self-Improve**    | `index.ts`              | LM Studio health checks, model management, config improvement proposals            |
+| 2   | **Agent Router**    | `agent-router.ts`       | Intelligent task-to-agent routing with keyword/skill scoring                       |
+| 3   | **MCP Manager**     | `mcp-manager.ts`        | List, check, toggle, and health-probe MCP servers                                  |
+| 4   | **ADR Workflow**    | `adr-workflow.ts`       | Architecture Decision Record drafting and listing                                  |
+| 5   | **Mobile Router**   | `mobile-tool-router.ts` | Android project detection and MCP tooling readiness check                          |
+| 6   | **Workflow Router** | `workflow-router.ts`    | Agency lifecycle workflow recommendation based on task classification              |
+| 7   | **Skill Manager**   | `skill-manager.ts`      | List, search, and inspect registered skills                                        |
+| 8   | **Context Manager** | `context-manager.ts`    | Dynamic context include/exclude configuration                                      |
+| 9   | **Memory Context**  | `memory-context.ts`     | Cross-session memory: stores decisions, patterns, conventions for prompt injection |
+
+> Note: `jsonc-utils.ts` and `debug-logger.ts` are shared utility modules (not plugins). They are imported by other plugins at runtime.
 
 ## 🛠️ Tools Provided by Each Core Plugin
 
@@ -28,13 +32,6 @@ Plugins extend OpenCode's functionality via TypeScript/JavaScript modules that e
 | ------------- | -------------------------------------------------- |
 | `route_agent` | Analyze task and recommend best agent with scoring |
 | `auto_route`  | Automatically suggest agent switching              |
-
-### Model Router (`model-router.ts`)
-
-| Tool              | Description                                                             |
-| ----------------- | ----------------------------------------------------------------------- |
-| `check_model`     | Check capabilities of a specific model (tools, reasoning, instructions) |
-| `recommend_model` | Recommend best model based on requirements                              |
 
 ### MCP Manager (`mcp-manager.ts`)
 
@@ -61,6 +58,19 @@ Plugins extend OpenCode's functionality via TypeScript/JavaScript modules that e
 | `context_add_exclude` | Add pattern to context exclude list           |
 | `context_reset`       | Reset context configuration to defaults       |
 
+### Memory Context (`memory-context.ts`)
+
+| Tool              | Description                                                    |
+| ----------------- | -------------------------------------------------------------- |
+| `memory_store`    | Store a context fragment (decision, convention, solution, etc) |
+| `memory_recall`   | Recall relevant context from past sessions                     |
+| `memory_learn`    | Teach a pattern: when X triggers, suggest Y                    |
+| `memory_find`     | Find learned patterns matching current task                    |
+| `memory_session`  | Save or view current session summary                           |
+| `memory_decision` | Log a key architectural decision                               |
+| `memory_stats`    | Show memory storage statistics                                 |
+| `memory_forget`   | Remove stored context by ID or type                            |
+
 ### Self-Improve (`index.ts`)
 
 | Tool                        | Description                                     |
@@ -82,12 +92,14 @@ Plugins are registered in `opencode.json`:
 {
   "plugin": [
     "plugins/index.ts",
-    "plugins/agent-router.ts",
     "plugins/skill-manager.ts",
     "plugins/context-manager.ts",
-    "plugins/extension-context-bridge.ts",
-    "plugins/language-context-bridge.ts",
-    "plugins/process-monitor.ts"
+    "plugins/agent-router.ts",
+    "plugins/mcp-manager.ts",
+    "plugins/adr-workflow.ts",
+    "plugins/mobile-tool-router.ts",
+    "plugins/memory-context.ts",
+    "plugins/workflow-router.ts"
   ]
 }
 ```
@@ -179,19 +191,24 @@ const config = parseJsonc(readFileSync("opencode.json", "utf8"));
 
 ```
 plugins/
-├── jsonc-utils.ts              # Shared JSONC parser (used by all config-reading plugins)
-├── index.ts                    # Self-improve + LM Studio tools
-├── agent-router.ts             # Task-to-agent routing
-├── model-router.ts             # Model capability routing
-├── mcp-manager.ts              # MCP server management
-├── skill-manager.ts            # Skill registry access
-├── context-manager.ts          # Context configuration
-├── extension-context-bridge.ts # Trae IDE extension bridge
-├── language-context-bridge.ts  # LSP integration bridge
-├── process-monitor.ts          # Process monitoring
-└── tests/                      # Test suite
-    ├── parseJsonc.test.js      # JSONC parser unit tests
-    └── core-plugins-e2e.test.js # Core plugin integration tests
+├── jsonc-utils.ts              # Shared JSONC parser (used by config-reading plugins)
+├── debug-logger.ts             # Structured debug logging utility (dependency of mcp-manager)
+├── index.ts                    # Self-improve + LM Studio tools + task delegation + checkpoints
+├── skill-manager.ts            # Skill registry access (list, info, search)
+├── context-manager.ts          # Context include/exclude configuration
+├── agent-router.ts             # Intelligent task-to-agent routing
+├── memory-context.ts           # Cross-session memory, pattern learning, context injection
+├── mcp-manager.ts              # MCP server health, listing, toggling
+├── adr-workflow.ts             # Architecture Decision Record automation
+├── mobile-tool-router.ts       # Android/iOS project detection + MCP readiness
+├── workflow-router.ts          # Agency lifecycle workflow routing
+├── model-router.ts             # (unused — kept on disk for reference)
+├── language-context-bridge.ts  # (unused — Trae IDE only, no trae.md)
+├── process-monitor.ts          # (unused — Trae IDE only, no trae.md)
+├── gate-validator.ts           # (unused — no consistent gate structures in workflows)
+├── release-gate.ts             # (unused — trivial hardcoded list, not pipeline-connected)
+└── __tests__/                  # Test suite
+    └── index.test.ts           # Core plugin integration tests
 ```
 
 ---
@@ -284,7 +301,7 @@ CREATE TABLE tool_loading_metrics (
 ---
 
 > [!TIP]
-> Use `mcp_list` to verify MCP server status, `route_agent` to find the best agent for your task, and `skill_search` to discover relevant skills. Combine with `skill_list` to see available capabilities.
+> Use `mcp_list` to verify MCP server status, `route_agent` to find the best agent for your task, `skill_search` to discover relevant skills, `draft_adr` to log architectural decisions, and `memory_store`/`memory_learn` to persist patterns across sessions. Combine with `list_lifecycle_workflows` to see available agency phases.
 
 ---
 
