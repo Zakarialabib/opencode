@@ -164,7 +164,42 @@ const MemoryContextPlugin: Plugin = async ({ directory }) => {
     return mem.patterns
       .filter((p) => p.trigger.some((t) => q.includes(t.toLowerCase())))
       .sort((a, b) => b.successCount - a.successCount)
+      .slice(0, 5); // Increased from 3 to 5 for better coverage
+  }
+
+  function getProjectConventions(): ContextFragment[] {
+    return mem.fragments
+      .filter((f) => f.type === "convention")
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, 5);
+  }
+
+  function getAutoPatterns(): string[] {
+    // Auto-generate patterns from high-success fragments
+    const patterns: string[] = [];
+
+    // Extract conventions into prompt-friendly format
+    const conventions = getProjectConventions();
+    if (conventions.length > 0) {
+      patterns.push("Project conventions from past sessions:");
+      for (const c of conventions) {
+        patterns.push(`- ${c.content.slice(0, 200)}`);
+      }
+    }
+
+    // Add error-prevention patterns from error-pattern fragments
+    const errorPatterns = mem.fragments
+      .filter((f) => f.type === "error-pattern")
+      .sort((a, b) => b.timestamp - a.timestamp)
       .slice(0, 3);
+    if (errorPatterns.length > 0) {
+      patterns.push("Known error patterns (avoid these):");
+      for (const ep of errorPatterns) {
+        patterns.push(`- ${ep.content.slice(0, 200)}`);
+      }
+    }
+
+    return patterns;
   }
 
   return {
@@ -180,7 +215,11 @@ const MemoryContextPlugin: Plugin = async ({ directory }) => {
         const relevant = getRelevantFragments(messageText, 4);
         const patterns = getMatchingPatterns(messageText);
 
-        if (relevant.length === 0 && patterns.length === 0) return;
+        // Also fetch project conventions and auto-patterns
+        const conventions = getProjectConventions();
+        const autoPatterns = getAutoPatterns();
+
+        if (relevant.length === 0 && patterns.length === 0 && conventions.length === 0) return;
 
         let injection = "\n\n## \uD83E\uDDE0 Session Memory Context\n";
 
@@ -202,6 +241,13 @@ const MemoryContextPlugin: Plugin = async ({ directory }) => {
           }
         }
 
+        if (autoPatterns.length > 0) {
+          injection += `\n**Auto-extracted context** (from past sessions):\n`;
+          for (const line of autoPatterns) {
+            injection += `  ${line}\n`;
+          }
+        }
+
         // Append to instructions/system prompt
         if (output?.instructions && Array.isArray(output.instructions)) {
           output.instructions.push(injection);
@@ -210,6 +256,93 @@ const MemoryContextPlugin: Plugin = async ({ directory }) => {
         }
       } catch {
         /* graceful degradation */
+      }
+    },
+
+    // ── Hook: Before each message — auto-extract patterns from conversation ──
+    "chat.message": async ({ sessionID, messages }: any) => {
+      try {
+        if (!messages || messages.length < 2) return;
+
+        // Check the last assistant message for patterns to learn
+        const lastMsg = messages[messages.length - 1];
+        if (lastMsg?.role !== "assistant" || typeof lastMsg?.content !== "string") return;
+        const content: string = lastMsg.content;
+
+        // Auto-extract conventions from "Always X" or "Never Y" patterns
+        const conventionPatterns = [
+          ...content.matchAll(/(?:Always|Never|Always use|Never use)\s+([^.\n]+)/gi),
+        ];
+        for (const match of conventionPatterns) {
+          const existing = mem.fragments.find(
+            (f) => f.type === "convention" && f.content.includes(match[1].slice(0, 40))
+          );
+          if (!existing) {
+            mem.fragments.push({
+              id: randomUUID().slice(0, 12),
+              type: "convention",
+              content: match[0].trim(),
+              tags: ["auto-extracted", "convention"],
+              source: `agent:${currentSession.currentAgent}`,
+              timestamp: Date.now(),
+              agent: currentSession.currentAgent || undefined,
+              sessionId: currentSession.id,
+            });
+          }
+        }
+
+        // Auto-extract decisions from "Decision:" markers
+        const decisionPatterns = [
+          ...content.matchAll(/(?:Decision|Chosen|Selected|Using)\s*:\s*([^.\n]+)/gi),
+        ];
+        for (const match of decisionPatterns) {
+          const existing = mem.fragments.find(
+            (f) => f.type === "decision" && f.content.includes(match[1].slice(0, 40))
+          );
+          if (!existing) {
+            mem.fragments.push({
+              id: randomUUID().slice(0, 12),
+              type: "decision",
+              content: match[0].trim(),
+              tags: ["auto-extracted", "decision"],
+              source: `agent:${currentSession.currentAgent}`,
+              timestamp: Date.now(),
+              agent: currentSession.currentAgent || undefined,
+              sessionId: currentSession.id,
+            });
+          }
+        }
+
+        // Auto-extract error patterns from "Error:" or "FIX:" patterns
+        const errorPatterns = [...content.matchAll(/(?:Error|Bug|Issue|FIX|Fix):\s*([^.\n]+)/gi)];
+        for (const match of errorPatterns) {
+          const existing = mem.fragments.find(
+            (f) => f.type === "error-pattern" && f.content.includes(match[1].slice(0, 40))
+          );
+          if (!existing) {
+            mem.fragments.push({
+              id: randomUUID().slice(0, 12),
+              type: "error-pattern",
+              content: match[0].trim(),
+              tags: ["auto-extracted", "error"],
+              source: `agent:${currentSession.currentAgent}`,
+              timestamp: Date.now(),
+              agent: currentSession.currentAgent || undefined,
+              sessionId: currentSession.id,
+            });
+          }
+        }
+
+        // Persist if anything was extracted
+        if (
+          conventionPatterns.length > 0 ||
+          decisionPatterns.length > 0 ||
+          errorPatterns.length > 0
+        ) {
+          persistAll();
+        }
+      } catch {
+        // Graceful degradation
       }
     },
 

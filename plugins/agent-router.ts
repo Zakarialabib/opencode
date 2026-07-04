@@ -69,6 +69,94 @@ interface AgentRule {
   description: string;
 }
 
+// ─── Model selection by task complexity ─────────────────────────
+// Single-model environment: all tasks use the free OpenCode model.
+// The model name here is a label; routing is handled by OpenCode's provider config.
+// Complexity classification is still useful for agent routing + tool selection.
+const MODEL_MAP = {
+  trivial: "opencode/deepseek-v4-flash-free",
+  simple: "opencode/deepseek-v4-flash-free",
+  medium: "opencode/deepseek-v4-flash-free",
+  complex: "opencode/deepseek-v4-flash-free",
+  research: "opencode/deepseek-v4-flash-free",
+};
+
+const COMPLEXITY_KEYWORDS = {
+  complex: [
+    "architecture",
+    "redesign",
+    "migrate",
+    "scalab",
+    "performance",
+    "security audit",
+    "new feature",
+    "system design",
+    "data model",
+    "cross-stack",
+    "multi-agent",
+    "orchestrat",
+    "workflow",
+    "refactor",
+    "restructure",
+    "design pattern",
+  ],
+  medium: [
+    "implement",
+    "add",
+    "create",
+    "build",
+    "feature",
+    "module",
+    "component",
+    "api",
+    "endpoint",
+    "service",
+    "integration",
+    "database",
+    "migration",
+    "schema",
+    "model",
+  ],
+  trivial: [
+    "typo",
+    "rename",
+    "fix typo",
+    "format",
+    "whitespace",
+    "comment",
+    "readme",
+    "spelling",
+    "cosmetic",
+  ],
+};
+
+function classifyComplexity(task: string): keyof typeof MODEL_MAP {
+  const q = task.toLowerCase();
+
+  // Check trivial first (fast path)
+  for (const kw of COMPLEXITY_KEYWORDS.trivial) {
+    if (q.includes(kw)) return "trivial";
+  }
+
+  // Check complex
+  for (const kw of COMPLEXITY_KEYWORDS.complex) {
+    if (q.includes(kw)) return "complex";
+  }
+
+  // Check medium
+  for (const kw of COMPLEXITY_KEYWORDS.medium) {
+    if (q.includes(kw)) return "medium";
+  }
+
+  return "simple";
+}
+
+function selectModel(_task: string, _agentName: string): string {
+  // Single-model environment: all agents use the same free model.
+  // Complexity is still tracked for agent-routing purposes (not model selection).
+  return MODEL_MAP.medium;
+}
+
 // Default agent routing rules - UPDATED to match opencode.json agents
 const DEFAULT_AGENT_RULES: AgentRule[] = [
   {
@@ -485,6 +573,39 @@ const AgentRouterPlugin: Plugin = async ({ directory }) => {
           }
           const bestMatch = matches[0];
           return `Recommended agent: ${bestMatch.agent}\n\nNote: Automatic agent switching requires session integration. Use \`/agent ${bestMatch.agent}\` to switch manually.`;
+        },
+      }),
+
+      // ── Model selector: picks best model by task complexity ──
+      recommend_model: tool({
+        description:
+          "Classify task complexity for agent-routing purposes (model is fixed — single-model environment)",
+        args: {
+          task: tool.schema.string().describe("The task to analyze"),
+          agentName: tool.schema
+            .string()
+            .default("core-factory")
+            .describe("The agent that will execute the task"),
+        },
+        async execute({ task, agentName }) {
+          const complexity = classifyComplexity(task);
+          const model = selectModel(task, agentName);
+
+          let result = `## Task Complexity Analysis\n\n`;
+          result += `**Task**: ${task}\n`;
+          result += `**Agent**: ${agentName}\n`;
+          result += `**Complexity**: ${complexity}\n`;
+          result += `**Model**: \`${model}\` (free model — same for all complexities)\n\n`;
+
+          result += `### Complexity Guidelines\n`;
+          result += `- Trivial (typo, rename, format) — quick single-edit tasks\n`;
+          result += `- Simple (single file, known pattern) — straightforward changes\n`;
+          result += `- Medium (multi-file feature) — new components, API endpoints\n`;
+          result += `- Complex (architecture, new system) — cross-stack, orchestration\n`;
+          result += `- Research (external) — library evaluation, benchmarks\n\n`;
+
+          result += `All complexities use the same free model (${model}). Complexity primarily affects agent routing and tool selection.`;
+          return result;
         },
       }),
     },

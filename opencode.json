@@ -116,7 +116,9 @@
     "plugins/mcp-manager.ts",
     "plugins/adr-workflow.ts",
     "plugins/mobile-tool-router.ts",
-    "plugins/workflow-router.ts"
+    "plugins/workflow-router.ts",
+    "plugins/project-initializer.ts",
+    "plugins/doc-sync.ts"
   ],
   "mcp": {
     "context7": {
@@ -431,6 +433,18 @@
       "template": "powershell -File scripts/db-backup.ps1",
       "description": "Backup database",
       "agent": "devops-engineer"
+    },
+    "sync-docs": {
+      "template": "Run doc-code drift detection across all .md files. Use sync_check_file and sync_docs tools from doc-sync plugin.",
+      "description": "Detect and fix doc-code drift",
+      "agent": "lead-strategist",
+      "subtask": true
+    },
+    "harness": {
+      "template": "Run project_detect to verify auto-harness initialization, then project_status to show current project profile.",
+      "description": "Verify auto-harness initialization",
+      "agent": "core-factory",
+      "subtask": true
     },
     "collect-conventions": {
       "template": "node scripts/extract-conventions.js",
