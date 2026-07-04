@@ -11,13 +11,6 @@ permission:
   bash: "allow"
   skill: "allow"
   lsp: "allow"
-tools:
-  - read
-  - write
-  - edit
-  - bash
-  - skill
-  - lsp
 ---
 
 # Android Kotlin Agent

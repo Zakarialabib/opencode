@@ -9,14 +9,6 @@ permission:
   edit: "deny"
   write: "deny"
   bash: "deny"
-tools:
-  - read
-  - glob
-  - grep
-  - list
-  - lsp
-  - codesearch
-  - mcp
 ---
 
 # Plan Agent

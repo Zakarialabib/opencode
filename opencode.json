@@ -419,11 +419,6 @@
       "description": "Initialize database",
       "agent": "devops-engineer"
     },
-    "process:check": {
-      "template": "npx tsx tools/process-check.ts",
-      "description": "Check processes and health",
-      "agent": "devops-engineer"
-    },
     "check-updates": {
       "template": "powershell -File scripts/check-updates.ps1",
       "description": "Check dependency updates",
@@ -700,6 +695,129 @@
         "edit": "deny",
         "write": "deny",
         "bash": "ask",
+        "task": { "*": "deny" }
+      }
+    },
+    "code-reviewer": {
+      "mode": "subagent",
+      "steps": 20,
+      "temperature": 0.1,
+      "color": "#10b981",
+      "description": "Read-only code quality auditor. Reviews diffs, identifies risks, produces CRITICAL/WARNING/INFO reports without making changes.",
+      "permission": {
+        "read": "allow",
+        "edit": "deny",
+        "write": "deny",
+        "bash": "deny",
+        "grep": "allow",
+        "glob": "allow",
+        "task": { "*": "deny" }
+      }
+    },
+    "docs-evolver": {
+      "mode": "subagent",
+      "steps": 25,
+      "temperature": 0.2,
+      "color": "#ec4899",
+      "description": "ADR author + changelog keeper + doc sync agent. Drafts Architecture Decision Records and keeps CHANGELOG.md aligned with commits.",
+      "permission": {
+        "read": "allow",
+        "edit": {
+          "./docs/**": "allow",
+          "./CHANGELOG.md": "allow",
+          "./README.md": "allow",
+          "./docs/adr/**": "allow",
+          "AGENT.md": "allow",
+          "AGENTS.md": "allow"
+        },
+        "write": {
+          "./docs/adr/**": "allow",
+          "./CHANGELOG.md": "allow"
+        },
+        "bash": {
+          "*": "ask",
+          "git log*": "allow",
+          "git diff*": "allow",
+          "ls": "allow"
+        },
+        "grep": "allow",
+        "glob": "allow",
+        "task": { "*": "deny" }
+      }
+    },
+    "integration-test": {
+      "mode": "subagent",
+      "steps": 25,
+      "temperature": 0.2,
+      "color": "#14b8a6",
+      "description": "Test author + runner. Generates tests (Vitest/Pest/Playwright/JUnit), runs them, reports coverage. Stack-aware via file-path detection.",
+      "permission": {
+        "read": "allow",
+        "edit": "allow",
+        "write": "allow",
+        "bash": {
+          "*": "ask",
+          "npm test*": "allow",
+          "npx vitest*": "allow",
+          "php artisan test*": "allow",
+          "./vendor/bin/pest *": "allow",
+          "cargo test*": "allow",
+          "./gradlew test*": "allow",
+          "ls": "allow"
+        },
+        "grep": "allow",
+        "glob": "allow",
+        "task": { "*": "deny" }
+      }
+    },
+    "mobile-qa": {
+      "mode": "subagent",
+      "steps": 20,
+      "temperature": 0.2,
+      "color": "#f43f5e",
+      "description": "Android QA via emulator + gradle. Tests the Android build, runs UI tests on connected/emulator devices, captures logs and screenshots.",
+      "permission": {
+        "read": "allow",
+        "edit": "ask",
+        "write": "ask",
+        "bash": {
+          "*": "ask",
+          "./gradlew *": "allow",
+          "adb *": "allow",
+          "ls": "allow"
+        },
+        "grep": "allow",
+        "glob": "allow",
+        "task": { "*": "deny" }
+      }
+    },
+    "refactor-architect": {
+      "mode": "subagent",
+      "steps": 20,
+      "temperature": 0.1,
+      "color": "#8b5cf6",
+      "description": "Refactoring coordinator. Plans structural refactors, never implements them. Produces ordered migration plan with risk tags and rollback strategy.",
+      "permission": {
+        "read": "allow",
+        "edit": "deny",
+        "write": "deny",
+        "bash": "deny",
+        "grep": "allow",
+        "glob": "allow",
+        "task": { "*": "deny" }
+      }
+    },
+    "research-analyst": {
+      "mode": "subagent",
+      "steps": 15,
+      "temperature": 0.2,
+      "color": "#06b6d4",
+      "description": "Best-practices + library comparison + gap-analysis researcher. Web + context7 powered. Never edits files.",
+      "permission": {
+        "read": "allow",
+        "edit": "deny",
+        "write": "deny",
+        "bash": "deny",
         "task": { "*": "deny" }
       }
     },

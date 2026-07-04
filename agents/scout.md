@@ -11,13 +11,6 @@ permission:
   bash: "ask"
   webfetch: "allow"
   websearch: "allow"
-tools:
-  - read
-  - glob
-  - grep
-  - webfetch
-  - websearch
-  - mcp
 ---
 
 # Scout Agent

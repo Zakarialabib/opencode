@@ -19,15 +19,6 @@ permission:
     php artisan test*: "allow"
     composer*: "allow"
     pint*: "allow"
-tools:
-  - read
-  - write
-  - edit
-  - bash
-  - skill
-  - lsp
-  - context7
-  - memory
 ---
 
 **Tools**: read, write, edit, bash, skill, lsp, context7, memory
