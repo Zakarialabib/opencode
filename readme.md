@@ -1,6 +1,6 @@
 # OpenCode - AI Development Ecosystem
 
-A complete AI-powered development environment featuring **12 specialized agents**, **63+ skills**, and **workflow orchestration** with intelligent routing, parallel execution, and MCP integration.
+A complete AI-powered development environment featuring **19 specialized agents**, **46 skills**, and **workflow orchestration** with intelligent routing, parallel execution, and MCP integration.
 
 ---
 
@@ -38,16 +38,16 @@ opencode.bat
 
 All documentation is centralized in the [`docs/`](docs/) folder:
 
-| Document                                                                              | Description                                       |
-| ------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| [**User-Guide.md**](docs/User-Guide.md)                                               | Basic usage, features, quick start                |
-| [**Workflows-Guide.md**](docs/Workflows-Guide.md)                                     | Multi-agent workflow automation                   |
-| [**Skills-Guide.md**](docs/Skills-Guide.md)                                           | 63+ specialized capabilities with MCP integration |
-| [**Plugins-Guide.md**](docs/Plugins-Guide.md)                                         | 10+ plugins including agent-router                |
-| [**Agents-Guide.md**](docs/Agents-Guide.md)                                           | Complete agent reference (12 agents)              |
-| [**Agent-Loop-Guide.md**](docs/Agent-Loop-Guide.md)                                   | Iterative execution and retry patterns            |
-| [**Prompting-Guide.md**](docs/Prompting-Guide.md)                                     | Effective prompt techniques                       |
-| [**Prompting-and-Context-Engineering.md**](docs/Prompting-and-Context-Engineering.md) | Context engineering deep dive                     |
+| Document                                                                              | Description                                      |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| [**User-Guide.md**](docs/User-Guide.md)                                               | Basic usage, features, quick start               |
+| [**Workflows-Guide.md**](docs/Workflows-Guide.md)                                     | Multi-agent workflow automation                  |
+| [**Skills-Guide.md**](docs/Skills-Guide.md)                                           | 46 specialized capabilities with MCP integration |
+| [**Plugins-Guide.md**](docs/Plugins-Guide.md)                                         | 11 plugins including agent-router                |
+| [**Agents-Guide.md**](docs/Agents-Guide.md)                                           | Complete agent reference (19 agents)             |
+| [**Agent-Loop-Guide.md**](docs/Agent-Loop-Guide.md)                                   | Iterative execution and retry patterns           |
+| [**Prompting-Guide.md**](docs/Prompting-Guide.md)                                     | Effective prompt techniques                      |
+| [**Prompting-and-Context-Engineering.md**](docs/Prompting-and-Context-Engineering.md) | Context engineering deep dive                    |
 
 ---
 
@@ -68,15 +68,16 @@ lead-strategist (Orchestration)
 
 ### Agent Categories
 
-| Category     | Agents                                      | Specialization                   |
-| ------------ | ------------------------------------------- | -------------------------------- |
-| **Core**     | core-factory                                | Core implementation              |
-| **Lead**     | lead-strategist, software-architect             | Orchestration, Architecture      |
-| **Backend**  | software-architect, backend-laravel, backend-tauri | API, Laravel, Tauri              |
-| **Frontend** | frontend-ui-ux                              | UI/UX Engineering                |
-| **QA**       | qa-guardian                                 | Review, Testing, Security, Debug |
-| **DevOps**   | devops-engineer                             | Operations, MCP                  |
-| **Docs**     | docs-curator                                | Writing, Governance, Evolution   |
+| Category     | Agents                                                             | Specialization                            |
+| ------------ | ------------------------------------------------------------------ | ----------------------------------------- |
+| **Core**     | core-factory, plan, explore, scout                                 | Implementation, analysis, search          |
+| **Lead**     | lead-strategist, software-architect                                | Orchestration, Architecture               |
+| **Backend**  | software-architect, backend-laravel, backend-tauri, android-kotlin | API, Laravel, Tauri, Android              |
+| **Frontend** | frontend-ui-ux                                                     | UI/UX Engineering                         |
+| **QA**       | qa-guardian, integration-test, mobile-qa, code-reviewer            | Testing, Security, Debug, Audit           |
+| **DevOps**   | devops-engineer                                                    | Operations, MCP                           |
+| **Docs**     | docs-curator, docs-evolver                                         | Writing, Governance, ADRs, Changelog      |
+| **Research** | research-analyst, refactor-architect                               | Best-practices, refactoring, dependencies |
 
 ---
 
@@ -121,16 +122,16 @@ phases:
 | `sequential-thinking` | Step-by-step reasoning     | 30s     |
 | `language-server`     | LSP integration            | 20s     |
 
-### 63+ Specialized Skills
+### 46 Specialized Skills
 
 Skills provide domain-specific capabilities:
 
-- **Development**: `laravel-feature-scaffold`, `fullstack-dev`, `stack-context`
-- **Content**: `blog-writer`, `docs-governance-audit`, `deep-research`
-- **Analysis**: `security-review`, `testing-strategy`, `database-design`
-- **Automation**: `workflow-manager`, `self-improver`, `project-orchestration`
-- **Media**: `pdf`, `ppt`, `xlsx`, `docx`, `image-generation`, `podcast-generate`
-- **Research**: `market-research-reports`, `aminer-open-academic`, `ai-news-collectors`
+- **Development**: `laravel-feature-scaffold`, `stack-context`, `database-design`
+- **Content**: `docs-governance-audit`, `deep-research`, `knowledge-architect`
+- **Analysis**: `security-review`, `testing-strategy`, `react-reuse-audit`
+- **Automation**: `workflow-manager`, `self-improver`, `spec-driven-design`
+- **Media**: `pdf`, `ppt`, `xlsx`, `docx`, `charts`
+- **Research**: `web-search`, `web-reader`, `multi-search-engine`
 
 ---
 
@@ -151,9 +152,9 @@ opencode/
 ├── tsconfig.json          # TypeScript config
 ├── vitest.config.ts       # Test configuration
 │
-├── agents/                # 12 specialized agent definitions
-├── skills/                # 63+ specialized capabilities
-├── plugins/               # 10+ TypeScript plugins
+├── agents/                # 19 specialized agent definitions
+├── skills/                # 46 specialized capabilities
+├── plugins/               # 11 TypeScript plugins
 ├── rules/                 # Code style guidelines
 ├── workflows/             # YAML workflow definitions
 ├── docs/                  # Centralized documentation
@@ -169,12 +170,105 @@ opencode/
 
 ### Main Config: `opencode.json`
 
-- **Model**: `opencode-go/kimi-k2.6` (default)
-- **Providers**: opencode, lmstudio, opencode-go
-- **Agents**: 12 custom agents with specialized tools
-- **MCP Servers**: 8+ servers with timeouts
-- **Plugins**: 10+ plugins (agent-router, model-router, etc.)
+- **Model**: `opencode/deepseek-v4-flash-free` (default)
+- **Providers**: opencode (primary), lmstudio (optional), openrouter (optional)
+- **Agents**: 19 custom agents with specialized permissions
+- **MCP Servers**: 12 servers with timeouts
+- **Plugins**: 11 plugins (agent-router, memory-context, project-initializer, etc.)
 - **Permissions**: Granular tool permissions, sensitive file protection
+
+## Working on External Projects
+
+OpenCode works on **any** project — Tauri desktop apps, Laravel APIs, React SPAs, Solid apps, Livewire dashboards, or plain PHP. The first step is always **stack detection**: agents read `package.json`, `Cargo.toml`, `composer.json` to determine the stack, then route to the correct specialists.
+
+### Step 1: Stack Detection (automatic)
+
+```bash
+# Tell agents the project path — they detect the rest
+@explore Map the project at C:\Projects\my-app.
+Read the root: package.json, Cargo.toml, composer.json — which exist?
+List top-level directories.
+```
+
+**Detection logic** (agents do this automatically):
+
+| Manifest found               | Stack detected              | Router to                              |
+| ---------------------------- | --------------------------- | -------------------------------------- |
+| `Cargo.toml` + `tauri`       | Tauri desktop app           | `@backend-tauri` + `@frontend-ui-ux`   |
+| `composer.json` + `laravel`  | Laravel web app             | `@backend-laravel`                     |
+| `composer.json` + `livewire` | Livewire app                | `@backend-laravel` + `@frontend-ui-ux` |
+| `package.json` + `react`     | React SPA                   | `@frontend-ui-ux`                      |
+| `package.json` + `solid`     | Solid.js SPA                | `@frontend-ui-ux`                      |
+| `composer.json` only         | Plain PHP project           | `@backend-laravel`                     |
+| multiple manifests           | Hybrid (e.g. Tauri+Laravel) | Multiple agents in sequence            |
+
+### Step 2: Generic Workflow (works for any stack)
+
+Once the stack is known, the workflow is the same — only the agents change:
+
+```
+DISCOVERY → PLAN → IMPLEMENT (backend) → IMPLEMENT (frontend) → REVIEW → TEST
+```
+
+Here's how the same task looks across different stacks:
+
+#### Tauri + React (desktop app detected from Cargo.toml + package.json)
+
+```bash
+@backend-tauri Add a Tauri command 'export_csv' to C:\Projects\my-app.
+Read src-tauri/src/ for existing command patterns.
+Return Result<String, String>.
+
+@frontend-ui-ux Add an "Export CSV" button in C:\Projects\my-app.
+Read src/components/ for existing patterns.
+Use @tauri-apps/api invoke to call the Rust command.
+```
+
+#### Laravel + Livewire (web app detected from composer.json)
+
+```bash
+@backend-laravel Add a CSV export endpoint to C:\Projects\my-app.
+Create a controller, route, and FormRequest.
+Use Laravel Excel or streamed response.
+Run php artisan pint.
+
+@frontend-ui-ux Add an export button to the Livewire component.
+Read existing Blade/Livewire patterns.
+Wire to the export endpoint.
+```
+
+#### React SPA (frontend-only detected from package.json)
+
+```bash
+@frontend-ui-ux Add a CSV export feature to C:\Projects\my-app.
+Read src/api/ for existing API client patterns.
+Create the download function, error handling, loading state.
+Use the existing button component style.
+Run npm run typecheck.
+```
+
+#### Hybrid — Tauri backend + Laravel API
+
+```bash
+# Backend API (Laravel)
+@backend-laravel Create the export endpoint in C:\Projects\my-api.
+# Desktop shell (Tauri)
+@backend-tauri Call the API from Rust via reqwest in C:\Projects\my-app.
+# Frontend (React)
+@frontend-ui-ux Add the export UI in C:\Projects\my-app.
+```
+
+### Step 3: Key Agent Routing by Stack
+
+| Task                 | Tauri+React app           | Laravel+Livewire app      | React SPA             |
+| -------------------- | ------------------------- | ------------------------- | --------------------- |
+| **Codebase map**     | `@explore`                | `@explore`                | `@explore`            |
+| **Feature plan**     | `@lead-strategist`        | `@lead-strategist`        | `@lead-strategist`    |
+| **Backend work**     | `@backend-tauri` (Rust)   | `@backend-laravel` (PHP)  | `@software-architect` |
+| **Frontend work**    | `@frontend-ui-ux` (React) | `@frontend-ui-ux` (Blade) | `@frontend-ui-ux`     |
+| **Code review**      | `@code-reviewer`          | `@code-reviewer`          | `@code-reviewer`      |
+| **Run tests**        | `@integration-test`       | `@integration-test`       | `@integration-test`   |
+| **Quality/security** | `@qa-guardian`            | `@qa-guardian`            | `@qa-guardian`        |
 
 ### Launch Scripts
 
@@ -220,5 +314,5 @@ MIT License - See [LICENSE](LICENSE) file for details.
 
 ---
 
-**Last Updated**: 2026-05-08
-**Version**: 2.0.0 (Workflow Orchestration)
+**Last Updated**: 2026-07-04
+**Version**: 2.1.0 (Spec-Driven Harness)

@@ -8,7 +8,7 @@ Welcome to the **OpenCode** ecosystem. This guide helps you navigate the agentic
 
 | Section                                                            | Description                                                          |
 | ------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| [**👥 Agents Guide**](Agents-Guide.md)                             | Meet your 14 configured AI agents with intelligent routing           |
+| [**👥 Agents Guide**](Agents-Guide.md)                             | Meet your 19 configured AI agents with intelligent routing           |
 | [**⚡ Workflows Guide**](Workflows-Guide.md)                       | Automate complex tasks with multi-agent workflows                    |
 | [**🔌 Plugins Guide**](Plugins-Guide.md)                           | Extend OpenCode with plugins including agent-router and MCP managers |
 | [**🛠️ Skills Guide**](Skills-Guide.md)                             | Deep dive into 44 specialized skills with MCP integration            |
@@ -20,7 +20,7 @@ Welcome to the **OpenCode** ecosystem. This guide helps you navigate the agentic
 
 ## 🚀 Getting Started
 
-OpenCode uses specialized agents configured in `opencode.json` to handle different aspects of software development.
+OpenCode uses specialized agents configured in `opencode.json` to handle different aspects of software development. You use it by describing what you need in natural language — agents handle the decomposition, research, implementation, and verification.
 
 ### Core Philosophy
 
@@ -29,6 +29,105 @@ OpenCode uses specialized agents configured in `opencode.json` to handle differe
 3. **Intelligent Routing**: The `agent-router` plugin automatically recommends the best agent
 4. **Workflow Automation**: Use `workflow-manager` skill for complex multi-step tasks with MCP integration
 5. **Continuous Improvement**: The `docs-curator` agent uses `self-reflection` and `self-improver` skills
+
+### Working on an External Project
+
+OpenCode works on **any** project — Tauri desktop apps, Laravel APIs, React SPAs, Solid.js apps, Livewire dashboards, or plain PHP. The first step is always **stack detection**: agents read `package.json`, `Cargo.toml`, `composer.json` automatically, then route to the correct specialists.
+
+#### Step 0: Stack Detection (automatic)
+
+```bash
+# Just tell agents the project path — they detect the rest
+@explore Map the project at C:\Projects\my-app.
+Read package.json, Cargo.toml, composer.json — which exist?
+List top-level directories and src/ structure.
+```
+
+**What agents detect** (they read manifest files, never guess):
+
+| Manifest found               | Stack detected       | Routes to agents                       |
+| ---------------------------- | -------------------- | -------------------------------------- |
+| `Cargo.toml` + `tauri`       | Tauri desktop app    | `@backend-tauri` + `@frontend-ui-ux`   |
+| `composer.json` + `laravel`  | Laravel web app      | `@backend-laravel` (PHP)               |
+| `composer.json` + `livewire` | Livewire app         | `@backend-laravel` + `@frontend-ui-ux` |
+| `package.json` + `react`     | React SPA            | `@frontend-ui-ux`                      |
+| `package.json` + `solid`     | Solid.js SPA         | `@frontend-ui-ux`                      |
+| `composer.json` only         | Plain PHP project    | `@backend-laravel`                     |
+| Multiple manifests           | Hybrid (multi-stack) | Multiple agents in sequence            |
+
+#### Step 1: Plan (stack-agnostic)
+
+```bash
+# Same prompt structure — works for any detected stack
+@lead-strategist Plan a "CSV export" feature for C:\Projects\my-app.
+First read the project's existing patterns (manifests, src/, routes).
+Propose implementation plan matching the actual stack.
+DO NOT write code — only plan.
+```
+
+**What happens**: `@lead-strategist` reads the project's actual files, detects the stack from manifests, then produces a stack-appropriate plan with files-to-touch and verification steps.
+
+#### Step 2: Implement Backend (agent chosen by stack)
+
+```bash
+# If stack is Tauri (Rust detected from Cargo.toml)
+@backend-tauri Add a Tauri command 'export_csv' to C:\Projects\my-app.
+Read src-tauri/src/ for existing command patterns.
+Return Result<String, String>. Run cargo check.
+
+# If stack is Laravel (PHP detected from composer.json)
+@backend-laravel Add a CSV export endpoint to C:\Projects\my-app.
+Create a controller, route, FormRequest. Run php artisan pint.
+
+# If stack is plain PHP
+@backend-laravel Add a CSV export script to C:\Projects\my-app.
+Read existing src/ structure. Match existing patterns.
+```
+
+#### Step 3: Implement Frontend (agent chosen by stack)
+
+```bash
+# If frontend is React/Solid (detected from package.json)
+@frontend-ui-ux Add an export button to C:\Projects\my-app.
+Read src/components/ for existing UI patterns.
+Use the project's existing fetch/invoke pattern. Run tsc.
+
+# If frontend is Livewire/Blade (detected from composer.json + livewire)
+@frontend-ui-ux Add an export button to C:\Projects\my-app.
+Read existing Livewire components for pattern matching.
+Match Blade/Tailwind conventions.
+```
+
+#### Step 4: Review (stack-agnostic)
+
+```bash
+@code-reviewer Review the new code in C:\Projects\my-app.
+Check: naming conventions, error handling, security, unused imports.
+Report CRITICAL/WARNING/INFO findings.
+```
+
+#### Step 5: Test (detected from project manifests)
+
+```bash
+@integration-test Run the test suite in C:\Projects\my-app.
+Detect test framework from package.json / composer.json.
+Run: appropriate command (vitest, pest, cargo test, etc.).
+Report pass/fail with root cause.
+```
+
+#### Quick Reference: Per-Stack Agent Routing
+
+| Task                 | Tauri+React             | Laravel+Livewire         | React SPA           | Plain PHP           |
+| -------------------- | ----------------------- | ------------------------ | ------------------- | ------------------- |
+| **Codebase map**     | `@explore`              | `@explore`               | `@explore`          | `@explore`          |
+| **Plan feature**     | `@lead-strategist`      | `@lead-strategist`       | `@lead-strategist`  | `@lead-strategist`  |
+| **Backend**          | `@backend-tauri` (Rust) | `@backend-laravel` (PHP) | (frontend-only)     | `@backend-laravel`  |
+| **Frontend**         | `@frontend-ui-ux`       | `@frontend-ui-ux`        | `@frontend-ui-ux`   | (none)              |
+| **Code review**      | `@code-reviewer`        | `@code-reviewer`         | `@code-reviewer`    | `@code-reviewer`    |
+| **Run tests**        | `@integration-test`     | `@integration-test`      | `@integration-test` | `@integration-test` |
+| **Quality/security** | `@qa-guardian`          | `@qa-guardian`           | `@qa-guardian`      | `@qa-guardian`      |
+
+**Key principle**: Never guess the stack — agents detect it from `package.json`, `Cargo.toml`, `composer.json` automatically. The same workflow (Discover → Plan → Implement → Review → Test) works for any project. You just specify the path; agents handle the rest.
 
 ### Quick Start
 
@@ -56,20 +155,21 @@ Ask: "Which agent should handle Laravel authentication?"
 
 ## 🛠️ Essential Tools
 
-### MCP Servers (12 configured, 6 enabled)
+### MCP Servers (12 configured, 9 enabled)
 
 | Server                | Status      | Purpose                                    | Timeout |
 | --------------------- | ----------- | ------------------------------------------ | ------- |
 | `context7`            | ✅ enabled  | Up-to-date documentation and code examples | 45s     |
 | `git`                 | ✅ enabled  | Git repository operations                  | 30s     |
+| `memory`              | ✅ enabled  | Persistent knowledge graph                 | 45s     |
 | `sequential-thinking` | ✅ enabled  | Step-by-step reasoning                     | 45s     |
-| `type-inject`         | ✅ enabled  | TypeScript type injection                  | 45s     |
+| `type-inject`         | ✅ enabled  | TypeScript type discovery                  | 45s     |
 | `stitch`              | ✅ enabled  | Google Stitch design system sync           | 45s     |
 | `filesystem`          | ✅ enabled  | File system operations                     | 45s     |
-| `memory`              | ⏸️ disabled | Persistent knowledge graph                 | 30s     |
-| `fetch`               | ⏸️ disabled | Web content fetching                       | 30s     |
-| `sqlite`              | ⏸️ disabled | SQLite database operations                 | 30s     |
-| `language-server`     | ⏸️ disabled | LSP integration                            | 45s     |
+| `sqlite`              | ✅ enabled  | SQLite database queries                    | 30s     |
+| `vercel-grep`         | ✅ enabled  | Public repo code search                    | 30s     |
+| `fetch`               | ⏸️ disabled | Use `webfetch` built-in instead            | 30s     |
+| `language-server`     | ⏸️ disabled | Built-in LSP handles this                  | 45s     |
 | `personal-knowledge`  | ⏸️ disabled | Personal knowledge base                    | 30s     |
 | `everything`          | ⏸️ disabled | MCP test server                            | 30s     |
 
@@ -178,22 +278,32 @@ Run with: `bun benchmark.js`
 ## 💡 Quick Tips
 
 - **Agent Routing**: Use `route_agent "your task"` to get intelligent agent recommendations
-- **Model Selection**: Use `recommend_model` to find the best model for your requirements
 - **Skill Search**: Use `skill_search query:"keyword"` to discover relevant skills
 - **MCP Management**: Use `mcp_list` and `mcp_check` to monitor MCP server health
-- **Context Configuration**: Use `context_view` to see current context patterns, `context_add_include` to add more
-- **Self-Improvement**: Use `/reflect` or ask `docs-curator` to analyze and improve configuration
-- **Web Version**: Access at `http://127.0.0.1:59596/` when running `opencode web`
+- **Project Detection**: Use `project_detect` to auto-detect stack and framework
+- **Doc Sync**: Use `/sync-docs` to detect and fix doc-code drift
+- **Harness Check**: Use `/harness` to verify auto-harness initialization
+- **Context Configuration**: Use `context_view` to see current context, `context_add_include` to add more
+- **Self-Improvement**: Use `/reflect` or `/improve` to analyze and improve configuration
+- **Web Version**: Access at `http://127.0.0.1:4096/` when running `opencode web`
 
 ---
 
-## 🔗 Plugin Ecosystem (3 registered)
+## 🔗 Plugin Ecosystem (11 registered)
 
-| Plugin               | Purpose                                 |
-| -------------------- | --------------------------------------- |
-| `index.ts`           | LM Studio management + self-improvement |
-| `skill-manager.ts`   | Skill registry access and search        |
-| `context-manager.ts` | Dynamic context configuration           |
+| Plugin                   | Purpose                                |
+| ------------------------ | -------------------------------------- |
+| `index.ts`               | Self-improvement, ambient LSP, worklog |
+| `skill-manager.ts`       | Skill loading and management           |
+| `memory-context.ts`      | Session memory, auto-extraction        |
+| `context-manager.ts`     | Context compression and optimization   |
+| `agent-router.ts`        | Agent recommendation, complexity       |
+| `mcp-manager.ts`         | MCP health and tool routing            |
+| `adr-workflow.ts`        | ADR creation and management            |
+| `mobile-tool-router.ts`  | Android detection and tools            |
+| `workflow-router.ts`     | YAML workflow orchestration            |
+| `project-initializer.ts` | Stack/framework/package auto-detection |
+| `doc-sync.ts`            | Doc-code drift detection (5 checkers)  |
 
 > See [**Plugins Guide**](Plugins-Guide.md) for complete details on all available plugins.
 
