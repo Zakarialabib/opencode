@@ -22,14 +22,14 @@ From the import/require/use pattern, determine which registry:
 - `use X::Y` or `cargo add` or `pub use` → **crates.io**
 - `use Vendor\Package` or `composer require` → **Packagist**
 
-### Step 2: Fetch package metadata via fetch MCP
+### Step 2: Fetch package metadata via webfetch
 
-Use the `fetch` MCP to query the registry API:
+Use the `webfetch` built-in tool to query the registry API:
 
 **npm:**
 
 ```
-fetch https://registry.npmjs.org/{package-name}
+webfetch https://registry.npmjs.org/{package-name}
 ```
 
 Returns: name, description, version, dependencies, maintainers
@@ -37,7 +37,7 @@ Returns: name, description, version, dependencies, maintainers
 **crates.io:**
 
 ```
-fetch https://crates.io/api/v1/crates/{crate-name}
+webfetch https://crates.io/api/v1/crates/{crate-name}
 ```
 
 Returns: name, description, max_version, dependencies, documentation URL
@@ -45,7 +45,7 @@ Returns: name, description, max_version, dependencies, documentation URL
 **Packagist:**
 
 ```
-fetch https://repo.packagist.org/p2/{vendor}/{package}.json
+webfetch https://repo.packagist.org/p2/{vendor}/{package}.json
 ```
 
 Returns: name, description, version, type, dependencies
@@ -54,9 +54,9 @@ Returns: name, description, version, type, dependencies
 
 If the API response isn't enough:
 
-**npm:** `fetch https://www.npmjs.com/package/{package}` or docs link from metadata
-**Rust:** `fetch https://docs.rs/{crate}/{version}` or the documentation URL from crates.io response
-**Laravel:** `fetch https://packagist.org/packages/{vendor}/{package}` or check context7
+**npm:** `webfetch https://www.npmjs.com/package/{package}` or docs link from metadata
+**Rust:** `webfetch https://docs.rs/{crate}/{version}` or the documentation URL from crates.io response
+**Laravel:** `webfetch https://packagist.org/packages/{vendor}/{package}` or check context7
 
 ### Step 4: Fallback to context7
 

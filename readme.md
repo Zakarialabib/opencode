@@ -105,7 +105,7 @@ I split the team the way a small studio would split it. One orchestrator, then s
 | `research-analyst` | Best-practices, library comparison. Web + context7 powered. |
 | `refactor-architect` | Plans refactors, never implements. Ordered migration plan with rollback. |
 
-Full per-agent prompts in [docs/Agents-Guide.md](docs/Agents-Guide.md).
+Full per-agent prompts in [docs/the-19-agents.md](docs/the-19-agents.md).
 
 ---
 
@@ -124,7 +124,7 @@ Skills are reusable instruction sets that an agent loads on-demand. I grouped th
 - **Web** — `web-search`, `web-reader`, `multi-search-engine`, `agent-browser`
 - **Visual** — `ui-ux-pro-max`, `visual-design-foundations`
 
-Full registry in [docs/Skills-Guide.md](docs/Skills-Guide.md).
+Full registry in [docs/the-46-skills.md](docs/the-46-skills.md).
 
 ---
 
@@ -146,7 +146,7 @@ Each plugin is a small TypeScript file that exports hooks and custom tools. I ke
 | `project-initializer.ts` | Detects stack on first chat. |
 | `doc-sync.ts` | 5 drift checkers + auto-fix for frontmatter. |
 
-Full API in [docs/Plugins-Guide.md](docs/Plugins-Guide.md).
+Full API in [docs/the-11-plugins.md](docs/the-11-plugins.md).
 
 ---
 
@@ -179,7 +179,7 @@ After 5–10 sessions you'll have a corpus of conventions that the system auto-i
 
 ## the improvement cycle
 
-I added a feedback loop so weak agent prompts get rewritten automatically. Full details in [docs/improvement-cycle.md](docs/improvement-cycle.md), short version:
+I added a feedback loop so weak agent prompts get rewritten automatically. Full details in [docs/the-improvement-cycle.md](docs/the-improvement-cycle.md), short version:
 
 ```
 score current output (0.0–1.0 across 6 dimensions)
@@ -214,7 +214,7 @@ Some tasks are too choreographed for freeform delegation. I wrote 9 yaml workflo
 - `lifecycle-discovery.yaml`, `lifecycle-build.yaml`, `lifecycle-release.yaml` — agency lifecycle
 - `sprint-ceremony.yaml` — standup + retro + planning
 
-Trigger them by asking `lead-strategist` to start a workflow, or call them by name. Full schema in [docs/Workflows-Guide.md](docs/Workflows-Guide.md).
+Trigger them by asking `lead-strategist` to start a workflow, or call them by name. Full schema in [docs/the-9-workflows.md](docs/the-9-workflows.md).
 
 ---
 

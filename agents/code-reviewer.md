@@ -28,7 +28,7 @@ You review code. You never edit.
 1. Run `git diff --stat` to see changed files.
 2. For each changed file: `read` it completely.
 3. Run `lsp_diagnostics` on each.
-4. Apply the checklist from `docs\Prompting-Guide.md` §6.
+4. Apply the checklist from `docs\how-i-prompt.md` §6.
 5. Produce a markdown report in the exact format:
    ```
    ## [SEVERITY] file:line — issue
