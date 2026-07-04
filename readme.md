@@ -1,318 +1,329 @@
-# OpenCode - AI Development Ecosystem
+# opencode — my agentic coding setup
 
-A complete AI-powered development environment featuring **19 specialized agents**, **46 skills**, and **workflow orchestration** with intelligent routing, parallel execution, and MCP integration.
+I took [opencode](https://opencode.ai), the open source AI coding CLI, and bolted an entire engineering agency onto it. 19 agents, 46 skills, 11 plugins, 12 MCP servers, 9 yaml workflows, plus a memory system that learns from every session. One `npm start` and I have a full team.
+
+This is a learning project. I share it so you can see what an opinionated, free-model-only agentic coding stack looks like in 2026.
 
 ---
 
-## Quick Start
+## who I am
 
-### Prerequisites
+I'm **Zakaria Labib**, a software engineer who works across the stacks that show up in real projects — Tauri/Rust on the desktop, React/TypeScript on the web, Laravel/PHP on the server, Kotlin on Android. I got tired of writing the same agent prompt over and over, so I built a system that handles the boring orchestration for me.
 
-- **Node.js** 18+ with npm
-- **lmstudio** (optional, for local models)
-- **OpenCode CLI** installed globally
+The goal was simple: make opencode actually powerful by applying every best practice I could find, then share the result as open source so others can fork it.
 
-### Launch OpenCode
+Thanks to the opencode team for the foundation. Everything I built sits on top of their config format, plugin system, and MCP wiring.
+
+---
+
+## what I built on top
+
+Opencode gives you a config file and a CLI. I used both as a substrate and added five layers:
+
+| Layer | What it does | Where it lives |
+| --- | --- | --- |
+| **1. Project detection** | Reads `package.json`, `Cargo.toml`, `composer.json`, `build.gradle.kts` — figures out your stack automatically | `plugins/project-initializer.ts` |
+| **2. Agent routing** | Classifies a task by complexity, picks the right agent | `plugins/agent-router.ts` |
+| **3. Doc-code sync** | Spots when docs lie about the code (wrong skill counts, dead MCP refs, agent frontmatter drift) | `plugins/doc-sync.ts` |
+| **4. Session memory** | Auto-extracts "Always X", "Decision: Y", "Error: Z" from every chat into a persistent store | `plugins/memory-context.ts` |
+| **5. Self-improvement** | Watches the worklog, scores agent prompts, rewrites the weak ones | `plugins/index.ts` + `skills/self-improver/` |
+
+The 11 plugins wire together like this:
+
+```
+session starts
+  → project-initializer scans the repo
+  → memory-context loads your past conventions
+  → chat.params injects both into every LLM call
+  → chat.message watches for new patterns to store
+  → tool.execute.after tracks file edits + runs ambient LSP
+  → session.archived generates config improvement proposals
+```
+
+You don't see any of this. You just see agents that know your stack and remember what you told them last week.
+
+---
+
+## the numbers (real ones, counted today)
+
+- **19 agents** — 1 primary, 18 specialists
+- **46 skills** — pdf, xlsx, ppt, docx, charts, laravel, react, security, testing, more
+- **11 plugins** — orchestration, memory, routing, sync, mobile
+- **12 MCP servers** — 9 enabled, 3 deliberately disabled
+- **9 yaml workflows** — feature dev, bug fix, code review, docs, refactor, android, incident, lifecycle
+- **20 slash commands** — `/build`, `/test`, `/harness`, `/sync-docs`, `/improve`, etc.
+- **1 model** — `opencode/deepseek-v4-flash-free` (free tier, works on a laptop)
+
+Total cost to run: zero. I don't have an OpenRouter bill because I never opened it.
+
+---
+
+## quick start (60 seconds)
 
 ```bash
-# Install dependencies
+# 1. clone
+git clone https://github.com/yourname/opencode.git
+cd opencode
+
+# 2. install (one-time, ~30s)
 npm install
 
-# Start OpenCode (recommended method)
-npm start
+# 3. start
+npm start        # or: opencode.bat on Windows
 
-# Or on Windows:
-opencode.bat
+# 4. inside the TUI, run the harness check
+/harness
 ```
 
-### First Steps
-
-1. **Switch to an agent**: `/agent backend-laravel`
-2. **Get agent recommendation**: Ask "Which agent should handle Laravel auth?"
-3. **Run commands**: `/build`, `/test`, `/lint`
-4. **Use workflows**: Ask lead-strategist to "Add user authentication feature"
+If `/harness` returns a project profile (stack, framework, package manager), you're in business. If it returns nothing, you don't have a stack file in the root — go write one, then come back.
 
 ---
 
-## Documentation
+## the 19 agents
 
-All documentation is centralized in the [`docs/`](docs/) folder:
+I split the team the way a small studio would split it. One orchestrator, then specialists who only do their thing.
 
-| Document                                                                              | Description                                      |
-| ------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| [**User-Guide.md**](docs/User-Guide.md)                                               | Basic usage, features, quick start               |
-| [**Workflows-Guide.md**](docs/Workflows-Guide.md)                                     | Multi-agent workflow automation                  |
-| [**Skills-Guide.md**](docs/Skills-Guide.md)                                           | 46 specialized capabilities with MCP integration |
-| [**Plugins-Guide.md**](docs/Plugins-Guide.md)                                         | 11 plugins including agent-router                |
-| [**Agents-Guide.md**](docs/Agents-Guide.md)                                           | Complete agent reference (19 agents)             |
-| [**Agent-Loop-Guide.md**](docs/Agent-Loop-Guide.md)                                   | Iterative execution and retry patterns           |
-| [**Prompting-Guide.md**](docs/Prompting-Guide.md)                                     | Effective prompt techniques                      |
-| [**Prompting-and-Context-Engineering.md**](docs/Prompting-and-Context-Engineering.md) | Context engineering deep dive                    |
+| Agent | What it owns |
+| --- | --- |
+| `core-factory` | The orchestrator. Decomposes requests, delegates to specialists, verifies results. 50 steps. |
+| `lead-strategist` | Feasibility, gap analysis, the "should we even do this" voice. |
+| `software-architect` | System design + Node/Bun backend. The technical backbone. |
+| `frontend-ui-ux` | React + TypeScript + Tailwind + shadcn. Premium UI, no placeholder code. |
+| `backend-laravel` | Laravel 13 + Livewire 4. Convention-strict, Pest-tested. |
+| `backend-tauri` | Rust + Tauri. Safety-first, `cargo check` after every edit. |
+| `android-kotlin` | Jetpack Compose, Clean Architecture, the Tauri mobile bridge. |
+| `qa-guardian` | The gatekeeper. Finds problems, never fixes them. CRITICAL/WARNING/INFO output. |
+| `integration-test` | Writes + runs Vitest, Pest, Playwright, JUnit. |
+| `mobile-qa` | Runs the Android build on emulator, captures logs and screenshots. |
+| `code-reviewer` | Read-only audit. Diffs, risks, no edits. |
+| `devops-engineer` | Databases, processes, caches, deps. The ops person. |
+| `docs-curator` | Technical writing. Accuracy over completeness. |
+| `docs-evolver` | ADRs, changelog, doc/code drift fixes. |
+| `plan` | Read-only analyst. Architecture review, never modifies files. |
+| `explore` | Fast search. Locate files, find patterns, report back in 3 tool calls. |
+| `scout` | External research. Webfetch, websearch, upstream docs. |
+| `research-analyst` | Best-practices, library comparison. Web + context7 powered. |
+| `refactor-architect` | Plans refactors, never implements. Ordered migration plan with rollback. |
 
----
-
-## Architecture
-
-### Swarm Architecture
-
-OpenCode uses a **Swarm Architecture** where specialized agents collaborate to solve problems:
-
-```
-lead-strategist (Orchestration)
-├── Backend (api, laravel, tauri)
-├── Frontend (ui-ux)
-├── QA/DevOps (guardian, engineering)
-├── Core (core-factory)
-└── Docs (docs-curator)
-```
-
-### Agent Categories
-
-| Category     | Agents                                                             | Specialization                            |
-| ------------ | ------------------------------------------------------------------ | ----------------------------------------- |
-| **Core**     | core-factory, plan, explore, scout                                 | Implementation, analysis, search          |
-| **Lead**     | lead-strategist, software-architect                                | Orchestration, Architecture               |
-| **Backend**  | software-architect, backend-laravel, backend-tauri, android-kotlin | API, Laravel, Tauri, Android              |
-| **Frontend** | frontend-ui-ux                                                     | UI/UX Engineering                         |
-| **QA**       | qa-guardian, integration-test, mobile-qa, code-reviewer            | Testing, Security, Debug, Audit           |
-| **DevOps**   | devops-engineer                                                    | Operations, MCP                           |
-| **Docs**     | docs-curator, docs-evolver                                         | Writing, Governance, ADRs, Changelog      |
-| **Research** | research-analyst, refactor-architect                               | Best-practices, refactoring, dependencies |
+Full per-agent prompts in [docs/Agents-Guide.md](docs/Agents-Guide.md).
 
 ---
 
-## Features
+## the 46 skills
 
-### Workflow Orchestration
+Skills are reusable instruction sets that an agent loads on-demand. I grouped them by what they're actually for, not by what their README claims:
 
-Complex multi-step tasks with advanced features:
+- **Build a feature** — `laravel-feature-scaffold`, `database-design`, `spec-driven-design`, `dynamic-workflow`, `workflow-manager`
+- **Code quality** — `code-review`, `react-reuse-audit`, `security-review`, `testing-strategy`, `pest-testing`, `testing-basics`
+- **Docs + knowledge** — `documentation`, `docs-governance-audit`, `knowledge-architect`, `deep-research`, `stitch-design-md`, `stitch-extract-design-md`, `stitch-manage-design-system`, `stitch-taste-design`, `stitch-code-to-design`, `lsp-navigation`, `project-memory`
+- **Self-improvement** — `self-improver`, `self-reflection`, `prompt-engineering`, `skill-creator`, `skill-vetter`, `config-doctor`
+- **Git + release** — `git-workflow`, `git-release`
+- **Android** — `android` (with sub-skills for compose, gradle, testing, debugging, deployment)
+- **Tauri / desktop** — `stack-context` (cross-stack)
+- **Office docs** — `pdf`, `ppt`, `xlsx`, `docx`, `charts`
+- **Web** — `web-search`, `web-reader`, `multi-search-engine`, `agent-browser`
+- **Visual** — `ui-ux-pro-max`, `visual-design-foundations`
 
-```yaml
-phases:
-  - name: Strategy & Analysis
-    use_agent_router: true
-    mcp_tools:
-      context7: [fetch_library_docs]
-      memory: [create_entities]
-    parallel_groups:
-      - [research_auth_methods, analyze_existing_patterns]
-```
-
-**Key Features:**
-
-- **Parallel Execution**: `parallel_groups` for independent tasks
-- **Retry Policies**: Configure `max_attempts` and backoff strategies
-- **MCP Integration**: Declarative `mcp_tools` per phase
-- **Performance Tracking**: Metrics in sqlite MCP
-- **Security Scanning**: Automated vulnerability scans
-- **Ambient LSP Feedback**: Automatic error detection after edits
-
-### MCP Server Integration
-
-8+ Model Context Protocol servers for enhanced capabilities:
-
-| Server                | Purpose                    | Timeout |
-| --------------------- | -------------------------- | ------- |
-| `context7`            | Up-to-date documentation   | 30s     |
-| `filesystem`          | File system operations     | 15s     |
-| `memory`              | Persistent knowledge graph | 10s     |
-| `git`                 | Git repository operations  | 20s     |
-| `fetch`               | Web content fetching       | 15s     |
-| `sqlite`              | SQLite database operations | 10s     |
-| `sequential-thinking` | Step-by-step reasoning     | 30s     |
-| `language-server`     | LSP integration            | 20s     |
-
-### 46 Specialized Skills
-
-Skills provide domain-specific capabilities:
-
-- **Development**: `laravel-feature-scaffold`, `stack-context`, `database-design`
-- **Content**: `docs-governance-audit`, `deep-research`, `knowledge-architect`
-- **Analysis**: `security-review`, `testing-strategy`, `react-reuse-audit`
-- **Automation**: `workflow-manager`, `self-improver`, `spec-driven-design`
-- **Media**: `pdf`, `ppt`, `xlsx`, `docx`, `charts`
-- **Research**: `web-search`, `web-reader`, `multi-search-engine`
+Full registry in [docs/Skills-Guide.md](docs/Skills-Guide.md).
 
 ---
 
-## Project Structure
+## the 11 plugins
+
+Each plugin is a small TypeScript file that exports hooks and custom tools. I kept them under 200 lines each so I can read them in one sitting.
+
+| Plugin | What it does |
+| --- | --- |
+| `index.ts` | The self-improve engine. Worklog appender, ambient LSP, LM Studio stubs, prompt scoring. |
+| `agent-router.ts` | 5-tier complexity classifier. Recommends the cheapest right agent. |
+| `mcp-manager.ts` | List / check / toggle MCP servers at runtime. |
+| `skill-manager.ts` | Search and inspect skills. |
+| `memory-context.ts` | The brain. Stores fragments, recalls on `chat.params`, extracts on `chat.message`. |
+| `context-manager.ts` | Dynamic include/exclude for context. |
+| `adr-workflow.ts` | Draft ADRs from architectural decisions made mid-session. |
+| `mobile-tool-router.ts` | Android detection + mobile MCP wiring. |
+| `workflow-router.ts` | Maps a task to the right yaml workflow. |
+| `project-initializer.ts` | Detects stack on first chat. |
+| `doc-sync.ts` | 5 drift checkers + auto-fix for frontmatter. |
+
+Full API in [docs/Plugins-Guide.md](docs/Plugins-Guide.md).
+
+---
+
+## the memory loop (this is the part I like most)
+
+Every chat has three hooks firing invisibly:
+
+1. **`chat.params`** — before the LLM call, injects 4 relevant past fragments + any matching patterns. The model sees "you said last week: Always run cargo check after Rust edits" and just does it.
+2. **`chat.message`** — after the agent replies, regex-scans for `Always X`, `Never X`, `Decision: X`, `Error: X`, `FIX: X` and stores them. You don't call any tool. You just talk.
+3. **`tool.execute.after`** — after every edit/write, records the file path for the session summary.
+
+Storage is dead simple: JSON files in `.opencode/`. No RAG, no embeddings, no vector DB. Regex + keyword scoring. Works on a Raspberry Pi.
+
+The 8 tools you can call directly:
+
+```
+memory_store   — save a convention, decision, solution, or pattern
+memory_recall  — search past context by query
+memory_learn   — teach a trigger → suggestion pattern
+memory_find    — find patterns matching current task
+memory_session — close a session with an outcome
+memory_decision— log a decision in-flight
+memory_stats   — see what you've accumulated
+memory_forget  — remove stale context
+```
+
+After 5–10 sessions you'll have a corpus of conventions that the system auto-injects into every prompt. That's the part no other CLI does out of the box.
+
+---
+
+## the improvement cycle
+
+I added a feedback loop so weak agent prompts get rewritten automatically. Full details in [docs/improvement-cycle.md](docs/improvement-cycle.md), short version:
+
+```
+score current output (0.0–1.0 across 6 dimensions)
+  → if score < 0.75: pick a rewrite strategy by weakest dimension
+  → rewrite the agent prompt
+  → re-run the same task
+  → store the delta in memory
+  → end-of-session: propose config changes for human approval
+```
+
+Thresholds I tuned by hand:
+
+- `0.75` — rewrite trigger
+- `0.50` — kill switch (revert if a rewrite makes it worse)
+- `+0.15` — minimum acceptable improvement
+
+The self-improver skill runs this loop. The `prompt-engineering` skill provides the `generate / rewrite / evaluate / audit / history` commands. Together they turn agent prompts from "write once, hope for the best" into "write once, measure, improve".
+
+---
+
+## the YAML workflows
+
+Some tasks are too choreographed for freeform delegation. I wrote 9 yaml workflows for those:
+
+- `feature-development.yaml` — full lifecycle from strategy to release
+- `bug-fix.yaml` — root cause + browser test + perf check
+- `code-review.yaml` — security + quality + style in parallel
+- `documentation.yaml` — gap discovery + auto-gen + audit
+- `refactor.yaml` — refactor with risk tags and rollback
+- `android-build-test-deploy.yaml` — Android pipeline
+- `incident-response.yaml` — outage playbook
+- `lifecycle-discovery.yaml`, `lifecycle-build.yaml`, `lifecycle-release.yaml` — agency lifecycle
+- `sprint-ceremony.yaml` — standup + retro + planning
+
+Trigger them by asking `lead-strategist` to start a workflow, or call them by name. Full schema in [docs/Workflows-Guide.md](docs/Workflows-Guide.md).
+
+---
+
+## the slash commands
+
+20 of them, registered in `opencode.json`. The ones I actually use daily:
+
+| Command | What it does |
+| --- | --- |
+| `/harness` | Run project detection, show the profile. First command I run in a new workspace. |
+| `/sync-docs` | Drift scan across all docs. Surfaces wrong skill counts, dead MCP refs. |
+| `/improve` | Trigger a self-improvement cycle on the current config. |
+| `/doctor` | Audit + repair config. Like `/improve` but conservative. |
+| `/reflect` | Same as `/improve` but goes through `lead-strategist` for analysis first. |
+| `/upgrade-config` | Apply proposed changes after review. |
+| `/test`, `/lint`, `/build` | Stack-agnostic dev commands routed to the right agent. |
+| `/audit` | Full lint + test sweep via `qa-guardian`. |
+| `/db:init`, `/db:backup`, `/check-updates` | Ops. |
+| `/sync-skills`, `/collect-conventions` | Bridge project skills into the runtime + scan codebase for conventions. |
+
+---
+
+## the harness audit (run this weekly)
+
+The health of the system fits in one screen. Run `/harness` or read the table:
+
+| Check | Command | Healthy if |
+| --- | --- | --- |
+| Stack detection | `project_detect` | non-empty `detectedStack` |
+| Agent routing | `route_agent task="debug test failure"` | returns a real agent name |
+| Memory pipeline | `memory_stats` | fragments > 0 |
+| Doc sync | `/sync-docs` | 0 CRITICAL drifts |
+| Worklog | `cat .opencode/worklog.md` | last entry is recent |
+| Prompt quality | `prompt-engineering history "core-factory"` | score trend is flat or improving |
+
+If any row is red, the system will tell you which file to fix.
+
+---
+
+## project structure (the parts that matter)
 
 ```
 opencode/
-├── opencode.json          # Main configuration
-├── package.json           # Dependencies
-├── README.md              # This file
-├── CHANGELOG.md           # Release history
-├── CONTRIBUTING.md        # Contribution guide
-├── SECURITY.md            # Security policy
-├── CODE_OF_CONDUCT.md     # Code of conduct
-├── LICENSE                # MIT License
-├── .gitignore             # Git exclusions
-├── .env.example           # Environment template
-├── tsconfig.json          # TypeScript config
-├── vitest.config.ts       # Test configuration
-│
-├── agents/                # 19 specialized agent definitions
-├── skills/                # 46 specialized capabilities
+├── opencode.json          # the whole config — agents, plugins, mcp, permissions
+├── AGENT.md               # canonical system prompt, loaded by every agent
+├── readme.md              # you are here
+├── agents/                # 19 .md files, one per agent
+├── skills/                # 46 skill folders, each with SKILL.md
 ├── plugins/               # 11 TypeScript plugins
-├── rules/                 # Code style guidelines
-├── workflows/             # YAML workflow definitions
-├── docs/                  # Centralized documentation
-├── tools/                 # Utility scripts
-├── scripts/               # Build & deployment scripts
-├── .github/               # CI/CD workflows & templates
-└── docs/adr/              # Architecture Decision Records
+├── rules/                 # code style + delegation templates
+├── workflows/             # 9 yaml workflows + 1 .md
+├── docs/                  # what you're reading
+├── tools/                 # tiny CLI helpers
+├── scripts/               # ps1 + node scripts for ops
+└── .opencode/             # runtime state (memory, worklog, snapshots)
 ```
+
+Everything else is dependencies, cache, and `.gitignore`-d build output.
 
 ---
 
-## Configuration
+## the philosophy (short version)
 
-### Main Config: `opencode.json`
+Five rules I try to follow in every decision:
 
-- **Model**: `opencode/deepseek-v4-flash-free` (default)
-- **Providers**: opencode (primary), lmstudio (optional), openrouter (optional)
-- **Agents**: 19 custom agents with specialized permissions
-- **MCP Servers**: 12 servers with timeouts
-- **Plugins**: 11 plugins (agent-router, memory-context, project-initializer, etc.)
-- **Permissions**: Granular tool permissions, sensitive file protection
+1. **Read before write.** Never edit a file I haven't read in full.
+2. **Search before ask.** The model is fast and the docs are in the repo. Use them.
+3. **Cite or concede.** If I can't source a claim, I mark it `[unverified]` or say "I don't know."
+4. **Spec before code.** Anything touching 3+ files gets a written plan first.
+5. **Verify before done.** Ambient LSP + tests + a self-review pass for one more bug.
 
-## Working on External Projects
-
-OpenCode works on **any** project — Tauri desktop apps, Laravel APIs, React SPAs, Solid apps, Livewire dashboards, or plain PHP. The first step is always **stack detection**: agents read `package.json`, `Cargo.toml`, `composer.json` to determine the stack, then route to the correct specialists.
-
-### Step 1: Stack Detection (automatic)
-
-```bash
-# Tell agents the project path — they detect the rest
-@explore Map the project at C:\Projects\my-app.
-Read the root: package.json, Cargo.toml, composer.json — which exist?
-List top-level directories.
-```
-
-**Detection logic** (agents do this automatically):
-
-| Manifest found               | Stack detected              | Router to                              |
-| ---------------------------- | --------------------------- | -------------------------------------- |
-| `Cargo.toml` + `tauri`       | Tauri desktop app           | `@backend-tauri` + `@frontend-ui-ux`   |
-| `composer.json` + `laravel`  | Laravel web app             | `@backend-laravel`                     |
-| `composer.json` + `livewire` | Livewire app                | `@backend-laravel` + `@frontend-ui-ux` |
-| `package.json` + `react`     | React SPA                   | `@frontend-ui-ux`                      |
-| `package.json` + `solid`     | Solid.js SPA                | `@frontend-ui-ux`                      |
-| `composer.json` only         | Plain PHP project           | `@backend-laravel`                     |
-| multiple manifests           | Hybrid (e.g. Tauri+Laravel) | Multiple agents in sequence            |
-
-### Step 2: Generic Workflow (works for any stack)
-
-Once the stack is known, the workflow is the same — only the agents change:
-
-```
-DISCOVERY → PLAN → IMPLEMENT (backend) → IMPLEMENT (frontend) → REVIEW → TEST
-```
-
-Here's how the same task looks across different stacks:
-
-#### Tauri + React (desktop app detected from Cargo.toml + package.json)
-
-```bash
-@backend-tauri Add a Tauri command 'export_csv' to C:\Projects\my-app.
-Read src-tauri/src/ for existing command patterns.
-Return Result<String, String>.
-
-@frontend-ui-ux Add an "Export CSV" button in C:\Projects\my-app.
-Read src/components/ for existing patterns.
-Use @tauri-apps/api invoke to call the Rust command.
-```
-
-#### Laravel + Livewire (web app detected from composer.json)
-
-```bash
-@backend-laravel Add a CSV export endpoint to C:\Projects\my-app.
-Create a controller, route, and FormRequest.
-Use Laravel Excel or streamed response.
-Run php artisan pint.
-
-@frontend-ui-ux Add an export button to the Livewire component.
-Read existing Blade/Livewire patterns.
-Wire to the export endpoint.
-```
-
-#### React SPA (frontend-only detected from package.json)
-
-```bash
-@frontend-ui-ux Add a CSV export feature to C:\Projects\my-app.
-Read src/api/ for existing API client patterns.
-Create the download function, error handling, loading state.
-Use the existing button component style.
-Run npm run typecheck.
-```
-
-#### Hybrid — Tauri backend + Laravel API
-
-```bash
-# Backend API (Laravel)
-@backend-laravel Create the export endpoint in C:\Projects\my-api.
-# Desktop shell (Tauri)
-@backend-tauri Call the API from Rust via reqwest in C:\Projects\my-app.
-# Frontend (React)
-@frontend-ui-ux Add the export UI in C:\Projects\my-app.
-```
-
-### Step 3: Key Agent Routing by Stack
-
-| Task                 | Tauri+React app           | Laravel+Livewire app      | React SPA             |
-| -------------------- | ------------------------- | ------------------------- | --------------------- |
-| **Codebase map**     | `@explore`                | `@explore`                | `@explore`            |
-| **Feature plan**     | `@lead-strategist`        | `@lead-strategist`        | `@lead-strategist`    |
-| **Backend work**     | `@backend-tauri` (Rust)   | `@backend-laravel` (PHP)  | `@software-architect` |
-| **Frontend work**    | `@frontend-ui-ux` (React) | `@frontend-ui-ux` (Blade) | `@frontend-ui-ux`     |
-| **Code review**      | `@code-reviewer`          | `@code-reviewer`          | `@code-reviewer`      |
-| **Run tests**        | `@integration-test`       | `@integration-test`       | `@integration-test`   |
-| **Quality/security** | `@qa-guardian`            | `@qa-guardian`            | `@qa-guardian`        |
-
-### Launch Scripts
-
-- **Primary**: `npm start` (recommended)
-- **Cross-platform**: `opencode.bat` (Windows), `opencode.sh` (Unix/macOS)
-- **JavaScript**: `node opencode-launch.js` (any platform)
+These aren't new. They're in [AGENT.md](AGENT.md) §2 and they're the same rules any senior engineer follows. The point of an agentic system is to make them cheap to enforce.
 
 ---
 
-## Contributing
+## honesty notes (the stuff nobody says)
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
-
-Quick reference:
-
-- **Add a skill**: Create `skills/my-skill/SKILL.md`, register in `skills/index.json`
-- **Add a plugin**: Create `plugins/my-plugin.ts`, register in `opencode.json`
-- **Add a workflow**: Create `workflows/my-workflow.yaml` with v2.0.0 schema
-- **Run tests**: `npm test` (Vitest suite)
+- This runs on a **free model** (`opencode/deepseek-v4-flash-free`). The outputs are good but not GPT-4 quality. If you need higher quality, swap the model in `opencode.json` — everything else stays the same.
+- The memory layer is **file-based JSON** in `.opencode/`. It's gitignored. Don't lose that folder unless you want to lose your conventions.
+- Some of the skills are **untested in real projects** (pdf, ppt, xlsx, docx, charts). I included them because they're useful scaffolds; tune them to your data.
+- The `lmstudio` provider is **stubbed**. The plugin returns "not available" instead of breaking. If you have a local model server, point `baseURL` at it and it works.
+- This is a **learning project**. I share it so others can learn from it, fork it, or argue with it. It's not a product, there's no roadmap, there's no SLA.
 
 ---
 
-## Performance & Cleanliness
+## shoutout
 
-- Root directory with ~15 essential files
-- Build artifacts and dependencies in `.gitignore`
-- Centralized documentation in `docs/`
-- Consistent structure with clear separation of concerns
+To the **opencode team** — the foundation is excellent. Config-driven, plugin-based, MCP-native. Everything in this repo is just an opinionated config + a handful of plugins on top.
 
----
+To **Anthropic** for the agent-loop thinking that inspired the harness architecture.
 
-## License
-
-MIT License - See [LICENSE](LICENSE) file for details.
+To **every indie dev** shipping agentic coding setups and posting the receipts. The whole space is better because you're all posting your configs in public.
 
 ---
 
-## Support
+## license
 
-- **Documentation**: Check [`docs/`](docs/) folder
-- **Issues**: Report bugs via GitHub Issues
-- **Discussions**: Join community discussions
+MIT. See [LICENSE](LICENSE).
 
 ---
 
-**Last Updated**: 2026-07-04
-**Version**: 2.1.0 (Spec-Driven Harness)
+## contributing
+
+Open an issue. Send a PR. Argue with my agent prompts in the discussions tab. The best contributions are ones that show me a better way to do something — I'm always learning.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the boring details.
+
+---
+
+**Last updated**: 2026-07-04
+**Version**: 2.1.0 — spec-driven harness, fully deployed
+**Status**: Learning project, actively used, MIT licensed
