@@ -1,7 +1,46 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "default_agent": "core-factory",
-  "model": "lmstudio/gemma-4-e4b-it",
+  "autoupdate": false,
+  "snapshot": true,
+  "share": "disabled",
+  "shell": "pwsh",
+  "watcher": {
+    "ignore": ["node_modules", "vendor", "target", ".git", "dist", "build", ".opencode/worklog.md"]
+  },
+  "tool_output": {
+    "max_lines": 2000,
+    "max_bytes": 51200
+  },
+  "references": {
+    "docs": "./docs",
+    "rules": "./rules",
+    "skills": "./skills",
+    "agents": "./agents",
+    "workflows": "./workflows",
+    "opencode-docs": "https://opencode.ai/docs/"
+  },
+  "skills": {
+    "paths": ["./skills"],
+    "urls": []
+  },
+  "attachment": {
+    "image": {
+      "auto_resize": true,
+      "max_width": 2000,
+      "max_height": 2000,
+      "max_base64_bytes": 5242880
+    }
+  },
+  "experimental": {
+    "policies": [
+      {
+        "effect": "deny",
+        "action": "provider.use",
+        "resource": "openrouter"
+      }
+    ]
+  },
   "provider": {
     "opencode": {
       "name": "opencode",
@@ -12,7 +51,8 @@
       "npm": "@ai-sdk/openai-compatible",
       "name": "LM Studio (local)",
       "options": {
-        "baseURL": "http://192.168.1.9:1234/v1"
+        "baseURL": "http://192.168.1.9:1234/v1",
+        "timeout": 600000
       },
       "models": {
         "gemma-4-e2b-it": {
@@ -42,7 +82,10 @@
       "name": "OpenRouter",
       "options": {
         "baseURL": "https://openrouter.ai/api/v1",
-        "apiKey": "${OPENROUTER_API_KEY}"
+        "apiKey": "${OPENROUTER_API_KEY}",
+        "timeout": 600000,
+        "chunkTimeout": 30000,
+        "setCacheKey": true
       },
       "models": {
         "inclusionai/ring-2.6-1t:free": {
@@ -128,6 +171,7 @@
       "type": "local",
       "command": ["npx", "-y", "@google-labs/stitch-mcp"],
       "enabled": true,
+      "timeout": 45000,
       "environment": {
         "STITCH_API_KEY": "${STITCH_API_KEY}",
         "STITCH_USE_SYSTEM_GCLOUD": "1"
@@ -150,6 +194,15 @@
       "command": ["npx", "-y", "@modelcontextprotocol/server-everything"],
       "enabled": false,
       "timeout": 30000
+    },
+    "vercel-grep": {
+      "type": "remote",
+      "url": "https://mcp.grep.app",
+      "enabled": true,
+      "timeout": 30000,
+      "headers": {
+        "User-Agent": "opencode/dev-architecture"
+      }
     }
   },
   "permission": {
@@ -157,29 +210,6 @@
       "*": "allow",
       "experimental-*": "ask",
       "internal-*": "deny"
-    },
-    "command": {
-      "*": "ask",
-      "ls": "allow",
-      "dir": "allow",
-      "git status": "allow",
-      "git diff": "allow",
-      "git log": "allow",
-      "git branch": "allow",
-      "git push": "ask",
-      "git pull": "ask",
-      "npm test": "allow",
-      "npm run": "allow",
-      "cargo check": "allow",
-      "cargo build": "allow",
-      "cargo run": "ask",
-      "php artisan list": "allow",
-      "php artisan migrate": "ask",
-      "php artisan test": "allow",
-      "php artisan pint": "allow",
-      "pnpm": "allow",
-      "bun": "allow",
-      "npx": "allow"
     },
     "read": {
       "*": "allow",
@@ -221,25 +251,34 @@
     "glob": "allow",
     "grep": "allow",
     "list": "allow",
+    "task": {
+      "*": "allow"
+    },
     "webfetch": "allow",
     "websearch": "allow",
     "codesearch": "allow",
-    "todoread": "allow",
     "todowrite": "allow",
-    "mcp": "allow",
-    "context7": "allow",
-    "sequential-thinking": "allow",
-    "language-server": "allow",
-    "type-inject": "allow",
-    "sqlite": "allow",
-    "gradle": "allow",
-    "mobile": "allow",
-    "android-emulator": "allow",
+    "doom_loop": "deny",
     "external_directory": {
-      ".\\**": "allow",
-      "~\\**": "ask"
+      "./**": "allow",
+      "~/**": "ask"
     },
-    "doom_loop": "deny"
+    "context7_*": "allow",
+    "sequential-thinking_*": "allow",
+    "type-inject_*": "allow",
+    "sqlite_*": "allow",
+    "gradle_*": "allow",
+    "mobile_*": "allow",
+    "android-emulator_*": "allow",
+    "git_*": "allow",
+    "memory_*": "allow",
+    "filesystem_*": "allow",
+    "fetch_*": "allow",
+    "stitch_*": "ask",
+    "language-server_*": "deny",
+    "personal-knowledge_*": "deny",
+    "everything_*": "deny",
+    "vercel-grep_*": "ask"
   },
   "tools": {
     "read": true,
@@ -261,8 +300,10 @@
     "context7": true,
     "filesystem": true,
     "sqlite": true,
-    "sequential-thinking": true,
-    "type-inject": true
+    "sequential-thinking": false,
+    "type-inject": false,
+    "stitch": false,
+    "memory": false
   },
   "lsp": {
     "typescript": {
@@ -308,25 +349,16 @@
     }
   },
   "instructions": [
-    "RULES: Read rules/general.md, rules/project.md, rules/laravel-boost.md at session start. Apply without exception.",
-    "STACK: Tauri (Rust) + React (TypeScript) + Laravel (PHP). Detect layer from file path — never guess.",
-    "FORMAT: Auto-format every edited file per rules/auto-format.md. No exceptions.",
-    "THINK: Before every action — What is the actual request? What do I know for certain? What must I verify first? What is the minimal path to the correct result?",
-    "HONESTY: If you do not know, say 'I do not know.' Never fabricate APIs, file contents, or code you have not read. Never guess a file path — search for it.",
-    "DIRECT: No preamble. No 'Sure!' No 'Here is the implementation:'. Produce the result immediately.",
-    "EDITS: Read the full file first. Use edit(oldString, newString). If the edit fails, the file differs from your assumption — re-read it, then retry with the correct oldString.",
-    "INTEGRITY: No unused imports. No dead code. No speculative comments. No 'any' types in TypeScript. Every line must earn its place.",
-    "NAMING: Match existing conventions exactly. Check 3 nearby files before coining a new name.",
-    "RECOVERY: If a tool fails, try one alternative approach. If that also fails, report the failure with both error messages — do not silently retry.",
-    "AGENCY DELIVERY: For complex features: (1) Strategist/lead-strategist decomposes → (2) software-architect reviews design → (3) core-factory/stack-agent implements → (4) qa-guardian validates → (5) Strategist synthesizes.",
-    "AGENT HIERARCHY: Executive(lead-strategist) → Leadership(software-architect) → Execution(core-factory, backend-laravel, frontend-ui-ux, qa-guardian, devops-engineer).",
-    "DELEGATION: Use the task() tool to delegate to specialized agents. Provide: (1) Task description, (2) Success criteria, (3) Files to modify, (4) Constraints to follow.",
-    "SKILLS: 38 project skills are bridged via directory junctions to ~/.agents/skills/ for the skill() tool. Use skill:skill-name to load any skill. Available: self-reflection, config-doctor, skill-vetter, etc. Use skill_list() for full catalog.",
-    "COMMANDS: Use /doctor or /improve to trigger self-reflection. Use /sync-skills to re-bridge skills.",
-    "MOBILE: For Android/Kotlin tasks, use @android-kotlin. For mobile QA/testing, use @mobile-qa. For Tauri mobile build commands, @backend-tauri handles Rust side, @android-kotlin handles native Android side. Available Android skills: android, android-compose, android-gradle, android-testing, android-debugging, android-deployment. MCP servers: gradle (builds), mobile (device control), android-emulator (emulator).",
-    "FALLBACK MODEL: When primary model fails or times out, fall back to LM Studio local model (qwen3.5-4b-claude-4.6-opus-reasoning-distilled-v2) for simple operations (file edits, bash commands, quick lookups).",
-    "MEMORY: Use memory tools (memory_store, memory_recall, memory_learn, memory_find) to persist decisions, conventions, and patterns across sessions. Call memory_session with outcome+task to save session summaries. Use memory_decision to log key architectural choices. Context is automatically injected on subsequent tasks.",
-    "AGENT TEMPERATURES: qa-guardian=0.05, explore=0.0, plan=0.1, devops-engineer=0.1, software-architect=0.2, backend-tauri=0.2, scout=0.2, docs-curator=0.2, core-factory=0.3, backend-laravel=0.3, android-kotlin=0.3, build=0.3, frontend-ui-ux=0.4, lead-strategist=0.4"
+    "AGENT.md",
+    ".opencode/instructions/*.md",
+    "rules/general.md",
+    "rules/project.md",
+    "rules/laravel-boost.md",
+    "rules/orchestration.md",
+    "rules/architecture.md",
+    "rules/auto-format.md",
+    "rules/context-engineering.md",
+    "rules/agent-delegation-templates.md"
   ],
   "command": {
     "audit": {
@@ -425,25 +457,11 @@
         "edit": "allow",
         "grep": "allow",
         "glob": "allow",
-        "command": {
+        "bash": {
+          "*": "ask",
+          "./gradlew *": "allow",
           "ls": "allow"
         }
-      },
-      "tools": {
-        "read": true,
-        "write": true,
-        "edit": true,
-        "bash": true,
-        "glob": true,
-        "grep": true,
-        "list": true,
-        "skill": true,
-        "lsp": true,
-        "mcp": true,
-        "context7": true,
-        "sequential-thinking": true,
-        "todoread": true,
-        "todowrite": true
       }
     },
     "backend-laravel": {
@@ -458,29 +476,14 @@
         "edit": "allow",
         "grep": "allow",
         "glob": "allow",
-        "command": {
-          "ls": "allow",
-          "php artisan list": "allow",
-          "php artisan test": "allow",
-          "php artisan pint": "allow",
-          "php artisan migrate": "ask"
+        "bash": {
+          "*": "ask",
+          "php *": "allow",
+          "./artisan *": "allow",
+          "./vendor/bin/pest *": "allow",
+          "./vendor/bin/pint *": "allow",
+          "ls": "allow"
         }
-      },
-      "tools": {
-        "read": true,
-        "write": true,
-        "edit": true,
-        "bash": true,
-        "glob": true,
-        "grep": true,
-        "list": true,
-        "task": true,
-        "skill": true,
-        "lsp": true,
-        "mcp": true,
-        "context7": true,
-        "codesearch": true,
-        "sequential-thinking": true
       }
     },
     "backend-tauri": {
@@ -495,27 +498,12 @@
         "edit": "allow",
         "grep": "allow",
         "glob": "allow",
-        "command": {
-          "ls": "allow",
-          "cargo check": "allow",
-          "cargo build": "allow"
+        "bash": {
+          "*": "ask",
+          "cargo *": "allow",
+          "rustc *": "allow",
+          "ls": "allow"
         }
-      },
-      "tools": {
-        "read": true,
-        "write": true,
-        "edit": true,
-        "bash": true,
-        "glob": true,
-        "grep": true,
-        "list": true,
-        "task": true,
-        "skill": true,
-        "lsp": true,
-        "mcp": true,
-        "context7": true,
-        "codesearch": true,
-        "sequential-thinking": true
       }
     },
     "core-factory": {
@@ -530,7 +518,29 @@
         "edit": "allow",
         "grep": "allow",
         "glob": "allow",
-        "command": {
+        "task": {
+          "*": "deny",
+          "lead-strategist": "allow",
+          "software-architect": "allow",
+          "plan": "allow",
+          "explore": "allow",
+          "scout": "allow",
+          "frontend-ui-ux": "allow",
+          "backend-laravel": "allow",
+          "backend-tauri": "allow",
+          "android-kotlin": "allow",
+          "qa-guardian": "allow",
+          "devops-engineer": "allow",
+          "docs-curator": "allow",
+          "code-reviewer": "allow",
+          "integration-test": "allow",
+          "research-analyst": "allow",
+          "refactor-architect": "allow",
+          "mobile-qa": "allow",
+          "docs-evolver": "allow"
+        },
+        "bash": {
+          "*": "ask",
           "git status": "allow",
           "git diff": "allow",
           "ls": "allow",
@@ -538,26 +548,6 @@
           "cargo check": "allow",
           "php artisan pint": "allow"
         }
-      },
-      "tools": {
-        "read": true,
-        "write": true,
-        "edit": true,
-        "bash": true,
-        "glob": true,
-        "grep": true,
-        "list": true,
-        "skill": true,
-        "lsp": true,
-        "todowrite": true,
-        "mcp": true,
-        "context7": true,
-        "sequential-thinking": true,
-        "task": true,
-        "todoread": true,
-        "webfetch": true,
-        "websearch": true,
-        "codesearch": true
       }
     },
     "devops-engineer": {
@@ -572,33 +562,12 @@
         "edit": "allow",
         "grep": "allow",
         "glob": "allow",
-        "command": {
-          "ls": "allow",
-          "npm run": "allow",
-          "pnpm": "allow",
-          "bun": "allow",
-          "npx": "allow",
-          "php artisan migrate": "ask"
+        "bash": {
+          "*": "ask",
+          "npm *": "allow",
+          "git *": "allow",
+          "ls": "allow"
         }
-      },
-      "tools": {
-        "read": true,
-        "write": true,
-        "edit": true,
-        "bash": true,
-        "glob": true,
-        "grep": true,
-        "list": true,
-        "task": true,
-        "skill": true,
-        "mcp": true,
-        "gradle": true,
-        "mobile": true,
-        "android-emulator": true,
-        "context7": true,
-        "sequential-thinking": true,
-        "todoread": true,
-        "todowrite": true
       }
     },
     "docs-curator": {
@@ -613,29 +582,10 @@
         "edit": "allow",
         "grep": "allow",
         "glob": "allow",
-        "command": {
-          "ls": "allow",
-          "npm run": "allow"
+        "bash": {
+          "*": "ask",
+          "ls": "allow"
         }
-      },
-      "tools": {
-        "read": true,
-        "write": true,
-        "edit": true,
-        "bash": true,
-        "glob": true,
-        "grep": true,
-        "list": true,
-        "skill": true,
-        "lsp": true,
-        "codesearch": true,
-        "websearch": true,
-        "webfetch": true,
-        "todowrite": true,
-        "mcp": true,
-        "context7": true,
-        "sequential-thinking": true,
-        "todoread": true
       }
     },
     "explore": {
@@ -648,17 +598,8 @@
       "permission": {
         "edit": "deny",
         "write": "deny",
-        "bash": "deny"
-      },
-      "tools": {
-        "read": true,
-        "glob": true,
-        "grep": true,
-        "list": true,
-        "codesearch": true,
-        "mcp": true,
-        "context7": true,
-        "sequential-thinking": true
+        "bash": "deny",
+        "task": { "*": "deny" }
       }
     },
     "frontend-ui-ux": {
@@ -673,27 +614,13 @@
         "edit": "allow",
         "grep": "allow",
         "glob": "allow",
-        "command": {
-          "ls": "allow",
-          "npm run": "allow"
+        "bash": {
+          "*": "ask",
+          "tsc *": "allow",
+          "npx biome *": "allow",
+          "npm run": "allow",
+          "ls": "allow"
         }
-      },
-      "tools": {
-        "read": true,
-        "write": true,
-        "edit": true,
-        "bash": true,
-        "glob": true,
-        "grep": true,
-        "list": true,
-        "task": true,
-        "skill": true,
-        "lsp": true,
-        "codesearch": true,
-        "mcp": true,
-        "context7": true,
-        "sequential-thinking": true,
-        "type-inject": true
       }
     },
     "lead-strategist": {
@@ -707,23 +634,8 @@
         "read": "allow",
         "edit": "ask",
         "grep": "allow",
-        "glob": "allow"
-      },
-      "tools": {
-        "read": true,
-        "glob": true,
-        "grep": true,
-        "list": true,
-        "task": true,
-        "skill": true,
-        "lsp": true,
-        "codesearch": true,
-        "todowrite": true,
-        "mcp": true,
-        "context7": true,
-        "sequential-thinking": true,
-        "webfetch": true,
-        "websearch": true
+        "glob": "allow",
+        "task": { "*": "allow" }
       }
     },
     "plan": {
@@ -736,21 +648,8 @@
       "permission": {
         "edit": "deny",
         "write": "deny",
-        "bash": "deny"
-      },
-      "tools": {
-        "read": true,
-        "glob": true,
-        "grep": true,
-        "list": true,
-        "lsp": true,
-        "codesearch": true,
-        "mcp": true,
-        "sequential-thinking": true,
-        "webfetch": true,
-        "websearch": true,
-        "todoread": true,
-        "todowrite": true
+        "bash": "deny",
+        "task": { "*": "deny" }
       }
     },
     "qa-guardian": {
@@ -765,31 +664,15 @@
         "edit": "deny",
         "grep": "allow",
         "glob": "allow",
-        "command": {
-          "npm test": "allow",
-          "npm run lint": "allow",
-          "cargo check": "allow",
-          "php artisan test": "allow",
+        "task": { "*": "deny" },
+        "bash": {
+          "*": "ask",
+          "npm test*": "allow",
+          "npm run lint*": "allow",
+          "cargo check*": "allow",
+          "php artisan test*": "allow",
           "ls": "allow"
         }
-      },
-      "tools": {
-        "read": true,
-        "bash": true,
-        "glob": true,
-        "grep": true,
-        "list": true,
-        "task": true,
-        "skill": true,
-        "lsp": true,
-        "mcp": true,
-        "gradle": true,
-        "mobile": true,
-        "android-emulator": true,
-        "context7": true,
-        "sequential-thinking": true,
-        "todoread": true,
-        "todowrite": true
       }
     },
     "scout": {
@@ -802,18 +685,8 @@
       "permission": {
         "edit": "deny",
         "write": "deny",
-        "bash": "ask"
-      },
-      "tools": {
-        "read": true,
-        "glob": true,
-        "grep": true,
-        "webfetch": true,
-        "websearch": true,
-        "mcp": true,
-        "context7": true,
-        "sequential-thinking": true,
-        "codesearch": true
+        "bash": "ask",
+        "task": { "*": "deny" }
       }
     },
     "software-architect": {
@@ -828,34 +701,16 @@
         "edit": "allow",
         "grep": "allow",
         "glob": "allow",
-        "command": {
-          "ls": "allow",
+        "bash": {
+          "*": "ask",
+          "tsc *": "allow",
+          "cargo check*": "allow",
           "npm test": "allow",
           "npm run": "allow",
           "git status": "allow",
-          "git diff": "allow"
+          "git diff": "allow",
+          "ls": "allow"
         }
-      },
-      "tools": {
-        "read": true,
-        "write": true,
-        "edit": true,
-        "bash": true,
-        "glob": true,
-        "grep": true,
-        "list": true,
-        "task": true,
-        "skill": true,
-        "lsp": true,
-        "todoread": true,
-        "todowrite": true,
-        "webfetch": true,
-        "websearch": true,
-        "codesearch": true,
-        "type-inject": true,
-        "mcp": true,
-        "context7": true,
-        "sequential-thinking": true
       }
     }
   },
