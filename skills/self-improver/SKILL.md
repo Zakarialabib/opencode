@@ -58,43 +58,43 @@ Autonomously improve the project by:
 ### Phase 3: Analysis via LSP
 
 ```
-1. Rust files → rust-analyzer context
-   - Check: trae_get_rust_context(filePath)
-   - Analyze: diagnostics, suggestions, unused imports
+1. Rust files → cargo check
+   - Run: cargo check --message-format=short
+   - Analyze: compilation errors, warnings, unused imports
 
-2. TypeScript files → TS language server
-   - Check: trae_get_typescript_context(filePath)
-   - Analyze: errors, warnings, type coverage
+2. TypeScript files → tsc --noEmit
+   - Run: npx tsc --noEmit [file]
+   - Analyze: type errors, import resolution, unused variables
 
-3. PHP files → PHP language server (Intelephense)
-   - Check: trae_get_php_context(filePath)
-   - Analyze: PSR-12 compliance, type hints, Laravel 13+ patterns
+3. PHP files → php -l (lint) + PHP Language Server
+   - Run: php -l [file]
+   - Analyze: syntax errors, PSR-12 compliance, Laravel conventions
 ```
 
 ### Phase 4: OpenCode Skill Audit
 
 ```
-1. Scan skills/ directory
-2. Read skills/index.json registry
-3. Verify that all scripts use 'opencode' CLI instead of 'clawdhub'
-4. Suggest adaptations for new OpenCode skills added by user
+1. Scan skills/ directory for new/updated SKILL.md files
+2. Read skills/index.json registry for consistency
+3. Verify all skill paths resolve to actual files on disk
+4. Suggest adaptations for new or modified skills
 ```
 
 ### Phase 5: Auto-Format by Language
 
 ```
-Detect file extension → Apply formatter:
+Detect file extension → Apply formatter (per rules/auto-format.md):
 
 | Extension | Formatter | Command |
 |-----------|-----------|---------|
 | .rs | rustfmt | cargo fmt |
 | .ts, .tsx, .js, .jsx | biome | npx biome format --write $FILE |
+| .json, .jsonc | biome | npx biome format --write $FILE |
 | .php | pint | php artisan pint $FILE |
-| .py | black | black $FILE |
-| .md, .yaml, .yml | prettier | npx prettier --write $FILE |
+| .css, .scss, .html, .md, .yaml, .yml | prettier | npx prettier --write $FILE |
 ```
 
-### Phase 5: Adaptation & Improvement
+### Phase 6: Adaptation & Improvement
 
 ```
 1. Compare current config with best practices:
@@ -119,9 +119,14 @@ Detect file extension → Apply formatter:
 ### With LSP Tools
 
 ```typescript
-// Get LSP context before editing
-const rustContext = await trae_get_rust_context("src/main.rs");
-const tsContext = await trae_get_typescript_context("src/App.tsx");
+// Get LSP diagnostics before editing (ambient — auto-fires after edit/write)
+// Use type-inject for type lookups:
+const typeInfo = await type_inject_lookup_type("MyComponent");
+
+// Use bash for LSP checks:
+// cargo check --message-format=short  (Rust)
+// npx tsc --noEmit                    (TypeScript)
+// php -l                              (PHP)
 ```
 
 ### With Context7
@@ -188,14 +193,22 @@ When invoked, provide:
 4. **Log all actions** to improvement.log
 5. **Rollback capability** via git
 
-## Example: Learning from OpenClaude
+## Example: Improvement Cycle
 
 ```
-1. Fetch OpenClaude repo structure via GitHub MCP
-2. Compare with current opencode.json
-3. Identify missing features:
-   - OpenClaude has: "auto-test-on-save"
-   - Current: missing
-4. Suggest: Add "test-on-save" to config
-5. Implement if approved
+1. Run project detection to understand current stack:
+   project_detect → project_status
+
+2. Check for doc-code drift:
+   sync_docs → review findings
+
+3. Review session memory for recurring patterns:
+   memory_stats → memory_recall { query: "known issues" }
+
+4. Identify gaps:
+   - Missing auto-format config for certain file types?
+   - Stale agent prompts in opencode.json?
+   - Dead skill references in index.json?
+
+5. Apply safe improvements (ask before major changes)
 ```

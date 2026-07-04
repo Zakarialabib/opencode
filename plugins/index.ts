@@ -2,7 +2,8 @@ import { parseJsonc } from "./jsonc-utils";
 import { type Plugin, tool } from "@opencode-ai/plugin";
 import { execSync } from "child_process";
 import { createHash } from "crypto";
-import { readFile, writeFile, copyFile, rename, readdir } from "fs/promises";
+import { readFile, writeFile, copyFile, rename, readdir, appendFile } from "fs/promises";
+import { join } from "path";
 
 // // Debug: trace hook invocation
 // function traceHook(name: string, input: any, output: any) {
@@ -513,7 +514,7 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
       // Reserved for future use
     },
 
-    // Hook: After tool execution — same-turn diagnostic injection
+    // Hook: After tool execution — same-turn diagnostic injection + worklog
     "tool.execute.after": async (input: any, output: any) => {
       const startTime = Date.now();
       const toolName = input.tool || "";
@@ -551,7 +552,7 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
       }
     },
 
-    // Hook: On session end, analyze and propose config improvements
+    // Hook: On session end, analyze and propose config improvements + worklog summary
     "session.archived": async ({ session }: any) => {
       // Analyze session patterns
       const analysis = await analyzeSessionPatterns(session.id);
@@ -568,6 +569,20 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
 
       console.log(`🔄 Self-improvement proposal generated: opencode.json.proposed`);
       console.log(`   Review with: opencode diff-config`);
+
+      // Append session-end worklog entry
+      try {
+        const worklogPath = join(directory, ".opencode", "worklog.md");
+        const timestamp = new Date().toISOString().replace("T", " ").slice(0, 19) + "Z";
+        const perfSummary =
+          performanceLog.length > 0
+            ? `perf: ${performanceLog.filter((p) => p.success).length}/${performanceLog.length} tasks succeeded`
+            : "no performance data";
+        const line = `[${timestamp}] core-factory: session archived — ${perfSummary}\n`;
+        await appendFile(worklogPath, line, "utf8");
+      } catch {
+        // Non-critical
+      }
     },
 
     // Custom tools
@@ -582,8 +597,8 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
         async execute({ approve, backup }) {
           if (!approve) return "Changes rejected. Proposal kept for review.";
 
-          const current = `${directory}/.opencode/opencode.json`;
-          const proposed = `${directory}/.opencode/opencode.json.proposed`;
+          const current = `${directory}/opencode.json`;
+          const proposed = `${directory}/opencode.json.proposed`;
 
           if (backup) {
             const backupPath = `${current}.backup.${Date.now()}`;
@@ -601,14 +616,16 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
         args: {
           agentName: tool.schema
             .enum([
-              "core-builder",
-              "core-planner",
+              "core-factory",
+              "plan",
               "lead-strategist",
               "software-architect",
               "frontend-ui-ux",
               "backend-laravel",
-              "qa-reviewer",
-              "qa-tester",
+              "backend-tauri",
+              "qa-guardian",
+              "code-reviewer",
+              "explore",
             ])
             .describe("Agent to evaluate"),
           metric: tool.schema
@@ -622,97 +639,41 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
         },
       }),
 
-      // LM Studio health check tool
+      // LM Studio health check tool (disabled — free model environment)
       lmstudio_health: tool({
-        description: "Check health of LM Studio server and display version",
+        description: "Check health of LM Studio server — not available in free-model environment",
         args: {},
         async execute() {
-          await ensureUrls();
-          const health = await healthCheckLmStudio(nativeUrl!);
-          if (health.healthy) {
-            return `✅ LM Studio is healthy (version: ${health.version}) at ${nativeUrl}`;
-          } else {
-            return `❌ LM Studio is unreachable: ${health.error}\nNative URL: ${nativeUrl}`;
-          }
+          return "LM Studio is not available. This environment uses free OpenCode models only (deepseek-v4-flash-free).";
         },
       }),
 
-      // LM Studio model discovery tool
+      // LM Studio model discovery tool (disabled — free model environment)
       lmstudio_models: tool({
-        description: "List available models from LM Studio and show all provider models",
+        description: "List available models — not available in free-model environment",
         args: {},
         async execute() {
-          await ensureUrls();
-          const health = await healthCheckLmStudio(nativeUrl!);
-          let result = "";
-
-          // LM Studio models
-          if (health.healthy) {
-            const lmResult = await fetchModels(nativeUrl!);
-            if (lmResult.error) {
-              result += `❌ Error fetching LM Studio models: ${lmResult.error}\n\n`;
-            } else if (lmResult.models.length === 0) {
-              result += `⚠️ No models loaded in LM Studio. Load a model first.\n\n`;
-            } else {
-              result += `## LM Studio Models (${lmResult.models.length})\n\n`;
-              for (const m of lmResult.models) {
-                result += `- \`${m}\`\n`;
-              }
-              result += "\n";
-            }
-          } else {
-            result += `❌ LM Studio is unreachable: ${health.error}\n\n`;
-          }
-
-          // OpenCode-Go models
-          result += `## OpenCode-Go Models (API)\n\n`;
-          result += `- \`kimi-k2.6\` (Tool calling: ✅, Reasoning: ✅)\n`;
-          result += `- \`glm-5.1\` (Tool calling: ✅, Reasoning: ✅)\n`;
-          result += `- \`qwen3.6-plus\` (Tool calling: ✅, Reasoning: ✅)\n\n`;
-
-          result += `💡 Use \`/model <provider>/<model>\` to switch models.`;
-
-          return result;
+          return "LM Studio is not available. This environment uses free OpenCode models only (deepseek-v4-flash-free).\n\nUse `/model` to see available free models.";
         },
       }),
 
-      // LM Studio load model tool
+      // LM Studio load model tool (disabled — free model environment)
       lmstudio_load_model: tool({
-        description: "Load a specific model in LM Studio",
+        description: "Load a model in LM Studio — not available in free-model environment",
         args: {
-          modelId: tool.schema.string().describe("Model ID to load (e.g., qwen3.5-4b)"),
+          modelId: tool.schema.string().describe("Model ID (ignored — LM Studio unavailable)"),
         },
-        async execute({ modelId }) {
-          await ensureUrls();
-          const health = await healthCheckLmStudio(nativeUrl!);
-          if (!health.healthy) {
-            return `Cannot load model: LM Studio is unreachable (${health.error})`;
-          }
-          const result = await loadModel(nativeUrl!, modelId);
-          if (result.success) {
-            return `✅ Model '${modelId}' loaded successfully.`;
-          } else {
-            return `❌ Failed to load model '${modelId}': ${result.error}`;
-          }
+        async execute() {
+          return "LM Studio is not available. This environment uses free OpenCode models only (deepseek-v4-flash-free).";
         },
       }),
 
-      // LM Studio unload model tool
+      // LM Studio unload model tool (disabled — free model environment)
       lmstudio_unload_model: tool({
-        description: "Unload the current model from LM Studio",
+        description: "Unload model from LM Studio — not available in free-model environment",
         args: {},
         async execute() {
-          await ensureUrls();
-          const health = await healthCheckLmStudio(nativeUrl!);
-          if (!health.healthy) {
-            return `Cannot unload model: LM Studio is unreachable (${health.error})`;
-          }
-          const result = await unloadModel(nativeUrl!);
-          if (result.success) {
-            return `✅ Current model unloaded successfully.`;
-          } else {
-            return `❌ Failed to unload model: ${result.error}`;
-          }
+          return "LM Studio is not available. This environment uses free OpenCode models only (deepseek-v4-flash-free).";
         },
       }),
 
@@ -911,8 +872,7 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
           // Layer 2: Database backup
           if (layers.includes("db")) {
             try {
-              // Mock DB backup - in real implementation, backup sqlite files
-              execSync(`copy opencode.db opencode.db.${checkpointId}.bak`, { stdio: "pipe" });
+              await copyFile("opencode.db", `opencode.db.${checkpointId}.bak`);
               results.push("✅ Database backup created");
             } catch (e) {
               results.push("❌ Database backup failed");
@@ -997,7 +957,7 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
 
           // Layer 2: Restore database
           try {
-            execSync(`copy opencode.db.${targetId}.bak opencode.db`, { stdio: "pipe" });
+            await copyFile(`opencode.db.${targetId}.bak`, "opencode.db");
             results.push("✅ Database restored");
           } catch (e) {
             results.push("❌ Database restore failed");

@@ -18,20 +18,6 @@ permission:
   memory: "allow"
   context7: "allow"
   sequential-thinking: "allow"
-tools:
-  - read
-  - write
-  - edit
-  - bash
-  - skill
-  - lsp
-  - codesearch
-  - websearch
-  - webfetch
-  - todowrite
-  - memory
-  - context7
-  - sequential-thinking
 ---
 
 **Tools**: read, write, edit, bash, skill, lsp, codesearch, websearch, webfetch, todowrite, memory, context7, sequential-thinking

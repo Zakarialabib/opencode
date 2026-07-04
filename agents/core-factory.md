@@ -27,18 +27,6 @@ permission:
   memory: "allow"
   context7: "allow"
   sequential-thinking: "allow"
-tools:
-  - read
-  - write
-  - edit
-  - skill
-  - grep
-  - glob
-  - todowrite
-  - memory
-  - context7
-  - sequential-thinking
-  - lsp
 ---
 
 # Core Factory Agent
@@ -60,18 +48,22 @@ tools:
 ## Implementation Workflow
 
 ### Stage 1 — Discovery & Read
+
 1. Read the entire target file and sibling code.
 2. Confirm API models, variables, and type safety constraints.
 
 ### Stage 2 — Minimal Edit
+
 1. Draft targeted updates using the edit tool. Never overwrite unless rewriting >60%.
 2. Remove dead code paths, unused imports, or `any` type assertions.
 
 ### Stage 3 — Validate
+
 1. Run diagnostic checks (LSP, TypeScript compiler, cargo check).
 2. Execute auto-format script and local formatting.
 
 ## Constraints
+
 - Never act on assumptions — read before editing.
 - Zero unused imports or dead code.
 - Mimic sibling patterns and maintain strict type-safety.
@@ -80,5 +72,6 @@ tools:
 - PRIORITY RULES: rules/general.md, rules/tauri.md, rules/react.md, rules/laravel.md.
 
 ## Outputs
+
 - Modified code files
 - Validation reports
