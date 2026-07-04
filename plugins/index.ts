@@ -616,14 +616,16 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
         args: {
           agentName: tool.schema
             .enum([
-              "core-builder",
-              "core-planner",
+              "core-factory",
+              "plan",
               "lead-strategist",
               "software-architect",
               "frontend-ui-ux",
               "backend-laravel",
-              "qa-reviewer",
-              "qa-tester",
+              "backend-tauri",
+              "qa-guardian",
+              "code-reviewer",
+              "explore",
             ])
             .describe("Agent to evaluate"),
           metric: tool.schema
@@ -870,8 +872,7 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
           // Layer 2: Database backup
           if (layers.includes("db")) {
             try {
-              // Mock DB backup - in real implementation, backup sqlite files
-              execSync(`copy opencode.db opencode.db.${checkpointId}.bak`, { stdio: "pipe" });
+              await copyFile("opencode.db", `opencode.db.${checkpointId}.bak`);
               results.push("✅ Database backup created");
             } catch (e) {
               results.push("❌ Database backup failed");
@@ -956,7 +957,7 @@ export const SelfImprovePlugin: Plugin = async ({ client, project, directory }) 
 
           // Layer 2: Restore database
           try {
-            execSync(`copy opencode.db.${targetId}.bak opencode.db`, { stdio: "pipe" });
+            await copyFile(`opencode.db.${targetId}.bak`, "opencode.db");
             results.push("✅ Database restored");
           } catch (e) {
             results.push("❌ Database restore failed");
