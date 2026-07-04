@@ -20,14 +20,6 @@ permission:
     php*: "allow"
     pnpm*: "allow"
     bun*: "allow"
-tools:
-  - read
-  - write
-  - edit
-  - bash
-  - skill
-  - context7
-  - memory
 ---
 
 **Tools**: read, write, edit, bash, skill, context7, memory

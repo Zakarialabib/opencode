@@ -5,9 +5,8 @@
  */
 
 const { spawn } = require("child_process");
-const path = require("path");
-const fs = require("fs");
-const os = require("os");
+const path = require("node:path");
+const fs = require("node:fs");
 
 function resolveInstalledOpencode(scriptDir) {
   if (process.platform !== "win32") return null;
@@ -79,68 +78,96 @@ function parseProjectRootArg(argv) {
   return null;
 }
 
-// Kill any existing opencode processes on port 4096
+// Kill any existing processes on port 4096
 function killExistingServer(port = 4096) {
   if (process.platform !== "win32") return;
 
   try {
-    const { execFileSync } = require("child_process");
+    const { execFileSync, execSync } = require("child_process");
+    let pidsToKill = new Set();
 
-    // Find process using the port
-    const netstatOutput = execFileSync(`netstat.exe`, ["-ano", "-p", "TCP"], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-    });
+    try {
+      // Find process using the port
+      const netstatOutput = execFileSync(`netstat.exe`, ["-ano", "-p", "TCP"], {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+      });
 
-    const lines = netstatOutput.split(/\r?\n/);
-    for (const line of lines) {
-      if (line.includes(`:${port}`) && line.includes("LISTENING")) {
-        const parts = line.trim().split(/\s+/);
-        const pidIndex = parts.length - 1;
-        const pid = parseInt(parts[pidIndex], 10);
+      const lines = netstatOutput.split(/\r?\n/);
+      for (const line of lines) {
+        if (line.includes(`:${port}`) && line.includes("LISTENING")) {
+          const parts = line.trim().split(/\s+/);
+          const pidIndex = parts.length - 1;
+          const pid = parseInt(parts[pidIndex], 10);
+          if (pid && !isNaN(pid)) {
+            pidsToKill.add(pid);
+          }
+        }
+      }
+    } catch (e) { /* ignore */ }
 
+    try {
+      // Find any opencode processes
+      const tasklistOutput = execFileSync(
+        "tasklist.exe",
+        ["/FI", "IMAGENAME eq opencode*", "/FO", "CSV", "/NH"],
+        {
+          encoding: "utf8",
+          stdio: ["ignore", "pipe", "ignore"],
+        }
+      );
+
+      const taskLines = tasklistOutput.split(/\r?\n/).filter(Boolean);
+      for (const taskLine of taskLines) {
+        const match = taskLine.match(/"([^"]+)","(\d+)"/);
+        if (match) {
+          pidsToKill.add(parseInt(match[2], 10));
+        }
+      }
+    } catch (e) { /* ignore */ }
+
+    try {
+      // Find any node processes too
+      const nodeTasklist = execFileSync(
+        "tasklist.exe",
+        ["/FI", "IMAGENAME eq node.exe", "/FO", "CSV", "/NH"],
+        {
+          encoding: "utf8",
+          stdio: ["ignore", "pipe", "ignore"],
+        }
+      );
+
+      const nodeLines = nodeTasklist.split(/\r?\n/).filter(Boolean);
+      for (const line of nodeLines) {
+        const match = line.match(/"([^"]+)","(\d+)"/);
+        if (match) {
+          pidsToKill.add(parseInt(match[2], 10));
+        }
+      }
+    } catch (e) { /* ignore */ }
+
+    // Kill all collected PIDs
+    if (pidsToKill.size > 0) {
+      console.log(`   Killing ${pidsToKill.size} process(es)...`);
+      for (const pid of pidsToKill) {
         if (pid && !isNaN(pid)) {
-          console.log(`   Killing existing process on port ${port} (PID: ${pid})`);
           try {
             execFileSync("taskkill.exe", ["/F", "/PID", pid.toString()], {
               stdio: "ignore",
             });
-          } catch (e) {
-            // Process may already be dead
-          }
+            console.log(`   Killed PID ${pid}`);
+          } catch (e) { /* ignore */ }
         }
       }
-    }
-
-    // Also kill any opencode processes that might be hanging
-    const tasklistOutput = execFileSync(
-      "tasklist.exe",
-      ["/FI", "IMAGENAME eq opencode*", "/FO", "CSV", "/NH"],
-      {
-        encoding: "utf8",
-        stdio: ["ignore", "pipe", "ignore"],
-      }
-    );
-
-    const taskLines = tasklistOutput.split(/\r?\n/).filter(Boolean);
-    for (const taskLine of taskLines) {
-      const match = taskLine.match(/"([^"]+)","(\d+)"/);
-      if (match) {
-        const [, imageName, pid] = match;
-        if (imageName.startsWith("opencode")) {
-          console.log(`   Killing opencode process: ${imageName} (PID: ${pid})`);
-          try {
-            execFileSync("taskkill.exe", ["/F", "/PID", pid], {
-              stdio: "ignore",
-            });
-          } catch (e) {
-            // Process may already be dead
-          }
-        }
-      }
+      // Wait for ports to be released
+      try {
+        execSync("timeout /t 2 /nobreak >nul 2>&1", { stdio: "ignore" });
+      } catch (e) { /* ignore */ }
+    } else {
+      console.log(`   No processes found on port ${port}`);
     }
   } catch (e) {
-    // Ignore errors - just means no process to kill
+    // Ignore errors
   }
 }
 
@@ -258,64 +285,60 @@ function launch() {
     });
   }
 
-  function hasOpencodeOnPath() {
-    try {
-      const { spawnSync } = require("child_process");
-      const check = spawnSync("opencode", ["--version"], {
-        stdio: "ignore",
-        shell: true, // Use shell to find it on path more reliably on Windows
-      });
-      return check.status === 0;
-    } catch {
-      return false;
-    }
-  }
-
   let child;
-  const rootExe = path.join(configRoot, "opencode.exe");
-  const rootBat = path.join(configRoot, "opencode.bat");
-  const localBin = path.join(
-    configRoot,
-    "node_modules",
-    ".bin",
-    "opencode" + (process.platform === "win32" ? ".cmd" : "")
-  );
-  const bunLocal = path.join(
-    os.homedir(),
-    ".bun",
-    "bin",
-    "opencode" + (process.platform === "win32" ? ".exe" : "")
-  );
-  const installedOpencode = resolveInstalledOpencode(scriptDir);
 
-  if (fs.existsSync(rootExe)) {
+  // Resolve the actual opencode binary to launch
+  // Per docs (https://opencode.ai/docs#install):
+  //   npm install -g opencode-ai  → installs global `opencode` binary
+  // We MUST NOT use `npx opencode` because our package.json declares a local
+  // "opencode" bin that would recurse into this same script.
+  const installedOpencode = resolveInstalledOpencode(scriptDir);
+  const rootExe = path.join(configRoot, "opencode.exe");
+
+  if (installedOpencode) {
+    console.log(`   Using installed CLI: ${installedOpencode}`);
+    // If the installed binary is our own local launch script, refuse to recurse
+    const normalized = path.normalize(installedOpencode).toLowerCase();
+    const localBat = path.join(scriptDir, "opencode.bat").toLowerCase();
+    const localCmd = path.join(scriptDir, "opencode.cmd").toLowerCase();
+    const localJs = path.join(scriptDir, "opencode").toLowerCase();
+    const thisScript = __filename.toLowerCase();
+    if (
+      normalized === localBat ||
+      normalized === localCmd ||
+      normalized === localJs ||
+      normalized === thisScript
+    ) {
+      console.error(
+        "❌ Resolved opencode points back to this launcher script — refusing to recurse."
+      );
+      console.error("   Install the official CLI globally: npm install -g opencode-ai");
+      process.exit(1);
+    }
+    child = runCommand(installedOpencode);
+  } else if (fs.existsSync(rootExe)) {
     console.log(`   Using project root executable: ${rootExe}`);
     child = runCommand(rootExe);
-  } else if (fs.existsSync(rootBat)) {
-    console.log(`   Using project root batch: ${rootBat}`);
-    child = runCommand(rootBat);
-  } else if (fs.existsSync(localBin)) {
-    console.log(`   Using local bin: ${localBin}`);
-    child = runCommand(localBin);
-  } else if (fs.existsSync(bunLocal)) {
-    console.log(`   Using bun bin: ${bunLocal}`);
-    child = runCommand(bunLocal);
-  } else if (installedOpencode) {
-    console.log(`   Using installed CLI: ${installedOpencode}`);
-    child = runCommand(installedOpencode);
   } else {
-    console.log(`   Searching for opencode on PATH...`);
-    child = runCommand("opencode");
+    console.error("❌ Could not find the official opencode CLI.");
+    console.error("   Install it globally per https://opencode.ai/docs#install:");
+    console.error("     npm install -g opencode-ai");
+    process.exit(1);
   }
 
   child.on("exit", (code) => {
+    // After the child exits, clean up any straggler processes still bound to the port
+    // (npx wrappers, helper node processes, etc.) so the next launch is clean.
+    try {
+      killExistingServer(4096);
+    } catch {}
     process.exit(code || 0);
   });
 
   child.on("error", (err) => {
     console.error("❌ Failed to launch opencode:", err.message);
     console.error("   Make sure the official OpenCode CLI is installed and available on PATH.");
-    console.error("   Recommended install: npm install -g opencode");
+    console.error("   Install per https://opencode.ai/docs#install:  npm install -g opencode-ai");
     process.exit(1);
   });
 }

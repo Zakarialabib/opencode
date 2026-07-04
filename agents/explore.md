@@ -9,11 +9,6 @@ permission:
   edit: "deny"
   write: "deny"
   bash: "deny"
-tools:
-  - read
-  - glob
-  - grep
-  - list
 ---
 
 # Explore Agent

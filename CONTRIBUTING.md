@@ -174,7 +174,7 @@ Examples:
 1. Create workflow YAML in `workflows/` directory
 2. Validate with `npm run config:validate`
 3. Test with sample feature or bug fix scenarios
-4. Document in `docs/Workflows-Guide.md`
+4. Document in `docs/the-9-workflows.md`
 
 ---
 
